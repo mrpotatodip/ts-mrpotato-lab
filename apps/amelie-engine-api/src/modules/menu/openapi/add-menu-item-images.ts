@@ -13,9 +13,9 @@ import {
   routeText,
 } from "#/lib/openapi";
 
-export const addMenuItemImageDoc = describeRoute({
+export const addMenuItemImagesDoc = describeRoute({
   tags: ["menu"],
-  summary: "Add a menu item image",
+  summary: "Add menu item images",
   security: STAFF_SECURITY,
   parameters: [
     TENANT_ID_QUERY_PARAMETER,
@@ -41,11 +41,11 @@ export const addMenuItemImageDoc = describeRoute({
   },
   description: routeText({
     context:
-      "An owner or manager adds photos to a Menu item in one request. The item can have up to 10. The first photo is the one cards show.",
+      "An owner or manager adds photos to a Menu item in one request. The item can have up to 10. Files are stored as sent: they are not resized. The first photo is the one cards show.",
     steps: [
       "The server checks that the signed-in Person is an owner or manager of this Tenant. A staff member gets 403.",
       "The server checks each file: JPEG, PNG or WebP, up to 10 MB, and that existing photos plus this batch stay at 10 or fewer.",
-      "The server stores the objects and returns the new images in order.",
+      "The server stores the objects under menu-items/<tenantId>/<itemId>/<imageId>-<name> and returns the new images in order.",
     ],
     example: [
       bash(

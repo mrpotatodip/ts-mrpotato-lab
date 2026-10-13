@@ -1,11 +1,12 @@
 import { beforeAll, describe, expect, it } from "vitest";
+import { Effect } from "effect";
 import { tenantMenuCategories } from "@repo/db-amelie";
 import type { DbConnectType } from "#/lib/db-connection";
-import { NotFoundError, ValidationError } from "#/lib/errors";
 import { runEffect } from "#/lib/effect-query";
 import { listMenuSvc } from "#/modules/menu";
 import {
   addMenuItemImagesSvc,
+  deleteMenuCategoryWithImagesSvc,
   deleteMenuItemImageSvc,
   getMenuItemImageBytesSvc,
   reorderMenuItemImagesSvc,
@@ -20,6 +21,7 @@ let db: DbConnectType;
 let sorellaId: string;
 let otherCafeId: string;
 let itemId: string;
+let breakfastId: string;
 let otherItemId: string;
 
 const stored = new Map<string, ArrayBuffer>();
@@ -49,6 +51,7 @@ beforeAll(async () => {
     .values({ tenantId: sorellaId, name: "Breakfast" })
     .returning();
   const item = await insertMenuItem(db, sorellaId, { categoryId: breakfast.id, name: "Latte", price: "4.75" });
+  breakfastId = breakfast.id;
   itemId = item.id;
   const [theirs] = await db
     .insert(tenantMenuCategories)
@@ -59,7 +62,7 @@ beforeAll(async () => {
 });
 
 describe("menu item images", () => {
-  it("stores a photo under the Tenant prefix, serves the bytes, and lists it as imageUrl", async () => {
+  it("stores a photo under the Tenant prefix, serves the bytes, and lists it as coverPath", async () => {
     const [created] = await runEffect(addMenuItemImagesSvc(db, storage(), sorellaId, itemId, [jpeg()]));
 
     expect(created).toMatchObject({ name: "latte.jpg", contentType: "image/jpeg", size: 8, sortOrder: 0 });
@@ -74,20 +77,20 @@ describe("menu item images", () => {
     const latte = (await runEffect(listMenuSvc(db, sorellaId)))
       .flatMap((category) => category.items)
       .find((item) => item.name === "Latte");
-    expect(latte?.imageUrl).toBe(menuItemImagePublicPath(created.id));
+    expect(latte?.coverPath).toBe(menuItemImagePublicPath(created.id));
     expect(latte?.images).toEqual([
       { id: created.id, name: "latte.jpg", contentType: "image/jpeg", size: 8, sortOrder: 0 },
     ]);
   });
 
   it("refuses a PDF, a foreign item, and an 11th photo", async () => {
-    await expect(
-      runEffect(addMenuItemImagesSvc(db, storage(), sorellaId, itemId, [{ ...jpeg(), contentType: "application/pdf" }])),
-    ).rejects.toBeInstanceOf(ValidationError);
-
-    await expect(runEffect(addMenuItemImagesSvc(db, storage(), sorellaId, otherItemId, [jpeg("x.jpg")]))).rejects.toBeInstanceOf(
-      NotFoundError,
+    const type = await Effect.runPromise(
+      Effect.flip(addMenuItemImagesSvc(db, storage(), sorellaId, itemId, [{ ...jpeg(), contentType: "application/pdf" }])),
     );
+    expect(type._tag).toBe("Invalid");
+
+    const foreign = await Effect.runPromise(Effect.flip(addMenuItemImagesSvc(db, storage(), sorellaId, otherItemId, [jpeg("x.jpg")])));
+    expect(foreign._tag).toBe("NotFound");
 
     const [capCategory] = await db
       .insert(tenantMenuCategories)
@@ -97,9 +100,10 @@ describe("menu item images", () => {
     for (let n = 0; n < 10; n += 1) {
       await runEffect(addMenuItemImagesSvc(db, storage(), sorellaId, extra.id, [jpeg(`n${n}.jpg`, 4)]));
     }
-    await expect(runEffect(addMenuItemImagesSvc(db, storage(), sorellaId, extra.id, [jpeg("overflow.jpg")]))).rejects.toMatchObject({
-      message: MENU_ITEM_IMAGE_TOO_MANY,
-    });
+    const overflow = await Effect.runPromise(
+      Effect.flip(addMenuItemImagesSvc(db, storage(), sorellaId, extra.id, [jpeg("overflow.jpg")])),
+    );
+    expect(overflow).toMatchObject({ _tag: "Invalid", message: MENU_ITEM_IMAGE_TOO_MANY });
   });
 
   it("stores several photos in one call, in order", async () => {
@@ -131,7 +135,7 @@ describe("menu item images", () => {
     const item = (await runEffect(listMenuSvc(db, sorellaId)))
       .flatMap((category) => category.items)
       .find((entry) => entry.id === tart.id);
-    expect(item?.imageUrl).toBe(menuItemImagePublicPath(created[1].id));
+    expect(item?.coverPath).toBe(menuItemImagePublicPath(created[1].id));
   });
 
   it("rearranges photos and refuses a list that is not exactly this item's ids", async () => {
@@ -147,9 +151,19 @@ describe("menu item images", () => {
       reorderMenuItemImagesSvc(db, sorellaId, pie.id, [created[1].id, created[0].id, created[2].id]),
     );
     expect(swapped.map((row) => row.name)).toEqual(["b.jpg", "a.jpg", "c.jpg"]);
-    await expect(runEffect(reorderMenuItemImagesSvc(db, sorellaId, pie.id, [created[0].id]))).rejects.toMatchObject({
-      message: MENU_ORDER_MISMATCH,
-    });
+    const mismatch = await Effect.runPromise(Effect.flip(reorderMenuItemImagesSvc(db, sorellaId, pie.id, [created[0].id])));
+    expect(mismatch).toMatchObject({ _tag: "Invalid", message: MENU_ORDER_MISMATCH });
+  });
+
+  it("fails as ExternalError when storage will not store the file", async () => {
+    const down: MenuImageStorage = {
+      ...storage(),
+      put: async () => {
+        throw new Error("R2 is down");
+      },
+    };
+    const error = await Effect.runPromise(Effect.flip(addMenuItemImagesSvc(db, down, sorellaId, itemId, [jpeg("x.jpg")])));
+    expect(error._tag).toBe("ExternalError");
   });
 
   it("deletes the row and the object, and 404s a missing id", async () => {
@@ -159,9 +173,18 @@ describe("menu item images", () => {
     await runEffect(deleteMenuItemImageSvc(db, storage(), sorellaId, itemId, created.id));
     expect([...stored.keys()].some((key) => key.includes(created.id))).toBe(false);
 
-    await expect(runEffect(getMenuItemImageBytesSvc(db, storage(), created.id))).rejects.toBeInstanceOf(NotFoundError);
-    await expect(runEffect(deleteMenuItemImageSvc(db, storage(), sorellaId, itemId, created.id))).rejects.toBeInstanceOf(
-      NotFoundError,
+    const missingGet = await Effect.runPromise(Effect.flip(getMenuItemImageBytesSvc(db, storage(), created.id)));
+    expect(missingGet._tag).toBe("NotFound");
+    const missingDelete = await Effect.runPromise(
+      Effect.flip(deleteMenuItemImageSvc(db, storage(), sorellaId, itemId, created.id)),
     );
+    expect(missingDelete._tag).toBe("NotFound");
+  });
+
+  it("deletes stored objects when the category goes", async () => {
+    const [created] = await runEffect(addMenuItemImagesSvc(db, storage(), sorellaId, itemId, [jpeg("cat.jpg")]));
+    expect([...stored.keys()].some((key) => key.includes(created.id))).toBe(true);
+    await runEffect(deleteMenuCategoryWithImagesSvc(db, storage(), sorellaId, breakfastId));
+    expect([...stored.keys()].some((key) => key.includes(created.id))).toBe(false);
   });
 });

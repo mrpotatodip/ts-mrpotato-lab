@@ -38,7 +38,7 @@ export const updateMenuItemDoc = describeRoute({
         '  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \\',
         '  -d \'{"categoryId":"$CATEGORY_ID","name":"Muffin","description":null,"price":"4.50","variants":null,"isAvailable":false,"dietaryTags":[]}\'',
       ),
-      json('{ "data": { "id": "…", "name": "Muffin", "description": null, "price": "4.50", "currency": "USD", "variants": null, "isAvailable": false, "availableAtAllLocations": true, "locationIds": [], "imageUrl": null, "images": [], "dietaryTags": [] }, "error": null }'),
+      json('{ "data": { "id": "…", "name": "Muffin", "description": null, "price": "4.50", "currency": "USD", "variants": null, "isAvailable": false, "availableAtAllLocations": true, "locationIds": [], "coverPath": null, "images": [], "dietaryTags": [] }, "error": null }'),
     ],
   }),
   responses: {

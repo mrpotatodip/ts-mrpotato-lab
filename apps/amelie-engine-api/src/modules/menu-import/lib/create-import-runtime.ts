@@ -17,6 +17,9 @@ export const createImportRuntime = (env: Bindings, db: DbConnectType): ImportRun
       const object = await env.IMPORT_FILES.get(key);
       return object ? object.arrayBuffer() : null;
     },
+    delete: async (key) => {
+      await env.IMPORT_FILES.delete(key);
+    },
   },
   queue: {
     send: async (message) => {

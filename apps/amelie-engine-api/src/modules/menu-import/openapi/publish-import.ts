@@ -30,7 +30,7 @@ export const publishImportDoc = describeRoute({
       "The server checks that the Import is ready and not yet published. If not, the answer is 409.",
       "Everything below happens in one transaction. If any step fails, nothing changes.",
       "Country: menu items are priced in one Country, named with `countryId`. It is needed when the cafe has several open Countries and defaults to the only one otherwise. An archived, unknown or foreign Country is refused with 404 before anything is written. Items get a sold price row in that Country only.",
-      "Menu: with mode `replace`, the server deletes the current menu first. With mode `add`, it keeps the current menu and reuses a category with the same name. Replace is refused with 400 when the cafe has several open Countries, since it would delete every Country's prices. It skips the menu when no menu draft is approved.",
+      "Menu: with mode `replace`, the server deletes the current menu first, including each Menu item image object in storage. With mode `add`, it keeps the current menu and reuses a category with the same name. Replace is refused with 400 when the cafe has several open Countries, since it would delete every Country's prices. It skips the menu when no menu draft is approved.",
       "Hours: approved weekly hours replace the weekly hours. Profile: approved contact facts fill only the fields that are empty.",
       "The server marks the Import as published and returns what it changed.",
     ],

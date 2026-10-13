@@ -36,6 +36,13 @@ export const DeleteMenuItemInputSchema = z.object({ itemId: z.uuid() });
 export const DeleteMenuItemImageInputSchema = z.object({ itemId: z.uuid(), imageId: z.uuid() });
 export const SetMenuItemImageCoverInputSchema = z.object({ itemId: z.uuid(), imageId: z.uuid() });
 export const ReorderMenuItemImagesInputSchema = MenuOrderBodySchema.extend({ itemId: z.uuid() });
+export const AddMenuItemImagesInputSchema = z
+  .instanceof(FormData)
+  .transform((form) => ({
+    itemId: String(form.get("itemId") ?? ""),
+    files: form.getAll("files").filter((file): file is File => file instanceof File),
+  }))
+  .pipe(z.object({ itemId: z.uuid(), files: z.array(z.instanceof(File)).min(1) }));
 
 // -----
 // What the boxes of the category and item forms hold:

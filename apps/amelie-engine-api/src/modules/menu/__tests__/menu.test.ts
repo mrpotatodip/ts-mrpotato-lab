@@ -165,7 +165,7 @@ describe("getMenuItemCardsSvc", () => {
         { name: "Small", price: "4.75" },
         { name: "Large", price: "6.25" },
       ],
-      imageUrl: null,
+      coverPath: null,
     });
   });
 });

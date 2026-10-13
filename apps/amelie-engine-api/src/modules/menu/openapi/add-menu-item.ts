@@ -37,7 +37,7 @@ export const addMenuItemDoc = describeRoute({
         '  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \\',
         '  -d \'{"categoryId":"$CATEGORY_ID","name":"Muffin","description":null,"price":"4.00","variants":null,"isAvailable":true,"dietaryTags":["vegetarian"]}\'',
       ),
-      json('{ "data": { "id": "…", "name": "Muffin", "description": null, "price": "4.00", "currency": "USD", "variants": null, "isAvailable": true, "imageUrl": null, "images": [], "dietaryTags": ["vegetarian"] }, "error": null }'),
+      json('{ "data": { "id": "…", "name": "Muffin", "description": null, "price": "4.00", "currency": "USD", "variants": null, "isAvailable": true, "coverPath": null, "images": [], "dietaryTags": ["vegetarian"] }, "error": null }'),
     ],
   }),
   responses: {

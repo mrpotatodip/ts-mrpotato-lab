@@ -11,6 +11,7 @@ import {
   tenantLocations,
   tenantMenuCategories,
   tenantMenuItemDietaryTags,
+  tenantMenuItemImages,
   tenantMenuItems,
 } from "@repo/db-amelie";
 import type { BusinessProfileDraftData, PublishedImport } from "@repo/contracts/amelie";
@@ -32,7 +33,7 @@ const CONTACT_FIELDS = ["phone", "address"] as const;
 type PublishOutcome =
   | { problem: "missing" | "published" | "not-ready" }
   | { problem: "location"; choice: LocationChoice }
-  | { problem: null; counts: PublishedImport };
+  | { problem: null; counts: PublishedImport; removedImageKeys: string[] };
 
 const query = <A>(run: () => Promise<A>): Effect.Effect<A, DbError> =>
   Effect.tryPromise({ try: run, catch: toDbError });
@@ -208,7 +209,7 @@ export const publishImportEffect = (
   mode: PublishPlanInput["mode"],
   locationId?: string,
   countryId?: string,
-): Effect.Effect<PublishedImport, DbError | NotFound | Conflict | NeedsLocation> =>
+): Effect.Effect<{ published: PublishedImport; removedImageKeys: string[] }, DbError | NotFound | Conflict | NeedsLocation> =>
   query(() =>
     db.transaction(async (tx): Promise<PublishOutcome> => {
       const [imp] = await tx
@@ -255,8 +256,14 @@ export const publishImportEffect = (
       }
 
       let categoryIds = new Map<string, string>();
+      let removedImageKeys: string[] = [];
       if (plan.menuCategories.length > 0) {
         if (mode === "replace") {
+          const imageRows = await tx
+            .select({ objectKey: tenantMenuItemImages.objectKey })
+            .from(tenantMenuItemImages)
+            .where(eq(tenantMenuItemImages.tenantId, tenantId));
+          removedImageKeys = imageRows.map((row) => row.objectKey);
           await tx.delete(tenantMenuCategories).where(eq(tenantMenuCategories.tenantId, tenantId));
         } else {
           const existing = await tx
@@ -364,17 +371,18 @@ export const publishImportEffect = (
           businessHours: plan.businessHours.length,
           profileFieldsFilled,
         },
+        removedImageKeys,
       };
     }),
   ).pipe(
-    Effect.flatMap((result): Effect.Effect<PublishedImport, NotFound | Conflict | NeedsLocation> => {
+    Effect.flatMap((result): Effect.Effect<{ published: PublishedImport; removedImageKeys: string[] }, NotFound | Conflict | NeedsLocation> => {
       if (result.problem === "missing") return Effect.fail(new NotFound({ message: IMPORT_NOT_FOUND }));
       if (result.problem === "published") return Effect.fail(new Conflict({ message: IMPORT_ALREADY_PUBLISHED }));
       if (result.problem === "not-ready") return Effect.fail(new Conflict({ message: IMPORT_NOT_READY }));
       if (result.problem === "location") {
         return locationChoiceToEffect(result.choice).pipe(Effect.flatMap(() => Effect.fail(new NotFound({ message: IMPORT_NOT_FOUND }))));
       }
-      if (result.problem === null) return Effect.succeed(result.counts);
+      if (result.problem === null) return Effect.succeed({ published: result.counts, removedImageKeys: result.removedImageKeys });
       return Effect.fail(new NotFound({ message: IMPORT_NOT_FOUND }));
     }),
   );

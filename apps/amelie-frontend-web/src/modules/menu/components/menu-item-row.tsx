@@ -7,7 +7,7 @@ import { Button } from "#/components/ui/button";
 import { cn } from "#/lib/utils";
 import { useActiveLocations } from "#/modules/location";
 import { useMenuActions } from "../hooks";
-import { isMenuItemMuted, isMenuItemSoldNowhere, moveId, showsMenuItemLocationsControl, toMenuItemBody, toMenuItemCoverUrl, toPriceEntryBody, toSoldBody } from "../utils";
+import { firstMutationError, isMenuItemMuted, isMenuItemSoldNowhere, moveId, showsMenuItemLocationsControl, toMenuItemBody, toMenuItemImageUrl, toPriceEntryBody, toSoldBody } from "../utils";
 import { MenuItemCountrySold } from "./menu-item-country-sold";
 import { MenuItemForm } from "./menu-item-form";
 import { MenuItemImages } from "./menu-item-images";
@@ -29,7 +29,7 @@ const describePrice = (item: MenuItem): string =>
   item.variants ? item.variants.map((variant) => `${variant.name} ${variant.price}`).join(" / ") : (item.price ?? "");
 
 function MenuItemCover({ item, onOpenPhotos }: { item: MenuItem; onOpenPhotos?: () => void }) {
-  const src = toMenuItemCoverUrl(item.images, item.imageUrl);
+  const src = toMenuItemImageUrl(item.coverPath);
   if (!src) return null;
   const count = item.images.length;
   const thumb = <img src={src} alt="" className="size-10 rounded-lg object-cover" />;
@@ -37,9 +37,9 @@ function MenuItemCover({ item, onOpenPhotos }: { item: MenuItem; onOpenPhotos?: 
   return (
     <div className="relative shrink-0">
       {onOpenPhotos ? (
-        <button type="button" className="block" aria-label="Photos" onClick={onOpenPhotos}>
+        <Button type="button" variant="ghost" className="size-10 p-0" aria-label="Photos" onClick={onOpenPhotos}>
           {thumb}
-        </button>
+        </Button>
       ) : (
         thumb
       )}
@@ -170,17 +170,7 @@ export function MenuItemRow({ item, categoryId, categories, dietaryTags, canEdit
           onOpenChange={setIsPhotosOpen}
           isPending={addImages.isPending || removeImage.isPending || setCover.isPending || reorderImages.isPending}
           isUploading={addImages.isPending}
-          error={
-            addImages.isError
-              ? addImages.error.message
-              : removeImage.isError
-                ? removeImage.error.message
-                : setCover.isError
-                  ? setCover.error.message
-                  : reorderImages.isError
-                    ? reorderImages.error.message
-                    : null
-          }
+          error={firstMutationError(addImages, removeImage, setCover, reorderImages)}
           onAdd={(files) => {
             const form = new FormData();
             form.append("itemId", item.id);

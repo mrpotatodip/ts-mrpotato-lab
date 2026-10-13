@@ -1,18 +1,14 @@
 import { createServerFn } from "@tanstack/react-start";
-import { z } from "zod";
 import { apiClient, ApiError } from "#/lib/api-client";
 import { tryCatch } from "#/lib/try-catch";
 import { withActiveTenant } from "#/lib/active-tenant";
-import { MenuItemImagesResponseSchema } from "../schemas";
+import { AddMenuItemImagesInputSchema, MenuItemImagesResponseSchema } from "../schemas";
 
 export const addMenuItemImages = createServerFn({ method: "POST" })
-  .validator((form: FormData) => form)
-  .handler(async ({ data: form }) => {
-    const itemId = z.uuid().parse(form.get("itemId"));
+  .validator(AddMenuItemImagesInputSchema)
+  .handler(async ({ data: { itemId, files } }) => {
     const body = new FormData();
-    for (const file of form.getAll("files")) {
-      if (file instanceof File) body.append("files", file);
-    }
+    for (const file of files) body.append("files", file);
 
     const { data, error } = await tryCatch(
       apiClient.post(await withActiveTenant(`/menu/items/${itemId}/images`), MenuItemImagesResponseSchema, body),

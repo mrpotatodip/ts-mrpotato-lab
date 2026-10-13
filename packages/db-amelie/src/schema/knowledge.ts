@@ -165,10 +165,6 @@ export const tenantMenuItems = pgTable(
   }),
 );
 
-// -----
-// Photos of a Menu item, in order; the first is
-// the card. object_key is the R2 object, not a URL.
-// -----
 export const tenantMenuItemImages = pgTable(
   "tenant_menu_item_images",
   {

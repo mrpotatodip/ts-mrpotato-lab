@@ -160,7 +160,7 @@ export const MenuItemSchema = z.object({
   availableAtAllLocations: z.boolean(),
   locationIds: z.array(z.uuid()),
   isSold: z.boolean().optional(),
-  imageUrl: z.string().nullable(),
+  coverPath: z.string().nullable(),
   images: z.array(MenuItemImageSchema),
   dietaryTags: z.array(z.string()),
 });

@@ -4,7 +4,7 @@ import { imports, menuItemPrices, tenantBusinessHours, tenantCountries, tenantLo
 import type { DbConnectType } from "#/lib/db-connection";
 import { ConflictError, NotFoundError, ValidationError } from "#/lib/errors";
 import { runEffect } from "#/lib/effect-query";
-import { addMenuCategorySvc, addMenuItemSvc, getMenuEditorSvc, listMenuSvc } from "#/modules/menu";
+import { addMenuCategorySvc, addMenuItemImagesSvc, addMenuItemSvc, getMenuEditorSvc, listMenuSvc } from "#/modules/menu";
 import { getBusinessProfileSvc, updateBusinessProfileSvc } from "#/modules/business-profile";
 import {
   approveAllImportDraftsSvc,
@@ -36,6 +36,9 @@ const runtime = (): ImportRuntime => ({
       stored.set(key, bytes);
     },
     get: async (key) => stored.get(key) ?? null,
+    delete: async (key) => {
+      stored.delete(key);
+    },
   },
   queue: { send: async (message) => void sent.push(message) },
   extract: () => extraction(),
@@ -170,7 +173,7 @@ describe("extracting an Import", () => {
     await expect(
       runEffect(updateImportDraftSvc(db, otherCafeId, id, draft.id, { status: "approved" })),
     ).rejects.toBeInstanceOf(NotFoundError);
-    await expect(runEffect(publishImportSvc(db, otherCafeId, id, "add"))).rejects.toBeInstanceOf(NotFoundError);
+    await expect(runEffect(publishImportSvc(db, runtime().storage, otherCafeId, id, "add"))).rejects.toBeInstanceOf(NotFoundError);
     expect((await runEffect(listImportsSvc(db, otherCafeId))).some((i) => i.id === id)).toBe(false);
   });
 });
@@ -217,7 +220,7 @@ describe("publishing an Import into a Country", () => {
     const { tenantId, canadaId, usId } = await twoCountryCafe("toronto");
     const id = await approvedImport(tenantId);
 
-    await runEffect(publishImportSvc(db, tenantId, id, "add", undefined, canadaId));
+    await runEffect(publishImportSvc(db, runtime().storage, tenantId, id, "add", undefined, canadaId));
 
     const rows = await db.select().from(menuItemPrices).where(eq(menuItemPrices.tenantId, tenantId));
     expect(rows.map((r) => [r.countryId, r.isSold])).toEqual([[canadaId, true], [canadaId, true]]);
@@ -229,7 +232,7 @@ describe("publishing an Import into a Country", () => {
     const { tenantId } = await twoCountryCafe("ask-country");
     const id = await approvedImport(tenantId);
 
-    await expect(runEffect(publishImportSvc(db, tenantId, id, "add"))).rejects.toBeInstanceOf(ValidationError);
+    await expect(runEffect(publishImportSvc(db, runtime().storage, tenantId, id, "add"))).rejects.toBeInstanceOf(ValidationError);
 
     expect(await menuNames(tenantId)).toEqual([]);
   });
@@ -241,7 +244,7 @@ describe("publishing an Import into a Country", () => {
     const id = await approvedImport(tenantId);
 
     for (const countryId of [archivedId, foreignId, crypto.randomUUID()]) {
-      await expect(runEffect(publishImportSvc(db, tenantId, id, "add", undefined, countryId))).rejects.toBeInstanceOf(NotFoundError);
+      await expect(runEffect(publishImportSvc(db, runtime().storage, tenantId, id, "add", undefined, countryId))).rejects.toBeInstanceOf(NotFoundError);
     }
     expect(await menuNames(tenantId)).toEqual([]);
   });
@@ -251,7 +254,7 @@ describe("publishing an Import into a Country", () => {
     const old = await runEffect(addMenuCategorySvc(db, tenantId, { name: "Old", note: null }));
     const id = await approvedImport(tenantId);
 
-    await expect(runEffect(publishImportSvc(db, tenantId, id, "replace", undefined, canadaId))).rejects.toBeInstanceOf(ValidationError);
+    await expect(runEffect(publishImportSvc(db, runtime().storage, tenantId, id, "replace", undefined, canadaId))).rejects.toBeInstanceOf(ValidationError);
 
     expect(await menuNames(tenantId)).toEqual([[old.name, []]]);
   });
@@ -262,7 +265,7 @@ describe("publishing an Import into a Country", () => {
     await runEffect(addMenuCategorySvc(db, tenantId, { name: "Old", note: null }));
     const id = await approvedImport(tenantId);
 
-    await runEffect(publishImportSvc(db, tenantId, id, "replace", undefined, only.id));
+    await runEffect(publishImportSvc(db, runtime().storage, tenantId, id, "replace", undefined, only.id));
 
     expect(await menuNames(tenantId)).toEqual([["Coffee", ["Latte"]], ["Pastries", ["Muffin"]]]);
   });
@@ -274,7 +277,7 @@ describe("publishing an Import into a Country", () => {
     const { drafts } = await runEffect(getImportSvc(db, tenantId, id));
     await runEffect(updateImportDraftSvc(db, tenantId, id, drafts[3].id, { status: "approved" }));
 
-    await expect(runEffect(publishImportSvc(db, tenantId, id, "replace", locationId))).resolves.toMatchObject({ businessHours: 1 });
+    await expect(runEffect(publishImportSvc(db, runtime().storage, tenantId, id, "replace", locationId))).resolves.toMatchObject({ businessHours: 1 });
   });
 });
 
@@ -282,14 +285,32 @@ describe("publishing an Import", () => {
   it("replaces the menu: old categories go, approved drafts come in, discarded ones never do", async () => {
     const old = await runEffect(addMenuCategorySvc(db, otherCafeId, { name: "Old", note: null }));
     expect(old.name).toBe("Old");
+    const pie = await runEffect(
+      addMenuItemSvc(db, otherCafeId, {
+        categoryId: old.id,
+        name: "Old pie",
+        description: null,
+        price: "1.00",
+        variants: null,
+        isAvailable: true,
+        dietaryTags: [],
+      }),
+    );
+    await runEffect(
+      addMenuItemImagesSvc(db, runtime().storage, otherCafeId, pie.id, [
+        { name: "old.jpg", contentType: "image/jpeg", bytes: new ArrayBuffer(4) },
+      ]),
+    );
+    expect([...stored.keys()].some((key) => key.startsWith("menu-items/"))).toBe(true);
     const id = await readyImport(otherCafeId);
     const { drafts } = await runEffect(getImportSvc(db, otherCafeId, id));
     await runEffect(approveAllImportDraftsSvc(db, otherCafeId, id));
     await runEffect(updateImportDraftSvc(db, otherCafeId, id, drafts[2].id, { status: "discarded" }));
 
-    const published = await runEffect(publishImportSvc(db, otherCafeId, id, "replace"));
+    const published = await runEffect(publishImportSvc(db, runtime().storage, otherCafeId, id, "replace"));
 
     expect(published).toMatchObject({ menuCategories: 1, menuItems: 1, businessHours: 1, profileFieldsFilled: 2 });
+    expect([...stored.keys()].some((key) => key.startsWith("menu-items/"))).toBe(false);
     expect(await menuNames(otherCafeId)).toEqual([["Coffee", ["Latte"]]]);
     const latte = (await runEffect(getMenuEditorSvc(db, otherCafeId))).categories[0].items[0];
     expect(latte).toMatchObject({ price: "4.75", currency: "USD", availableAtAllLocations: true, locationIds: [] });
@@ -303,7 +324,7 @@ describe("publishing an Import", () => {
     await runEffect(approveAllImportDraftsSvc(db, tenantId, id));
     await runEffect(updateImportDraftSvc(db, tenantId, id, drafts[2].id, { status: "discarded" }));
 
-    await runEffect(publishImportSvc(db, tenantId, id, "add"));
+    await runEffect(publishImportSvc(db, runtime().storage, tenantId, id, "add"));
 
     const [latte] = (await runEffect(getMenuEditorSvc(db, tenantId))).categories[0].items;
     const rows = await db.select().from(menuItemPrices).where(eq(menuItemPrices.tenantId, tenantId));
@@ -327,7 +348,7 @@ describe("publishing an Import", () => {
     const id = await readyImport();
     await runEffect(approveAllImportDraftsSvc(db, sorellaId, id));
 
-    await runEffect(publishImportSvc(db, sorellaId, id, "add"));
+    await runEffect(publishImportSvc(db, runtime().storage, sorellaId, id, "add"));
 
     const menu = await runEffect(getMenuEditorSvc(db, sorellaId));
     const coffee = menu.categories.find((c) => c.name.toLowerCase() === "coffee");
@@ -345,7 +366,7 @@ describe("publishing an Import", () => {
     const id = await readyImport();
     await runEffect(approveAllImportDraftsSvc(db, sorellaId, id));
 
-    await runEffect(publishImportSvc(db, sorellaId, id, "add"));
+    await runEffect(publishImportSvc(db, runtime().storage, sorellaId, id, "add"));
 
     const hours = await db.select().from(tenantBusinessHours).where(eq(tenantBusinessHours.tenantId, sorellaId));
     expect(hours.map((h) => [h.dayOfWeek, h.opensAt, h.closesAt])).toEqual([[1, "08:00:00", "16:00:00"]]);
@@ -362,10 +383,10 @@ describe("publishing an Import", () => {
     const id = await readyImport(tenantId);
     await runEffect(approveAllImportDraftsSvc(db, tenantId, id));
 
-    await expect(runEffect(publishImportSvc(db, tenantId, id, "replace"))).rejects.toBeInstanceOf(ValidationError);
+    await expect(runEffect(publishImportSvc(db, runtime().storage, tenantId, id, "replace"))).rejects.toBeInstanceOf(ValidationError);
     expect(await menuNames(tenantId)).toEqual([]);
 
-    await runEffect(publishImportSvc(db, tenantId, id, "replace", airportId));
+    await runEffect(publishImportSvc(db, runtime().storage, tenantId, id, "replace", airportId));
 
     const hours = await db.select().from(tenantBusinessHours).where(eq(tenantBusinessHours.tenantId, tenantId));
     expect(hours.map((h) => [h.locationId, h.dayOfWeek])).toEqual([[airportId, 1]]);
@@ -382,7 +403,7 @@ describe("publishing an Import", () => {
     const { drafts } = await runEffect(getImportSvc(db, sorellaId, id));
     await runEffect(updateImportDraftSvc(db, sorellaId, id, drafts[3].id, { status: "approved" }));
 
-    await runEffect(publishImportSvc(db, sorellaId, id, "replace"));
+    await runEffect(publishImportSvc(db, runtime().storage, sorellaId, id, "replace"));
 
     expect(await menuNames()).toEqual(before);
   });
@@ -393,10 +414,10 @@ describe("publishing an Import", () => {
     extraction = async () => MENU;
     const running = await runEffect(createImportSvc(runtime(), sorellaId, [file("late.jpg")]));
 
-    await runEffect(publishImportSvc(db, sorellaId, id, "add"));
+    await runEffect(publishImportSvc(db, runtime().storage, sorellaId, id, "add"));
 
-    await expect(runEffect(publishImportSvc(db, sorellaId, id, "add"))).rejects.toBeInstanceOf(ConflictError);
-    await expect(runEffect(publishImportSvc(db, sorellaId, running.id, "add"))).rejects.toEqual(
+    await expect(runEffect(publishImportSvc(db, runtime().storage, sorellaId, id, "add"))).rejects.toBeInstanceOf(ConflictError);
+    await expect(runEffect(publishImportSvc(db, runtime().storage, sorellaId, running.id, "add"))).rejects.toEqual(
       new ConflictError(IMPORT_NOT_READY),
     );
     const [first] = (await runEffect(getImportSvc(db, sorellaId, id))).drafts;
@@ -413,7 +434,7 @@ describe("publishing an Import", () => {
     // publish after the menu was already rewritten, so only a rollback can restore it.
     await db.execute(sql`alter table tenant_business_hours rename to tenant_business_hours_broken`);
 
-    await expect(runEffect(publishImportSvc(db, otherCafeId, id, "replace"))).rejects.toBeDefined();
+    await expect(runEffect(publishImportSvc(db, runtime().storage, otherCafeId, id, "replace"))).rejects.toBeDefined();
     await db.execute(sql`alter table tenant_business_hours_broken rename to tenant_business_hours`);
 
     expect(await menuNames(otherCafeId)).toEqual(before);

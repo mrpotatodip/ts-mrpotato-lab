@@ -1,4 +1,5 @@
-import type { MenuCategory, MenuEditor } from "@repo/contracts/amelie";
+import type { MenuCategory, MenuEditor, MenuItem } from "@repo/contracts/amelie";
+import { menuItemImagePath } from "./menu-item-image-url";
 
 const sortByIds = <T extends { id: string }>(rows: T[], ids: string[]): T[] => {
   const byId = new Map(rows.map((row) => [row.id, row]));
@@ -18,3 +19,23 @@ export const withItemsOrder = (menu: MenuEditor, categoryId: string, ids: string
       category.id === categoryId ? { ...category, items: sortByIds(category.items, ids) } : category,
   ),
 });
+
+const withItemImages = (item: MenuItem, ids: string[]): MenuItem => {
+  const images = sortByIds(item.images, ids).map((image, sortOrder) => ({ ...image, sortOrder }));
+  const cover = images[0];
+  return { ...item, images, coverPath: cover ? menuItemImagePath(cover.id) : null };
+};
+
+export const withItemImagesOrder = (menu: MenuEditor, itemId: string, ids: string[]): MenuEditor => ({
+  ...menu,
+  categories: menu.categories.map((category) => ({
+    ...category,
+    items: category.items.map((item) => (item.id === itemId ? withItemImages(item, ids) : item)),
+  })),
+});
+
+export const withItemImageCover = (menu: MenuEditor, itemId: string, imageId: string): MenuEditor => {
+  const item = menu.categories.flatMap((category) => category.items).find((entry) => entry.id === itemId);
+  if (!item) return menu;
+  return withItemImagesOrder(menu, itemId, [imageId, ...item.images.map((image) => image.id).filter((id) => id !== imageId)]);
+};
