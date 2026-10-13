@@ -1,0 +1,32 @@
+{
+  "name": "@repo/db-amelie",
+  "version": "1.0.0",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:studio": "drizzle-kit studio",
+    "db:seed": "tsx --env-file=.env src/seed.ts",
+    "db:add-superuser": "tsx --env-file=.env src/add-superuser.ts"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.1.0",
+    "@repo/chat-bot-durable-stream": "workspace:*",
+    "drizzle-orm": "^0.45.2",
+    "pg": "^8.22.0"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
+    "@types/node": "^22.19.19",
+    "better-auth": "^1.6.25",
+    "drizzle-kit": "^0.31.10",
+    "tsx": "^4.10.1",
+    "typescript": "^5.4.5"
+  }
+}

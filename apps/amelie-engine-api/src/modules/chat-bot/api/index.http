@@ -1,0 +1,77 @@
+@baseUrl = http://localhost:8788
+# Paste the "token" from POST {{baseUrl}}/auth/sign-in/email
+@token = <session-token>
+@tenantId = <tenant-id from GET {{baseUrl}}/tenants>
+@threadId = 11111111-1111-4111-8111-111111111111
+@anonymousId = 22222222-2222-4222-8222-222222222222
+
+# Staff chat. Bearer session and ?tenantId= required.
+# First send omits threadId; response header X-Thread-Id.
+POST {{baseUrl}}/chat-bot?tenantId={{tenantId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+Accept: text/event-stream
+
+{
+  "content": "What are our hours this week?"
+}
+
+###
+POST {{baseUrl}}/chat-bot?tenantId={{tenantId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+Accept: text/event-stream
+
+{
+  "threadId": "{{threadId}}",
+  "content": "And how much is a large latte?"
+}
+
+###
+GET {{baseUrl}}/chat-bot?tenantId={{tenantId}}&threadId={{threadId}}
+Authorization: Bearer {{token}}
+
+###
+GET {{baseUrl}}/chat-bot?tenantId={{tenantId}}&runId=run-1&offset=-1
+Authorization: Bearer {{token}}
+Accept: text/event-stream
+
+###
+GET {{baseUrl}}/chat-bot/threads?tenantId={{tenantId}}
+Authorization: Bearer {{token}}
+
+###
+GET {{baseUrl}}/chat-bot/threads/{{threadId}}?tenantId={{tenantId}}
+Authorization: Bearer {{token}}
+
+###
+PATCH {{baseUrl}}/chat-bot/threads/{{threadId}}?tenantId={{tenantId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "title": "Hours this week"
+}
+
+###
+DELETE {{baseUrl}}/chat-bot/threads/{{threadId}}?tenantId={{tenantId}}
+Authorization: Bearer {{token}}
+
+###
+# Customer chat. No login: the Tenant comes from the slug.
+# Needs an Origin the Tenant allows, and an anonymous id.
+POST {{baseUrl}}/public/chat-bot?slug=sorella
+Origin: http://localhost:3000
+X-Anonymous-Id: {{anonymousId}}
+Content-Type: application/json
+Accept: text/event-stream
+
+{
+  "slug": "sorella",
+  "content": "Are you open right now?"
+}
+
+###
+GET {{baseUrl}}/public/chat-bot?slug=sorella&threadId={{threadId}}
+Origin: http://localhost:3000
+X-Anonymous-Id: {{anonymousId}}

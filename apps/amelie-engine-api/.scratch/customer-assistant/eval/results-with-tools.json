@@ -1,0 +1,276 @@
+[
+  {
+    "round": 1,
+    "case": "open now",
+    "pass": true,
+    "lookedUp": true,
+    "reported": false,
+    "tools": [
+      "getOpeningSchedule"
+    ],
+    "answer": "We’re closed right now. We open Tuesday at 8:00 AM."
+  },
+  {
+    "round": 1,
+    "case": "latte follow-up",
+    "pass": true,
+    "lookedUp": true,
+    "reported": false,
+    "tools": [
+      "findMenuItems"
+    ],
+    "answer": "A large latte is $6.25."
+  },
+  {
+    "round": 1,
+    "case": "gluten-free",
+    "pass": true,
+    "lookedUp": true,
+    "reported": false,
+    "tools": [
+      "findMenuItems",
+      "showMenuItems"
+    ],
+    "answer": "Yes—we have a gluten-free muffin for $5.00."
+  },
+  {
+    "round": 1,
+    "case": "gift cards",
+    "pass": true,
+    "lookedUp": true,
+    "reported": false,
+    "tools": [
+      "listFaqs"
+    ],
+    "answer": "Yes! Gift cards are available on the Gift Cards page at lasorellafishkill.com."
+  },
+  {
+    "round": 1,
+    "case": "phone",
+    "pass": true,
+    "lookedUp": true,
+    "reported": false,
+    "tools": [
+      "getBusinessProfile"
+    ],
+    "answer": "Our phone number is **845-871-2010**."
+  },
+  {
+    "round": 1,
+    "case": "christmas",
+    "pass": true,
+    "lookedUp": true,
+    "reported": false,
+    "tools": [
+      "getOpeningSchedule"
+    ],
+    "answer": "No, we’re closed on Christmas Day, Friday, December 25, 2026."
+  },
+  {
+    "round": 1,
+    "case": "parking",
+    "pass": true,
+    "lookedUp": true,
+    "reported": true,
+    "tools": [
+      "listFaqs",
+      "getBusinessProfile",
+      "reportMissingInformation"
+    ],
+    "answer": "I don’t have specific information about nearby parking. You can check with the café at **845-871-2010** or **lasorellafishkill@gmail.com**."
+  },
+  {
+    "round": 1,
+    "case": "close today",
+    "pass": true,
+    "lookedUp": true,
+    "reported": false,
+    "tools": [
+      "getOpeningSchedule"
+    ],
+    "answer": "You close today at 2:00 PM."
+  },
+  {
+    "round": 2,
+    "case": "open now",
+    "pass": true,
+    "lookedUp": true,
+    "reported": false,
+    "tools": [
+      "getOpeningSchedule"
+    ],
+    "answer": "No, we’re closed right now. We reopen Tuesday at 8:00 AM."
+  },
+  {
+    "round": 2,
+    "case": "latte follow-up",
+    "pass": true,
+    "lookedUp": true,
+    "reported": false,
+    "tools": [
+      "findMenuItems"
+    ],
+    "answer": "A large latte is $6.25."
+  },
+  {
+    "round": 2,
+    "case": "gluten-free",
+    "pass": true,
+    "lookedUp": true,
+    "reported": false,
+    "tools": [
+      "findMenuItems",
+      "showMenuItems"
+    ],
+    "answer": "Yes—we have a Gluten-Free Muffin for $5.00."
+  },
+  {
+    "round": 2,
+    "case": "gift cards",
+    "pass": true,
+    "lookedUp": true,
+    "reported": false,
+    "tools": [
+      "listFaqs"
+    ],
+    "answer": "Yes! You can buy gift cards on the “Gift Cards” page at lasorellafishkill.com."
+  },
+  {
+    "round": 2,
+    "case": "phone",
+    "pass": true,
+    "lookedUp": true,
+    "reported": false,
+    "tools": [
+      "getBusinessProfile"
+    ],
+    "answer": "Our phone number is 845-871-2010."
+  },
+  {
+    "round": 2,
+    "case": "christmas",
+    "pass": true,
+    "lookedUp": true,
+    "reported": false,
+    "tools": [
+      "getOpeningSchedule"
+    ],
+    "answer": "We’re closed on Christmas Day, Friday, December 25, 2026."
+  },
+  {
+    "round": 2,
+    "case": "parking",
+    "pass": true,
+    "lookedUp": true,
+    "reported": true,
+    "tools": [
+      "listFaqs",
+      "getBusinessProfile",
+      "reportMissingInformation"
+    ],
+    "answer": "There isn’t specific information available about nearby parking. You can contact the café at **845-871-2010** or **lasorellafishkill@gmail.com**."
+  },
+  {
+    "round": 2,
+    "case": "close today",
+    "pass": false,
+    "lookedUp": true,
+    "reported": false,
+    "tools": [
+      "getOpeningSchedule",
+      "getOpeningSchedule"
+    ],
+    "answer": "You close at 2:00 p.m. today."
+  },
+  {
+    "round": 3,
+    "case": "open now",
+    "pass": true,
+    "lookedUp": true,
+    "reported": false,
+    "tools": [
+      "getOpeningSchedule"
+    ],
+    "answer": "No, we’re closed right now. We reopen Tuesday at 8:00 a.m. (local time)."
+  },
+  {
+    "round": 3,
+    "case": "latte follow-up",
+    "pass": true,
+    "lookedUp": true,
+    "reported": false,
+    "tools": [
+      "findMenuItems"
+    ],
+    "answer": "A large latte costs $6.25."
+  },
+  {
+    "round": 3,
+    "case": "gluten-free",
+    "pass": true,
+    "lookedUp": true,
+    "reported": false,
+    "tools": [
+      "findMenuItems",
+      "showMenuItems"
+    ],
+    "answer": "Yes, we have a gluten-free muffin for $5.00."
+  },
+  {
+    "round": 3,
+    "case": "gift cards",
+    "pass": true,
+    "lookedUp": true,
+    "reported": false,
+    "tools": [
+      "listFaqs"
+    ],
+    "answer": "Yes, we sell gift cards through the Gift Cards page on lasorellafishkill.com."
+  },
+  {
+    "round": 3,
+    "case": "phone",
+    "pass": true,
+    "lookedUp": true,
+    "reported": false,
+    "tools": [
+      "getBusinessProfile"
+    ],
+    "answer": "Our phone number is 845-871-2010."
+  },
+  {
+    "round": 3,
+    "case": "christmas",
+    "pass": true,
+    "lookedUp": true,
+    "reported": false,
+    "tools": [
+      "getOpeningSchedule"
+    ],
+    "answer": "No, we’re closed on Christmas Day, Friday, December 25, 2026."
+  },
+  {
+    "round": 3,
+    "case": "parking",
+    "pass": true,
+    "lookedUp": true,
+    "reported": true,
+    "tools": [
+      "listFaqs",
+      "getBusinessProfile",
+      "reportMissingInformation"
+    ],
+    "answer": "I couldn’t find details about nearby parking. Please call 845-871-2010 or email lasorellafishkill@gmail.com to check."
+  },
+  {
+    "round": 3,
+    "case": "close today",
+    "pass": true,
+    "lookedUp": true,
+    "reported": false,
+    "tools": [
+      "getOpeningSchedule"
+    ],
+    "answer": "You close at 2:00 pm today."
+  }
+]

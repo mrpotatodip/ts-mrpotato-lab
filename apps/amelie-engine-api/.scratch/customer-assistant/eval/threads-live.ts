@@ -1,0 +1,11 @@
+const E = "http://localhost:8788", O = "http://localhost:3000";
+const si = (await (await fetch(E + "/auth/sign-in/email", { method: "POST", headers: { "Content-Type": "application/json", Origin: O }, body: JSON.stringify({ email: "owner@sorella.test", password: process.env.SEED_OWNER_PASSWORD }) })).json()) as { token: string };
+const h = { Authorization: "Bearer " + si.token, Origin: O };
+const t = ((await (await fetch(E + "/tenants", { headers: h })).json()) as { data: Array<{ id: string }> }).data[0]!.id;
+const list = await fetch(`${E}/customer-threads?tenantId=${t}`, { headers: h });
+const j = (await list.json()) as { data: Array<{ id: string; messageCount: number; unansweredCount: number }> };
+console.log("list", list.status, j.data.length, JSON.stringify(j.data.slice(0, 2)));
+const detail = await fetch(`${E}/customer-threads/${j.data[0]!.id}?tenantId=${t}`, { headers: h });
+const d = (await detail.json()) as { data: { messages: Array<{ role: string; content: string; missingTopics: string[] }> } };
+console.log("detail", detail.status, d.data.messages.map((m) => `${m.role}:${m.content.slice(0, 40)}:${m.missingTopics}`).join(" | "));
+console.log("unknown", (await fetch(`${E}/customer-threads/${crypto.randomUUID()}?tenantId=${t}`, { headers: h })).status, "no login", (await fetch(`${E}/customer-threads?tenantId=${t}`, { headers: { Origin: O } })).status);

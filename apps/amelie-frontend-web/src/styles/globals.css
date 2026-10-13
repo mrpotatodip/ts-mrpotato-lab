@@ -1,0 +1,532 @@
+@import "tailwindcss";
+@import "sonner/dist/styles.css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --background: oklch(0.985 0.002 75);
+  --foreground: oklch(0.22 0.01 60);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.22 0.01 60);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.22 0.01 60);
+  --primary: oklch(0.38 0.05 50);
+  --primary-foreground: oklch(0.985 0.002 75);
+  --secondary: oklch(0.955 0.006 75);
+  --secondary-foreground: oklch(0.28 0.02 55);
+  --muted: oklch(0.955 0.006 75);
+  --muted-foreground: oklch(0.54 0.012 60);
+  --accent: oklch(0.945 0.012 75);
+  --accent-foreground: oklch(0.28 0.02 55);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(0.915 0.006 75);
+  --input: oklch(0.915 0.006 75);
+  --ring: oklch(0.62 0.06 50);
+  --chart-1: oklch(0.52 0.07 50);
+  --chart-2: oklch(0.68 0.12 70);
+  --chart-3: oklch(0.6 0.1 150);
+  --chart-4: oklch(0.58 0.1 240);
+  --chart-5: oklch(0.7 0.05 60);
+  --sidebar: oklch(0.99 0.002 75);
+  --sidebar-foreground: oklch(0.28 0.02 55);
+  --sidebar-primary: oklch(0.38 0.05 50);
+  --sidebar-primary-foreground: oklch(0.985 0.002 75);
+  --sidebar-accent: oklch(0.977 0.006 75);
+  --sidebar-accent-foreground: oklch(0.22 0.01 60);
+  --sidebar-border: oklch(0.915 0.006 75);
+  --sidebar-ring: oklch(0.62 0.06 50);
+  /* ----- */
+  /* Status colour for screens outside the dashboard theme: a solid
+     ink plus a soft fill. Dashboard overrides it with the same values. */
+  /* ----- */
+  --status-success: oklch(0.52 0.12 155);
+  --status-success-soft: oklch(0.95 0.04 155);
+  --status-danger: oklch(0.55 0.17 27);
+  --status-danger-soft: oklch(0.95 0.03 20);
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
+  --radius: 0.75rem;
+  --shadow-x: 0;
+  --shadow-y: 1px;
+  --shadow-blur: 3px;
+  --shadow-spread: 0px;
+  --shadow-opacity: 0.1;
+  --shadow-color: oklch(0 0 0);
+  --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
+  --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
+  --shadow-sm:
+    0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
+  --shadow: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
+  --shadow-md:
+    0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 2px 4px -1px hsl(0 0% 0% / 0.1);
+  --shadow-lg:
+    0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 4px 6px -1px hsl(0 0% 0% / 0.1);
+  --shadow-xl:
+    0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 8px 10px -1px hsl(0 0% 0% / 0.1);
+  --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
+  --tracking-normal: 0em;
+  --spacing: 0.25rem;
+  --status-warning: oklch(0.58 0.12 75);
+  --status-warning-soft: oklch(0.96 0.05 90);
+  --status-info: oklch(0.52 0.12 245);
+  --status-info-soft: oklch(0.95 0.03 245);
+  --status-neutral: oklch(0.5 0.01 60);
+  --status-neutral-soft: oklch(0.95 0.005 75);
+  --shadow-card: 0 1px 2px 0 oklch(0.2 0.01 60 / 0.04);
+  --dashboard-gap: 1rem;
+  --dashboard-content-max: 80rem;
+}
+
+.dark {
+  --background: oklch(0.17 0.004 60);
+  --foreground: oklch(0.95 0.005 75);
+  --card: oklch(0.21 0.005 60);
+  --card-foreground: oklch(0.95 0.005 75);
+  --popover: oklch(0.21 0.005 60);
+  --popover-foreground: oklch(0.95 0.005 75);
+  --primary: oklch(0.78 0.08 65);
+  --primary-foreground: oklch(0.2 0.01 60);
+  --secondary: oklch(0.27 0.006 60);
+  --secondary-foreground: oklch(0.95 0.005 75);
+  --muted: oklch(0.27 0.006 60);
+  --muted-foreground: oklch(0.7 0.01 70);
+  --accent: oklch(0.29 0.008 60);
+  --accent-foreground: oklch(0.95 0.005 75);
+  --destructive: oklch(0.6600 0.1900 25.5);
+  --destructive-foreground: oklch(0.16 0 0);
+  --border: oklch(0.29 0.006 60);
+  --input: oklch(0.29 0.006 60);
+  --ring: oklch(0.6 0.06 60);
+  --chart-1: oklch(0.78 0.08 65);
+  --chart-2: oklch(0.8 0.12 80);
+  --chart-3: oklch(0.74 0.11 150);
+  --chart-4: oklch(0.72 0.11 240);
+  --chart-5: oklch(0.7 0.05 60);
+  --sidebar: oklch(0.19 0.004 60);
+  --sidebar-foreground: oklch(0.95 0.005 75);
+  --sidebar-primary: oklch(0.78 0.08 65);
+  --sidebar-primary-foreground: oklch(0.2 0.01 60);
+  --sidebar-accent: oklch(0.215 0.004 60);
+  --sidebar-accent-foreground: oklch(0.95 0.005 75);
+  --sidebar-border: oklch(0.29 0.006 60);
+  --sidebar-ring: oklch(0.6 0.06 60);
+  /* ----- */
+  /* Dark: the ink gains lightness to hold contrast, and the soft
+     fill becomes a dark tint of the same hue. */
+  /* ----- */
+  --status-success: oklch(0.78 0.13 155);
+  --status-success-soft: oklch(0.3 0.05 155);
+  --status-danger: oklch(0.72 0.16 27);
+  --status-danger-soft: oklch(0.3 0.055 27);
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
+  --shadow-x: 0;
+  --shadow-y: 1px;
+  --shadow-blur: 3px;
+  --shadow-spread: 0px;
+  --shadow-opacity: 0.1;
+  --shadow-color: oklch(0 0 0);
+  --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
+  --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
+  --shadow-sm:
+    0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
+  --shadow: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
+  --shadow-md:
+    0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 2px 4px -1px hsl(0 0% 0% / 0.1);
+  --shadow-lg:
+    0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 4px 6px -1px hsl(0 0% 0% / 0.1);
+  --shadow-xl:
+    0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 8px 10px -1px hsl(0 0% 0% / 0.1);
+  --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
+  --status-warning: oklch(0.83 0.13 85);
+  --status-warning-soft: oklch(0.31 0.05 85);
+  --status-info: oklch(0.76 0.11 245);
+  --status-info-soft: oklch(0.3 0.045 245);
+  --status-neutral: oklch(0.75 0.01 70);
+  --status-neutral-soft: oklch(0.28 0.005 60);
+  --shadow-card: none;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+
+  --color-status-success: var(--status-success);
+  --color-status-success-soft: var(--status-success-soft);
+  --color-status-danger: var(--status-danger);
+  --color-status-danger-soft: var(--status-danger-soft);
+  --color-status-warning: var(--status-warning);
+  --color-status-warning-soft: var(--status-warning-soft);
+  --color-status-info: var(--status-info);
+  --color-status-info-soft: var(--status-info-soft);
+  --color-status-neutral: var(--status-neutral);
+  --color-status-neutral-soft: var(--status-neutral-soft);
+
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --font-serif: var(--font-serif);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --shadow-2xs: var(--shadow-2xs);
+  --shadow-xs: var(--shadow-xs);
+  --shadow-sm: var(--shadow-sm);
+  --shadow: var(--shadow);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+  --shadow-xl: var(--shadow-xl);
+  --shadow-2xl: var(--shadow-2xl);
+  --shadow-floating: 0 8px 40px 12px oklch(0 0 0 / 0.06);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    overscroll-behavior-y: contain;
+  }
+  body {
+    @apply bg-background text-foreground;
+    position: relative;
+    /* ----- */
+    /* Installed standalone there is no browser chrome, so content
+       runs under the notch and the home indicator. Every inset is 0
+       in a normal browser tab, so this is inert outside standalone.
+       Fixed/sticky elements ignore this padding and pad themselves. */
+    /* ----- */
+    padding-top: env(safe-area-inset-top);
+    padding-right: env(safe-area-inset-right);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    overscroll-behavior-y: contain;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* ----- */
+/* First launch of the installed app (issue #212). It always opens
+   signed out: iOS gives home-screen apps their own cookie jar, so a
+   browser session never carries over. Both screens sit in the markup
+   and CSS picks between them, because standalone is a client-only
+   fact — resolving it after hydration would render the wrong screen
+   first and visibly swap. The interstitial holds no form, so only one
+   sign-in form exists in the DOM. */
+/* ----- */
+.first-run {
+  display: none;
+}
+
+@media (display-mode: standalone) {
+  [data-first-run="pending"] .first-run {
+    display: flex;
+  }
+
+  [data-first-run="pending"] .first-run-signin {
+    display: none;
+  }
+}
+
+/* -----
+   Superellipse (|x|^4 + |y|^4 = 1) as an SVG mask — CSS border-radius
+   only draws arcs, so a true superellipse needs masking. Scales with the
+   element via mask-size, so every avatar size curves proportionally.
+   ----- */
+:root {
+  --squircle-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M100 50C100 56.02 99.93 63.82 99.79 68.06C99.64 72.3 99.43 73.29 99.14 75.44C98.85 77.58 98.49 79.28 98.06 80.93C97.62 82.58 97.12 84.01 96.53 85.36C95.94 86.7 95.28 87.9 94.54 89.01C93.79 90.13 92.97 91.12 92.04 92.04C91.12 92.97 90.13 93.79 89.01 94.54C87.9 95.28 86.7 95.94 85.36 96.53C84.01 97.12 82.58 97.62 80.93 98.06C79.28 98.49 77.58 98.85 75.44 99.14C73.29 99.43 72.3 99.64 68.06 99.79C63.82 99.93 56.02 100 50 100C43.98 100 36.18 99.93 31.94 99.79C27.7 99.64 26.71 99.43 24.56 99.14C22.42 98.85 20.72 98.49 19.07 98.06C17.42 97.62 15.99 97.12 14.64 96.53C13.3 95.94 12.1 95.28 10.99 94.54C9.87 93.79 8.88 92.97 7.96 92.04C7.03 91.12 6.21 90.13 5.46 89.01C4.72 87.9 4.06 86.7 3.47 85.36C2.88 84.01 2.38 82.58 1.94 80.93C1.51 79.28 1.15 77.58 0.86 75.44C0.57 73.29 0.36 72.3 0.21 68.06C0.07 63.82 0 56.02 0 50C0 43.98 0.07 36.18 0.21 31.94C0.36 27.7 0.57 26.71 0.86 24.56C1.15 22.42 1.51 20.72 1.94 19.07C2.38 17.42 2.88 15.99 3.47 14.64C4.06 13.3 4.72 12.1 5.46 10.99C6.21 9.87 7.03 8.88 7.96 7.96C8.88 7.03 9.87 6.21 10.99 5.46C12.1 4.72 13.3 4.06 14.64 3.47C15.99 2.88 17.42 2.38 19.07 1.94C20.72 1.51 22.42 1.15 24.56 0.86C26.71 0.57 27.7 0.36 31.94 0.21C36.18 0.07 43.98 0 50 0C56.02 0 63.82 0.07 68.06 0.21C72.3 0.36 73.29 0.57 75.44 0.86C77.58 1.15 79.28 1.51 80.93 1.94C82.58 2.38 84.01 2.88 85.36 3.47C86.7 4.06 87.9 4.72 89.01 5.46C90.13 6.21 91.12 7.03 92.04 7.96C92.97 8.88 93.79 9.87 94.54 10.99C95.28 12.1 95.94 13.3 96.53 14.64C97.12 15.99 97.62 17.42 98.06 19.07C98.49 20.72 98.85 22.42 99.14 24.56C99.43 26.71 99.64 27.7 99.79 31.94C99.93 36.18 100 43.98 100 50Z' fill='%23000'/%3E%3C/svg%3E");
+}
+
+@utility squircle {
+  -webkit-mask-image: var(--squircle-mask);
+  -webkit-mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-image: var(--squircle-mask);
+  mask-size: 100% 100%;
+  mask-repeat: no-repeat;
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@theme {
+  --animate-first: moveVertical 30s ease infinite;
+  --animate-second: moveInCircle 20s reverse infinite;
+  --animate-third: moveInCircle 40s linear infinite;
+  --animate-fourth: moveHorizontal 40s ease infinite;
+  --animate-fifth: moveInCircle 20s ease infinite;
+  --animate-jump: jump 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
+  --animate-shake: shake 0.6s ease-in-out infinite;
+  --animate-digest-fade-in: digest-fade-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes moveHorizontal {
+  0% {
+    transform: translateX(-50%) translateY(-10%);
+  }
+  50% {
+    transform: translateX(50%) translateY(10%);
+  }
+  100% {
+    transform: translateX(-50%) translateY(-10%);
+  }
+}
+
+@keyframes moveInCircle {
+  0% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(180deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes moveVertical {
+  0% {
+    transform: translateY(-50%);
+  }
+  50% {
+    transform: translateY(50%);
+  }
+  100% {
+    transform: translateY(-50%);
+  }
+}
+
+@keyframes jump {
+  0%,
+  100% {
+    transform: translateY(0) scale(1, 1);
+  }
+  15% {
+    transform: translateY(0) scale(1.15, 0.85);
+  }
+  40% {
+    transform: translateY(-30%) scale(0.9, 1.1);
+  }
+  65% {
+    transform: translateY(0) scale(1.15, 0.85);
+  }
+  80% {
+    transform: translateY(0) scale(0.95, 1.05);
+  }
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-4px);
+  }
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(4px);
+  }
+}
+
+@keyframes digest-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* -----
+   Bottom sheet tween: slides up on open, down on
+   close, so the motion reads as one continuous move.
+   ----- */
+@keyframes sheet-slide-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes sheet-slide-down {
+  0% {
+    transform: translateY(0);
+  }
+  25% {
+    transform: translateY(-20px);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+.sheet-slide-up[data-state="open"] {
+  animation: sheet-slide-up 2.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.sheet-slide-down[data-state="closed"] {
+  animation: sheet-slide-down 0.35s cubic-bezier(0.33, 0, 0.19, 0.12) both;
+}
+
+/* -----
+   Building blocks. Cards are flat and bordered; the page is a
+   sidebar + content grid; stats and badges use the status tokens.
+   ----- */
+
+@utility dashboard-content {
+  display: flex;
+  width: 100%;
+  max-width: var(--dashboard-content-max);
+  margin-inline: auto;
+  flex-direction: column;
+  gap: calc(var(--dashboard-gap) * 1.5);
+  padding: 1rem;
+
+  @media (min-width: 768px) {
+    padding: 1.5rem;
+  }
+}
+
+@utility dashboard-grid {
+  display: grid;
+  gap: var(--dashboard-gap);
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+
+  @media (min-width: 640px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @media (min-width: 1280px) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@utility dashboard-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  color: var(--card-foreground);
+  box-shadow: var(--shadow-card);
+}
+
+@utility stat-label {
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  color: var(--muted-foreground);
+}
+
+@utility stat-value {
+  font-size: 1.75rem;
+  line-height: 2rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+@utility stat-icon {
+  display: inline-flex;
+  width: 2.25rem;
+  height: 2.25rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: calc(var(--radius) - 2px);
+  background: var(--accent);
+  color: var(--primary);
+}
+
+@utility status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  border-radius: 9999px;
+  padding: 0.125rem 0.625rem;
+  font-size: 0.75rem;
+  line-height: 1.25rem;
+  font-weight: 500;
+  white-space: nowrap;
+  background: var(--status-neutral-soft);
+  color: var(--status-neutral);
+}
+
+.status-badge[data-status="success"] {
+  background: var(--status-success-soft);
+  color: var(--status-success);
+}
+
+.status-badge[data-status="warning"] {
+  background: var(--status-warning-soft);
+  color: var(--status-warning);
+}
+
+.status-badge[data-status="info"] {
+  background: var(--status-info-soft);
+  color: var(--status-info);
+}
+
+.status-badge[data-status="danger"] {
+  background: var(--status-danger-soft);
+  color: var(--status-danger);
+}

@@ -1,0 +1,12 @@
+diff --git a/dist/esm/chat-client.js b/dist/esm/chat-client.js
+index ff7f5e4b16d568ea4961e6d86e94799ef06f1bdf..58126503cde2f8502247305356162ff935c79d1d 100644
+--- a/dist/esm/chat-client.js
++++ b/dist/esm/chat-client.js
+@@ -152,6 +152,7 @@ var REJOIN_REBUILD_TRIGGERS = /* @__PURE__ */ new Set([
+ function rebuildsAssistantMessage(chunk) {
+ 	if (chunk.type === "REASONING_ENCRYPTED_VALUE") return chunk.subtype === "message" && typeof chunk.encryptedValue === "string" && chunk.encryptedValue.length > 0;
+ 	if (chunk.type === "STEP_FINISHED") return "signature" in chunk && Boolean(chunk.signature);
++	if (chunk.type === "CUSTOM") return chunk.name === "structured-output.start";
+ 	return REJOIN_REBUILD_TRIGGERS.has(chunk.type);
+ }
+ /** Every subagent card in the messages, nested cards included. */

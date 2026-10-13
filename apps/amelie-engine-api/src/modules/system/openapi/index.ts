@@ -1,0 +1,1 @@
+export { healthDoc } from "./health";

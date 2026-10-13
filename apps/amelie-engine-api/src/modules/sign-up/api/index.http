@@ -1,0 +1,51 @@
+@baseUrl = http://localhost:8788
+# Create a code first with POST /admin/invite-codes (see
+# ../../invite-code/api/index.http; superuser login needed) and paste
+# the "code" from its answer here. Case, dashes and spaces are ignored.
+@inviteCode = <invite-code>
+
+# Start a cafe. No login needed. Change the email and the cafe name
+# each time you run it: an email can sign up once.
+POST {{baseUrl}}/public/sign-up
+Content-Type: application/json
+
+{
+  "inviteCode": "{{inviteCode}}",
+  "firstName": "Ada",
+  "lastName": "Rossi",
+  "email": "ada@sorellacafe.test",
+  "password": "correct-horse-battery",
+  "cafeName": "Sorella Cafe",
+  "timezone": "Europe/Rome",
+  "country": "IT",
+  "currency": "EUR",
+  "website": "https://sorellacafe.com"
+}
+
+###
+# The new login can sign in right away (email verification is off).
+POST {{baseUrl}}/auth/sign-in/email
+Content-Type: application/json
+
+{
+  "email": "ada@sorellacafe.test",
+  "password": "correct-horse-battery"
+}
+
+###
+# A wrong, revoked, expired or used-up invite code gets one generic 403
+# and saves nothing.
+POST {{baseUrl}}/public/sign-up
+Content-Type: application/json
+
+{
+  "inviteCode": "not-the-code",
+  "firstName": "Eve",
+  "lastName": "Intruder",
+  "email": "eve@example.test",
+  "password": "correct-horse-battery",
+  "cafeName": "Nope Cafe",
+  "timezone": "Europe/Rome",
+  "country": "IT",
+  "currency": "EUR"
+}

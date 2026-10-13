@@ -1,0 +1,20 @@
+@baseUrl = http://localhost:8788
+# Paste the "token" from POST {{baseUrl}}/auth/sign-in/email
+@token = <session-token>
+@tenantId = <tenant-id from the list below>
+
+# The cafes the signed-in user belongs to.
+GET {{baseUrl}}/tenants
+Authorization: Bearer {{token}}
+
+###
+GET {{baseUrl}}/tenants/{{tenantId}}
+Authorization: Bearer {{token}}
+
+###
+# Owner or manager only. Relabels prices, does not convert them.
+PATCH {{baseUrl}}/tenants/{{tenantId}}/region
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "country": "PH", "currency": "PHP" }

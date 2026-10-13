@@ -1,0 +1,132 @@
+@baseUrl = http://localhost:8788
+# Paste the "token" from POST {{baseUrl}}/auth/sign-in/email
+@token = <session-token>
+@tenantId = <tenant-id from GET {{baseUrl}}/tenants>
+@locationId = <location id from GET {{baseUrl}}/locations?tenantId=...>
+@countryId = <country id from GET {{baseUrl}}/countries?tenantId=...>
+@categoryId = <category id from the menu below>
+@itemId = <item id from the menu below>
+
+# The menu as the dashboard edits it. Add &locationId= to see one Location.
+GET {{baseUrl}}/menu?tenantId={{tenantId}}
+Authorization: Bearer {{token}}
+
+###
+GET {{baseUrl}}/menu?tenantId={{tenantId}}&locationId={{locationId}}
+Authorization: Bearer {{token}}
+
+###
+# One Country's menu: every item with its price, currency and isSold there.
+GET {{baseUrl}}/menu?tenantId={{tenantId}}&countryId={{countryId}}
+Authorization: Bearer {{token}}
+
+###
+# A price in one Country, and whether it is sold there. Without price/variants only isSold changes.
+PUT {{baseUrl}}/menu/items/{{itemId}}/countries/{{countryId}}?tenantId={{tenantId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "isSold": true,
+  "price": "6.25"
+}
+
+###
+POST {{baseUrl}}/menu/categories?tenantId={{tenantId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Pastries",
+  "note": null
+}
+
+###
+PUT {{baseUrl}}/menu/categories/order?tenantId={{tenantId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "ids": ["{{categoryId}}"]
+}
+
+###
+PUT {{baseUrl}}/menu/categories/{{categoryId}}?tenantId={{tenantId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Baked goods",
+  "note": null
+}
+
+###
+DELETE {{baseUrl}}/menu/categories/{{categoryId}}?tenantId={{tenantId}}
+Authorization: Bearer {{token}}
+
+###
+POST {{baseUrl}}/menu/items?tenantId={{tenantId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "categoryId": "{{categoryId}}",
+  "name": "Croissant",
+  "description": null,
+  "price": "3.50",
+  "currency": "USD",
+  "variants": null,
+  "isAvailable": true,
+  "dietaryTags": []
+}
+
+###
+PUT {{baseUrl}}/menu/categories/{{categoryId}}/items/order?tenantId={{tenantId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "ids": ["{{itemId}}"]
+}
+
+###
+PUT {{baseUrl}}/menu/items/{{itemId}}?tenantId={{tenantId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "categoryId": "{{categoryId}}",
+  "name": "Croissant",
+  "description": "Butter, baked daily",
+  "price": "3.75",
+  "currency": "USD",
+  "variants": null,
+  "isAvailable": true,
+  "dietaryTags": []
+}
+
+###
+# Sold at every Location except the listed ones (sold out there).
+PUT {{baseUrl}}/menu/items/{{itemId}}/locations?tenantId={{tenantId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "availableAtAllLocations": true,
+  "locationIds": ["{{locationId}}"]
+}
+
+###
+# Sold only at the listed Locations. locationIds cannot be empty here (400).
+PUT {{baseUrl}}/menu/items/{{itemId}}/locations?tenantId={{tenantId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "availableAtAllLocations": false,
+  "locationIds": ["{{locationId}}"]
+}
+
+###
+DELETE {{baseUrl}}/menu/items/{{itemId}}?tenantId={{tenantId}}
+Authorization: Bearer {{token}}

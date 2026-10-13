@@ -1,0 +1,299 @@
+[
+  {
+    "round": 1,
+    "case": "open now",
+    "pass": true,
+    "lookedUp": true,
+    "reported": false,
+    "wrongVoice": false,
+    "tools": [
+      "getOpeningSchedule"
+    ],
+    "answer": "We’re closed right now. We open Tuesday at 8:00 AM."
+  },
+  {
+    "round": 1,
+    "case": "latte follow-up",
+    "pass": true,
+    "lookedUp": true,
+    "reported": false,
+    "wrongVoice": false,
+    "tools": [
+      "findMenuItems"
+    ],
+    "answer": "A large latte is $6.25 USD."
+  },
+  {
+    "round": 1,
+    "case": "gluten-free",
+    "pass": true,
+    "lookedUp": true,
+    "reported": false,
+    "wrongVoice": false,
+    "tools": [
+      "findMenuItems",
+      "showMenuItems"
+    ],
+    "answer": "Yes—we offer a gluten-free muffin, and sandwiches can be made with gluten-free bread for an additional $2."
+  },
+  {
+    "round": 1,
+    "case": "gift cards",
+    "pass": true,
+    "lookedUp": true,
+    "reported": false,
+    "wrongVoice": false,
+    "tools": [
+      "listFaqs"
+    ],
+    "answer": "Yes, we sell gift cards through the Gift Cards page on our website, lasorellafishkill.com."
+  },
+  {
+    "round": 1,
+    "case": "phone",
+    "pass": true,
+    "lookedUp": true,
+    "reported": false,
+    "wrongVoice": false,
+    "tools": [
+      "getBusinessProfile"
+    ],
+    "answer": "Our phone number is 845-871-2010."
+  },
+  {
+    "round": 1,
+    "case": "christmas",
+    "pass": true,
+    "lookedUp": true,
+    "reported": false,
+    "wrongVoice": false,
+    "tools": [
+      "getOpeningSchedule"
+    ],
+    "answer": "No, we’re closed on Christmas Day, Friday, December 25, 2026."
+  },
+  {
+    "round": 1,
+    "case": "parking",
+    "pass": true,
+    "lookedUp": true,
+    "reported": true,
+    "wrongVoice": false,
+    "tools": [
+      "listFaqs",
+      "getBusinessProfile",
+      "reportMissingInformation"
+    ],
+    "answer": "We don’t have information about nearby parking. Please call us at 845-871-2010 to check."
+  },
+  {
+    "round": 1,
+    "case": "close today",
+    "pass": true,
+    "lookedUp": true,
+    "reported": false,
+    "wrongVoice": false,
+    "tools": [
+      "getOpeningSchedule"
+    ],
+    "answer": "We closed today at 2:00 PM."
+  },
+  {
+    "round": 2,
+    "case": "open now",
+    "pass": true,
+    "lookedUp": true,
+    "reported": false,
+    "wrongVoice": false,
+    "tools": [
+      "getOpeningSchedule"
+    ],
+    "answer": "We’re closed right now. We closed at 2:00 PM today and reopen Tuesday at 8:00 AM."
+  },
+  {
+    "round": 2,
+    "case": "latte follow-up",
+    "pass": true,
+    "lookedUp": true,
+    "reported": false,
+    "wrongVoice": false,
+    "tools": [
+      "findMenuItems"
+    ],
+    "answer": "A large latte is $6.25."
+  },
+  {
+    "round": 2,
+    "case": "gluten-free",
+    "pass": true,
+    "lookedUp": true,
+    "reported": false,
+    "wrongVoice": false,
+    "tools": [
+      "findMenuItems",
+      "showMenuItems"
+    ],
+    "answer": "Yes—we offer a gluten-free muffin, and you can get gluten-free bread on several sandwiches for an extra $2.00. Please check with our staff about ingredients and preparation if you have an allergy."
+  },
+  {
+    "round": 2,
+    "case": "gift cards",
+    "pass": true,
+    "lookedUp": true,
+    "reported": false,
+    "wrongVoice": false,
+    "tools": [
+      "listFaqs"
+    ],
+    "answer": "Yes, we sell gift cards. You can purchase them on the Gift Cards page at lasorellafishkill.com."
+  },
+  {
+    "round": 2,
+    "case": "phone",
+    "pass": true,
+    "lookedUp": true,
+    "reported": false,
+    "wrongVoice": false,
+    "tools": [
+      "getBusinessProfile"
+    ],
+    "answer": "You can reach us at 845-871-2010."
+  },
+  {
+    "round": 2,
+    "case": "christmas",
+    "pass": true,
+    "lookedUp": true,
+    "reported": false,
+    "wrongVoice": false,
+    "tools": [
+      "getOpeningSchedule"
+    ],
+    "answer": "We’re closed on Christmas Day, Friday, December 25, 2026."
+  },
+  {
+    "round": 2,
+    "case": "parking",
+    "pass": true,
+    "lookedUp": true,
+    "reported": true,
+    "wrongVoice": false,
+    "tools": [
+      "listFaqs",
+      "getBusinessProfile",
+      "reportMissingInformation"
+    ],
+    "answer": "We don’t have specific information about nearby parking. Please call us at 845-871-2010 or email lasorellafishkill@gmail.com for details."
+  },
+  {
+    "round": 2,
+    "case": "close today",
+    "pass": true,
+    "lookedUp": true,
+    "reported": false,
+    "wrongVoice": false,
+    "tools": [
+      "getOpeningSchedule"
+    ],
+    "answer": "We close at 2:00 PM today."
+  },
+  {
+    "round": 3,
+    "case": "open now",
+    "pass": true,
+    "lookedUp": true,
+    "reported": false,
+    "wrongVoice": false,
+    "tools": [
+      "getOpeningSchedule"
+    ],
+    "answer": "We’re closed right now. We open Tuesday at 8:00 AM."
+  },
+  {
+    "round": 3,
+    "case": "latte follow-up",
+    "pass": true,
+    "lookedUp": true,
+    "reported": false,
+    "wrongVoice": false,
+    "tools": [
+      "findMenuItems"
+    ],
+    "answer": "A large latte is $6.25."
+  },
+  {
+    "round": 3,
+    "case": "gluten-free",
+    "pass": true,
+    "lookedUp": true,
+    "reported": false,
+    "wrongVoice": false,
+    "tools": [
+      "findMenuItems",
+      "showMenuItems"
+    ],
+    "answer": "Yes—we offer a gluten-free muffin, and you can substitute gluten-free bread on our sandwiches for an additional $2."
+  },
+  {
+    "round": 3,
+    "case": "gift cards",
+    "pass": true,
+    "lookedUp": true,
+    "reported": false,
+    "wrongVoice": false,
+    "tools": [
+      "listFaqs"
+    ],
+    "answer": "Yes, we sell gift cards. You can purchase them through the Gift Cards page on our website, lasorellafishkill.com."
+  },
+  {
+    "round": 3,
+    "case": "phone",
+    "pass": true,
+    "lookedUp": true,
+    "reported": false,
+    "wrongVoice": false,
+    "tools": [
+      "getBusinessProfile"
+    ],
+    "answer": "You can reach us at 845-871-2010."
+  },
+  {
+    "round": 3,
+    "case": "christmas",
+    "pass": true,
+    "lookedUp": true,
+    "reported": false,
+    "wrongVoice": false,
+    "tools": [
+      "getOpeningSchedule"
+    ],
+    "answer": "We’re closed on Christmas Day, Friday, December 25, 2026."
+  },
+  {
+    "round": 3,
+    "case": "parking",
+    "pass": true,
+    "lookedUp": true,
+    "reported": true,
+    "wrongVoice": false,
+    "tools": [
+      "listFaqs",
+      "getBusinessProfile",
+      "reportMissingInformation"
+    ],
+    "answer": "We don’t have details about nearby parking. Please contact us at 845-871-2010 or lasorellafishkill@gmail.com."
+  },
+  {
+    "round": 3,
+    "case": "close today",
+    "pass": true,
+    "lookedUp": true,
+    "reported": false,
+    "wrongVoice": false,
+    "tools": [
+      "getOpeningSchedule"
+    ],
+    "answer": "We closed at 2:00 PM today."
+  }
+]

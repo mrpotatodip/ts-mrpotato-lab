@@ -1,0 +1,195 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1791090231389,
+      "tag": "0000_init",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791090304820,
+      "tag": "0001_chat_bot_seed",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791090958086,
+      "tag": "0002_party_tenant",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791091392565,
+      "tag": "0003_drop_db_driven_tools",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791094919651,
+      "tag": "0004_knowledge",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791094920041,
+      "tag": "0005_seed_dietary_tags",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791095219497,
+      "tag": "0006_drop_chat_bot_agents",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1791095476044,
+      "tag": "0007_trim_chat_bot_schema",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791097386384,
+      "tag": "0008_tenant_prefix_knowledge",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1791097649969,
+      "tag": "0009_merge_documents_into_faqs",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1791097966890,
+      "tag": "0010_tenant_faq_categories",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1791099102433,
+      "tag": "0011_tenant_chat_bot_threads",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1791100053944,
+      "tag": "0012_rename_thread_sessions",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1791184814133,
+      "tag": "0013_imports",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1791467914258,
+      "tag": "0014_party_roles",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1791469829182,
+      "tag": "0015_invite_codes",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1791470383511,
+      "tag": "0016_invite_code_redemptions",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1791627745849,
+      "tag": "0017_tenant_region",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1791628091242,
+      "tag": "0018_tenants_region_drop_defaults",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1791628558066,
+      "tag": "0019_menu_items_drop_currency",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1791628600000,
+      "tag": "0020_tenant_locations",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1791628610888,
+      "tag": "0021_location_hours_required",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1791628641712,
+      "tag": "0022_drop_tenant_level_hours_and_contact",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1791629413671,
+      "tag": "0023_chat_thread_location",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1791630250901,
+      "tag": "0024_menu_item_locations_faq_location",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1791667462293,
+      "tag": "0025_tenant_countries",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1791693712175,
+      "tag": "0026_drop_old_price_and_region_columns",
+      "breakpoints": true
+    }
+  ]
+}

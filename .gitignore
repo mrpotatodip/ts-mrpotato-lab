@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+
+# Production build outputs
+dist/
+dist-ssr/
+.output/
+
+# OS files
+.DS_Store
+
+# Local env files
+.env
+.env.local
+.env.*.local
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+
+# Databases
+*.db
+*.db-journal
+
+# Dev tools / caches
+.pnpm-store/
+.tanstack/
+.turbo/
+.wrangler/
+
+# Stray local archives
+.opencode.zip
+
+# cf CLI generated types
+.cloudflare/
+
+# Local Claude agent checkouts and machine-specific permissions
+.claude/worktrees/
+.claude/settings.local.json

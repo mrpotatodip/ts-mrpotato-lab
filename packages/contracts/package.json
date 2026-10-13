@@ -1,0 +1,16 @@
+{
+  "name": "@repo/contracts",
+  "version": "1.0.0",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./response": "./src/response.ts",
+    "./chat-bots": "./src/chat-bots/index.ts",
+    "./amelie": "./src/amelie/index.ts"
+  },
+  "dependencies": {
+    "zod": "^4.4.3"
+  }
+}

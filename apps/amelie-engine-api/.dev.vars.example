@@ -1,0 +1,7 @@
+OPENAI_API_KEY=sk-proj-your-key-here
+AUTH_SECRET=generate-a-random-secret
+AUTH_BASE_URL=http://localhost:8788
+AUTH_TRUSTED_ORIGINS=http://localhost:3000
+
+# Serves GET /openapi.json (the API spec). Leave unset in production.
+ENVIRONMENT=development

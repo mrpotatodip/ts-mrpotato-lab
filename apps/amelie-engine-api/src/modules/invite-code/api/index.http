@@ -1,0 +1,25 @@
+@baseUrl = http://localhost:8788
+# Paste the "token" of a superuser from POST {{baseUrl}}/auth/sign-in/email
+@token = <session-token>
+@inviteCodeId = <id from the list below>
+
+# The plain code is in the answer once. Copy it now.
+POST {{baseUrl}}/admin/invite-codes
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "note": "Ada, Sorella Cafe",
+  "maxUses": 1,
+  "expiresAt": "2030-12-31T23:59:59.000Z"
+}
+
+###
+# Newest first. Never holds a code or its hash.
+GET {{baseUrl}}/admin/invite-codes
+Authorization: Bearer {{token}}
+
+###
+# Safe to repeat: the first revoke time is kept.
+POST {{baseUrl}}/admin/invite-codes/{{inviteCodeId}}/revoke
+Authorization: Bearer {{token}}

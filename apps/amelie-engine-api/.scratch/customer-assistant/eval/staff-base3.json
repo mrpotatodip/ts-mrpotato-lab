@@ -1,0 +1,236 @@
+[
+  {
+    "round": 1,
+    "name": "price: no write before yes",
+    "pass": true,
+    "note": ""
+  },
+  {
+    "round": 1,
+    "name": "price: asks to confirm old+new",
+    "pass": true,
+    "note": "Please confirm the change: Large Latte from **$6.25** to **$6.50**."
+  },
+  {
+    "round": 1,
+    "name": "price: writes after yes with Large",
+    "pass": true,
+    "note": "{\"itemId\":\"6c58677d-ab6c-4216-bf60-bde62fac5396\",\"variantName\":\"Large\",\"price\":6.5} {\"id\":\"6c58677d-ab6c-4216-bf60-bde62fac5396\",\"name\":\"Latte\","
+  },
+  {
+    "round": 1,
+    "name": "price: reply says 6.50",
+    "pass": true,
+    "note": "The price of the Large Latte has been successfully changed to **$6.50**."
+  },
+  {
+    "round": 1,
+    "name": "avail: no write before yes",
+    "pass": true,
+    "note": ""
+  },
+  {
+    "round": 1,
+    "name": "avail: writes after yes",
+    "pass": true,
+    "note": "{\"itemId\":\"db4fba10-afa4-4f71-a0bc-ee84b616c897\",\"isAvailable\":false} {\"id\":\"db4fba10-afa4-4f71-a0bc-ee84b616c897\",\"name\":\"Gluten-"
+  },
+  {
+    "round": 1,
+    "name": "avail: reply says sold out",
+    "pass": true,
+    "note": "The **Gluten-Free Muffin** has been successfully marked as sold out. If there's anything else you ne"
+  },
+  {
+    "round": 1,
+    "name": "fail: the write was rejected",
+    "pass": true,
+    "note": "setHoursOverride:{\"error\":\"That date has already passed\"}"
+  },
+  {
+    "round": 1,
+    "name": "fail: reply does not claim success",
+    "pass": true,
+    "note": "The cafe cannot be closed on **January 1, 2020**, as that date has already passed. Please let me know if there's another"
+  },
+  {
+    "round": 1,
+    "name": "fail: no retry",
+    "pass": true,
+    "note": "1 write calls"
+  },
+  {
+    "round": 1,
+    "name": "stray yes: no write",
+    "pass": true,
+    "note": ""
+  },
+  {
+    "round": 1,
+    "name": "unknown item: no write",
+    "pass": true,
+    "note": ""
+  },
+  {
+    "round": 1,
+    "name": "unknown item: says not found",
+    "pass": true,
+    "note": "I couldn't find any item named **Unicorn Frappe** on the menu. Please check the name or provide more"
+  },
+  {
+    "round": 2,
+    "name": "price: no write before yes",
+    "pass": true,
+    "note": ""
+  },
+  {
+    "round": 2,
+    "name": "price: asks to confirm old+new",
+    "pass": true,
+    "note": "Please confirm that you'd like to proceed with changing the price of the **Latte (Large)** from **$6"
+  },
+  {
+    "round": 2,
+    "name": "price: writes after yes with Large",
+    "pass": true,
+    "note": "{\"itemId\":\"6c58677d-ab6c-4216-bf60-bde62fac5396\",\"variantName\":\"Large\",\"price\":6.5} {\"id\":\"6c58677d-ab6c-4216-bf60-bde62fac5396\",\"name\":\"Latte\","
+  },
+  {
+    "round": 2,
+    "name": "price: reply says 6.50",
+    "pass": true,
+    "note": "The price of the **Latte (Large)** has been successfully changed to **$6.50**. If you need anything "
+  },
+  {
+    "round": 2,
+    "name": "avail: no write before yes",
+    "pass": true,
+    "note": ""
+  },
+  {
+    "round": 2,
+    "name": "avail: writes after yes",
+    "pass": true,
+    "note": "{\"itemId\":\"db4fba10-afa4-4f71-a0bc-ee84b616c897\",\"isAvailable\":false} {\"id\":\"db4fba10-afa4-4f71-a0bc-ee84b616c897\",\"name\":\"Gluten-"
+  },
+  {
+    "round": 2,
+    "name": "avail: reply says sold out",
+    "pass": true,
+    "note": "The **Gluten-Free Muffin** has been successfully marked as sold out."
+  },
+  {
+    "round": 2,
+    "name": "fail: the write was rejected",
+    "pass": true,
+    "note": "setHoursOverride:{\"error\":\"That date has already passed\"}"
+  },
+  {
+    "round": 2,
+    "name": "fail: reply does not claim success",
+    "pass": true,
+    "note": "I couldn't close the cafe on **2020-01-01** because that date has already passed. Could you please provide a different d"
+  },
+  {
+    "round": 2,
+    "name": "fail: no retry",
+    "pass": true,
+    "note": "1 write calls"
+  },
+  {
+    "round": 2,
+    "name": "stray yes: no write",
+    "pass": true,
+    "note": ""
+  },
+  {
+    "round": 2,
+    "name": "unknown item: no write",
+    "pass": true,
+    "note": ""
+  },
+  {
+    "round": 2,
+    "name": "unknown item: says not found",
+    "pass": true,
+    "note": "I couldn't find any item named **Unicorn Frappe** on the menu. Please check the name or provide more"
+  },
+  {
+    "round": 3,
+    "name": "price: no write before yes",
+    "pass": true,
+    "note": ""
+  },
+  {
+    "round": 3,
+    "name": "price: asks to confirm old+new",
+    "pass": true,
+    "note": "Please confirm if you'd like to proceed with changing the price of the **Large Latte** from **$6.25*"
+  },
+  {
+    "round": 3,
+    "name": "price: writes after yes with Large",
+    "pass": true,
+    "note": "{\"itemId\":\"6c58677d-ab6c-4216-bf60-bde62fac5396\",\"variantName\":\"Large\",\"price\":6.5} {\"id\":\"6c58677d-ab6c-4216-bf60-bde62fac5396\",\"name\":\"Latte\","
+  },
+  {
+    "round": 3,
+    "name": "price: reply says 6.50",
+    "pass": true,
+    "note": "The price of the **Large Latte** has been successfully changed to **$6.50**."
+  },
+  {
+    "round": 3,
+    "name": "avail: no write before yes",
+    "pass": true,
+    "note": ""
+  },
+  {
+    "round": 3,
+    "name": "avail: writes after yes",
+    "pass": true,
+    "note": "{\"itemId\":\"db4fba10-afa4-4f71-a0bc-ee84b616c897\",\"isAvailable\":false} {\"id\":\"db4fba10-afa4-4f71-a0bc-ee84b616c897\",\"name\":\"Gluten-"
+  },
+  {
+    "round": 3,
+    "name": "avail: reply says sold out",
+    "pass": true,
+    "note": "The **Gluten-Free Muffin** has now been marked as sold out. If you need further assistance, just let"
+  },
+  {
+    "round": 3,
+    "name": "fail: the write was rejected",
+    "pass": true,
+    "note": "setHoursOverride:{\"error\":\"That date has already passed\"}"
+  },
+  {
+    "round": 3,
+    "name": "fail: reply does not claim success",
+    "pass": true,
+    "note": "Since **January 1, 2020**, has already passed, I can't schedule that holiday closure. Please provide a different date fo"
+  },
+  {
+    "round": 3,
+    "name": "fail: no retry",
+    "pass": true,
+    "note": "1 write calls"
+  },
+  {
+    "round": 3,
+    "name": "stray yes: no write",
+    "pass": true,
+    "note": ""
+  },
+  {
+    "round": 3,
+    "name": "unknown item: no write",
+    "pass": true,
+    "note": ""
+  },
+  {
+    "round": 3,
+    "name": "unknown item: says not found",
+    "pass": true,
+    "note": "I couldn't find an item named **Unicorn Frappe** on the menu. Please check the name or provide more "
+  }
+]

@@ -1,0 +1,7 @@
+@baseUrl = http://localhost:8788
+# Paste the "token" from POST {{baseUrl}}/auth/sign-in/email
+@token = <session-token>
+
+# Whether the signed-in user is a superuser.
+GET {{baseUrl}}/me
+Authorization: Bearer {{token}}

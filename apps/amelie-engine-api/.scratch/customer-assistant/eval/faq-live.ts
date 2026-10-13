@@ -1,0 +1,22 @@
+const E = "http://localhost:8788", O = "http://localhost:3000";
+const si = (await (await fetch(E + "/auth/sign-in/email", { method: "POST", headers: { "Content-Type": "application/json", Origin: O }, body: JSON.stringify({ email: "owner@sorella.test", password: process.env.SEED_OWNER_PASSWORD }) })).json()) as { token: string };
+const h = { Authorization: "Bearer " + si.token, Origin: O, "Content-Type": "application/json" };
+const t = ((await (await fetch(E + "/tenants", { headers: h })).json()) as { data: Array<{ id: string }> }).data[0]!.id;
+const call = async (method: string, path: string, body?: unknown) => {
+  const r = await fetch(`${E}${path}${path.includes("?") ? "&" : "?"}tenantId=${t}`, { method, headers: h, body: body ? JSON.stringify(body) : undefined });
+  const j = (await r.json()) as { data: { id?: string } & Record<string, unknown>; error: unknown };
+  console.log(`${method} ${path.replace(/[0-9a-f-]{36}/g, ":id")} -> ${r.status} ${JSON.stringify(j.data ?? j.error).slice(0, 110)}`);
+  return j.data;
+};
+const list = (await call("GET", "/faqs")) as { faqs: unknown[]; categories: unknown[] };
+const cat = await call("POST", "/faqs/categories", { name: "ZZ Test" });
+await call("POST", "/faqs/categories", { name: "zz test" });
+const faq = await call("POST", "/faqs", { categoryId: cat.id, question: "ZZ question?", answer: "ZZ answer." });
+await call("PUT", `/faqs/${faq.id}`, { categoryId: null, question: "ZZ question?", answer: "Changed." });
+await call("PUT", `/faqs/categories/${cat.id}`, { name: "ZZ Renamed" });
+await call("POST", "/faqs", { categoryId: null, question: "", answer: "x" });
+await call("DELETE", `/faqs/${faq.id}`);
+await call("DELETE", `/faqs/categories/${cat.id}`);
+await call("DELETE", `/faqs/${faq.id}`);
+const after = (await call("GET", "/faqs")) as { faqs: unknown[]; categories: unknown[] };
+console.log("before/after counts", list.faqs.length, list.categories.length, "->", after.faqs.length, after.categories.length);

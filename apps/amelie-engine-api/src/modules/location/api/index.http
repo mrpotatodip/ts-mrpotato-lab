@@ -1,0 +1,36 @@
+@baseUrl = http://localhost:8788
+# Paste the "token" from POST {{baseUrl}}/auth/sign-in/email
+@token = <session-token>
+@tenantId = <tenant-id from GET {{baseUrl}}/tenants>
+@locationId = <location id from the list below>
+
+# Every Location of the Tenant, archived ones included.
+GET {{baseUrl}}/locations?tenantId={{tenantId}}
+Authorization: Bearer {{token}}
+
+###
+# Owner or manager only.
+POST {{baseUrl}}/locations?tenantId={{tenantId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Airport",
+  "countryId": "<country id; required with 2+ open Countries>",
+  "address": "Terminal 2",
+  "phone": "+1 555 0100"
+}
+
+###
+PATCH {{baseUrl}}/locations/{{locationId}}?tenantId={{tenantId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "phone": "+1 555 0101"
+}
+
+###
+# 409 when it is the Tenant's last active Location.
+POST {{baseUrl}}/locations/{{locationId}}/archive?tenantId={{tenantId}}
+Authorization: Bearer {{token}}

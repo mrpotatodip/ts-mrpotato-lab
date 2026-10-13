@@ -1,0 +1,48 @@
+{
+  "name": "amelie-engine-api",
+  "version": "1.0.2",
+  "main": "src/index.ts",
+  "type": "module",
+  "scripts": {
+    "dev": "node --env-file-if-exists=.env node_modules/cf/bin/cf dev --port 8788",
+    "deploy": "cf deploy",
+    "build": "tsc",
+    "lint": "oxlint src",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@hono/zod-validator": "^0.8.0",
+    "@neondatabase/serverless": "^1.1.0",
+    "@repo/chat-bot-durable-stream": "workspace:*",
+    "@repo/contracts": "workspace:*",
+    "@repo/db-amelie": "workspace:*",
+    "@scalar/hono-api-reference": "^0.12.9",
+    "@tanstack/ai": "^0.63.0",
+    "@tanstack/ai-mcp": "^0.7.0",
+    "@tanstack/ai-openai": "^0.25.1",
+    "@tanstack/ai-typesafe": "^0.1.6",
+    "better-auth": "^1.6.23",
+    "croner": "^10.0.1",
+    "drizzle-orm": "0.45.2",
+    "drizzle-zod": "^0.6.0",
+    "effect": "^3.21.2",
+    "hono": "^4.3.7",
+    "hono-openapi": "^1.3.3",
+    "pg": "^8.22.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@cloudflare/puppeteer": "^1.1.0",
+    "@cloudflare/workers-types": "^4.20241201.0",
+    "@electric-sql/pglite": "^0.5.8",
+    "@electric-sql/pglite-socket": "^0.2.11",
+    "@oxlint/plugins": "1.79.0",
+    "@types/pg": "^8.20.0",
+    "cf": "1.0.0-beta.12",
+    "oxlint": "1.79.0",
+    "tsx": "^4.10.1",
+    "typescript": "^5.4.5",
+    "vitest": "^4.1.7",
+    "wrangler": "^4.147.0"
+  }
+}

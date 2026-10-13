@@ -1,0 +1,23 @@
+const E = "http://localhost:8788", O = "http://localhost:3000";
+const si = (await (await fetch(E + "/auth/sign-in/email", { method: "POST", headers: { "Content-Type": "application/json", Origin: O }, body: JSON.stringify({ email: "owner@sorella.test", password: process.env.SEED_OWNER_PASSWORD }) })).json()) as { token: string };
+const h = { Authorization: "Bearer " + si.token, Origin: O, "Content-Type": "application/json" };
+const t = ((await (await fetch(E + "/tenants", { headers: h })).json()) as { data: Array<{ id: string }> }).data[0]!.id;
+const call = async (method: string, path: string, body?: unknown) => {
+  const r = await fetch(`${E}${path}${path.includes("?") ? "&" : "?"}tenantId=${t}`, { method, headers: h, body: body ? JSON.stringify(body) : undefined });
+  const j = (await r.json()) as { data: unknown; error: unknown };
+  return `${method} ${path} -> ${r.status} ${JSON.stringify(j.data ?? j.error).slice(0, 170)}`;
+};
+const profile = ((await (await fetch(`${E}/business-profile?tenantId=${t}`, { headers: h })).json()) as { data: Record<string, unknown> }).data;
+console.log(await call("GET", "/business-profile"));
+console.log(await call("PUT", "/business-profile", { ...profile, address: null }));
+console.log(await call("PUT", "/business-profile", { ...profile, email: "nope" }));
+console.log(await call("PUT", "/business-profile", profile));
+console.log(await call("GET", "/schedule"));
+const sched = ((await (await fetch(`${E}/schedule?tenantId=${t}`, { headers: h })).json()) as { data: { weekly: Array<{ isClosed: boolean; opensAt: string | null; closesAt: string | null }> } }).data;
+const mon = sched.weekly[1]!;
+console.log(await call("PUT", "/schedule/hours/1", { isClosed: mon.isClosed, opensAt: mon.opensAt, closesAt: mon.closesAt }));
+console.log(await call("PUT", "/schedule/hours/1", { isClosed: false, opensAt: "16:00", closesAt: "08:00" }));
+console.log(await call("PUT", "/schedule/overrides/2031-12-25", { isClosed: true, opensAt: null, closesAt: null, note: "Test" }));
+console.log(await call("PUT", "/schedule/overrides/2020-01-01", { isClosed: true, opensAt: null, closesAt: null, note: "Past" }));
+console.log(await call("DELETE", "/schedule/overrides/2031-12-25"));
+console.log(await call("DELETE", "/schedule/overrides/2031-12-25"));

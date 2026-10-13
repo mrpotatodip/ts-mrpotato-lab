@@ -1,0 +1,36 @@
+@baseUrl = http://localhost:8788
+# Paste the "token" from POST {{baseUrl}}/auth/sign-in/email
+@token = <session-token>
+@tenantId = <tenant-id from GET {{baseUrl}}/tenants>
+@countryId = <country id from the list below>
+
+# Every Country of the Tenant, archived ones included.
+GET {{baseUrl}}/countries?tenantId={{tenantId}}
+Authorization: Bearer {{token}}
+
+###
+# Owner or manager only. 409 if the Tenant already sells there.
+# An archived Country with this code is restored with its prices.
+POST {{baseUrl}}/countries?tenantId={{tenantId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "country": "CA",
+  "currency": "CAD"
+}
+
+###
+# The code is the identity; only the Currency changes. Prices are not converted.
+PATCH {{baseUrl}}/countries/{{countryId}}?tenantId={{tenantId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "currency": "USD"
+}
+
+###
+# 409 when it is the last open Country, or still has open Locations.
+POST {{baseUrl}}/countries/{{countryId}}/archive?tenantId={{tenantId}}
+Authorization: Bearer {{token}}

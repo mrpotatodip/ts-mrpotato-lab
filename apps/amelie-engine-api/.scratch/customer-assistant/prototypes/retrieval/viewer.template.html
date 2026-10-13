@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Amelie Retrieval Prototype</title>
+<style>
+:root{--bg:#fbfaf7;--card:#fff;--ink:#1e1f1c;--muted:#6b6d66;--line:#e4e2db;--accent:#5d7a5a;--accent-soft:#e7efe5;--bad:#a8432f;--bad-soft:#f6e3de;--warn:#8a6a12;--warn-soft:#f6edd2}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#151614;--card:#1d1f1c;--ink:#e9e8e3;--muted:#9a9c94;--line:#30332e;--accent:#9cc097;--accent-soft:#25321f;--bad:#ef9a85;--bad-soft:#3a221c;--warn:#e3c46a;--warn-soft:#332b14}}
+:root[data-theme="dark"]{--bg:#151614;--card:#1d1f1c;--ink:#e9e8e3;--muted:#9a9c94;--line:#30332e;--accent:#9cc097;--accent-soft:#25321f;--bad:#ef9a85;--bad-soft:#3a221c;--warn:#e3c46a;--warn-soft:#332b14}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:1100px;margin:0 auto;padding:24px 16px 80px}
+h1{font-size:24px;margin:0 0 4px}
+.lede{color:var(--muted);margin:0 0 20px;max-width:760px}
+.tag{display:inline-block;font-size:12px;padding:1px 8px;border-radius:999px;background:var(--warn-soft);color:var(--warn);margin-left:6px;vertical-align:middle}
+.summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:0 0 20px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.panel h2{font-size:14px;margin:0 0 8px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.stat{display:flex;justify-content:space-between;border-top:1px solid var(--line);padding:4px 0;font-variant-numeric:tabular-nums}
+.stat:first-of-type{border-top:0}
+.tally{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 20px;align-items:center}
+.tally b{font-variant-numeric:tabular-nums}
+.filters{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 16px}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:4px 10px}
+button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+.q{background:var(--card);border:1px solid var(--line);border-radius:12px;margin:0 0 14px;overflow:hidden}
+.qhead{padding:12px 16px;border-bottom:1px solid var(--line)}
+.qhead .n{color:var(--muted);font-variant-numeric:tabular-nums;margin-right:6px}
+.qhead .text{font-weight:600}
+.expect{color:var(--muted);font-size:13px;margin-top:2px}
+.cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+.col{padding:12px 16px;min-width:0}
+.col+.col{border-left:1px solid var(--line)}
+.col h3{font-size:12px;margin:0 0 6px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.reply{white-space:pre-wrap;margin:0 0 8px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px}
+.chip{font-size:12px;padding:1px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent)}
+.chip.no{background:var(--bad-soft);color:var(--bad)}
+.items{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px}
+.item{font-size:13px;border:1px solid var(--line);border-radius:8px;padding:2px 8px}
+.meta{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.verdict{display:flex;flex-wrap:wrap;gap:6px;padding:10px 16px;border-top:1px solid var(--line);align-items:center}
+.verdict span{color:var(--muted);font-size:13px;margin-right:4px}
+.err{color:var(--bad)}
+details{margin:0 0 20px}
+details pre{white-space:pre-wrap;font-size:12px;max-height:420px;overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px}
+@media (max-width:720px){.cols,.summary{grid-template-columns:minmax(0,1fr)}.col+.col{border-left:0;border-top:1px solid var(--line)}}
+</style>
+</head>
+<body>
+<main>
+<h1>Tools or the whole menu in the prompt? <span class="tag">prototype · throwaway</span></h1>
+<p class="lede">The same 21 customer questions go to La Sorella's assistant in two ways. <b>Tools</b>: the assistant looks things up with searchMenu, getBusinessHours and the other lookup tools. <b>Whole prompt</b>: the entire menu, hours and info sit in its instructions. Same model, same rules. Read each pair, check it against "a good answer", and pick a verdict. Your picks are kept in this browser and tallied at the top.</p>
+
+<div class="summary" id="summary"></div>
+<div class="tally panel" id="tally"></div>
+<div class="filters" id="filters"></div>
+<div id="list"></div>
+<details><summary>What the "whole prompt" assistant sees (business information)</summary><pre id="kb"></pre></details>
+</main>
+<script>
+const DATA = /*DATA*/null;
+const KEY = "amelie-retrieval-verdicts";
+const VERDICTS = [["tools","Tools better"],["prompt","Whole prompt better"],["both","Both good"],["neither","Both wrong"]];
+let verdicts = {};
+try { verdicts = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch {}
+let filter = "all";
+
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const sum = (a, f) => a.reduce((t, x) => t + f(x), 0);
+
+function summary() {
+  const side = (k, label) => {
+    const rs = DATA.rows.map((r) => r[k]);
+    const ok = rs.filter((r) => !r.error);
+    return `<div class="panel"><h2>${label}</h2>
+      <div class="stat"><span>Average cost per question</span><b>$${(sum(ok, (r) => r.costUsd) / ok.length).toFixed(5)}</b></div>
+      <div class="stat"><span>Average time to answer</span><b>${(sum(ok, (r) => r.ms) / ok.length / 1000).toFixed(1)} s</b></div>
+      <div class="stat"><span>Average input tokens (of which cached)</span><b>${Math.round(sum(ok, (r) => r.inputTokens) / ok.length)} (${Math.round(sum(ok, (r) => r.cachedTokens) / ok.length)})</b></div>
+      <div class="stat"><span>Model round-trips per question</span><b>${(sum(ok, (r) => r.modelCalls) / ok.length).toFixed(1)}</b></div>
+      <div class="stat"><span>Marked "couldn't answer"</span><b>${ok.filter((r) => r.result && !r.result.answered).length} of ${rs.length}</b></div>
+      <div class="stat"><span>Errors</span><b>${rs.length - ok.length}</b></div></div>`;
+  };
+  document.getElementById("summary").innerHTML = side("tools", "Tools") + side("prompt", "Whole prompt");
+  document.getElementById("kb").textContent = DATA.knowledge;
+}
+
+function tally() {
+  const c = Object.fromEntries(VERDICTS.map(([k]) => [k, 0]));
+  Object.values(verdicts).forEach((v) => c[v]++);
+  const done = Object.keys(verdicts).length;
+  document.getElementById("tally").innerHTML =
+    `<span>Your verdicts (${done} of ${DATA.rows.length}):</span>` +
+    VERDICTS.map(([k, l]) => `<span>${l} <b>${c[k]}</b></span>`).join(" · ") +
+    ` <button id="reset">Clear verdicts</button>`;
+  document.getElementById("reset").onclick = () => { verdicts = {}; save(); render(); };
+}
+
+function filters() {
+  const kinds = ["all", ...new Set(DATA.rows.map((r) => r.kind))];
+  document.getElementById("filters").innerHTML = kinds
+    .map((k) => `<button data-k="${k}" aria-pressed="${k === filter}">${k}</button>`).join("");
+  document.querySelectorAll("#filters button").forEach((b) => (b.onclick = () => { filter = b.dataset.k; render(); }));
+}
+
+function col(r, label) {
+  if (r.error) return `<div class="col"><h3>${label}</h3><p class="err">${esc(r.error)}</p></div>`;
+  const x = r.result;
+  const items = x.menuItemIds.map((id) => DATA.items[id]).filter(Boolean)
+    .map((it) => `<span class="item">${esc(it.name)} · ${esc(it.price)}</span>`).join("");
+  const tools = r.toolCalls.length ? `tools: ${r.toolCalls.map((t) => `${t.name}(${t.args === "{}" ? "" : t.args})`).join(", ")}` : "";
+  return `<div class="col"><h3>${label}</h3>
+    <p class="reply">${esc(x.reply)}</p>
+    <div class="chips">${x.answered ? `<span class="chip">answered</span>` : `<span class="chip no">couldn't answer · ${esc(x.topic ?? "")}</span>`}</div>
+    ${items ? `<div class="items">${items}</div>` : ""}
+    <div class="meta">${(r.ms / 1000).toFixed(1)} s · $${r.costUsd.toFixed(5)} · ${r.inputTokens} in (${r.cachedTokens} cached) / ${r.outputTokens} out</div>
+    ${tools ? `<div class="meta">${esc(tools)}</div>` : ""}</div>`;
+}
+
+function render() {
+  tally(); filters();
+  document.getElementById("list").innerHTML = DATA.rows.map((r, i) => (filter !== "all" && r.kind !== filter) ? "" : `
+    <section class="q">
+      <div class="qhead"><span class="n">${i + 1}.</span><span class="text">${esc(r.q)}</span>
+        <div class="expect">A good answer: ${esc(r.expect)}</div></div>
+      <div class="cols">${col(r.tools, "Tools")}${col(r.prompt, "Whole prompt")}</div>
+      <div class="verdict"><span>Verdict:</span>${VERDICTS.map(([k, l]) =>
+        `<button data-i="${i}" data-v="${k}" aria-pressed="${verdicts[i] === k}">${l}</button>`).join("")}</div>
+    </section>`).join("");
+  document.querySelectorAll(".verdict button").forEach((b) => (b.onclick = () => {
+    const i = b.dataset.i; verdicts[i] = verdicts[i] === b.dataset.v ? undefined : b.dataset.v;
+    if (!verdicts[i]) delete verdicts[i];
+    save(); render();
+  }));
+}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(verdicts)); } catch {} }
+
+summary(); render();
+</script>
+</body>
+</html>
