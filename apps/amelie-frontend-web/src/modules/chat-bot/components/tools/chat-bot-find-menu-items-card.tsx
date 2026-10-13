@@ -16,7 +16,7 @@ export function ChatBotFindMenuItemsCard({ result }: ChatBotToolCardProps<FindMe
             <h4 className="text-base font-semibold">{group.category}</h4>
             {group.note && <p className="text-xs text-muted-foreground">{group.note}</p>}
           </div>
-          <ul className="flex flex-col gap-2">
+          <ul className="flex flex-col gap-0.5">
             {group.items.map((item) => (
               <ChatBotMenuItem key={item.id} item={item} />
             ))}

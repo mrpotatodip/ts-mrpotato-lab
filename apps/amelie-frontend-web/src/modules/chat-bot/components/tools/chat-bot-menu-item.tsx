@@ -10,7 +10,7 @@ type ChatBotMenuItemProps = {
 export function ChatBotMenuItem({ item }: ChatBotMenuItemProps) {
   const priceText = toChatBotMenuItemPrice(item);
   return (
-    <li className={cn("grid grid-cols-[1fr_auto] gap-x-4 rounded-xl bg-accent px-4 py-3", !item.isAvailable && "text-muted-foreground")}>
+    <li className={cn("grid grid-cols-[1fr_auto] gap-x-4 rounded-xl bg-accent px-4 py-1", !item.isAvailable && "text-muted-foreground")}>
       <div className="flex min-w-0 flex-col gap-1">
         <span className={cn("font-medium", !item.isAvailable && "line-through")}>{item.name}</span>
         {item.description && <p className="text-xs text-muted-foreground">{item.description}</p>}

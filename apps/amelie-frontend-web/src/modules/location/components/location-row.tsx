@@ -121,7 +121,7 @@ export function LocationRow({ location, canEdit, onArchive, isArchiving }: Locat
           </form.Field>
         </div>
         {canEdit ? (
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="mt-3 flex flex-wrap items-center gap-2">
             <form.Subscribe selector={(state) => state.canSubmit && isLocationChanged(state.values, location)}>
               {(canSave) => (
                 <Button type="submit" size="sm" disabled={!canSave || updateLocation.isPending}>

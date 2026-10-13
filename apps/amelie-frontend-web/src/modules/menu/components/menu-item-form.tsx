@@ -176,7 +176,7 @@ export function MenuItemForm({
           <>
             {!result.success ? <p className="text-xs text-destructive">{result.error.issues[0]?.path.join(".")}: {result.error.issues[0]?.message}</p> : null}
             {error ? <p className="text-xs text-destructive">{error}</p> : null}
-            <div className="flex gap-2">
+            <div className="mt-3 flex gap-2">
               <Button type="submit" size="sm" disabled={!result.success || isPending}>
                 {submitLabel}
               </Button>

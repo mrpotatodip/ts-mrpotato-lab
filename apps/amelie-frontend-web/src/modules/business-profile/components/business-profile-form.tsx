@@ -102,7 +102,7 @@ export function BusinessProfileForm({ profile, canEdit, locationId }: BusinessPr
       {save.isSuccess && !form.state.isDirty ? <p className="text-muted-foreground text-xs">Saved.</p> : null}
 
       {canEdit ? (
-        <div className="flex gap-2">
+        <div className="mt-3 flex gap-2">
           <Button type="submit" size="sm" disabled={save.isPending}>
             {save.isPending ? "Saving..." : "Save"}
           </Button>

@@ -71,7 +71,7 @@ export function MenuImportDraftEditor({ draft, isPending, error, onSave, onCance
         }
       </form.Subscribe>
       {error ? <p className="text-xs text-destructive">{error}</p> : null}
-      <div className="flex gap-2">
+      <div className="mt-3 flex gap-2">
         <Button type="submit" size="sm" disabled={isPending}>
           Save
         </Button>

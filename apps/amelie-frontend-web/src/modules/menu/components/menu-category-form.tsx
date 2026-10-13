@@ -62,7 +62,7 @@ export function MenuCategoryForm({ initial, submitLabel, isPending, error, onSub
         )}
       </form.Field>
       {error ? <p className="text-xs text-destructive">{error}</p> : null}
-      <div className="flex gap-2">
+      <div className="mt-3 flex gap-2">
         <form.Subscribe selector={(state) => MenuCategoryBodySchema.safeParse(toCategoryCandidate(state.values)).success}>
           {(valid) => (
             <Button type="submit" size="sm" disabled={!valid || isPending}>

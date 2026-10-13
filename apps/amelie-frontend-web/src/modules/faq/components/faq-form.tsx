@@ -120,7 +120,7 @@ export function FaqForm({ categories, locations, countries, initial, submitLabel
         </form.Field>
       ) : null}
       {error ? <p className="text-xs text-destructive">{error}</p> : null}
-      <div className="flex gap-2">
+      <div className="mt-3 flex gap-2">
         <form.Subscribe selector={(state) => FaqBodySchema.safeParse(toFaqBodyInput(state.values)).success}>
           {(isValid) => (
             <Button type="submit" size="sm" disabled={!isValid || isPending}>

@@ -72,7 +72,7 @@ export function ScheduleSpecialDateForm({ locationId }: { locationId?: string })
           <>
             {!check.success ? <p className="text-xs text-destructive">{check.error.issues[0]?.message}</p> : null}
             {saveSpecialDate.isError ? <p className="text-xs text-destructive">{saveSpecialDate.error.message}</p> : null}
-            <Button type="submit" size="sm" className="w-fit" disabled={!check.success || !hasDate || saveSpecialDate.isPending}>
+            <Button type="submit" size="sm" className="mt-3 w-fit" disabled={!check.success || !hasDate || saveSpecialDate.isPending}>
               Save special date
             </Button>
           </>

@@ -91,7 +91,7 @@ function RegionCard({ tenant }: { tenant: Tenant }) {
               selector={(state) => state.values.country !== tenant.country || state.values.currency !== tenant.currency}
             >
               {(dirty) => (
-                <Button type="submit" size="sm" className="w-fit" disabled={!dirty || updateRegion.isPending}>
+                <Button type="submit" size="sm" className="mt-4 w-fit" disabled={!dirty || updateRegion.isPending}>
                   {updateRegion.isPending ? "Saving..." : "Save region"}
                 </Button>
               )}
