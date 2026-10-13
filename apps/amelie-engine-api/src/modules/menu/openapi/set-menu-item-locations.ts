@@ -36,7 +36,7 @@ export const setMenuItemLocationsDoc = describeRoute({
         '  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \\',
         '  -d \'{"availableAtAllLocations":true,"locationIds":["$DOWNTOWN_ID"]}\'',
       ),
-      json('{ "data": { "id": "…", "name": "Iced Latte", "description": null, "price": "5.00", "currency": "USD", "variants": null, "isAvailable": true, "availableAtAllLocations": true, "locationIds": ["…"], "imageUrl": null, "dietaryTags": [] }, "error": null }'),
+      json('{ "data": { "id": "…", "name": "Iced Latte", "description": null, "price": "5.00", "currency": "USD", "variants": null, "isAvailable": true, "availableAtAllLocations": true, "locationIds": ["…"], "imageUrl": null, "images": [], "dietaryTags": [] }, "error": null }'),
     ],
   }),
   responses: {

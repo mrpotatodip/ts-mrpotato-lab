@@ -7,3 +7,4 @@ export * from "./menu-item-country";
 export * from "./move-id";
 export * from "./menu-form";
 export * from "./menu-order";
+export * from "./menu-item-image-url";

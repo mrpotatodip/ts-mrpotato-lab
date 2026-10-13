@@ -15,6 +15,7 @@ const item = (n: number) => ({
   availableAtAllLocations: true,
   locationIds: [],
   imageUrl: null,
+  images: [],
   dietaryTags: [],
 });
 

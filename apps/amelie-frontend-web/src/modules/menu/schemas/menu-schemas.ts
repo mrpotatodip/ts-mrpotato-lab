@@ -7,6 +7,7 @@ import {
   MenuItemBodySchema,
   MenuItemLocationsBodySchema,
   SetMenuItemCountryPriceBodySchema,
+  MenuItemImagesSchema,
   MenuItemSchema,
   MenuOrderBodySchema,
 } from "@repo/contracts/amelie";
@@ -17,6 +18,7 @@ export const MenuCategoryResponseSchema = apiResponseSchema(MenuCategorySchema.o
 export const MenuCategoriesResponseSchema = apiResponseSchema(z.array(MenuCategorySchema));
 export const MenuItemResponseSchema = apiResponseSchema(MenuItemSchema);
 export const MenuDeletedResponseSchema = apiResponseSchema(MenuDeletedSchema);
+export const MenuItemImagesResponseSchema = apiResponseSchema(MenuItemImagesSchema);
 
 export const UpdateMenuCategoryInputSchema = MenuCategoryBodySchema.extend({ categoryId: z.uuid() });
 export const DeleteMenuCategoryInputSchema = z.object({ categoryId: z.uuid() });
@@ -31,6 +33,9 @@ export const SetMenuItemCountryPriceInputSchema = z.object({
   body: SetMenuItemCountryPriceBodySchema,
 });
 export const DeleteMenuItemInputSchema = z.object({ itemId: z.uuid() });
+export const DeleteMenuItemImageInputSchema = z.object({ itemId: z.uuid(), imageId: z.uuid() });
+export const SetMenuItemImageCoverInputSchema = z.object({ itemId: z.uuid(), imageId: z.uuid() });
+export const ReorderMenuItemImagesInputSchema = MenuOrderBodySchema.extend({ itemId: z.uuid() });
 
 // -----
 // What the boxes of the category and item forms hold:

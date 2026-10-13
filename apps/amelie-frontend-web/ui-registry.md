@@ -170,3 +170,25 @@ Last updated: 2026-09-14
 
 **Pattern notes:**
 Home right rail, under recent watchlists. Three random channels. Header matches SubscriptionsTileHeader (label + ghost More). More goes to `/hot-channels`.
+
+### MenuItemImages
+
+File: `src/modules/menu/components/menu-item-images.tsx`
+Last updated: 2026-10-13
+
+| Property         | Class |
+| ---------------- | ----- |
+| Background       | sheet `bg-card` |
+| Border           | sheet `border`, `rounded-3xl` |
+| Border radius    | thumbs `rounded-lg`, sheet `rounded-3xl` |
+| List thumb       | `size-10` |
+| Sheet thumb      | `size-24` |
+| Text — primary   | title `text-lg font-semibold` |
+| Text — secondary | description `text-sm text-muted-foreground`, errors `text-xs text-destructive` |
+| Spacing          | sheet `p-6`, inset `inset-y-4 right-4`, list `gap-3`, body `mt-6 gap-4` |
+| Hover state      | shadcn ghost/outline buttons |
+| Shadow           | none |
+| Accent usage     | Cover `Badge variant="secondary"` |
+
+**Pattern notes:**
+Opens from a ghost `icon-sm` Image control next to Delete on the item row. Sheet chrome matches `CustomerThreadSheet` (`inset-y-4 right-4`, `rounded-3xl`, overlay `bg-black/10`). Sheet thumbs are `size-24 rounded-lg object-cover`. Each photo row uses ghost `icon-sm` up/down arrows, then Cover (`outline` `sm`), then delete. Add photos is `Button variant="outline" size="sm"`. Cap is `MENU_ITEM_IMAGE_MAX`. First photo is Cover. The item row shows that cover left of the title (`size-10 rounded-lg`) with a primary count bubble (`Badge`, `min-w-5`, `text-[10px]`, `-top-1.5 -right-1.5`). The thumb is omitted when the item has no photo.

@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, MapPin, Pencil, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Image, MapPin, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 import type { Country, DietaryTag, MenuCategory, MenuItem } from "@repo/contracts/amelie";
 
@@ -7,9 +7,10 @@ import { Button } from "#/components/ui/button";
 import { cn } from "#/lib/utils";
 import { useActiveLocations } from "#/modules/location";
 import { useMenuActions } from "../hooks";
-import { isMenuItemMuted, isMenuItemSoldNowhere, showsMenuItemLocationsControl, toMenuItemBody, toPriceEntryBody, toSoldBody } from "../utils";
+import { isMenuItemMuted, isMenuItemSoldNowhere, moveId, showsMenuItemLocationsControl, toMenuItemBody, toMenuItemCoverUrl, toPriceEntryBody, toSoldBody } from "../utils";
 import { MenuItemCountrySold } from "./menu-item-country-sold";
 import { MenuItemForm } from "./menu-item-form";
+import { MenuItemImages } from "./menu-item-images";
 import { MenuItemLocationsForm } from "./menu-item-locations-form";
 
 type MenuItemRowProps = {
@@ -27,12 +28,39 @@ type MenuItemRowProps = {
 const describePrice = (item: MenuItem): string =>
   item.variants ? item.variants.map((variant) => `${variant.name} ${variant.price}`).join(" / ") : (item.price ?? "");
 
+function MenuItemCover({ item, onOpenPhotos }: { item: MenuItem; onOpenPhotos?: () => void }) {
+  const src = toMenuItemCoverUrl(item.images, item.imageUrl);
+  if (!src) return null;
+  const count = item.images.length;
+  const thumb = <img src={src} alt="" className="size-10 rounded-lg object-cover" />;
+
+  return (
+    <div className="relative shrink-0">
+      {onOpenPhotos ? (
+        <button type="button" className="block" aria-label="Photos" onClick={onOpenPhotos}>
+          {thumb}
+        </button>
+      ) : (
+        thumb
+      )}
+      <Badge
+        variant="default"
+        className="absolute -top-1.5 -right-1.5 min-w-5 justify-center px-1 py-0 text-[10px]"
+        aria-label={`${count} photos`}
+      >
+        {count}
+      </Badge>
+    </div>
+  );
+}
+
 export function MenuItemRow({ item, categoryId, categories, dietaryTags, canEdit, country, isFirst, isLast, onMove }: MenuItemRowProps) {
-  const { updateItem, removeItem, setLocations, setCountryPrice } = useMenuActions();
+  const { updateItem, removeItem, setLocations, setCountryPrice, addImages, removeImage, setCover, reorderImages } = useMenuActions();
   const muted = country !== undefined && isMenuItemMuted(item);
   const { locations, isPending: locationsPending } = useActiveLocations();
   const [isEditing, setIsEditing] = useState(false);
   const [isChoosingLocations, setIsChoosingLocations] = useState(false);
+  const [isPhotosOpen, setIsPhotosOpen] = useState(false);
   const hasSeveralLocations = locations.length > 1;
   const locationsLoaded = locations.length > 0;
   const soldNowhere = locationsLoaded && isMenuItemSoldNowhere(item, locations.map((location) => location.id));
@@ -78,9 +106,12 @@ export function MenuItemRow({ item, categoryId, categories, dietaryTags, canEdit
   return (
     <li className={cn("space-y-2 p-6", muted && "opacity-60")}>
       <div className="flex items-center justify-between gap-4">
-        <p className="min-w-0 text-sm font-medium">
-          {item.name} <span className="text-muted-foreground font-normal">{describePrice(item)} {item.currency ?? ""}</span>
-        </p>
+        <div className="flex min-w-0 items-center gap-3">
+          <MenuItemCover item={item} onOpenPhotos={canEdit ? () => setIsPhotosOpen(true) : undefined} />
+          <p className="min-w-0 text-sm font-medium">
+            {item.name} <span className="text-muted-foreground font-normal">{describePrice(item)} {item.currency ?? ""}</span>
+          </p>
+        </div>
         {canEdit ? (
           <div className="flex shrink-0 items-center gap-1">
             <Button
@@ -112,6 +143,9 @@ export function MenuItemRow({ item, categoryId, categories, dietaryTags, canEdit
             <Button variant="ghost" size="icon-sm" aria-label="Edit item" title="Edit" onClick={() => setIsEditing(true)}>
               <Pencil />
             </Button>
+            <Button variant="ghost" size="icon-sm" aria-label="Photos" title="Photos" onClick={() => setIsPhotosOpen(true)}>
+              <Image />
+            </Button>
             <Button
               variant="ghost"
               size="icon-sm"
@@ -128,6 +162,43 @@ export function MenuItemRow({ item, categoryId, categories, dietaryTags, canEdit
         ) : null}
       </div>
       {item.description ? <p className="text-muted-foreground text-sm leading-relaxed">{item.description}</p> : null}
+      {canEdit ? (
+        <MenuItemImages
+          itemName={item.name}
+          images={item.images}
+          open={isPhotosOpen}
+          onOpenChange={setIsPhotosOpen}
+          isPending={addImages.isPending || removeImage.isPending || setCover.isPending || reorderImages.isPending}
+          isUploading={addImages.isPending}
+          error={
+            addImages.isError
+              ? addImages.error.message
+              : removeImage.isError
+                ? removeImage.error.message
+                : setCover.isError
+                  ? setCover.error.message
+                  : reorderImages.isError
+                    ? reorderImages.error.message
+                    : null
+          }
+          onAdd={(files) => {
+            const form = new FormData();
+            form.append("itemId", item.id);
+            for (const file of files) form.append("files", file);
+            addImages.mutate({ data: form });
+          }}
+          onCover={(imageId) => setCover.mutate({ data: { itemId: item.id, imageId } })}
+          onMove={(imageId, direction) => {
+            const ids = moveId(
+              item.images.map((image) => image.id),
+              imageId,
+              direction,
+            );
+            reorderImages.mutate({ data: { itemId: item.id, ids } });
+          }}
+          onDelete={(imageId) => removeImage.mutate({ data: { itemId: item.id, imageId } })}
+        />
+      ) : null}
       {country && canEdit ? (
         <MenuItemCountrySold
           item={item}

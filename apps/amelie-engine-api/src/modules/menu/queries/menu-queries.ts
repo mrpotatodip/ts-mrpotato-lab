@@ -20,6 +20,8 @@ import {
 import { setCountrySoldFlag, upsertCountryPrice } from "./menu-country-price-queries";
 import { firstOpenCountryId, openCountryIdsEffect, readCountryIdEffect } from "#/modules/country/queries";
 import { MENU_CATEGORY_NOT_FOUND, MENU_ITEM_NOT_FOUND } from "#/modules/menu/constants";
+import { menuItemImagePublicPath } from "#/modules/menu/lib";
+import { listMenuItemImagesByItemEffect } from "./menu-image-queries";
 import type {
   DietaryTagOption,
   MenuCategory,
@@ -108,7 +110,6 @@ export const listMenuEffect = (
               soldHere: sql<boolean>`coalesce(${menuItemPrices.isSold}, false)`,
               isAvailable: tenantMenuItems.isAvailable,
               availableAtAllLocations: tenantMenuItems.availableAtAllLocations,
-              imageUrl: tenantMenuItems.imageUrl,
             })
             .from(tenantMenuItems)
             .leftJoin(menuItemPrices, countryPriceOn(countryId))
@@ -167,21 +168,32 @@ export const listMenuEffect = (
     // sold there. A one-Country cafe keeps its empty ones.
     // -----
     const hideEmpty = openCountries.length > 1 && !includeUnsold;
+    const imagesByItem = yield* listMenuItemImagesByItemEffect(
+      db,
+      tenantId,
+      items.map((item) => item.id),
+    );
     return categories
       .filter((category) => !hideEmpty || items.some((item) => item.categoryId === category.id))
       .map((category) => ({
         ...category,
         items: items
           .filter((item) => item.categoryId === category.id)
-          .map(({ categoryId: _categoryId, soldHere, ...item }) => ({
-            ...item,
-            isSold: includeUnsold ? soldHere : undefined,
-            locationIds: locationRows
-              .filter((row) => row.menuItemId === item.id && row.isAvailable !== item.availableAtAllLocations)
-              .map((row) => row.locationId)
-              .toSorted(),
-            dietaryTags: tags.filter((tag) => tag.menuItemId === item.id).map((tag) => tag.slug),
-          })),
+          .map(({ categoryId: _categoryId, soldHere, ...item }) => {
+            const images = imagesByItem.get(item.id) ?? [];
+            const imageId = images[0]?.id;
+            return {
+              ...item,
+              images,
+              imageUrl: imageId ? menuItemImagePublicPath(imageId) : null,
+              isSold: includeUnsold ? soldHere : undefined,
+              locationIds: locationRows
+                .filter((row) => row.menuItemId === item.id && row.isAvailable !== item.availableAtAllLocations)
+                .map((row) => row.locationId)
+                .toSorted(),
+              dietaryTags: tags.filter((tag) => tag.menuItemId === item.id).map((tag) => tag.slug),
+            };
+          }),
       }));
   });
 
@@ -202,13 +214,12 @@ export const listMenuItemCardsEffect = (
     ? Effect.succeed([])
     : Effect.gen(function* () {
         const countryId = yield* readCountryIdEffect(db, tenantId, locationId, explicitCountryId);
-        return yield* query(() =>
+        const rows = yield* query(() =>
           db
             .select({
               id: tenantMenuItems.id,
               name: tenantMenuItems.name,
               ...priceColumns,
-              imageUrl: tenantMenuItems.imageUrl,
             })
             .from(tenantMenuItems)
             .leftJoin(menuItemPrices, countryPriceOn(countryId))
@@ -221,6 +232,15 @@ export const listMenuItemCardsEffect = (
               ),
             ),
         );
+        const imagesByItem = yield* listMenuItemImagesByItemEffect(
+          db,
+          tenantId,
+          rows.map((row) => row.id),
+        );
+        return rows.map((row) => {
+          const imageId = imagesByItem.get(row.id)?.[0]?.id;
+          return { ...row, imageUrl: imageId ? menuItemImagePublicPath(imageId) : null };
+        });
       });
 
 // -----

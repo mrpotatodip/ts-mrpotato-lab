@@ -1,4 +1,4 @@
-import type { MenuItemVariant } from "@repo/contracts/amelie";
+import type { MenuItemImage, MenuItemVariant } from "@repo/contracts/amelie";
 
 export type MenuItem = {
   id: string;
@@ -12,6 +12,7 @@ export type MenuItem = {
   locationIds: string[];
   isSold?: boolean;
   imageUrl: string | null;
+  images: MenuItemImage[];
   dietaryTags: string[];
 };
 
@@ -41,3 +42,21 @@ export type MenuItemValues = {
 export type DietaryTagOption = { slug: string; label: string };
 
 export type MenuItemLocationsValues = { availableAtAllLocations: boolean; locationIds: string[] };
+
+export type MenuItemImageFile = { name: string; contentType: string; bytes: ArrayBuffer };
+
+export type MenuItemImageRecord = {
+  id: string;
+  name: string;
+  contentType: string;
+  size: number;
+  sortOrder: number;
+};
+
+export type MenuItemImageBytes = { contentType: string; bytes: ArrayBuffer };
+
+export type MenuImageStorage = {
+  put: (key: string, bytes: ArrayBuffer, contentType: string) => Promise<void>;
+  get: (key: string) => Promise<ArrayBuffer | null>;
+  delete: (key: string) => Promise<void>;
+};

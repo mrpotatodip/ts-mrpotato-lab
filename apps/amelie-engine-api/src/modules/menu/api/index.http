@@ -130,3 +130,35 @@ Content-Type: application/json
 ###
 DELETE {{baseUrl}}/menu/items/{{itemId}}?tenantId={{tenantId}}
 Authorization: Bearer {{token}}
+
+###
+POST {{baseUrl}}/menu/items/{{itemId}}/images?tenantId={{tenantId}}
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data; boundary=----MenuImage
+
+------MenuImage
+Content-Disposition: form-data; name="files"; filename="latte.jpg"
+Content-Type: image/jpeg
+
+< ./latte.jpg
+------MenuImage--
+
+###
+GET {{baseUrl}}/menu-item-images/{{imageId}}
+
+###
+PUT {{baseUrl}}/menu/items/{{itemId}}/images/order?tenantId={{tenantId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "ids": ["{{imageId}}"]
+}
+
+###
+PUT {{baseUrl}}/menu/items/{{itemId}}/images/{{imageId}}/cover?tenantId={{tenantId}}
+Authorization: Bearer {{token}}
+
+###
+DELETE {{baseUrl}}/menu/items/{{itemId}}/images/{{imageId}}?tenantId={{tenantId}}
+Authorization: Bearer {{token}}

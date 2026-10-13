@@ -7,6 +7,7 @@ import { publicChatBotRestAPI } from "#/modules/chat-bot";
 import systemRestAPI from "#/modules/system";
 import mcpRestAPI from "#/modules/mcp";
 import signUpRestAPI from "#/modules/sign-up";
+import { getMenuItemImageAPI } from "#/modules/menu";
 
 // -----
 // No login: health, the login routes
@@ -39,5 +40,10 @@ app.route("/public/chat-bot", publicChatBotRestAPI);
 app.route("/public/mcp", mcpRestAPI);
 // invite-only: the invite code is the guard (#350)
 app.route("/public/sign-up", signUpRestAPI);
+// -----
+// Menu item photos: the id is the secret.
+// Chat cards load them without a session.
+// -----
+app.route("/menu-item-images", getMenuItemImageAPI);
 
 export default app;

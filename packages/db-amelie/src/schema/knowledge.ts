@@ -151,7 +151,6 @@ export const tenantMenuItems = pgTable(
     description: text("description"),
     isAvailable: boolean("is_available").notNull().default(true),
     availableAtAllLocations: boolean("available_at_all_locations").notNull().default(true),
-    imageUrl: text("image_url"),
     sortOrder: integer("sort_order").notNull().default(0),
     ...timestamps(),
   },
@@ -163,6 +162,37 @@ export const tenantMenuItems = pgTable(
     }).onDelete("cascade"),
     uqIdTenant: unique("uq_tenant_menu_items_id_tenant").on(t.id, t.tenantId),
     idxTenant: index("idx_tenant_menu_items_tenant").on(t.tenantId),
+  }),
+);
+
+// -----
+// Photos of a Menu item, in order; the first is
+// the card. object_key is the R2 object, not a URL.
+// -----
+export const tenantMenuItemImages = pgTable(
+  "tenant_menu_item_images",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: tenantId(),
+    menuItemId: uuid("menu_item_id").notNull(),
+    objectKey: text("object_key").notNull(),
+    name: text("name").notNull(),
+    contentType: text("content_type").notNull(),
+    size: integer("size").notNull(),
+    sortOrder: integer("sort_order").notNull().default(0),
+    ...timestamps(),
+  },
+  (t) => ({
+    itemInTenant: foreignKey({
+      name: "tenant_menu_item_images_item_in_tenant_fk",
+      columns: [t.menuItemId, t.tenantId],
+      foreignColumns: [tenantMenuItems.id, tenantMenuItems.tenantId],
+    }).onDelete("cascade"),
+    uqIdTenant: unique("uq_tenant_menu_item_images_id_tenant").on(t.id, t.tenantId),
+    uqItemSort: unique("uq_tenant_menu_item_images_item_sort").on(t.menuItemId, t.sortOrder),
+    uqObjectKey: unique("uq_tenant_menu_item_images_object_key").on(t.objectKey),
+    idxTenant: index("idx_tenant_menu_item_images_tenant").on(t.tenantId),
+    idxItem: index("idx_tenant_menu_item_images_item").on(t.menuItemId),
   }),
 );
 
