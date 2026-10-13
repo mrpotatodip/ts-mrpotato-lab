@@ -108,7 +108,7 @@ export function AdminInviteCodeForm({ onCreated }: AdminInviteCodeFormProps) {
         }}
       </form.Subscribe>
       {create.error ? <p className="text-destructive text-sm">{create.error.message}</p> : null}
-      <div>
+      <div className="mt-4">
         <form.Subscribe selector={(state) => state.canSubmit}>
           {(canSubmit) => (
             <Button type="submit" disabled={create.isPending || !canSubmit}>

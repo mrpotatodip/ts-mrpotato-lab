@@ -47,11 +47,11 @@ export function DashboardSidebar({ userName }: DashboardSidebarProps) {
           <SidebarGroup key={group.label}>
             <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
             <SidebarGroupContent>
-              <SidebarMenu>
+              <SidebarMenu className="gap-0.5">
                 {group.items.map(({ to, label, icon: Icon }) => (
                   <SidebarMenuItem key={to}>
                     <SidebarMenuButton
-                      className="h-10 gap-3 px-3 text-[0.9375rem] [&>svg]:size-[1.125rem]"
+                      className="h-8 gap-3 px-3 text-[0.9375rem] [&>svg]:size-[1.125rem]"
                       isActive={pathname === to || pathname.startsWith(`${to}/`)}
                       render={<Link to={to} onClick={() => setOpenMobile(false)} />}
                     >

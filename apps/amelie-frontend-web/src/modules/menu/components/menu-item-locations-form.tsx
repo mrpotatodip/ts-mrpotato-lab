@@ -98,7 +98,7 @@ export function MenuItemLocationsForm({ item, locations, isPending, error, onSub
         )}
       </form.Field>
       {error ? <p className="text-xs text-destructive">{error}</p> : null}
-      <div className="flex gap-2">
+      <div className="mt-3 flex gap-2">
         <form.Subscribe selector={(state) => MenuItemLocationsBodySchema.safeParse(state.values).success}>
           {(canSave) => (
             <Button type="submit" size="sm" disabled={!canSave || isPending}>

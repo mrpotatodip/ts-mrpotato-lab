@@ -15,7 +15,7 @@ export function ChatBotListMenuCard({ result }: ChatBotToolCardProps<ListMenuRes
             <h4 className="text-base font-semibold">{category.name}</h4>
             {category.note && <p className="text-xs text-muted-foreground">{category.note}</p>}
           </div>
-          <ul className="flex flex-col gap-2">
+          <ul className="flex flex-col gap-0.5">
             {category.items.map((item) => (
               <ChatBotMenuItem key={item.id} item={item} />
             ))}
