@@ -19,6 +19,7 @@ import { Route as DashboardHoursRouteImport } from './routes/_dashboard/hours'
 import { Route as DashboardMenuRouteImport } from './routes/_dashboard/menu'
 import { Route as DashboardOverviewRouteImport } from './routes/_dashboard/overview'
 import { Route as DashboardUnansweredRouteImport } from './routes/_dashboard/unanswered'
+import { Route as DashboardWidgetRouteImport } from './routes/_dashboard/widget'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as ApiChatBotRouteImport } from './routes/api/chat-bot'
 import { Route as ChatSlugRouteImport } from './routes/chat/$slug'
@@ -81,6 +82,11 @@ const DashboardOverviewRoute = DashboardOverviewRouteImport.update({
 const DashboardUnansweredRoute = DashboardUnansweredRouteImport.update({
   id: '/unanswered',
   path: '/unanswered',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardWidgetRoute = DashboardWidgetRouteImport.update({
+  id: '/widget',
+  path: '/widget',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
@@ -164,6 +170,7 @@ export interface FileRoutesByFullPath {
   '/menu': typeof DashboardMenuRoute
   '/overview': typeof DashboardOverviewRoute
   '/unanswered': typeof DashboardUnansweredRoute
+  '/widget': typeof DashboardWidgetRoute
   '/api/chat-bot': typeof ApiChatBotRoute
   '/chat/$slug': typeof ChatSlugRoute
   '/admin/': typeof AdminIndexRoute
@@ -187,6 +194,7 @@ export interface FileRoutesByTo {
   '/menu': typeof DashboardMenuRoute
   '/overview': typeof DashboardOverviewRoute
   '/unanswered': typeof DashboardUnansweredRoute
+  '/widget': typeof DashboardWidgetRoute
   '/api/chat-bot': typeof ApiChatBotRoute
   '/chat/$slug': typeof ChatSlugRoute
   '/admin': typeof AdminIndexRoute
@@ -212,6 +220,7 @@ export interface FileRoutesById {
   '/_dashboard/menu': typeof DashboardMenuRoute
   '/_dashboard/overview': typeof DashboardOverviewRoute
   '/_dashboard/unanswered': typeof DashboardUnansweredRoute
+  '/_dashboard/widget': typeof DashboardWidgetRoute
   '/api/chat-bot': typeof ApiChatBotRoute
   '/chat/$slug': typeof ChatSlugRoute
   '/admin/': typeof AdminIndexRoute
@@ -238,6 +247,7 @@ export interface FileRouteTypes {
     | '/menu'
     | '/overview'
     | '/unanswered'
+    | '/widget'
     | '/api/chat-bot'
     | '/chat/$slug'
     | '/admin/'
@@ -261,6 +271,7 @@ export interface FileRouteTypes {
     | '/menu'
     | '/overview'
     | '/unanswered'
+    | '/widget'
     | '/api/chat-bot'
     | '/chat/$slug'
     | '/admin'
@@ -285,6 +296,7 @@ export interface FileRouteTypes {
     | '/_dashboard/menu'
     | '/_dashboard/overview'
     | '/_dashboard/unanswered'
+    | '/_dashboard/widget'
     | '/api/chat-bot'
     | '/chat/$slug'
     | '/admin/'
@@ -382,6 +394,13 @@ declare module '@tanstack/react-router' {
       path: '/unanswered'
       fullPath: '/unanswered'
       preLoaderRoute: typeof DashboardUnansweredRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/_dashboard/widget': {
+      id: '/_dashboard/widget'
+      path: '/widget'
+      fullPath: '/widget'
+      preLoaderRoute: typeof DashboardWidgetRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
     '/admin/': {
@@ -501,6 +520,7 @@ interface DashboardRouteRouteChildren {
   DashboardMenuRoute: typeof DashboardMenuRoute
   DashboardOverviewRoute: typeof DashboardOverviewRoute
   DashboardUnansweredRoute: typeof DashboardUnansweredRoute
+  DashboardWidgetRoute: typeof DashboardWidgetRoute
   DashboardChatBotRoomRouteRoute: typeof DashboardChatBotRoomRouteRouteWithChildren
   DashboardCustomersThreadIdRoute: typeof DashboardCustomersThreadIdRoute
   DashboardImportsImportIdRoute: typeof DashboardImportsImportIdRoute
@@ -515,6 +535,7 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardMenuRoute: DashboardMenuRoute,
   DashboardOverviewRoute: DashboardOverviewRoute,
   DashboardUnansweredRoute: DashboardUnansweredRoute,
+  DashboardWidgetRoute: DashboardWidgetRoute,
   DashboardChatBotRoomRouteRoute: DashboardChatBotRoomRouteRouteWithChildren,
   DashboardCustomersThreadIdRoute: DashboardCustomersThreadIdRoute,
   DashboardImportsImportIdRoute: DashboardImportsImportIdRoute,

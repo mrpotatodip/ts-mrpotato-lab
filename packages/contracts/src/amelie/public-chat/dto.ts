@@ -29,5 +29,15 @@ export const PublicChatHydrateQuerySchema = ChatBotStreamQuerySchema.extend({
   slug: PublicChatSlugSchema,
 });
 
+export const PublicChatFramePolicyQuerySchema = z.object({
+  slug: PublicChatSlugSchema,
+});
+
+export const PublicChatFramePolicySchema = z.object({
+  allowedOrigins: z.array(z.string()),
+});
+
 export type PublicChatStreamBody = z.infer<typeof PublicChatStreamBodySchema>;
 export type PublicChatHydrateQuery = z.infer<typeof PublicChatHydrateQuerySchema>;
+export type PublicChatFramePolicyQuery = z.infer<typeof PublicChatFramePolicyQuerySchema>;
+export type PublicChatFramePolicy = z.infer<typeof PublicChatFramePolicySchema>;

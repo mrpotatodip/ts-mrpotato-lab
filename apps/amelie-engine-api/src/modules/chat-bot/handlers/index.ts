@@ -8,3 +8,4 @@ export * from "./update-chat-bot-thread-title-svc";
 export * from "./delete-chat-bot-thread-svc";
 export * from "./prepare-customer-turn-svc";
 export * from "./guard-public-chat-turn-svc";
+export * from "./get-public-chat-frame-policy-svc";

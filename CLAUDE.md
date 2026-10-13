@@ -9,6 +9,7 @@ pnpm workspace with two layers:
 - `apps/` — runnable applications
   - `amelie-engine-api` — Amelie backend (Hono on Cloudflare Workers): auth, tenants, menu, FAQs, chat bot, public widget. Domain terms: `apps/amelie-engine-api/GLOSSARY.md`
   - `amelie-frontend-web` — cafe owner dashboard and public customer chat (TanStack Start + React 19)
+  - `amelie-frontend-host` — stand-in cafe website for embedding the Customer widget (`http://localhost:5174`)
 - `packages/` — shared libraries
   - `@repo/db-amelie` — Drizzle ORM schema + Neon client (single source of truth for Amelie DB types)
   - `@repo/contracts` — Zod schemas shared between the API and frontend (`amelie/` and `chat-bots/` families)
@@ -27,6 +28,7 @@ pnpm build          # build all
 # Per-app
 pnpm --filter amelie-engine-api dev      # cf dev --port 8788
 pnpm --filter amelie-frontend-web dev    # vite dev --port 3000
+pnpm --filter amelie-frontend-host dev   # vite --port 5174, loads widget.js from :3000
 pnpm --filter amelie-engine-api test     # vitest run
 pnpm --filter amelie-engine-api lint     # oxlint src
 

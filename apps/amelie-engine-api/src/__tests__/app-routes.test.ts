@@ -47,6 +47,12 @@ describe("app routes", () => {
     expect(res.status).toBe(400);
   });
 
+  it("lets the frame-policy lookup run without a login", async () => {
+    const res = await request("/public/chat-bot/frame-policy");
+
+    expect(res.status).toBe(400);
+  });
+
   it.each([
     "/tenants",
     "/tenants/some-id",

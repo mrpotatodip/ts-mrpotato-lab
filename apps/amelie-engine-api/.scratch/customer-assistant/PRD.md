@@ -4,7 +4,7 @@
 >
 > **Design change (2026-10-04):** Customers chat in **anonymous threads** of the existing chat bot (`chat_bot_threads` / `_runs` / `_messages`, with ownership in `chat_bot_thread_sessions`), answered by a `customer` agent with streaming. The planned `chat_sessions` / `chat_messages` tables are dropped from the plan.
 >
-> **Two open gaps**, marked ⚠️ below: the embeddable widget (#329) and menu item images in R2 (#334). Everything else is decided and can be built.
+> **Open gap**, marked ⚠️ below: menu item images in R2 (#334). The embeddable widget is decided in `widget-embed.md` (same folder).
 
 ## Problem Statement
 
@@ -179,16 +179,9 @@ Separate public routes beside the signed-in `/chat-bot/*`, e.g. `/public/chat-bo
 
 A daily cron job deletes anonymous threads 90 days after `expires_at`, with their runs and Messages. Signed-in threads are untouched. The 90 days is a named constant.
 
-### ⚠️ Gap: the embeddable widget ([#329](https://github.com/mrpotatodip/ts-elise/issues/329), paused)
+### Embeddable widget
 
-Settled: a script tag that opens an iframe hosted on `amelie-frontend-web`, identified by slug.
-
-Draft proposals, **not decided**, are on the ticket:
-- a plain `widget.js` that loads the iframe on first open
-- the chat page calls the engine API directly, so per-IP limits see the real IP
-- replies carry full menu item details
-- a public `/chat/<slug>` route with a public Tenant-config endpoint
-- name-only branding
+Decided. See `widget-embed.md` in this folder (lab issues #2–#5). A script tag opens an iframe of `/chat/<slug>`. CSP `frame-ancestors` is the embed lock.
 
 ### ⚠️ Gap: menu item images ([#334](https://github.com/mrpotatodip/ts-elise/issues/334), paused)
 

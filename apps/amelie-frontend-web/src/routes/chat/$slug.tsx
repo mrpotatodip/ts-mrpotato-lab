@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { PublicChatRoom, PublicChatSearchSchema } from "#/modules/chat-bot";
+import { publicChatFrameHeaders, PublicChatRoom, PublicChatSearchSchema } from "#/modules/chat-bot";
 import { AppErrorComponent } from "#/modules/shared";
 
 // -----
@@ -10,6 +10,7 @@ import { AppErrorComponent } from "#/modules/shared";
 export const Route = createFileRoute("/chat/$slug")({
   ssr: false,
   validateSearch: PublicChatSearchSchema,
+  headers: ({ params }) => publicChatFrameHeaders(params.slug),
   component: RouteComponent,
   errorComponent: AppErrorComponent,
 });
