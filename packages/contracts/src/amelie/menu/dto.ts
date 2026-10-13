@@ -27,6 +27,15 @@ export const MenuItemParamSchema = z.object({
   itemId: z.uuid(),
 });
 
+export const MenuItemImageParamSchema = z.object({
+  imageId: z.uuid(),
+});
+
+export const MenuItemImageNestedParamSchema = z.object({
+  itemId: z.uuid(),
+  imageId: z.uuid(),
+});
+
 export const MenuCategoryBodySchema = z.object({
   name: z.string().trim().min(1).max(80),
   note: z.string().trim().min(1).max(300).nullable(),
@@ -126,6 +135,16 @@ export const MenuItemLocationsBodySchema = z
     }
   });
 
+export const MenuItemImageSchema = z.object({
+  id: z.uuid(),
+  name: z.string(),
+  contentType: z.string(),
+  size: z.number().int().nonnegative(),
+  sortOrder: z.number().int().nonnegative(),
+});
+
+export const MenuItemImagesSchema = z.array(MenuItemImageSchema);
+
 // -----
 // Responses: the menu as the dashboard edits it,
 // with the shared Dietary tag list to choose from
@@ -142,6 +161,7 @@ export const MenuItemSchema = z.object({
   locationIds: z.array(z.uuid()),
   isSold: z.boolean().optional(),
   imageUrl: z.string().nullable(),
+  images: z.array(MenuItemImageSchema),
   dietaryTags: z.array(z.string()),
 });
 
@@ -166,6 +186,10 @@ export const MenuDeletedSchema = z.object({ id: z.uuid() });
 
 export type MenuCategoryParam = z.infer<typeof MenuCategoryParamSchema>;
 export type MenuItemParam = z.infer<typeof MenuItemParamSchema>;
+export type MenuItemImageParam = z.infer<typeof MenuItemImageParamSchema>;
+export type MenuItemImageNestedParam = z.infer<typeof MenuItemImageNestedParamSchema>;
+export type MenuItemImage = z.infer<typeof MenuItemImageSchema>;
+export type MenuItemImages = z.infer<typeof MenuItemImagesSchema>;
 export type MenuCategoryBody = z.infer<typeof MenuCategoryBodySchema>;
 export type MenuOrderBody = z.infer<typeof MenuOrderBodySchema>;
 export type MenuItemLocationsBody = z.infer<typeof MenuItemLocationsBodySchema>;

@@ -39,7 +39,7 @@ export const setMenuItemCountryPriceDoc = describeRoute({
         '  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \\',
         '  -d \'{"isSold":true,"price":"6.25"}\'',
       ),
-      json('{ "data": { "id": "…", "name": "Latte", "description": null, "price": "6.25", "currency": "CAD", "variants": null, "isAvailable": true, "availableAtAllLocations": true, "locationIds": [], "isSold": true, "imageUrl": null, "dietaryTags": [] }, "error": null }'),
+      json('{ "data": { "id": "…", "name": "Latte", "description": null, "price": "6.25", "currency": "CAD", "variants": null, "isAvailable": true, "availableAtAllLocations": true, "locationIds": [], "isSold": true, "imageUrl": null, "images": [], "dietaryTags": [] }, "error": null }'),
     ],
   }),
   responses: {

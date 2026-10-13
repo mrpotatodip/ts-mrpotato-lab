@@ -62,10 +62,14 @@ export default defineConfig({
         simple: { limit: 5, period: 60 },
       }),
       // -----
-      // Menu imports (#347): the uploaded files, and
-      // the queue that sends each Import to extraction.
+      // Menu imports and menu item photos. Local cf
+      // dev writes to the real bucket so objects show
+      // in the Cloudflare R2 dashboard.
       // -----
-      IMPORT_FILES: bindings.r2({ name: "amelie-import-files" }),
+      IMPORT_FILES: bindings.r2({
+        name: "ts-elise-lab",
+        dev: { remote: true },
+      }),
       IMPORT_QUEUE: bindings.queue({ name: "amelie-imports" }),
     },
     triggers: [triggers.queue({ name: "amelie-imports", maxRetries: 2 })],

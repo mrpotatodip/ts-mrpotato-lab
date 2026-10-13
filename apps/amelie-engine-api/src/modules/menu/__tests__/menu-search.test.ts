@@ -11,7 +11,10 @@ const item = (name: string, dietaryTags: string[] = []): MenuItem => ({
   variants: null,
   isAvailable: true,
   imageUrl: null,
+  images: [],
   dietaryTags,
+  availableAtAllLocations: true,
+  locationIds: [],
 });
 
 const menu: MenuCategory[] = [

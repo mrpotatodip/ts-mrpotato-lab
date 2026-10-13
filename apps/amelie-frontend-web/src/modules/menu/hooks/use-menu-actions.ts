@@ -4,11 +4,15 @@ import { optimisticEdit } from "#/lib/optimistic-cache";
 import {
   addMenuCategory,
   addMenuItem,
+  addMenuItemImages,
   deleteMenuCategory,
   deleteMenuItem,
+  deleteMenuItemImage,
   reorderMenuCategories,
+  reorderMenuItemImages,
   reorderMenuItems,
   setMenuItemCountryPrice,
+  setMenuItemImageCover,
   setMenuItemLocations,
   updateMenuCategory,
   updateMenuItem,
@@ -51,6 +55,10 @@ export function useMenuActions() {
   const removeItem = useMutation({ mutationFn: deleteMenuItem, onSuccess: reload });
   const setLocations = useMutation({ mutationFn: setMenuItemLocations, onSuccess: reload });
   const setCountryPrice = useMutation({ mutationFn: setMenuItemCountryPrice, onSuccess: reload });
+  const addImages = useMutation({ mutationFn: addMenuItemImages, onSuccess: reload });
+  const removeImage = useMutation({ mutationFn: deleteMenuItemImage, onSuccess: reload });
+  const setCover = useMutation({ mutationFn: setMenuItemImageCover, onSuccess: reload });
+  const reorderImages = useMutation({ mutationFn: reorderMenuItemImages, onSuccess: reload });
 
   return {
     addCategory,
@@ -63,5 +71,9 @@ export function useMenuActions() {
     removeItem,
     setLocations,
     setCountryPrice,
+    addImages,
+    removeImage,
+    setCover,
+    reorderImages,
   };
 }

@@ -10,6 +10,8 @@ export const IMPORT_MAX_FILE_BYTES = 10 * 1024 * 1024;
 export const IMPORT_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
 export const IMPORT_PDF_TYPE = "application/pdf";
 
+export const MENU_ITEM_IMAGE_MAX = 10;
+
 // -----
 // Sign-up: limits the form and the server share
 // -----

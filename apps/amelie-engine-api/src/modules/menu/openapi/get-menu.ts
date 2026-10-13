@@ -48,7 +48,7 @@ export const getMenuDoc = describeRoute({
       bash(
         `curl "${EXAMPLE_BASE_URL}/menu?tenantId=${EXAMPLE_TENANT_ID}" -H "Authorization: Bearer $TOKEN"`,
       ),
-      json('{ "data": { "categories": [{ "id": "…", "name": "Coffee", "note": null, "items": [{ "id": "…", "name": "Latte", "description": null, "price": "4.75", "currency": "USD", "variants": [{ "name": "Small", "price": "4.75" }, { "name": "Large", "price": "6.25" }], "isAvailable": true, "availableAtAllLocations": true, "locationIds": [], "imageUrl": null, "dietaryTags": ["vegetarian"] }] }], "dietaryTags": [{ "slug": "vegetarian", "label": "Vegetarian" }] }, "error": null }'),
+      json('{ "data": { "categories": [{ "id": "…", "name": "Coffee", "note": null, "items": [{ "id": "…", "name": "Latte", "description": null, "price": "4.75", "currency": "USD", "variants": [{ "name": "Small", "price": "4.75" }, { "name": "Large", "price": "6.25" }], "isAvailable": true, "availableAtAllLocations": true, "locationIds": [], "imageUrl": null, "images": [], "dietaryTags": ["vegetarian"] }] }], "dietaryTags": [{ "slug": "vegetarian", "label": "Vegetarian" }] }, "error": null }'),
     ],
   }),
   responses: {

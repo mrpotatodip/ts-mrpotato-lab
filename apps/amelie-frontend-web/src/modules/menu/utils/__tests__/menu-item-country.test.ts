@@ -17,6 +17,7 @@ const latte: MenuItem = {
   availableAtAllLocations: true,
   locationIds: [],
   imageUrl: null,
+  images: [],
   dietaryTags: [],
   isSold: true,
 };
