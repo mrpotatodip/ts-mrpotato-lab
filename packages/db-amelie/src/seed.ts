@@ -35,18 +35,27 @@ const SORELLA = {
   slug: "sorella",
   timezone: "America/New_York",
 };
+const SORELLA_HOST_ORIGIN = "http://localhost:5174";
 const SORELLA_COUNTRY = { country: "US", currency: "USD" };
 const OWNER_EMAIL = process.env.SEED_OWNER_EMAIL ?? "owner@sorella.test";
 const OWNER_PASSWORD = process.env.SEED_OWNER_PASSWORD;
 
 async function seedTenant() {
   const [existing] = await db.select().from(tenants).where(eq(tenants.slug, SORELLA.slug));
-  if (existing) return existing.id;
+  if (existing) {
+    if (existing.allowedOrigins.length === 0) {
+      await db
+        .update(tenants)
+        .set({ allowedOrigins: [SORELLA_HOST_ORIGIN] })
+        .where(eq(tenants.id, existing.id));
+    }
+    return existing.id;
+  }
   const [party] = await db.insert(parties).values({ type: "organization" }).returning();
   await db.insert(organizations).values({ partyId: party.id, name: SORELLA.name });
   const [tenant] = await db
     .insert(tenants)
-    .values({ organizationPartyId: party.id, ...SORELLA })
+    .values({ organizationPartyId: party.id, ...SORELLA, allowedOrigins: [SORELLA_HOST_ORIGIN] })
     .returning();
   return tenant.id;
 }

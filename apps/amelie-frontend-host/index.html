@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sorella Cafe</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: Georgia, "Times New Roman", serif;
+        background: #f6f1e8;
+        color: #1f1a14;
+      }
+      body {
+        margin: 0;
+      }
+      header {
+        padding: 2.5rem 1.5rem 1.5rem;
+        border-bottom: 1px solid #e2d6c4;
+        background: #fffaf3;
+      }
+      main {
+        max-width: 40rem;
+        margin: 0 auto;
+        padding: 2rem 1.5rem 8rem;
+      }
+      h1 {
+        margin: 0 0 0.35rem;
+        font-size: 2rem;
+        font-weight: 600;
+      }
+      .tag {
+        margin: 0;
+        color: #6b5c4a;
+        font-size: 0.95rem;
+      }
+      p {
+        line-height: 1.5;
+      }
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.85em;
+      }
+      .note {
+        margin-top: 2rem;
+        padding: 1rem 1.1rem;
+        background: #fff;
+        border: 1px solid #e2d6c4;
+        font-size: 0.9rem;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Sorella Cafe</h1>
+      <p class="tag">Stand-in cafe site for the Amelie widget</p>
+    </header>
+    <main>
+      <p>Hours, the menu, and parking questions should go through the chat button.</p>
+      <p>
+        Query params: <code>slug</code>, <code>location</code>, <code>country</code>,
+        <code>amelie</code> (widget origin, default <code>http://localhost:3000</code>).
+      </p>
+      <div class="note">
+        This page is <code>http://localhost:5174</code>. The iframe only loads if that origin is in
+        the Tenant's Allowed origins. Seed writes it for Sorella when the list is empty.
+      </div>
+    </main>
+    <script>
+      const query = new URLSearchParams(location.search);
+      const script = document.createElement("script");
+      const amelie = query.get("amelie") || "http://localhost:3000";
+      script.src = `${amelie.replace(/\/$/, "")}/widget.js`;
+      script.dataset.slug = query.get("slug") || "sorella";
+      const locationName = query.get("location");
+      const country = query.get("country");
+      if (locationName) script.dataset.location = locationName;
+      if (country) script.dataset.country = country;
+      script.defer = true;
+      document.body.appendChild(script);
+    </script>
+  </body>
+</html>

@@ -32,6 +32,10 @@ The engine's `Origin` check on chat turns still sees Amelie's origin when the ch
 
 Widget under Your cafe: read-only snippet with the Tenant slug, plus a link to `/chat/$slug`. No live preview. No Allowed-origins editor (sign-up `website` still seeds the list).
 
+## Local cafe host
+
+`amelie-frontend-host` is a stand-in cafe site at `http://localhost:5174`. It loads `widget.js` from `http://localhost:3000`. Query params: `slug`, `location`, `country`, `amelie`. Seed puts that origin on Sorella when Allowed origins is empty.
+
 ## Out of this work
 
 Allowed-origins editor, cafe branding, `postMessage`, dashboard live preview, menu item images, agent / prompt / public-chat API changes.
