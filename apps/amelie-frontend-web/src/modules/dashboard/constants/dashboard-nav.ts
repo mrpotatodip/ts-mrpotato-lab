@@ -4,6 +4,7 @@ import {
   FileUp,
   KeyRound,
   LayoutDashboard,
+  Code,
   MessageSquareWarning,
   MessagesSquare,
   CircleQuestionMark,
@@ -28,6 +29,7 @@ export const DASHBOARD_NAV_GROUPS = [
       { to: "/menu", label: "Menu", icon: UtensilsCrossed },
       { to: "/imports", label: "Import", icon: FileUp },
       { to: "/faqs", label: "FAQs", icon: CircleQuestionMark },
+      { to: "/widget", label: "Widget", icon: Code },
     ],
   },
   {

@@ -75,3 +75,6 @@ Accept: text/event-stream
 GET {{baseUrl}}/public/chat-bot?slug=sorella&threadId={{threadId}}
 Origin: http://localhost:3000
 X-Anonymous-Id: {{anonymousId}}
+
+###
+GET {{baseUrl}}/public/chat-bot/frame-policy?slug=sorella

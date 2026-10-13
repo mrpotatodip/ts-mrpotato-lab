@@ -15,6 +15,7 @@ import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as NoCafeRouteImport } from './routes/no-cafe'
 import { Route as DashboardBusinessProfileRouteImport } from './routes/_dashboard/business-profile'
 import { Route as DashboardFaqsRouteImport } from './routes/_dashboard/faqs'
+import { Route as DashboardWidgetRouteImport } from './routes/_dashboard/widget'
 import { Route as DashboardHoursRouteImport } from './routes/_dashboard/hours'
 import { Route as DashboardMenuRouteImport } from './routes/_dashboard/menu'
 import { Route as DashboardOverviewRouteImport } from './routes/_dashboard/overview'
@@ -61,6 +62,11 @@ const DashboardBusinessProfileRoute =
 const DashboardFaqsRoute = DashboardFaqsRouteImport.update({
   id: '/faqs',
   path: '/faqs',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardWidgetRoute = DashboardWidgetRouteImport.update({
+  id: '/widget',
+  path: '/widget',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
 const DashboardHoursRoute = DashboardHoursRouteImport.update({
@@ -160,6 +166,7 @@ export interface FileRoutesByFullPath {
   '/no-cafe': typeof NoCafeRoute
   '/business-profile': typeof DashboardBusinessProfileRoute
   '/faqs': typeof DashboardFaqsRoute
+  '/widget': typeof DashboardWidgetRoute
   '/hours': typeof DashboardHoursRoute
   '/menu': typeof DashboardMenuRoute
   '/overview': typeof DashboardOverviewRoute
@@ -183,6 +190,7 @@ export interface FileRoutesByTo {
   '/no-cafe': typeof NoCafeRoute
   '/business-profile': typeof DashboardBusinessProfileRoute
   '/faqs': typeof DashboardFaqsRoute
+  '/widget': typeof DashboardWidgetRoute
   '/hours': typeof DashboardHoursRoute
   '/menu': typeof DashboardMenuRoute
   '/overview': typeof DashboardOverviewRoute
@@ -208,6 +216,7 @@ export interface FileRoutesById {
   '/no-cafe': typeof NoCafeRoute
   '/_dashboard/business-profile': typeof DashboardBusinessProfileRoute
   '/_dashboard/faqs': typeof DashboardFaqsRoute
+  '/_dashboard/widget': typeof DashboardWidgetRoute
   '/_dashboard/hours': typeof DashboardHoursRoute
   '/_dashboard/menu': typeof DashboardMenuRoute
   '/_dashboard/overview': typeof DashboardOverviewRoute
@@ -234,6 +243,7 @@ export interface FileRouteTypes {
     | '/no-cafe'
     | '/business-profile'
     | '/faqs'
+    | '/widget'
     | '/hours'
     | '/menu'
     | '/overview'
@@ -257,6 +267,7 @@ export interface FileRouteTypes {
     | '/no-cafe'
     | '/business-profile'
     | '/faqs'
+    | '/widget'
     | '/hours'
     | '/menu'
     | '/overview'
@@ -281,6 +292,7 @@ export interface FileRouteTypes {
     | '/no-cafe'
     | '/_dashboard/business-profile'
     | '/_dashboard/faqs'
+    | '/_dashboard/widget'
     | '/_dashboard/hours'
     | '/_dashboard/menu'
     | '/_dashboard/overview'
@@ -354,6 +366,13 @@ declare module '@tanstack/react-router' {
       path: '/faqs'
       fullPath: '/faqs'
       preLoaderRoute: typeof DashboardFaqsRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/_dashboard/widget': {
+      id: '/_dashboard/widget'
+      path: '/widget'
+      fullPath: '/widget'
+      preLoaderRoute: typeof DashboardWidgetRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
     '/_dashboard/hours': {
@@ -497,6 +516,7 @@ const DashboardChatBotRoomRouteRouteWithChildren =
 interface DashboardRouteRouteChildren {
   DashboardBusinessProfileRoute: typeof DashboardBusinessProfileRoute
   DashboardFaqsRoute: typeof DashboardFaqsRoute
+  DashboardWidgetRoute: typeof DashboardWidgetRoute
   DashboardHoursRoute: typeof DashboardHoursRoute
   DashboardMenuRoute: typeof DashboardMenuRoute
   DashboardOverviewRoute: typeof DashboardOverviewRoute
@@ -511,6 +531,7 @@ interface DashboardRouteRouteChildren {
 const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardBusinessProfileRoute: DashboardBusinessProfileRoute,
   DashboardFaqsRoute: DashboardFaqsRoute,
+  DashboardWidgetRoute: DashboardWidgetRoute,
   DashboardHoursRoute: DashboardHoursRoute,
   DashboardMenuRoute: DashboardMenuRoute,
   DashboardOverviewRoute: DashboardOverviewRoute,

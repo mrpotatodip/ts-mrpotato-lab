@@ -56,6 +56,7 @@ describe("GET /openapi.json", () => {
       "GET /me",
       "GET /menu",
       "GET /public/chat-bot",
+      "GET /public/chat-bot/frame-policy",
       "GET /schedule",
       "GET /tenants",
       "GET /tenants/{tenantId}",
