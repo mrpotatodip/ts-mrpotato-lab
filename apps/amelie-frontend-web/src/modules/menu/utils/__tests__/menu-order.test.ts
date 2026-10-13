@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { MenuEditor } from "@repo/contracts/amelie";
-import { withCategoriesOrder, withItemsOrder } from "../menu-order";
+import { withCategoriesOrder, withItemImageCover, withItemImagesOrder, withItemsOrder } from "../menu-order";
 
 const ID = (n: number) => `00000000-0000-4000-8000-00000000000${n}`;
 
@@ -14,7 +14,7 @@ const item = (n: number) => ({
   isAvailable: true,
   availableAtAllLocations: true,
   locationIds: [],
-  imageUrl: null,
+  coverPath: null,
   images: [],
   dietaryTags: [],
 });
@@ -46,5 +46,36 @@ describe("withItemsOrder", () => {
   it("leaves other categories alone", () => {
     const next = withItemsOrder(menu, ID(1), [ID(6), ID(4), ID(5)]);
     expect(next.categories[1]).toBe(menu.categories[1]);
+  });
+});
+
+describe("withItemImagesOrder", () => {
+  it("reorders one item's photos and points coverPath at the first", () => {
+    const photos = [
+      { id: ID(7), name: "a.jpg", contentType: "image/jpeg", size: 1, sortOrder: 0 },
+      { id: ID(8), name: "b.jpg", contentType: "image/jpeg", size: 1, sortOrder: 1 },
+    ];
+    const withPhotos: MenuEditor = {
+      ...menu,
+      categories: [{ ...menu.categories[0], items: [{ ...item(4), images: photos, coverPath: `/menu-item-images/${ID(7)}` }] }],
+    };
+    const next = withItemImagesOrder(withPhotos, ID(4), [ID(8), ID(7)]);
+    expect(next.categories[0].items[0].images.map((image) => image.id)).toEqual([ID(8), ID(7)]);
+    expect(next.categories[0].items[0].coverPath).toBe(`/menu-item-images/${ID(8)}`);
+  });
+});
+
+describe("withItemImageCover", () => {
+  it("moves the named photo first", () => {
+    const photos = [
+      { id: ID(7), name: "a.jpg", contentType: "image/jpeg", size: 1, sortOrder: 0 },
+      { id: ID(8), name: "b.jpg", contentType: "image/jpeg", size: 1, sortOrder: 1 },
+    ];
+    const withPhotos: MenuEditor = {
+      ...menu,
+      categories: [{ ...menu.categories[0], items: [{ ...item(4), images: photos, coverPath: `/menu-item-images/${ID(7)}` }] }],
+    };
+    const next = withItemImageCover(withPhotos, ID(4), ID(8));
+    expect(next.categories[0].items[0].images.map((image) => image.id)).toEqual([ID(8), ID(7)]);
   });
 });

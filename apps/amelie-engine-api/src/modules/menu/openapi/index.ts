@@ -10,7 +10,7 @@ export { deleteMenuItemDoc } from "./delete-menu-item";
 export { setMenuItemLocationsDoc } from "./set-menu-item-locations";
 export { setMenuItemCountryPriceDoc } from "./set-menu-item-country-price";
 export { getMenuItemImageDoc } from "./get-menu-item-image";
-export { addMenuItemImageDoc } from "./add-menu-item-image";
+export { addMenuItemImagesDoc } from "./add-menu-item-images";
 export { reorderMenuItemImagesDoc } from "./reorder-menu-item-images";
 export { deleteMenuItemImageDoc } from "./delete-menu-item-image";
 export { setMenuItemImageCoverDoc } from "./set-menu-item-image-cover";

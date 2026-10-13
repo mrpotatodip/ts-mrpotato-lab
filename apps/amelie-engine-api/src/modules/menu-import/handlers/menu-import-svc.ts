@@ -15,7 +15,7 @@ import {
 import type { DbConnectType } from "#/lib/db-connection";
 import { Conflict, ExternalError, Invalid, NotFound, type DbError, type NeedsLocation } from "#/lib/effect-query";
 import { chooseCountryIdSvc, listOpenCountryRefsEffect } from "#/modules/country";
-import { listDietaryTagsSvc } from "#/modules/menu";
+import { dropTenantMenuItemImagesSvc, listDietaryTagsSvc } from "#/modules/menu";
 import {
   IMPORT_ALREADY_PUBLISHED,
   IMPORT_DRAFT_NOT_FOUND,
@@ -42,6 +42,7 @@ import type {
   ImportQueueMessage,
   ImportRow,
   ImportRuntime,
+  ImportStorage,
   NewDraft,
   StoredImportFile,
   UploadedFile,
@@ -219,19 +220,26 @@ export const approveAllImportDraftsSvc = (
 // -----
 export const publishImportSvc = (
   db: DbConnectType,
+  storage: ImportStorage,
   tenantId: string,
   importId: string,
   mode: "replace" | "add",
   locationId?: string,
   countryId?: string,
-): Effect.Effect<PublishedImport, DbError | NotFound | Conflict | NeedsLocation | Invalid> =>
+): Effect.Effect<PublishedImport, DbError | NotFound | Conflict | NeedsLocation | Invalid | ExternalError> =>
   Effect.gen(function* () {
     const drafts = yield* listDraftsEffect(db, tenantId, importId);
     const hasMenu = drafts.some((d) => d.status === "approved" && (d.kind === "menu_category" || d.kind === "menu_item"));
-    if (!hasMenu) return yield* publishImportEffect(db, tenantId, importId, mode, locationId);
+    if (!hasMenu) {
+      const result = yield* publishImportEffect(db, tenantId, importId, mode, locationId);
+      yield* dropTenantMenuItemImagesSvc(storage, result.removedImageKeys);
+      return result.published;
+    }
     if (mode === "replace" && (yield* listOpenCountryRefsEffect(db, tenantId)).length > 1) {
       return yield* new Invalid({ message: IMPORT_REPLACE_NEEDS_ONE_COUNTRY });
     }
     const chosen = yield* chooseCountryIdSvc(db, tenantId, countryId);
-    return yield* publishImportEffect(db, tenantId, importId, mode, locationId, chosen);
+    const result = yield* publishImportEffect(db, tenantId, importId, mode, locationId, chosen);
+    yield* dropTenantMenuItemImagesSvc(storage, result.removedImageKeys);
+    return result.published;
   });

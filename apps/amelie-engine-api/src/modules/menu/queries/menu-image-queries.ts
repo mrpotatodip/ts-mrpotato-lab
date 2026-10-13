@@ -214,6 +214,26 @@ export const listMenuItemImageObjectKeysEffect = (
     return rows.map((row) => row.objectKey);
   });
 
+export const listMenuItemImageObjectKeysForCategoryEffect = (
+  db: DbConnectType,
+  tenantId: string,
+  categoryId: string,
+): Effect.Effect<string[], DbError> =>
+  query(async () => {
+    const rows = await db
+      .select({ objectKey: tenantMenuItemImages.objectKey })
+      .from(tenantMenuItemImages)
+      .innerJoin(tenantMenuItems, eq(tenantMenuItems.id, tenantMenuItemImages.menuItemId))
+      .where(
+        and(
+          eq(tenantMenuItemImages.tenantId, tenantId),
+          eq(tenantMenuItems.tenantId, tenantId),
+          eq(tenantMenuItems.categoryId, categoryId),
+        ),
+      );
+    return rows.map((row) => row.objectKey);
+  });
+
 export const listMenuItemImagesByItemEffect = (
   db: DbConnectType,
   tenantId: string,

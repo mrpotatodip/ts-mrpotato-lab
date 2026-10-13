@@ -11,7 +11,7 @@ const item = (overrides: Partial<MenuItemResult>): MenuItemResult => ({
   currency: "USD",
   variants: null,
   isAvailable: true,
-  imageUrl: null,
+  coverPath: null,
   dietaryTags: [],
   ...overrides,
 });

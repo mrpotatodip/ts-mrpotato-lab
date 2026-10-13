@@ -14,7 +14,7 @@ export const MenuItemResultSchema = z.object({
   currency: z.string().nullable(),
   variants: z.array(MenuItemVariantSchema).nullable(),
   isAvailable: z.boolean(),
-  imageUrl: z.string().nullable(),
+  coverPath: z.string().nullable(),
   dietaryTags: z.array(z.string()),
 });
 
@@ -156,7 +156,7 @@ export const ShowMenuItemsResultSchema = z.object({
       price: z.string().nullable(),
       currency: z.string().nullable(),
       variants: z.array(MenuItemVariantSchema).nullable(),
-      imageUrl: z.string().nullable(),
+      coverPath: z.string().nullable(),
     }),
   ),
 });

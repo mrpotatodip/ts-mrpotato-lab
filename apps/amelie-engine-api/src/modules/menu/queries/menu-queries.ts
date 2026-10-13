@@ -185,7 +185,7 @@ export const listMenuEffect = (
             return {
               ...item,
               images,
-              imageUrl: imageId ? menuItemImagePublicPath(imageId) : null,
+              coverPath: imageId ? menuItemImagePublicPath(imageId) : null,
               isSold: includeUnsold ? soldHere : undefined,
               locationIds: locationRows
                 .filter((row) => row.menuItemId === item.id && row.isAvailable !== item.availableAtAllLocations)
@@ -239,7 +239,7 @@ export const listMenuItemCardsEffect = (
         );
         return rows.map((row) => {
           const imageId = imagesByItem.get(row.id)?.[0]?.id;
-          return { ...row, imageUrl: imageId ? menuItemImagePublicPath(imageId) : null };
+          return { ...row, coverPath: imageId ? menuItemImagePublicPath(imageId) : null };
         });
       });
 

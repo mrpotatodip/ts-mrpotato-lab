@@ -12,7 +12,7 @@ export const getMenuItemImageDoc = describeRoute({
       "The photo bytes for one Menu item image. Knowing the id is enough; there is no session. Chat cards and the dashboard use this URL.",
     steps: [
       "The server loads the image by id. If there is none, the answer is 404.",
-      "The server reads the object from storage and returns the bytes with the stored content type.",
+      "The server reads the object from storage and returns the bytes with the stored content type and a year-long immutable cache, because a new photo is a new id.",
     ],
     example: [bash(`curl "${EXAMPLE_BASE_URL}/menu-item-images/$IMAGE_ID" --output photo.jpg`)],
   }),

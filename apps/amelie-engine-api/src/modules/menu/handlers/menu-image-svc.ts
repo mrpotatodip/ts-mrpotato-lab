@@ -13,12 +13,14 @@ import {
 import { menuItemImageObjectKey } from "#/modules/menu/lib";
 import {
   countMenuItemImagesEffect,
+  deleteMenuCategoryEffect,
   deleteMenuItemEffect,
   deleteMenuItemImageRowEffect,
   getMenuItemImageRowEffect,
   getOwnedMenuItemImageEffect,
   insertMenuItemImageEffect,
   listMenuItemImageObjectKeysEffect,
+  listMenuItemImageObjectKeysForCategoryEffect,
   listMenuItemImagesByItemEffect,
   nextMenuItemImageSortEffect,
   requireMenuItemEffect,
@@ -29,6 +31,12 @@ import type { MenuImageStorage, MenuItemImageBytes, MenuItemImageFile, MenuItemI
 
 const store = <A>(run: () => Promise<A>): Effect.Effect<A, ExternalError> =>
   Effect.tryPromise({ try: run, catch: (cause) => new ExternalError({ cause }) });
+
+const dropStored = (
+  storage: Pick<MenuImageStorage, "delete">,
+  keys: ReadonlyArray<string>,
+): Effect.Effect<void, ExternalError> =>
+  Effect.forEach(keys, (key) => store(() => storage.delete(key)), { concurrency: "unbounded" }).pipe(Effect.asVoid);
 
 const checkImageFile = (file: MenuItemImageFile): string | null => {
   if (!IMPORT_IMAGE_TYPES.some((type) => type === file.contentType)) {
@@ -83,14 +91,15 @@ export const addMenuItemImagesSvc = (
       };
     });
     const keys = planned.map((row) => row.objectKey);
+    const rollback = () => dropStored(storage, keys);
     yield* Effect.forEach(planned, (row) => store(() => storage.put(row.objectKey, row.bytes, row.contentType)), {
       concurrency: 1,
-    }).pipe(Effect.tapError(() => Effect.forEach(keys, (key) => store(() => storage.delete(key)), { concurrency: "unbounded" })));
+    }).pipe(Effect.tapError(rollback));
     return yield* Effect.forEach(
       planned,
       ({ bytes: _bytes, ...row }) => insertMenuItemImageEffect(db, row),
       { concurrency: 1 },
-    ).pipe(Effect.tapError(() => Effect.forEach(keys, (key) => store(() => storage.delete(key)), { concurrency: "unbounded" })));
+    ).pipe(Effect.tapError(rollback));
   });
 
 export const deleteMenuItemWithImagesSvc = (
@@ -102,9 +111,27 @@ export const deleteMenuItemWithImagesSvc = (
   Effect.gen(function* () {
     const keys = yield* listMenuItemImageObjectKeysEffect(db, tenantId, itemId);
     const deleted = yield* deleteMenuItemEffect(db, tenantId, itemId);
-    yield* Effect.forEach(keys, (key) => store(() => storage.delete(key)), { concurrency: "unbounded" });
+    yield* dropStored(storage, keys);
     return deleted;
   });
+
+export const deleteMenuCategoryWithImagesSvc = (
+  db: DbConnectType,
+  storage: MenuImageStorage,
+  tenantId: string,
+  categoryId: string,
+): Effect.Effect<{ id: string }, DbError | NotFound | ExternalError> =>
+  Effect.gen(function* () {
+    const keys = yield* listMenuItemImageObjectKeysForCategoryEffect(db, tenantId, categoryId);
+    const deleted = yield* deleteMenuCategoryEffect(db, tenantId, categoryId);
+    yield* dropStored(storage, keys);
+    return deleted;
+  });
+
+export const dropTenantMenuItemImagesSvc = (
+  storage: Pick<MenuImageStorage, "delete">,
+  keys: ReadonlyArray<string>,
+): Effect.Effect<void, ExternalError> => dropStored(storage, keys);
 
 export const setMenuItemImageCoverSvc = (
   db: DbConnectType,
@@ -112,7 +139,10 @@ export const setMenuItemImageCoverSvc = (
   itemId: string,
   imageId: string,
 ): Effect.Effect<MenuItemImageRecord[], DbError | NotFound> =>
-  setMenuItemImageCoverEffect(db, tenantId, itemId, imageId);
+  Effect.gen(function* () {
+    yield* getOwnedMenuItemImageEffect(db, tenantId, itemId, imageId);
+    return yield* setMenuItemImageCoverEffect(db, tenantId, itemId, imageId);
+  });
 
 export const reorderMenuItemImagesSvc = (
   db: DbConnectType,
@@ -140,6 +170,6 @@ export const deleteMenuItemImageSvc = (
   Effect.gen(function* () {
     const row = yield* getOwnedMenuItemImageEffect(db, tenantId, itemId, imageId);
     yield* deleteMenuItemImageRowEffect(db, tenantId, row.id);
-    yield* store(() => storage.delete(row.objectKey));
+    yield* dropStored(storage, [row.objectKey]);
     return { id: row.id };
   });

@@ -10,7 +10,7 @@ const item = (name: string, dietaryTags: string[] = []): MenuItem => ({
   currency: "USD",
   variants: null,
   isAvailable: true,
-  imageUrl: null,
+  coverPath: null,
   images: [],
   dietaryTags,
   availableAtAllLocations: true,

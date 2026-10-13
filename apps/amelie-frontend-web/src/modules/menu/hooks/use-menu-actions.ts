@@ -17,7 +17,7 @@ import {
   updateMenuCategory,
   updateMenuItem,
 } from "../api";
-import { withCategoriesOrder, withItemsOrder } from "../utils";
+import { withCategoriesOrder, withItemImageCover, withItemImagesOrder, withItemsOrder } from "../utils";
 import { menuKeys } from "./use-menu";
 
 // -----
@@ -57,8 +57,24 @@ export function useMenuActions() {
   const setCountryPrice = useMutation({ mutationFn: setMenuItemCountryPrice, onSuccess: reload });
   const addImages = useMutation({ mutationFn: addMenuItemImages, onSuccess: reload });
   const removeImage = useMutation({ mutationFn: deleteMenuItemImage, onSuccess: reload });
-  const setCover = useMutation({ mutationFn: setMenuItemImageCover, onSuccess: reload });
-  const reorderImages = useMutation({ mutationFn: reorderMenuItemImages, onSuccess: reload });
+  const setCover = useMutation(
+    optimisticEdit({
+      queryClient,
+      queryKey: menuKeys.all,
+      mutationFn: setMenuItemImageCover,
+      applyEdit: (menu: MenuEditor, { data }) => withItemImageCover(menu, data.itemId, data.imageId),
+      settle: reload,
+    }),
+  );
+  const reorderImages = useMutation(
+    optimisticEdit({
+      queryClient,
+      queryKey: menuKeys.all,
+      mutationFn: reorderMenuItemImages,
+      applyEdit: (menu: MenuEditor, { data }) => withItemImagesOrder(menu, data.itemId, data.ids),
+      settle: reload,
+    }),
+  );
 
   return {
     addCategory,

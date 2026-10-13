@@ -14,6 +14,7 @@ export type UploadedFile = { name: string; contentType: string; bytes: ArrayBuff
 export type ImportStorage = {
   put: (key: string, bytes: ArrayBuffer, contentType: string) => Promise<void>;
   get: (key: string) => Promise<ArrayBuffer | null>;
+  delete: (key: string) => Promise<void>;
 };
 
 export type ImportQueue = {

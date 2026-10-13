@@ -5,18 +5,18 @@ import { zValidator } from "#/lib/zod-validator";
 import type { AppEnv } from "#/types/variables";
 import { db_connect } from "#/lib/db-connection";
 import { runEffect } from "#/lib/effect-query";
-import { PayloadTooLargeError, ValidationError } from "#/lib/errors";
+import { PayloadTooLargeError } from "#/lib/errors";
 import { requireTenantEditor } from "#/modules/tenant";
-import { MENU_ITEM_IMAGE_NO_FILE } from "#/modules/menu/constants";
 import { addMenuItemImagesSvc } from "#/modules/menu/handlers";
-import { createMenuImageStorage } from "#/modules/menu/lib";
-import { addMenuItemImageDoc } from "#/modules/menu/openapi";
+import { createMenuImageStorage, toMenuItemImageFiles } from "#/modules/menu/lib";
+import { addMenuItemImagesDoc } from "#/modules/menu/openapi";
+import { MenuItemImagesFormSchema } from "#/modules/menu/schemas";
 
 const app = new Hono<AppEnv>();
 
 app.post(
   "/items/:itemId/images",
-  addMenuItemImageDoc,
+  addMenuItemImagesDoc,
   requireTenantEditor,
   zValidator("param", MenuItemParamSchema),
   bodyLimit({
@@ -25,21 +25,19 @@ app.post(
       throw new PayloadTooLargeError();
     },
   }),
+  zValidator("form", MenuItemImagesFormSchema),
   async (c) => {
     const { itemId } = c.req.valid("param");
-    const body = await c.req.parseBody({ all: true }).catch(() => ({}));
-    const sent = "files" in body ? body.files : "file" in body ? body.file : [];
-    const entries = Array.isArray(sent) ? sent : [sent];
-    const files = await Promise.all(
-      entries.filter((entry) => entry instanceof File).map(async (file) => ({
-        name: file.name,
-        contentType: file.type,
-        bytes: await file.arrayBuffer(),
-      })),
-    );
-    if (files.length === 0) throw new ValidationError(MENU_ITEM_IMAGE_NO_FILE);
     const db = db_connect(c.env.HYPERDRIVE_REALTIME.connectionString);
-    const data = await runEffect(addMenuItemImagesSvc(db, createMenuImageStorage(c.env), c.get("tenantId"), itemId, files));
+    const data = await runEffect(
+      addMenuItemImagesSvc(
+        db,
+        createMenuImageStorage(c.env),
+        c.get("tenantId"),
+        itemId,
+        await toMenuItemImageFiles(c.req.valid("form")),
+      ),
+    );
     return c.json({ data, error: null }, 201);
   },
 );

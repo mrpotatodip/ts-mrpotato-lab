@@ -10,7 +10,7 @@ export { default as deleteMenuItemAPI } from "./delete-menu-item";
 export { default as setMenuItemLocationsAPI } from "./set-menu-item-locations";
 export { default as setMenuItemCountryPriceAPI } from "./set-menu-item-country-price";
 export { default as getMenuItemImageAPI } from "./get-menu-item-image";
-export { default as addMenuItemImageAPI } from "./add-menu-item-image";
+export { default as addMenuItemImagesAPI } from "./add-menu-item-images";
 export { default as reorderMenuItemImagesAPI } from "./reorder-menu-item-images";
 export { default as deleteMenuItemImageAPI } from "./delete-menu-item-image";
 export { default as setMenuItemImageCoverAPI } from "./set-menu-item-image-cover";
