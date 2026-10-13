@@ -27,7 +27,7 @@ app.route("/", streamChatBotAPI);
 // -----
 export const publicChatBotRestAPI = new Hono<AppEnv>();
 
-publicChatBotRestAPI.route("/frame-policy", getPublicChatFramePolicyAPI);
+publicChatBotRestAPI.route("/", getPublicChatFramePolicyAPI);
 publicChatBotRestAPI.route("/", publicHydrateOrJoinChatBotAPI);
 publicChatBotRestAPI.route("/", publicStreamChatBotAPI);
 

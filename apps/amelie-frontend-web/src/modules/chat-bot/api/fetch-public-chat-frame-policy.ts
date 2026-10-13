@@ -1,17 +1,35 @@
-import { PublicChatFramePolicySchema } from "@repo/contracts/amelie";
-import { z } from "zod";
+import { PublicChatFramePolicyQuerySchema } from "@repo/contracts/amelie";
+import { createServerFn } from "@tanstack/react-start";
 
-import { API_BASE_URL } from "#/lib/api-base-url";
+import { apiClient, ApiError } from "#/lib/api-client";
+import { tryCatch } from "#/lib/try-catch";
+import { PublicChatFramePolicyResponseSchema } from "../schemas";
 
-const EnvelopeSchema = z.object({
-  data: PublicChatFramePolicySchema,
-  error: z.null(),
-});
+type FramePolicyEnvelope = {
+  data: { allowedOrigins: string[] } | null;
+};
 
-export async function fetchPublicChatFramePolicy(slug: string): Promise<readonly string[] | null> {
-  const url = `${API_BASE_URL}/public/chat-bot/frame-policy?slug=${encodeURIComponent(slug)}`;
-  const response = await fetch(url, { headers: { Accept: "application/json" } });
-  if (response.status === 404) return null;
-  if (!response.ok) throw new Error(`frame policy ${response.status}`);
-  return EnvelopeSchema.parse(await response.json()).data.allowedOrigins;
+type FramePolicyGet = (path: string) => Promise<FramePolicyEnvelope>;
+
+const getFramePolicy: FramePolicyGet = (path) =>
+  apiClient.get(path, PublicChatFramePolicyResponseSchema);
+
+export async function loadPublicChatFrameOrigins(
+  slug: string,
+  get: FramePolicyGet = getFramePolicy,
+): Promise<readonly string[] | null> {
+  const { data, error } = await tryCatch(
+    get(`/public/chat-bot/frame-policy?slug=${encodeURIComponent(slug)}`),
+  );
+
+  if (error instanceof ApiError && error.status === 404) return null;
+  if (error) {
+    throw new Error(error instanceof ApiError ? error.message : "Failed to load frame policy");
+  }
+  if (!data.data) return null;
+  return data.data.allowedOrigins;
 }
+
+export const fetchPublicChatFramePolicy = createServerFn({ method: "GET" })
+  .validator(PublicChatFramePolicyQuerySchema)
+  .handler(async ({ data: { slug } }) => loadPublicChatFrameOrigins(slug));

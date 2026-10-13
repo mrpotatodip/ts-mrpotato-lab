@@ -3,9 +3,18 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const widgetSource = readFileSync("public/widget.js", "utf8");
 
-const runWidget = (attrs: { slug?: string; location?: string; country?: string; src?: string }) => {
+const runWidget = (attrs: {
+  slug?: string;
+  location?: string;
+  country?: string;
+  src?: string;
+  brokenSrc?: string;
+}) => {
   const script = document.createElement("script");
   script.src = attrs.src ?? "https://app.test/widget.js";
+  if (attrs.brokenSrc !== undefined) {
+    Object.defineProperty(script, "src", { configurable: true, value: attrs.brokenSrc });
+  }
   if (attrs.slug !== undefined) script.setAttribute("data-slug", attrs.slug);
   if (attrs.location) script.setAttribute("data-location", attrs.location);
   if (attrs.country) script.setAttribute("data-country", attrs.country);
@@ -28,7 +37,7 @@ describe("widget.js", () => {
   it("creates the iframe on first click with the Tenant slug", () => {
     runWidget({ slug: "sorella" });
     const button = document.getElementById("amelie-customer-widget-button");
-    expect(button).toBeTruthy();
+    expect(button?.textContent).toBe("Chat with us");
     expect(document.querySelector("iframe")).toBeNull();
 
     button?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
@@ -65,12 +74,23 @@ describe("widget.js", () => {
     runWidget({});
     expect(document.getElementById("amelie-customer-widget-button")).toBeNull();
     expect(error).toHaveBeenCalledTimes(1);
+    expect(error).toHaveBeenCalledWith("Amelie widget: missing or invalid data-slug");
   });
 
-  it("draws nothing for an invalid slug", () => {
-    vi.spyOn(console, "error").mockImplementation(() => {});
+  it("logs once and draws nothing for an invalid slug", () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
     runWidget({ slug: "Not Valid" });
     expect(document.getElementById("amelie-customer-widget-button")).toBeNull();
+    expect(error).toHaveBeenCalledTimes(1);
+    expect(error).toHaveBeenCalledWith("Amelie widget: missing or invalid data-slug");
+  });
+
+  it("logs a script-origin error when data-slug is valid but src is not a URL", () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    runWidget({ slug: "sorella", brokenSrc: "not a url" });
+    expect(document.getElementById("amelie-customer-widget-button")).toBeNull();
+    expect(error).toHaveBeenCalledTimes(1);
+    expect(error).toHaveBeenCalledWith("Amelie widget: missing or invalid script origin");
   });
 
   it("ignores a second script tag", () => {

@@ -10,7 +10,7 @@ import { PublicChatFramePolicyQuerySchema } from "@repo/contracts/amelie";
 const app = new Hono<AppEnv>();
 
 app.get(
-  "/",
+  "/frame-policy",
   getPublicChatFramePolicyDoc,
   zValidator("query", PublicChatFramePolicyQuerySchema),
   async (c) => {
