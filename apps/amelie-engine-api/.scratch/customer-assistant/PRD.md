@@ -153,7 +153,7 @@ Separate public routes beside the signed-in `/chat-bot/*`, e.g. `/public/chat-bo
   - `RATE_LIMITED`: "You're sending messages quickly. Try again in a moment."
   - `THREAD_LIMIT`: "This chat is getting long. Start a new one?"
   - `TENANT_DAILY_LIMIT`: "Our assistant is resting for today. Contact <business> at <phone> or <email>."
-- **Allowed origins:** the chat page sends `Content-Security-Policy: frame-ancestors <allowed_origins>`. If the list is empty, the widget only works on its own Amelie page.
+- **Allowed origins:** the chat page sends `Content-Security-Policy: frame-ancestors <allowed_origins>`. If the list is empty, or the slug is unknown, it sends `frame-ancestors 'none'` and the page cannot be framed. Top-level Amelie chat still works. See `widget-embed.md`.
 
 ### Menu import ([#333](https://github.com/mrpotatodip/ts-elise/issues/333))
 

@@ -1,4 +1,4 @@
-import { queryOptions, useQuery } from "@tanstack/react-query";
+import { queryOptions, useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { fetchTenants } from "../api";
 import { findActiveTenant } from "../utils";
 
@@ -17,6 +17,10 @@ export const tenantsQueries = {
 
 export function useTenants() {
   return useQuery(tenantsQueries.list());
+}
+
+export function useSuspenseTenants() {
+  return useSuspenseQuery(tenantsQueries.list());
 }
 
 // -----

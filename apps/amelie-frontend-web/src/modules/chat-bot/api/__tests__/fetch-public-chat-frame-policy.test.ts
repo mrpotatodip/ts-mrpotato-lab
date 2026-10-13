@@ -1,62 +1,53 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { readFileSync } from "node:fs";
+import { describe, expect, it } from "vitest";
 
-import { fetchPublicChatFramePolicy } from "../fetch-public-chat-frame-policy";
+import { ApiError } from "#/lib/api-client";
+import { loadPublicChatFrameOrigins } from "../fetch-public-chat-frame-policy";
 import { publicChatFrameHeaders } from "../public-chat-frame-headers";
 
-afterEach(() => {
-  vi.unstubAllGlobals();
-});
-
-type FramePolicyJson = {
-  data: { allowedOrigins: string[] } | null;
-  error: { code: string } | null;
-};
-
-const jsonResponse = (status: number, body: FramePolicyJson) =>
-  new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
-
-describe("fetchPublicChatFramePolicy", () => {
+describe("loadPublicChatFrameOrigins", () => {
   it("returns Allowed origins and never a Tenant id", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async () => jsonResponse(200, { data: { allowedOrigins: ["https://sorellacafe.com"] }, error: null })),
-    );
+    const body = await loadPublicChatFrameOrigins("sorella", async () => ({
+      data: { allowedOrigins: ["https://sorellacafe.com"] },
+    }));
 
-    await expect(fetchPublicChatFramePolicy("sorella")).resolves.toEqual(["https://sorellacafe.com"]);
+    expect(body).toEqual(["https://sorellacafe.com"]);
   });
 
   it("returns null for an unknown slug", async () => {
-    vi.stubGlobal("fetch", vi.fn(async () => jsonResponse(404, { data: null, error: { code: "NOT_FOUND" } })));
-
-    await expect(fetchPublicChatFramePolicy("missing")).resolves.toBeNull();
+    await expect(
+      loadPublicChatFrameOrigins("missing", async () => {
+        throw new ApiError(404, null);
+      }),
+    ).resolves.toBeNull();
   });
 });
 
 describe("publicChatFrameHeaders", () => {
   it("sets frame-ancestors from Allowed origins", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async () => jsonResponse(200, { data: { allowedOrigins: ["https://sorellacafe.com/menu"] }, error: null })),
-    );
-
-    await expect(publicChatFrameHeaders("sorella")).resolves.toEqual({
+    await expect(
+      publicChatFrameHeaders("sorella", async () => ["https://sorellacafe.com/menu"]),
+    ).resolves.toEqual({
       "Content-Security-Policy": "frame-ancestors https://sorellacafe.com",
     });
   });
 
   it("sets none for an empty list", async () => {
-    vi.stubGlobal("fetch", vi.fn(async () => jsonResponse(200, { data: { allowedOrigins: [] }, error: null })));
-
-    await expect(publicChatFrameHeaders("empty")).resolves.toEqual({
+    await expect(publicChatFrameHeaders("empty", async () => [])).resolves.toEqual({
       "Content-Security-Policy": "frame-ancestors 'none'",
     });
   });
 
   it("sets none for an unknown slug", async () => {
-    vi.stubGlobal("fetch", vi.fn(async () => jsonResponse(404, { data: null, error: { code: "NOT_FOUND" } })));
-
-    await expect(publicChatFrameHeaders("missing")).resolves.toEqual({
+    await expect(publicChatFrameHeaders("missing", async () => null)).resolves.toEqual({
       "Content-Security-Policy": "frame-ancestors 'none'",
     });
+  });
+});
+
+describe("/chat/$slug document headers", () => {
+  it("sets CSP from publicChatFrameHeaders", () => {
+    const route = readFileSync("src/routes/chat/$slug.tsx", "utf8");
+    expect(route).toContain("headers: ({ params }) => publicChatFrameHeaders(params.slug)");
   });
 });

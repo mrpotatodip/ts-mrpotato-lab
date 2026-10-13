@@ -1,6 +1,6 @@
 (() => {
   const FLAG = "__amelieCustomerWidget";
-  const SLUG = /^[a-z0-9][a-z0-9-]{0,62}$/;
+  const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]{0,62}$/;
   if (window[FLAG]) return;
 
   const script =
@@ -11,7 +11,7 @@
   window[FLAG] = true;
 
   const slug = (script.getAttribute("data-slug") || "").trim();
-  if (!SLUG.test(slug)) {
+  if (!SLUG_PATTERN.test(slug)) {
     console.error("Amelie widget: missing or invalid data-slug");
     return;
   }
@@ -20,7 +20,7 @@
   try {
     origin = new URL(script.src).origin;
   } catch {
-    console.error("Amelie widget: missing or invalid data-slug");
+    console.error("Amelie widget: missing or invalid script origin");
     return;
   }
 
@@ -35,7 +35,7 @@
   const style = document.createElement("style");
   style.textContent =
     "#amelie-customer-widget-button,#amelie-customer-widget-frame{position:fixed;z-index:2147483647;box-sizing:border-box}" +
-    "#amelie-customer-widget-button{right:20px;bottom:20px;width:56px;height:56px;border:0;border-radius:28px;background:#171717;color:#fff;cursor:pointer;font:600 14px/1 system-ui,sans-serif}" +
+    "#amelie-customer-widget-button{right:20px;bottom:20px;height:56px;padding:0 18px;border:0;border-radius:28px;background:#171717;color:#fff;cursor:pointer;font:600 14px/1 system-ui,sans-serif}" +
     "#amelie-customer-widget-frame{right:20px;bottom:88px;width:min(380px,calc(100vw - 24px));height:min(640px,calc(100vh - 120px));border:0;border-radius:16px;background:#fff;box-shadow:0 8px 32px rgba(0,0,0,.18)}";
   document.head.appendChild(style);
 
@@ -44,7 +44,7 @@
   button.type = "button";
   button.setAttribute("aria-expanded", "false");
   button.setAttribute("aria-label", "Chat with us");
-  button.textContent = "Chat";
+  button.textContent = "Chat with us";
 
   let frame = null;
   const toggle = () => {
