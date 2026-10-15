@@ -7,3 +7,4 @@ export { deleteChatBotThreadDoc } from "./delete-chat-bot-thread";
 export { publicStreamChatBotDoc } from "./public-stream-chat-bot";
 export { publicHydrateOrJoinChatBotDoc } from "./public-hydrate-or-join-chat-bot";
 export { getPublicChatFramePolicyDoc } from "./get-public-chat-frame-policy";
+export { getPublicChatAppearanceDoc } from "./get-public-chat-appearance";

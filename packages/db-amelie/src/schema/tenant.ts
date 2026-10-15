@@ -37,6 +37,8 @@ export const tenants = pgTable(
       .array()
       .notNull()
       .default(sql`'{}'::text[]`),
+    customerChatLabel: text("customer_chat_label").notNull().default("Chat with us"),
+    customerChatAccent: text("customer_chat_accent"),
     timezone: text("timezone").notNull(),
     ...timestamps(),
   },

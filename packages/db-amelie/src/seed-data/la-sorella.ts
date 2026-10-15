@@ -52,11 +52,13 @@ export const faqs = [
     category: "Ordering & gift cards",
     question: "Can I order online?",
     answer: "Yes, order online through the 'Online ordering' link on lasorellafishkill.com.",
+    country: "US",
   },
   {
     category: "Ordering & gift cards",
     question: "Do you sell gift cards?",
     answer: "Yes, gift cards are sold through the 'Gift Cards' page on lasorellafishkill.com.",
+    country: "US",
   },
   {
     category: "About us",

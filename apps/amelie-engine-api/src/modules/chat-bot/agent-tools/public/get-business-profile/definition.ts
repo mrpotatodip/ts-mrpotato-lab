@@ -16,9 +16,10 @@ export const getBusinessProfileTool = defineChatBotTool({
       "then pass its name, slug or id. A value that is not one of the " +
       "cafe's locations is ignored and note says so. " +
       "With several locations and " +
-      "none set, description, website and email still come back, address and " +
-      "phone are null, and needsLocation is true with the locations to choose " +
-      "from: ask which one only if the customer wants an address or phone, " +
+      "none set, address and phone are null and needsLocation is true with " +
+      "the locations to choose from. Description, website and email come " +
+      "back only for the first country; they are null for a later country. " +
+      "Ask which location only if the customer wants an address or phone, " +
       "then call setThreadLocation. If the conversation's country has exactly " +
       "one location it is used without asking; with several, the options " +
       "are only that country's.",

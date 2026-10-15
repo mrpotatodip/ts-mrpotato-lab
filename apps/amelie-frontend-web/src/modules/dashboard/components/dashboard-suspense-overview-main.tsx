@@ -1,4 +1,4 @@
-import { CircleQuestionMark, MessageSquareWarning, MessagesSquare, UtensilsCrossed } from "lucide-react";
+import { FileText, MessageSquareWarning, MessagesSquare, UtensilsCrossed } from "lucide-react";
 import { Suspense } from "react";
 
 import { useSuspenseDashboardOverview } from "../hooks";
@@ -58,7 +58,7 @@ function DashboardOverviewView() {
           label="FAQs"
           value={overview.faqCount}
           hint={`${overview.faqCategoryCount} categories`}
-          icon={CircleQuestionMark}
+          icon={FileText}
           to="/faqs"
         />
       </div>

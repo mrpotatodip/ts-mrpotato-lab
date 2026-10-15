@@ -129,7 +129,12 @@ async function seedKnowledge(tenantId: string, countryId: string) {
     .returning();
   const faqCategoryId = new Map(faqCategories.map((c) => [c.name, c.id]));
   await db.insert(tenantFaqs).values(
-    laSorella.faqs.map(({ category, ...f }) => ({ tenantId, categoryId: faqCategoryId.get(category), ...f })),
+    laSorella.faqs.map(({ category, country, ...f }) => ({
+      tenantId,
+      categoryId: faqCategoryId.get(category),
+      countryId: country === SORELLA_COUNTRY.country ? countryId : null,
+      ...f,
+    })),
   );
   const categories = await db
     .insert(tenantMenuCategories)
@@ -175,6 +180,20 @@ const AIRPORT = {
   phone: "845-555-2010",
 };
 
+// -----
+// Fishkill ordering FAQs are US-only. Older
+// seeds left them cafe-wide, so a later
+// Country's chat would quote that website.
+// -----
+async function scopeFishkillFaqs(tenantId: string, countryId: string) {
+  const questions = laSorella.faqs.filter((faq) => faq.country === SORELLA_COUNTRY.country).map((faq) => faq.question);
+  if (questions.length === 0) return;
+  await db
+    .update(tenantFaqs)
+    .set({ countryId })
+    .where(and(eq(tenantFaqs.tenantId, tenantId), inArray(tenantFaqs.question, questions), isNull(tenantFaqs.countryId)));
+}
+
 async function seedAirport(tenantId: string, countryId: string) {
   const active = await db
     .select({ id: tenantLocations.id })
@@ -219,6 +238,7 @@ async function main() {
   const countryId = await seedCountry(tenantId);
   await seedKnowledge(tenantId, countryId);
   await seedAirport(tenantId, countryId);
+  await scopeFishkillFaqs(tenantId, countryId);
   console.log(`seeded ${SORELLA.slug} with owner ${OWNER_EMAIL} and La Sorella's knowledge`);
 }
 

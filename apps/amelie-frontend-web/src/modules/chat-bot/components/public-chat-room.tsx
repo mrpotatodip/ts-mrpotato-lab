@@ -1,7 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { MessageSquarePlus } from "lucide-react";
+import type { PublicChatAppearance } from "@repo/contracts/amelie";
+
+type CustomerChatTheme = CSSProperties & {
+  "--primary"?: string;
+  "--primary-foreground"?: string;
+  "--ring"?: string;
+};
 
 import { Button } from "#/components/ui/button";
+import { toCustomerChatInk } from "../utils";
 import { livePublicChatThreadId } from "../api/live-public-chat-thread-id";
 import { CHAT_BOT_CUSTOMER_SURFACE } from "../constants";
 import { ChatBotSurfaceContext } from "../contexts";
@@ -20,6 +28,7 @@ type PublicChatRoomProps = {
   slug: string;
   location?: string;
   country?: string;
+  appearance: PublicChatAppearance;
 };
 
 type PublicChatStart = {
@@ -31,7 +40,7 @@ type PublicChatStart = {
 // Client-only: the Customer's id lives in
 // this browser's storage, not on the server.
 // -----
-export function PublicChatRoom({ slug, location, country }: PublicChatRoomProps) {
+export function PublicChatRoom({ slug, location, country, appearance }: PublicChatRoomProps) {
   const [start, setStart] = useState<PublicChatStart | null>(null);
 
   useEffect(() => {
@@ -60,14 +69,27 @@ export function PublicChatRoom({ slug, location, country }: PublicChatRoomProps)
     setStart((current) => ({ threadId: null, generation: (current?.generation ?? 0) + 1 }));
   };
 
+  const accentStyle: CustomerChatTheme | undefined = appearance.customerChatAccent
+    ? {
+        "--primary": appearance.customerChatAccent,
+        "--primary-foreground": toCustomerChatInk(appearance.customerChatAccent),
+        "--ring": appearance.customerChatAccent,
+      }
+    : undefined;
+
   return (
     <ChatBotSurfaceContext.Provider value={CHAT_BOT_CUSTOMER_SURFACE}>
-      <div className="flex h-dvh min-h-0 flex-col">
-        <header className="mx-auto flex w-full max-w-2xl shrink-0 items-center justify-between p-4">
-          <h1 className="text-sm font-medium">Chat with us</h1>
-          <Button variant="ghost" size="sm" onClick={startNewChat} disabled={!start}>
+      <div className="flex h-dvh min-h-0 flex-col" style={accentStyle}>
+        <header className="mx-auto flex w-full max-w-2xl shrink-0 items-center justify-end p-4">
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label="New chat"
+            title="New chat"
+            onClick={startNewChat}
+            disabled={!start}
+          >
             <MessageSquarePlus />
-            New chat
           </Button>
         </header>
         <div className="min-h-0 flex-1">

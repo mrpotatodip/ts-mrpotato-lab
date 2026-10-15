@@ -10,6 +10,7 @@ import {
   publicStreamChatBotAPI,
   publicHydrateOrJoinChatBotAPI,
   getPublicChatFramePolicyAPI,
+  getPublicChatAppearanceAPI,
 } from "./api";
 
 const app = new Hono<AppEnv>();
@@ -28,6 +29,7 @@ app.route("/", streamChatBotAPI);
 export const publicChatBotRestAPI = new Hono<AppEnv>();
 
 publicChatBotRestAPI.route("/", getPublicChatFramePolicyAPI);
+publicChatBotRestAPI.route("/", getPublicChatAppearanceAPI);
 publicChatBotRestAPI.route("/", publicHydrateOrJoinChatBotAPI);
 publicChatBotRestAPI.route("/", publicStreamChatBotAPI);
 

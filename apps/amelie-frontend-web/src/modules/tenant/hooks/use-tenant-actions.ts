@@ -1,7 +1,11 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { menuKeys } from "#/modules/menu";
-import { updateTenantAllowedOrigins, updateTenantRegion } from "../api";
-import type { UpdateTenantAllowedOriginsInput, UpdateTenantRegionInput } from "../schemas";
+import { updateTenantAllowedOrigins, updateTenantCustomerChat, updateTenantRegion } from "../api";
+import type {
+  UpdateTenantAllowedOriginsInput,
+  UpdateTenantCustomerChatInput,
+  UpdateTenantRegionInput,
+} from "../schemas";
 import { tenantsKeys } from "./use-tenants";
 
 export function useTenantActions() {
@@ -22,5 +26,11 @@ export function useTenantActions() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: tenantsKeys.all }),
   });
 
-  return { updateRegion, updateAllowedOrigins };
+  const updateCustomerChat = useMutation({
+    mutationFn: (input: UpdateTenantCustomerChatInput) => updateTenantCustomerChat({ data: input }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: tenantsKeys.all }),
+    meta: { successMessage: "Chat look saved" },
+  });
+
+  return { updateRegion, updateAllowedOrigins, updateCustomerChat };
 }

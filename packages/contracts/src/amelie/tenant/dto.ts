@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ALLOWED_ORIGINS_MAX } from "../constants";
+import { ALLOWED_ORIGINS_MAX, CUSTOMER_CHAT_LABEL_DEFAULT, CUSTOMER_CHAT_LABEL_MAX } from "../constants";
 import { COUNTRY_VALUES, CURRENCY_VALUES, TENANT_ROLE_KEY_VALUES } from "../enums";
 
 // -----
@@ -64,6 +64,40 @@ export const UpdateTenantAllowedOriginsBodySchema = z.object({
 // currency are those of the Tenant's first open
 // Country; the Tenant row holds neither.
 // -----
+export const CUSTOMER_CHAT_APPEARANCE_INVALID =
+  "The button text must be 1 to 40 characters. The colour must be a #rrggbb hex value, or empty for the default.";
+
+const CUSTOMER_CHAT_ACCENT = /^#[0-9a-fA-F]{6}$/;
+
+export function parseCustomerChatAccent(value: string | null): string | null | undefined {
+  if (value === null) return null;
+  const trimmed = value.trim();
+  if (trimmed === "") return null;
+  if (!CUSTOMER_CHAT_ACCENT.test(trimmed)) return undefined;
+  return trimmed.toLowerCase();
+}
+
+export const UpdateTenantCustomerChatBodySchema = z.object({
+  customerChatLabel: z
+    .string()
+    .superRefine((value, ctx) => {
+      const label = value.trim();
+      if (label.length < 1 || label.length > CUSTOMER_CHAT_LABEL_MAX) {
+        ctx.addIssue({ code: "custom", message: CUSTOMER_CHAT_APPEARANCE_INVALID });
+      }
+    })
+    .transform((value) => value.trim() || CUSTOMER_CHAT_LABEL_DEFAULT),
+  customerChatAccent: z
+    .string()
+    .nullable()
+    .superRefine((value, ctx) => {
+      if (parseCustomerChatAccent(value) === undefined) {
+        ctx.addIssue({ code: "custom", message: CUSTOMER_CHAT_APPEARANCE_INVALID });
+      }
+    })
+    .transform((value) => parseCustomerChatAccent(value) ?? null),
+});
+
 export const TenantSchema = z.object({
   id: TenantIdSchema,
   name: z.string(),
@@ -72,6 +106,8 @@ export const TenantSchema = z.object({
   country: z.enum(COUNTRY_VALUES),
   currency: z.enum(CURRENCY_VALUES),
   allowedOrigins: z.array(z.string()),
+  customerChatLabel: z.string(),
+  customerChatAccent: z.string().nullable(),
   role: z.enum(TENANT_ROLE_KEY_VALUES),
   canEdit: z.boolean(),
 });
@@ -79,5 +115,6 @@ export const TenantSchema = z.object({
 export type TenantParam = z.infer<typeof TenantParamSchema>;
 export type UpdateTenantRegionBody = z.infer<typeof UpdateTenantRegionBodySchema>;
 export type UpdateTenantAllowedOriginsBody = z.infer<typeof UpdateTenantAllowedOriginsBodySchema>;
+export type UpdateTenantCustomerChatBody = z.infer<typeof UpdateTenantCustomerChatBodySchema>;
 export type TenantRegion = z.infer<typeof TenantRegionSchema>;
 export type Tenant = z.infer<typeof TenantSchema>;

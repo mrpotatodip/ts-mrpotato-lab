@@ -25,6 +25,8 @@ const tenantColumns = {
   country: tenantCountries.country,
   currency: tenantCountries.currency,
   allowedOrigins: tenants.allowedOrigins,
+  customerChatLabel: tenants.customerChatLabel,
+  customerChatAccent: tenants.customerChatAccent,
   role: roles.key,
   canEdit: roles.canEdit,
 };
@@ -143,6 +145,25 @@ export const updateTenantAllowedOriginsEffect = (
     return yield* getTenantForUserEffect(db, userId, tenantId);
   });
 
+export const updateTenantCustomerChatEffect = (
+  db: DbConnectType,
+  userId: string,
+  tenantId: string,
+  customerChatLabel: string,
+  customerChatAccent: string | null,
+): Effect.Effect<Tenant, DbError | NotFound> =>
+  Effect.gen(function* () {
+    yield* Effect.tryPromise({
+      try: () =>
+        db
+          .update(tenants)
+          .set({ customerChatLabel, customerChatAccent, updatedAt: new Date() })
+          .where(eq(tenants.id, tenantId)),
+      catch: toDbError,
+    });
+    return yield* getTenantForUserEffect(db, userId, tenantId);
+  });
+
 // -----
 // The public widget names a Tenant by slug;
 // the id never leaves the server.
@@ -160,6 +181,8 @@ export const findPublicTenantBySlugEffect = (
             name: tenants.name,
             timezone: tenants.timezone,
             allowedOrigins: tenants.allowedOrigins,
+            customerChatLabel: tenants.customerChatLabel,
+            customerChatAccent: tenants.customerChatAccent,
           })
           .from(tenants)
           .where(eq(tenants.slug, slug))

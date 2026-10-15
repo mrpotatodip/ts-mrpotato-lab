@@ -440,7 +440,7 @@ Last updated: 2026-10-15
 | Property         | Class |
 | ---------------- | ----- |
 | Background       | active `bg-sidebar-accent` |
-| Border           | rail `border-l border-sidebar-border` |
+| Border           | rail `border-l border-sidebar-foreground/25`, ticks `before:bg-sidebar-foreground/25` |
 | Border radius    | row `rounded-md` |
 | Text — primary   | `text-[0.9375rem] tracking-tight`, active `font-medium` |
 | Text — secondary | idle `text-sidebar-foreground/70` |
@@ -450,7 +450,27 @@ Last updated: 2026-10-15
 | Accent usage     | none |
 
 **Pattern notes:**
-Uses shadcn `SidebarMenuSub` / `SidebarMenuSubButton` under FAQs, inside Base UI `Collapsible`. Sub labels match the parent nav size (`text-[0.9375rem] tracking-tight`), quieter when idle (`text-sidebar-foreground/70`), `font-medium` when selected. The FAQs row is the trigger; a `ChevronRight` with `ml-auto` rotates `group-data-[open]/collapsible:rotate-90`. Open by default on `/faqs`, closed elsewhere. General first, then the tenant's categories. Do not add icons on the sub rows.
+Uses shadcn `SidebarMenuSub` / `SidebarMenuSubButton` under FAQs, inside Base UI `Collapsible`. Sub labels match the parent nav size (`text-[0.9375rem] tracking-tight`), quieter when idle (`text-sidebar-foreground/70`), `font-medium` when selected. The FAQs row is the trigger (`FileText`, same icon as the overview FAQ stat); a `ChevronRight` with `ml-auto` rotates `group-data-[open]/collapsible:rotate-90`. Open by default on `/faqs`, closed elsewhere. General first, then the tenant's categories. Do not add icons on FAQ sub rows. Menu uses the same chrome (`dashboard-menu-subnav.tsx`) with icons. Tree rail and ticks live on `SidebarMenuSub` / `SidebarMenuSubItem` so every subnav gets them. Do not use `Brain` here; that reads as the assistant.
+
+### DashboardMenuSubnav
+
+File: `src/modules/dashboard/components/dashboard-menu-subnav.tsx`
+Last updated: 2026-10-15
+
+| Property         | Class |
+| ---------------- | ----- |
+| Background       | active `bg-sidebar-accent` |
+| Border           | rail `border-l border-sidebar-foreground/25`, ticks `before:bg-sidebar-foreground/25` |
+| Border radius    | row `rounded-md` |
+| Text — primary   | `text-[0.9375rem] tracking-tight`, active `font-medium` |
+| Text — secondary | idle `text-sidebar-foreground/70` |
+| Spacing          | list `mx-3.5 px-2.5 py-0.5 gap-1`, row `h-8 px-2` |
+| Hover state      | `hover:bg-sidebar-accent hover:text-sidebar-accent-foreground` |
+| Shadow           | none |
+| Accent usage     | none |
+
+**Pattern notes:**
+Same collapsible chrome as DashboardFaqSubnav, but sub rows have Lucide icons (`LayoutList` Items, `FileUp` Import) at the SidebarMenuSubButton default `[&>svg]:size-4`. Parent is not a link. Tree rail and ticks come from `SidebarMenuSub` / `SidebarMenuSubItem`.
 
 ### DashboardScopeControls
 
@@ -531,6 +551,46 @@ Last updated: 2026-10-15
 **Pattern notes:**
 Mounted once in `__root.tsx`, `position="top-right"`. Action mutations toast through Query `MutationCache` (`src/lib/mutation-toast.ts`): success copy lives in `meta.successMessage`, failures use the thrown `Error` message. Skip a success toast with `successMessage: false` (drag reorders). Do not add a second toaster, and do not call `toast` from components when the mutation already has meta.
 
+### WidgetInstallCard
+
+File: `src/modules/widget/components/widget-install-card.tsx`
+Last updated: 2026-10-15
+
+| Property         | Class |
+| ---------------- | ----- |
+| Background       | PageCard (`bg-muted/60`, body `rounded-3xl border-t bg-card`) |
+| Border           | PageCard; guide `border-t` |
+| Border radius    | PageCard |
+| Text — primary   | title via PageCard `text-lg`; guide heading `text-sm font-medium`; snippet `font-mono text-sm` |
+| Text — secondary | description via PageCard; guide body `text-sm text-muted-foreground`; attr names `code` `text-foreground` |
+| Spacing          | snippet then link `mt-4`; guide `mt-6` `pt-6` `space-y-3`; examples `space-y-4` / `space-y-2`; page stack `space-y-8` |
+| Hover state      | outline `sm` Copy; Try chat Link with `buttonVariants` `link` `sm` `px-0` |
+| Shadow           | none |
+| Accent usage     | snippet `bg-muted rounded-md px-3 py-2` |
+
+**Pattern notes:**
+Copyable install snippet on Widget. Snippet chrome matches invite-code mono: `font-mono` on `bg-muted rounded-md px-3 py-2`. One Location pins `data-location` and `data-country` on that snippet. Several Locations keep the copy slug-only and list a tag per branch under Country and location. Link to `/chat/$slug` uses the link button classes so it stays an `<a>`, not `role="button"`.
+
+### WidgetCustomerChatCard
+
+File: `src/modules/widget/components/widget-customer-chat-card.tsx`
+Last updated: 2026-10-15
+
+| Property         | Class |
+| ---------------- | ----- |
+| Background       | PageCard (`bg-muted/60`, body `rounded-3xl border-t bg-card`) |
+| Border           | PageCard |
+| Border radius    | PageCard |
+| Text — primary   | title via PageCard `text-lg`; field label `text-sm` |
+| Text — secondary | description via PageCard; hex line `text-muted-foreground`; errors `text-xs text-destructive` |
+| Spacing          | fields `flex flex-col gap-3`, label/input `gap-1.5`, colour row `gap-2`, Save `mt-3`, error `mt-4` |
+| Hover state      | colour Input `h-10 w-14 p-1`; outline `sm` Use default; default `sm` Save |
+| Shadow           | none |
+| Accent usage     | empty swatch is `--primary` as hex (`toAccentSwatchValue`) |
+
+**Pattern notes:**
+Sits between the install snippet and Allowed origins on Widget. Editors set an accessible button label and a `#rrggbb` colour. The label is not drawn on the bubble or in the iframe. Fields wrap like Profile (`flex flex-col gap-1.5 text-sm`). Empty colour is Amelie's `--primary`; the native colour input shows that swatch, not a raw near-black. Staff see the stored text and hex with no Save.
+
 ### WidgetAllowedOriginsCard
 
 File: `src/modules/widget/components/widget-allowed-origins-card.tsx`
@@ -550,3 +610,23 @@ Last updated: 2026-10-15
 
 **Pattern notes:**
 Sits under the install snippet on Widget. Editors get one Input per row, ghost `icon-sm` Trash2 to remove, outline Add website, then Save. Staff see the stored origins as `text-sm break-all` with no add, remove, or Save. Empty list shows the iframe warning. Paste a full URL; the server keeps the origin.
+
+### PublicChatRoom
+
+File: `src/modules/chat-bot/components/public-chat-room.tsx`
+Last updated: 2026-10-15
+
+| Property         | Class |
+| ---------------- | ----- |
+| Background       | page default |
+| Border           | none |
+| Border radius    | none on the header |
+| Text — primary   | none; cafe label is not shown in the iframe |
+| Text — secondary | none |
+| Spacing          | header `p-4`, icon aligned `justify-end` |
+| Hover state      | ghost `icon-sm` |
+| Shadow           | none |
+| Accent usage     | `--primary` / `--ring` from `customerChatAccent` |
+
+**Pattern notes:**
+Customer iframe header is icon-only. New chat is ghost `icon-sm` `MessageSquarePlus` with `aria-label` and `title` "New chat". The cafe name is not shown in the iframe or on the host bubble.

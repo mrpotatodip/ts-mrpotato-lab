@@ -16,9 +16,10 @@ import {
 } from "#/components/ui/sidebar";
 import { useAdminAccess } from "#/modules/admin";
 import { TenantPicker, useTenants } from "#/modules/tenant";
-import { DASHBOARD_ADMIN_GROUP, DASHBOARD_NAV_GROUPS } from "../constants";
+import { DASHBOARD_ADMIN_GROUP, DASHBOARD_MENU_SUBNAV, DASHBOARD_NAV_GROUPS } from "../constants";
 import { DashboardAccountMenu } from "./dashboard-account-menu";
 import { DashboardFaqNav } from "./dashboard-faq-subnav";
+import { DashboardMenuNav } from "./dashboard-menu-subnav";
 import { DashboardScopePickers } from "./dashboard-scope-pickers";
 
 type DashboardSidebarProps = {
@@ -54,7 +55,15 @@ export function DashboardSidebar({ userName, userEmail }: DashboardSidebarProps)
               <SidebarMenu className="gap-0.5">
                 {group.items.map(({ to, label, icon: Icon }) => (
                   <SidebarMenuItem key={to}>
-                    {to === "/faqs" ? (
+                    {to === "/menu" ? (
+                      <DashboardMenuNav
+                        label={label}
+                        icon={Icon}
+                        isActive={DASHBOARD_MENU_SUBNAV.some(
+                          (item) => pathname === item.to || pathname.startsWith(`${item.to}/`),
+                        )}
+                      />
+                    ) : to === "/faqs" ? (
                       <DashboardFaqNav label={label} icon={Icon} isActive={pathname === to} />
                     ) : (
                       <SidebarMenuButton

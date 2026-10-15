@@ -53,6 +53,12 @@ describe("app routes", () => {
     expect(res.status).toBe(400);
   });
 
+  it("lets the Customer chat look lookup run without a login", async () => {
+    const res = await request("/public/chat-bot/appearance");
+
+    expect(res.status).toBe(400);
+  });
+
   it.each([
     "/tenants",
     "/tenants/some-id",

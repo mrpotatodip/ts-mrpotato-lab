@@ -8,6 +8,7 @@ import {
   CURRENCY_VALUES,
   TenantRegionSchema,
   UpdateTenantAllowedOriginsBodySchema,
+  UpdateTenantCustomerChatBodySchema,
 } from "@repo/contracts/amelie";
 import type { DbConnectType } from "#/lib/db-connection";
 import { ConflictError, ForbiddenError, NotFoundError } from "#/lib/errors";
@@ -59,6 +60,8 @@ describe("listTenantsSvc", () => {
         country: "US",
         currency: "USD",
         allowedOrigins: [],
+        customerChatLabel: "Chat with us",
+        customerChatAccent: null,
         role: "owner",
         canEdit: true,
       },
@@ -427,6 +430,32 @@ describe("UpdateTenantAllowedOriginsBodySchema", () => {
     expect(UpdateTenantAllowedOriginsBodySchema.parse({ allowedOrigins }).allowedOrigins).toEqual([
       "https://sorellacafe.com",
     ]);
+  });
+});
+
+describe("UpdateTenantCustomerChatBodySchema", () => {
+  it("trims the label and lowercases the colour", () => {
+    expect(
+      UpdateTenantCustomerChatBodySchema.parse({
+        customerChatLabel: " Ask Sorella ",
+        customerChatAccent: "#B4532A",
+      }),
+    ).toEqual({ customerChatLabel: "Ask Sorella", customerChatAccent: "#b4532a" });
+  });
+
+  it("treats a blank colour as the default", () => {
+    expect(
+      UpdateTenantCustomerChatBodySchema.parse({ customerChatLabel: "Hi", customerChatAccent: "  " }),
+    ).toEqual({ customerChatLabel: "Hi", customerChatAccent: null });
+  });
+
+  it("rejects an empty label and a non-hex colour", () => {
+    expect(
+      UpdateTenantCustomerChatBodySchema.safeParse({ customerChatLabel: "  ", customerChatAccent: null }).success,
+    ).toBe(false);
+    expect(
+      UpdateTenantCustomerChatBodySchema.safeParse({ customerChatLabel: "Hi", customerChatAccent: "red" }).success,
+    ).toBe(false);
   });
 });
 

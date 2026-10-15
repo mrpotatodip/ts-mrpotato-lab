@@ -7,3 +7,4 @@ export { default as deleteChatBotThreadAPI } from "./delete-chat-bot-thread";
 export { default as publicStreamChatBotAPI } from "./public-stream-chat-bot";
 export { default as publicHydrateOrJoinChatBotAPI } from "./public-hydrate-or-join-chat-bot";
 export { default as getPublicChatFramePolicyAPI } from "./get-public-chat-frame-policy";
+export { default as getPublicChatAppearanceAPI } from "./get-public-chat-appearance";

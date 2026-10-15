@@ -1,6 +1,7 @@
 import { Effect } from "effect";
 import type { DbConnectType } from "#/lib/db-connection";
 import type { DbError, NeedsLocation, NotFound } from "#/lib/effect-query";
+import { listOpenCountryRefsEffect, readCountryIdEffect } from "#/modules/country";
 import { resolveLocationSvc, updateLocationContactEffect } from "#/modules/location";
 import {
   getBusinessProfileEffect,
@@ -29,6 +30,25 @@ export const getTenantProfileSvc = (
   getBusinessProfileEffect(db, tenantId).pipe(Effect.map((profile) => profile ?? EMPTY_TENANT_PROFILE));
 
 // -----
+// Description, website and email sit on the
+// Tenant. With several Countries they belong
+// to the first (sign-up) Country, not to a
+// later one: that later Location only has
+// its own address and phone.
+// -----
+export const tenantProfileForCountrySvc = (
+  db: DbConnectType,
+  tenantId: string,
+  countryId: string | null,
+): Effect.Effect<TenantProfile, DbError> =>
+  Effect.gen(function* () {
+    const open = yield* listOpenCountryRefsEffect(db, tenantId);
+    const home = open[0]?.id;
+    if (open.length > 1 && countryId !== home) return EMPTY_TENANT_PROFILE;
+    return yield* getTenantProfileSvc(db, tenantId);
+  });
+
+// -----
 // Tenant-wide facts plus one Location's address
 // and phone. No locationId means the Tenant's
 // only Location; with several it fails with the
@@ -41,7 +61,8 @@ export const getBusinessProfileSvc = (
 ): Effect.Effect<BusinessProfile, DbError | NotFound | NeedsLocation> =>
   Effect.gen(function* () {
     const location = yield* resolveLocationSvc(db, tenantId, locationId);
-    const profile = yield* getTenantProfileSvc(db, tenantId);
+    const countryId = yield* readCountryIdEffect(db, tenantId, location.id);
+    const profile = yield* tenantProfileForCountrySvc(db, tenantId, countryId);
     return { ...profile, address: location.address, phone: location.phone };
   });
 
