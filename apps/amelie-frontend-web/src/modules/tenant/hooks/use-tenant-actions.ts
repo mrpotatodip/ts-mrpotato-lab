@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { menuKeys } from "#/modules/menu";
-import { updateTenantRegion } from "../api";
-import type { UpdateTenantRegionInput } from "../schemas";
+import { updateTenantAllowedOrigins, updateTenantRegion } from "../api";
+import type { UpdateTenantAllowedOriginsInput, UpdateTenantRegionInput } from "../schemas";
 import { tenantsKeys } from "./use-tenants";
 
 export function useTenantActions() {
@@ -17,5 +17,10 @@ export function useTenantActions() {
     meta: { successMessage: "Region saved" },
   });
 
-  return { updateRegion };
+  const updateAllowedOrigins = useMutation({
+    mutationFn: (input: UpdateTenantAllowedOriginsInput) => updateTenantAllowedOrigins({ data: input }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: tenantsKeys.all }),
+  });
+
+  return { updateRegion, updateAllowedOrigins };
 }

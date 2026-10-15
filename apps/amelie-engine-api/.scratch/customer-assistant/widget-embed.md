@@ -30,7 +30,7 @@ The engine's `Origin` check on chat turns still sees Amelie's origin when the ch
 
 ## Dashboard
 
-Widget under Your cafe: read-only snippet with the Tenant slug, plus a link to `/chat/$slug`. No live preview. No Allowed-origins editor (sign-up `website` still seeds the list).
+Widget under Your cafe: read-only snippet with the Tenant slug, plus a link to `/chat/$slug`. Under that, Allowed origins. A team member whose Role has `can_edit` pastes site URLs, then Save replaces the whole list (unique `http`/`https` origins, at most 20, in save order). Empty is allowed: Widget warns, the cafe site cannot iframe, `/chat/$slug` still works. Staff see the list and the snippet and cannot save. Sign-up `website` still seeds the first Allowed origin. The Business profile website is a contact fact. No live preview. Amelie is not a row in the list.
 
 ## Local cafe host
 
@@ -38,4 +38,4 @@ Widget under Your cafe: read-only snippet with the Tenant slug, plus a link to `
 
 ## Out of this work
 
-Allowed-origins editor, cafe branding, `postMessage`, dashboard live preview, menu item images, agent / prompt / public-chat API changes.
+Cafe branding, `postMessage`, dashboard live preview, menu item images, agent / prompt / public-chat API changes.
