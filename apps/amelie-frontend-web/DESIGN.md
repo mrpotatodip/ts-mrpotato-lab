@@ -361,6 +361,7 @@ Consumers: `dashboard-overview-skeleton.tsx`, `menu-panel-skeleton.tsx`, `faq-pa
 | **Done (checklist)** | Title gets `text-muted-foreground line-through`, a `Check size-3` icon, plus `sr-only` "Done / Not done" | `dashboard-setup-checklist.tsx` |
 | **Read-only** | `DashboardStatusBadge tone="neutral"` reading "View only" in the top bar | `dashboard-header.tsx` |
 | **Drag** | `active:cursor-grabbing` (menu board) | `menu/components/menu-tree-board.tsx` |
+| **Keyboard** | Sidebar toggle is `Mod+B`. Assistant: `Mod+.` shows or hides (minimize), `Escape` closes (`useHotkeys`) | `ui/sidebar.tsx`, `chat-bot-sheet.tsx` |
 
 **Motion** (verified, `globals.css`): `--animate-digest-fade-in` (0.5s, 8px rise), `--animate-jump`, `--animate-bot-excited` (0.7s hop + tilt on the assistant launcher Bot, `@media (hover: hover)`), `--animate-shake`, and the background gradient animations (`first` to `fifth`). Dialogs and popups use `animate-in/out`, `fade`, `zoom-95`, `slide-in-from-*` utilities. Interactive color changes use `transition-colors`. The `motion` library is a dependency.
 

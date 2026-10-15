@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { useRouterState } from "@tanstack/react-router";
+import { HotkeysProvider } from "@tanstack/react-hotkeys";
 
 import { SidebarInset, SidebarProvider } from "#/components/ui/sidebar";
 import { ChatBotSheet, useChatBotCacheSync } from "#/modules/chat-bot";
@@ -25,13 +26,15 @@ export function DashboardShell({ userName, userEmail, children }: DashboardShell
   });
 
   return (
-    <SidebarProvider>
-      <DashboardSidebar userName={userName} userEmail={userEmail} />
-      <SidebarInset>
-        <DashboardHeader />
-        <main className="dashboard-content">{children}</main>
-      </SidebarInset>
-      {onAssistantPage ? null : <ChatBotSheet />}
-    </SidebarProvider>
+    <HotkeysProvider>
+      <SidebarProvider>
+        <DashboardSidebar userName={userName} userEmail={userEmail} />
+        <SidebarInset>
+          <DashboardHeader />
+          <main className="dashboard-content">{children}</main>
+        </SidebarInset>
+        {onAssistantPage ? null : <ChatBotSheet />}
+      </SidebarProvider>
+    </HotkeysProvider>
   );
 }
