@@ -7,7 +7,6 @@ import {
   type Location,
 } from "@repo/contracts/amelie";
 
-import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
 import { countryLabel, useActiveCountries } from "#/modules/country";
@@ -60,7 +59,7 @@ export function LocationRow({ location, canEdit, onArchive, isArchiving }: Locat
           void form.handleSubmit();
         }}
       >
-        {country ? <Badge variant="outline">{countryLabel(country)}</Badge> : null}
+        {country ? <p className="text-muted-foreground text-xs">In {countryLabel(country)}.</p> : null}
         <div className="flex flex-wrap gap-2">
           <form.Field name="name">
             {(field) => (

@@ -31,3 +31,10 @@ export function faqGroupFor(groups: FaqGroup[], key: string): FaqGroup {
   if (found) return found;
   return groups[0] ?? { key: FAQ_NO_CATEGORY, title: "General", category: null, faqs: [] };
 }
+
+export function faqNavEntries(categories: FaqCategory[]): Array<{ key: string; title: string }> {
+  return [
+    { key: FAQ_NO_CATEGORY, title: "General" },
+    ...categories.map((category) => ({ key: category.id, title: category.name })),
+  ];
+}

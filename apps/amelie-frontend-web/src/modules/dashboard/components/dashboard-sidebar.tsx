@@ -18,6 +18,7 @@ import { useAdminAccess } from "#/modules/admin";
 import { LogoutButton } from "#/modules/auth";
 import { TenantPicker, useTenants } from "#/modules/tenant";
 import { DASHBOARD_ADMIN_GROUP, DASHBOARD_NAV_GROUPS } from "../constants";
+import { DashboardFaqSubnav } from "./dashboard-faq-subnav";
 
 type DashboardSidebarProps = {
   userName: string;
@@ -58,6 +59,7 @@ export function DashboardSidebar({ userName }: DashboardSidebarProps) {
                       <Icon />
                       <span>{label}</span>
                     </SidebarMenuButton>
+                    {to === "/faqs" ? <DashboardFaqSubnav /> : null}
                   </SidebarMenuItem>
                 ))}
               </SidebarMenu>

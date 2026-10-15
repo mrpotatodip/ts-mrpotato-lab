@@ -268,10 +268,10 @@ Last updated: 2026-10-15
 | Spacing          | row `p-6`, form `flex flex-col gap-3`, field rows `flex flex-wrap gap-2`, actions `mt-3 flex gap-2` |
 | Hover state      | none (menu item rows do not hover-fill); Save `size="sm"`, Archive `ghost` `size="sm"` |
 | Shadow           | none |
-| Accent usage     | country `Badge variant="outline"`, errors `text-xs text-destructive` |
+| Accent usage     | country line `text-muted-foreground text-xs`, errors `text-xs text-destructive` |
 
 **Pattern notes:**
-Same list chrome as menu items: `PageCard` `contentClassName="p-0"`, `ul.divide-y`, `p-6` rows. Fields are unlabeled (`aria-label` plus placeholder) like the menu item form. Timezone uses `SelectTrigger` `w-fit min-w-56` so IANA names such as `America/New_York` fit; other form selects stay at `min-w-40`.
+Same list chrome as menu items: `PageCard` `contentClassName="p-0"`, `ul.divide-y`, `p-6` rows. Fields are unlabeled (`aria-label` plus placeholder) like the menu item form. When the cafe sells in several countries, the country is muted helper copy (`In {label}.`), not a badge, matching the menu item form's country line. Timezone uses `SelectTrigger` `w-fit min-w-56` so IANA names such as `America/New_York` fit; other form selects stay at `min-w-40`.
 
 ### FaqCategoryNav
 
@@ -312,3 +312,23 @@ Last updated: 2026-10-15
 
 **Pattern notes:**
 One category per page, same chrome as a menu category: `PageCard` `contentClassName="p-0"`, header actions, `ul.divide-y` items, Add FAQ expands in the footer like Add item. General has no rename/delete.
+
+### DashboardFaqSubnav
+
+File: `src/modules/dashboard/components/dashboard-faq-subnav.tsx`
+Last updated: 2026-10-15
+
+| Property         | Class |
+| ---------------- | ----- |
+| Background       | active `bg-sidebar-accent` |
+| Border           | rail `border-l border-sidebar-border` |
+| Border radius    | row `rounded-md` |
+| Text — primary   | `text-xs` (`size="sm"`) |
+| Text — secondary | `text-sidebar-foreground` |
+| Spacing          | list `mx-3.5 px-2.5 py-0.5 gap-1`, row `h-7 px-2` |
+| Hover state      | `hover:bg-sidebar-accent hover:text-sidebar-accent-foreground` |
+| Shadow           | none |
+| Accent usage     | none |
+
+**Pattern notes:**
+Uses shadcn `SidebarMenuSub` / `SidebarMenuSubButton` under FAQs. Always expanded. General first, then the tenant's categories. Do not add icons on the sub rows.

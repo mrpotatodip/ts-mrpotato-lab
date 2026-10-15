@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { Faq, FaqCategory } from "@repo/contracts/amelie";
 
 import { FAQ_NO_CATEGORY } from "../../constants";
-import { faqGroupFor, faqGroups, resolveFaqCategoryKey } from "../faq-groups";
+import { faqGroupFor, faqGroups, faqNavEntries, resolveFaqCategoryKey } from "../faq-groups";
 
 const ORDERS = "00000000-0000-4000-8000-000000000001";
 const HOURS = "00000000-0000-4000-8000-000000000002";
@@ -49,5 +49,15 @@ describe("faqGroupFor", () => {
   it("returns the matching group", () => {
     const groups = faqGroups([], categories);
     expect(faqGroupFor(groups, HOURS).title).toBe("Hours");
+  });
+});
+
+describe("faqNavEntries", () => {
+  it("lists General then each category", () => {
+    expect(faqNavEntries(categories)).toEqual([
+      { key: FAQ_NO_CATEGORY, title: "General" },
+      { key: ORDERS, title: "Orders" },
+      { key: HOURS, title: "Hours" },
+    ]);
   });
 });
