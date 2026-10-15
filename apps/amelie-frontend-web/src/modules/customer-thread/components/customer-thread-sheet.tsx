@@ -1,15 +1,13 @@
-import { useState } from "react";
 import { PanelLeft, PanelRight, X } from "lucide-react";
 
 import { Button, buttonVariants } from "#/components/ui/button";
 import { cn } from "#/lib/utils";
 import { Sheet, SheetClose, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "#/components/ui/sheet";
+import { Skeleton } from "#/components/ui/skeleton";
 import { useCustomerThread } from "../hooks";
 import { CustomerThreadMessages } from "./customer-thread-messages";
 import { CustomerThreadMessagesSkeleton } from "./customer-thread-messages-skeleton";
-import { LocalDateTime } from "#/modules/shared";
-
-type CustomerThreadSheetSide = "left" | "right";
+import { LocalDateTime, useSheetSide } from "#/modules/shared";
 
 type CustomerThreadSheetProps = {
   threadId: string;
@@ -22,7 +20,7 @@ type CustomerThreadSheetProps = {
 // the assistant: inset, rounded, no overlay.
 // -----
 export function CustomerThreadSheet({ threadId, open, onOpenChange }: CustomerThreadSheetProps) {
-  const [side, setSide] = useState<CustomerThreadSheetSide>("right");
+  const { side, moveToOppositeSide, wiggleClassName, onWiggleEnd } = useSheetSide();
   const moveToLeft = side === "right";
 
   return (
@@ -33,7 +31,9 @@ export function CustomerThreadSheet({ threadId, open, onOpenChange }: CustomerTh
         className={cn(
           "inset-y-4 flex h-auto w-[calc(100%-2rem)] flex-col rounded-3xl border bg-card sm:max-w-xl [&>[data-slot=sheet-close]]:hidden",
           side === "left" ? "left-4" : "right-4",
+          wiggleClassName,
         )}
+        onAnimationEnd={onWiggleEnd}
       >
         <div className="absolute top-3.5 right-4 flex items-center">
           <Button
@@ -41,8 +41,11 @@ export function CustomerThreadSheet({ threadId, open, onOpenChange }: CustomerTh
             variant="ghost"
             size="icon-sm"
             aria-label={moveToLeft ? "Move chat to the left" : "Move chat to the right"}
-            className="opacity-70 hover:opacity-100"
-            onClick={() => setSide(moveToLeft ? "left" : "right")}
+            className={cn(
+              "opacity-70 hover:opacity-100",
+              moveToLeft ? "sheet-move-wiggle-left" : "sheet-move-wiggle-right",
+            )}
+            onClick={moveToOppositeSide}
           >
             {moveToLeft ? <PanelLeft /> : <PanelRight />}
           </Button>
@@ -70,8 +73,14 @@ function CustomerThreadSheetBody({ threadId }: CustomerThreadSheetBodyProps) {
     return (
       <>
         <SheetHeader className="shrink-0">
-          <SheetTitle>Chat</SheetTitle>
-          <SheetDescription>Loading the conversation.</SheetDescription>
+          <SheetTitle>
+            <span className="sr-only">Loading chat</span>
+            <Skeleton className="h-6 w-40" aria-hidden />
+          </SheetTitle>
+          <SheetDescription>
+            <span className="sr-only">Loading the conversation</span>
+            <Skeleton className="h-4 w-48" aria-hidden />
+          </SheetDescription>
         </SheetHeader>
         <div className="mt-6 min-h-0 flex-1 overflow-y-auto">
           <CustomerThreadMessagesSkeleton />

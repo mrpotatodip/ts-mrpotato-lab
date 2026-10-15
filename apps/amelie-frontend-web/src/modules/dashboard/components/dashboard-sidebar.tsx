@@ -15,14 +15,15 @@ import {
   useSidebar,
 } from "#/components/ui/sidebar";
 import { useAdminAccess } from "#/modules/admin";
-import { LogoutButton } from "#/modules/auth";
 import { TenantPicker, useTenants } from "#/modules/tenant";
 import { DASHBOARD_ADMIN_GROUP, DASHBOARD_NAV_GROUPS } from "../constants";
+import { DashboardAccountMenu } from "./dashboard-account-menu";
 import { DashboardFaqNav } from "./dashboard-faq-subnav";
 import { DashboardScopePickers } from "./dashboard-scope-pickers";
 
 type DashboardSidebarProps = {
   userName: string;
+  userEmail: string;
 };
 
 // -----
@@ -30,7 +31,7 @@ type DashboardSidebarProps = {
 // then the platform's for a superuser), who is signed in
 // at the bottom.
 // -----
-export function DashboardSidebar({ userName }: DashboardSidebarProps) {
+export function DashboardSidebar({ userName, userEmail }: DashboardSidebarProps) {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const { setOpenMobile } = useSidebar();
   const { isSuperuser } = useAdminAccess();
@@ -72,9 +73,8 @@ export function DashboardSidebar({ userName }: DashboardSidebarProps) {
           </SidebarGroup>
         ))}
       </SidebarContent>
-      <SidebarFooter className="gap-2 p-4">
-        <p className="text-muted-foreground truncate text-xs">{userName}</p>
-        <LogoutButton />
+      <SidebarFooter className="bg-sidebar z-10 p-2">
+        <DashboardAccountMenu userName={userName} userEmail={userEmail} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

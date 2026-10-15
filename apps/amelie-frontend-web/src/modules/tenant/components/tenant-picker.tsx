@@ -1,4 +1,5 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#/components/ui/select";
+import { Skeleton } from "#/components/ui/skeleton";
 import { useSwitchTenant, useTenants } from "../hooks";
 import { findActiveTenant } from "../utils";
 
@@ -7,8 +8,12 @@ import { findActiveTenant } from "../utils";
 // Person pick which one they are working in.
 // -----
 export function TenantPicker() {
-  const { data } = useTenants();
+  const { data, isPending } = useTenants();
   const switchTenant = useSwitchTenant();
+
+  if (isPending) {
+    return <Skeleton className="h-5 w-36" />;
+  }
 
   if (!data || data.tenants.length === 0) return null;
 

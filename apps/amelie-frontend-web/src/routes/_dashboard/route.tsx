@@ -33,7 +33,7 @@ function RouteComponent() {
   const { user } = Route.useRouteContext();
 
   return (
-    <DashboardShell userName={user?.name ?? ""}>
+    <DashboardShell userName={user?.name ?? ""} userEmail={user?.email ?? ""}>
       <Outlet />
     </DashboardShell>
   );

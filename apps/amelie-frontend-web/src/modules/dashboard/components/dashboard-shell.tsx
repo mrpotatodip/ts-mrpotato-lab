@@ -8,6 +8,7 @@ import { DashboardSidebar } from "./dashboard-sidebar";
 
 type DashboardShellProps = {
   userName: string;
+  userEmail: string;
   children: ReactNode;
 };
 
@@ -17,7 +18,7 @@ type DashboardShellProps = {
 // The assistant button floats on every screen but
 // the assistant's own page.
 // -----
-export function DashboardShell({ userName, children }: DashboardShellProps) {
+export function DashboardShell({ userName, userEmail, children }: DashboardShellProps) {
   useChatBotCacheSync();
   const onAssistantPage = useRouterState({
     select: (state) => state.location.pathname.startsWith("/chat-bot"),
@@ -25,7 +26,7 @@ export function DashboardShell({ userName, children }: DashboardShellProps) {
 
   return (
     <SidebarProvider>
-      <DashboardSidebar userName={userName} />
+      <DashboardSidebar userName={userName} userEmail={userEmail} />
       <SidebarInset>
         <DashboardHeader />
         <main className="dashboard-content">{children}</main>

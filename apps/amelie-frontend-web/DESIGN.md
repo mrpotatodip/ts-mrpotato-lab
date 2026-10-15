@@ -242,7 +242,7 @@ Forms in the app mostly use `size="sm"` (for example `faq-form.tsx`). Primary ac
 - **Card** (`ui/card.tsx`): `rounded-3xl border bg-card text-card-foreground shadow-sm`. Header `p-6` with `space-y-1.5`, content `p-6 pt-0`, footer `flex items-center p-6 pt-0`. Title default `text-2xl font-semibold leading-none tracking-tight`.
 - **PageCard** (`modules/shared/components/page-card.tsx`): the main section container, 19 uses. A `Card` (already `rounded-3xl`) with `bg-muted/60 shadow-none`. The header sits on the muted tint, the body is `rounded-3xl border-t bg-card pt-6`. Title `text-lg`, optional description and right-aligned `action`.
 - **Dashboard card** (`.dashboard-card` utility in `globals.css`): flat, `1px` border, `var(--radius)`, `bg-card`, `var(--shadow-card)`. Only `DashboardStatCard` uses it, and it overrides the radius with `rounded-3xl`.
-- **Stat card** (`dashboard-stat-card.tsx`): a `Link` with `.dashboard-card`, `p-6`, `gap-3`, `hover:bg-accent/40`. Contains `.stat-label`, `.stat-icon` (2.25rem square, `bg-accent`, `text-primary`), `.stat-value`. Loading state is `Skeleton h-8 w-16`.
+- **Stat card** (`dashboard-stat-card.tsx`): a `Link` with `.dashboard-card`, `p-6`, `gap-3`, `hover:bg-accent/40`. Contains `.stat-label`, `.stat-icon` (2.25rem square, `bg-accent`, `text-primary`), `.stat-value`. The loading copy is in `dashboard-overview-skeleton.tsx` (see 6.11).
 - **List-in-card rows**: `<ul class="divide-y">` with `px-6 py-5` rows and `hover:bg-accent/40 transition-colors` (`dashboard-attention.tsx`, `dashboard-setup-checklist.tsx`).
 
 ### 6.4 Dialog, Sheet, Drawer, Dropdown, Tooltip
@@ -293,11 +293,39 @@ The generic layout cards (used when a tool has no card of its own): title `text-
 
 ### 6.9 Other
 
-`Avatar` (Base UI), `Progress` (Base UI, track plus `bg-primary` indicator), `Skeleton` (`animate-pulse rounded-md bg-muted`), `Empty*` family, `Kbd`, `Carousel` (embla), `Toaster` (sonner), `chart.tsx` (recharts wrapper), `background-gradient-animation.tsx`.
+`Avatar` (Base UI), `Progress` (Base UI, track plus `bg-primary` indicator), `Skeleton` (`animate-pulse rounded-md bg-muted`, see 6.11), `Empty*` family, `Kbd`, `Carousel` (embla), `Toaster` (sonner), `chart.tsx` (recharts wrapper), `background-gradient-animation.tsx`.
 
 ### 6.10 Where native elements are still used
 
 These have no matching `ui/` component or are a deliberate choice: the two radio buttons in `menu-item-locations-form.tsx`, the file input in `menu-import-upload.tsx`, and the hand-built chat table card. The timezone field in the sign-up form and the location checkboxes now use `Select` and `Checkbox`.
+
+### 6.11 Skeleton loaders
+
+The bone is `ui/skeleton.tsx`: `animate-pulse rounded-md bg-muted`. Each screen that waits on data has a sibling `*-skeleton.tsx` used as the `Suspense` fallback (and as the pending body of `CustomerThreadSheet`).
+
+A skeleton copies the loaded layout. Card titles stay real (`PageCard title="Weekly hours"`). Rows keep the same padding and split as the data rows (`px-6 py-5` plus `divide-y`, or `p-6` for menu and FAQ items). Forms keep input-height bones. A single `h-32 w-full` (or `h-56`, `h-80`) block inside a card is the old pattern and is gone from the panel skeletons.
+
+| Loaded piece | Bone |
+|---|---|
+| Row title | `h-4`, about `w-40` to `w-72` |
+| Row secondary / `.stat-label` | `h-3` or `h-4`, narrower |
+| Input / select | `h-10 w-full` (6.2) |
+| Textarea | `h-20` or `h-24` |
+| Primary / outline `size="sm"` | `h-9` and a short width (`w-24`, `w-28`) |
+| Ghost `icon-sm` | `size-8 rounded-md` |
+| Status pill | `h-5 w-20 rounded-full` (or similar) |
+| Menu cover thumb | `size-10 rounded-lg` |
+| Stat icon | `size-9` |
+| Stat value | `h-8 w-16` |
+| Chart | `h-56` row of 7 bars of mixed height (`DASHBOARD_ACTIVITY_DAYS`) |
+
+Chat skeletons (`chat-bot-thread-skeleton.tsx`, `customer-thread-messages-skeleton.tsx`) reuse `Message` and `Bubble`. Bones inside the bubble use `bg-foreground/15` so they still read on `default` and `muted` fills.
+
+While tenants are unknown, `TenantPicker` shows `h-5 w-36` (the one-cafe name line). `DashboardScopePickers` still falls back to nothing: a fake select would flash and then vanish for a cafe with one country and one location. FAQ subnav, when open and still loading, shows three short bones in `SidebarMenuSub`. The customer chat sheet titles the pending state with `sr-only` copy plus header bones, then the message skeleton.
+
+Button pending stays `disabled` plus a label ("Saving..."). Sonner still uses `LoaderCircle animate-spin`. No button spinner.
+
+Consumers: `dashboard-overview-skeleton.tsx`, `menu-panel-skeleton.tsx`, `faq-panel-skeleton.tsx`, `schedule-panel-skeleton.tsx`, `business-profile-panel-skeleton.tsx`, `widget-panel-skeleton.tsx`, `admin-invite-codes-skeleton.tsx`, `menu-import-list-skeleton.tsx`, `menu-import-review-skeleton.tsx`, `unanswered-question-list-skeleton.tsx`, `customer-thread-list-skeleton.tsx`, `customer-thread-view-skeleton.tsx`, `customer-thread-messages-skeleton.tsx`, `chat-bot-thread-skeleton.tsx`, `chat-bot-room-skeleton.tsx`.
 
 ---
 
@@ -325,7 +353,7 @@ These have no matching `ui/` component or are a deliberate choice: the two radio
 | **Focus** | `focus-visible:ring-2 ring-ring ring-offset-2 ring-offset-background`, outline removed. Select trigger uses `focus:` rather than `focus-visible:` | `ui/button.tsx`, `ui/input.tsx`, `ui/select.tsx` |
 | **Active (selected)** | Sidebar: `data-[active=true]:bg-sidebar-accent font-medium`. Tabs: `data-active:bg-background shadow-sm`. Select item: `data-highlighted:bg-accent` | `ui/sidebar.tsx`, `ui/tabs.tsx`, `ui/select.tsx` |
 | **Disabled** | `disabled:opacity-50` plus `pointer-events-none` (buttons) or `cursor-not-allowed` (inputs). Menu import and forms disable submit on invalid or pending | `ui/button.tsx`, `faq-form.tsx` |
-| **Loading** | `Skeleton` (16 usages, `animate-pulse bg-muted`); stat value uses `h-8 w-16`; panel skeletons such as `m-6 h-32`. Sonner uses a `LoaderCircle animate-spin` icon. Button pending state is `disabled`, with no spinner pattern found | `ui/skeleton.tsx`, `dashboard-stat-card.tsx` |
+| **Loading** | Layout-matching `Skeleton` bones in a sibling `*-skeleton.tsx` (6.11). Sonner uses `LoaderCircle animate-spin`. A pending button is `disabled` with a label, no spinner | `ui/skeleton.tsx`, `*-skeleton.tsx` |
 | **Empty** | A single `text-muted-foreground text-sm` (or `.stat-label p-6`) sentence, for example "No FAQs yet. Add the first one." The `Empty` component family exists but has 0 usages | `faq-list.tsx`, `dashboard-attention.tsx` |
 | **Error (inline field/query)** | `text-xs text-destructive` for form and mutation errors; `text-destructive text-sm` for panel-level query errors. About 45 occurrences | `faq-form.tsx`, `*-panel.tsx` |
 | **Error (route)** | `AppErrorComponent`: `bg-status-danger-soft` box with `text-status-danger` | `shared/components/app-error-component.tsx` |
@@ -334,7 +362,7 @@ These have no matching `ui/` component or are a deliberate choice: the two radio
 | **Read-only** | `DashboardStatusBadge tone="neutral"` reading "View only" in the top bar | `dashboard-header.tsx` |
 | **Drag** | `active:cursor-grabbing` (menu board) | `menu/components/menu-tree-board.tsx` |
 
-**Motion** (verified, `globals.css`): `--animate-digest-fade-in` (0.5s, 8px rise), `--animate-jump`, `--animate-shake`, and the background gradient animations (`first` to `fifth`). Dialogs and popups use `animate-in/out`, `fade`, `zoom-95`, `slide-in-from-*` utilities. Interactive color changes use `transition-colors`. The `motion` library is a dependency.
+**Motion** (verified, `globals.css`): `--animate-digest-fade-in` (0.5s, 8px rise), `--animate-jump`, `--animate-bot-excited` (0.7s hop + tilt on the assistant launcher Bot, `@media (hover: hover)`), `--animate-shake`, and the background gradient animations (`first` to `fifth`). Dialogs and popups use `animate-in/out`, `fade`, `zoom-95`, `slide-in-from-*` utilities. Interactive color changes use `transition-colors`. The `motion` library is a dependency.
 
 ---
 
@@ -360,6 +388,7 @@ These have no matching `ui/` component or are a deliberate choice: the two radio
 | shadcn config | `components.json` |
 | UI primitives | `src/components/ui/*.tsx` |
 | Shared composites | `src/modules/shared/components/` (`page-card.tsx`, `app-error-component.tsx`, `app-breadcrumb.tsx`) |
+| Skeleton loaders | `src/components/ui/skeleton.tsx`, each module's `*-skeleton.tsx` (6.11) |
 | Dashboard chrome | `src/modules/dashboard/components/` |
 | Nav definition | `src/modules/dashboard/constants/dashboard-nav.ts` |
 | Theme logic | `src/modules/shared/hooks/use-theme.ts`, `src/routes/__root.tsx` |
