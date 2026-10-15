@@ -1,12 +1,26 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { and, eq } from "drizzle-orm";
-import { menuItemPrices, partyRoles, roles, tenantCountries } from "@repo/db-amelie";
-import { COUNTRIES, COUNTRY_VALUES, CURRENCY_VALUES, TenantRegionSchema } from "@repo/contracts/amelie";
+import { menuItemPrices, partyRoles, roles, tenantCountries, tenants as tenantTable } from "@repo/db-amelie";
+import {
+  ALLOWED_ORIGINS_MAX,
+  COUNTRIES,
+  COUNTRY_VALUES,
+  CURRENCY_VALUES,
+  TenantRegionSchema,
+  UpdateTenantAllowedOriginsBodySchema,
+} from "@repo/contracts/amelie";
 import type { DbConnectType } from "#/lib/db-connection";
 import { ConflictError, ForbiddenError, NotFoundError } from "#/lib/errors";
 import { runEffect } from "#/lib/effect-query";
 import { addMenuCategorySvc, addMenuItemSvc } from "#/modules/menu";
-import { getTenantSvc, listPublicTenantsSvc, listTenantsSvc, updateTenantRegionSvc } from "#/modules/tenant/handlers";
+import { getTenantProfileSvc, updateBusinessProfileSvc } from "#/modules/business-profile/handlers";
+import {
+  getTenantSvc,
+  listPublicTenantsSvc,
+  listTenantsSvc,
+  updateTenantAllowedOriginsSvc,
+  updateTenantRegionSvc,
+} from "#/modules/tenant/handlers";
 import {
   createTestDb,
   insertMember,
@@ -377,5 +391,100 @@ describe("updateTenantRegionSvc", () => {
     await expect(
       runEffect(updateTenantRegionSvc(db, otherOwner.userId, sorellaId, { country: "PH", currency: "PHP" })),
     ).rejects.toBeInstanceOf(NotFoundError);
+  });
+});
+
+describe("UpdateTenantAllowedOriginsBodySchema", () => {
+  it("turns pasted URLs into unique origins in save order", () => {
+    const parsed = UpdateTenantAllowedOriginsBodySchema.parse({
+      allowedOrigins: [
+        "https://sorellacafe.com/menu",
+        "https://sorellacafe.com/hours",
+        "http://localhost:5174/",
+      ],
+    });
+
+    expect(parsed.allowedOrigins).toEqual(["https://sorellacafe.com", "http://localhost:5174"]);
+  });
+
+  it("accepts an empty list", () => {
+    expect(UpdateTenantAllowedOriginsBodySchema.parse({ allowedOrigins: [] }).allowedOrigins).toEqual([]);
+  });
+
+  it.each(["*", "ftp://sorellacafe.com", "not a url", "https://"])("rejects %s", (value) => {
+    expect(UpdateTenantAllowedOriginsBodySchema.safeParse({ allowedOrigins: [value] }).success).toBe(false);
+  });
+
+  it("rejects more than 20 unique origins", () => {
+    const allowedOrigins = Array.from({ length: ALLOWED_ORIGINS_MAX + 1 }, (_, i) => `https://cafe-${i}.example`);
+
+    expect(UpdateTenantAllowedOriginsBodySchema.safeParse({ allowedOrigins }).success).toBe(false);
+  });
+
+  it("keeps 21 copies of the same site as one origin", () => {
+    const allowedOrigins = Array.from({ length: ALLOWED_ORIGINS_MAX + 1 }, () => "https://sorellacafe.com/menu");
+
+    expect(UpdateTenantAllowedOriginsBodySchema.parse({ allowedOrigins }).allowedOrigins).toEqual([
+      "https://sorellacafe.com",
+    ]);
+  });
+});
+
+describe("updateTenantAllowedOriginsSvc", () => {
+  const newCafe = async (slug: string, role: "owner" | "manager" | "staff") => {
+    const tenantId = await insertTenant(db, slug, slug);
+    const login = await insertPersonWithLogin(db, `${role}@${slug}.test`);
+    await insertMember(db, tenantId, login.partyId, role);
+    return { tenantId, userId: login.userId };
+  };
+
+  it("lets an owner replace the list, and the change persists", async () => {
+    const { tenantId, userId } = await newCafe("origins-owner", "owner");
+
+    const saved = await runEffect(
+      updateTenantAllowedOriginsSvc(db, userId, tenantId, ["https://sorellacafe.com", "http://localhost:5174"]),
+    );
+
+    expect(saved.allowedOrigins).toEqual(["https://sorellacafe.com", "http://localhost:5174"]);
+    expect(await runEffect(getTenantSvc(db, userId, tenantId))).toMatchObject({
+      allowedOrigins: ["https://sorellacafe.com", "http://localhost:5174"],
+    });
+  });
+
+  it("lets a manager replace the list", async () => {
+    const { tenantId, userId } = await newCafe("origins-manager", "manager");
+
+    const saved = await runEffect(updateTenantAllowedOriginsSvc(db, userId, tenantId, ["https://other.test"]));
+
+    expect(saved.allowedOrigins).toEqual(["https://other.test"]);
+  });
+
+  it("refuses staff and leaves the list unchanged", async () => {
+    const { tenantId, userId } = await newCafe("origins-staff", "staff");
+    await db.update(tenantTable).set({ allowedOrigins: ["https://keep.test"] }).where(eq(tenantTable.id, tenantId));
+
+    await expect(
+      runEffect(updateTenantAllowedOriginsSvc(db, userId, tenantId, ["https://new.test"])),
+    ).rejects.toBeInstanceOf(ForbiddenError);
+    expect(await runEffect(getTenantSvc(db, userId, tenantId))).toMatchObject({
+      allowedOrigins: ["https://keep.test"],
+    });
+  });
+
+  it("reads another Tenant as not found", async () => {
+    await expect(
+      runEffect(updateTenantAllowedOriginsSvc(db, otherOwner.userId, sorellaId, ["https://steal.test"])),
+    ).rejects.toBeInstanceOf(NotFoundError);
+  });
+
+  it("does not change the Business profile website", async () => {
+    const { tenantId, userId } = await newCafe("origins-profile", "owner");
+    await runEffect(updateBusinessProfileSvc(db, tenantId, { websiteUrl: "https://sorellacafe.com" }));
+
+    await runEffect(updateTenantAllowedOriginsSvc(db, userId, tenantId, ["https://other.test"]));
+
+    expect(await runEffect(getTenantProfileSvc(db, tenantId))).toMatchObject({
+      websiteUrl: "https://sorellacafe.com",
+    });
   });
 });

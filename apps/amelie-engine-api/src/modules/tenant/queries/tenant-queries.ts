@@ -125,6 +125,24 @@ export const updateTenantRegionEffect = (
     return yield* getTenantForUserEffect(db, userId, tenantId);
   });
 
+export const updateTenantAllowedOriginsEffect = (
+  db: DbConnectType,
+  userId: string,
+  tenantId: string,
+  allowedOrigins: string[],
+): Effect.Effect<Tenant, DbError | NotFound> =>
+  Effect.gen(function* () {
+    yield* Effect.tryPromise({
+      try: () =>
+        db
+          .update(tenants)
+          .set({ allowedOrigins, updatedAt: new Date() })
+          .where(eq(tenants.id, tenantId)),
+      catch: toDbError,
+    });
+    return yield* getTenantForUserEffect(db, userId, tenantId);
+  });
+
 // -----
 // The public widget names a Tenant by slug;
 // the id never leaves the server.

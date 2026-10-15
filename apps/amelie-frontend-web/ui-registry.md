@@ -530,3 +530,23 @@ Last updated: 2026-10-15
 
 **Pattern notes:**
 Mounted once in `__root.tsx`, `position="top-right"`. Action mutations toast through Query `MutationCache` (`src/lib/mutation-toast.ts`): success copy lives in `meta.successMessage`, failures use the thrown `Error` message. Skip a success toast with `successMessage: false` (drag reorders). Do not add a second toaster, and do not call `toast` from components when the mutation already has meta.
+
+### WidgetAllowedOriginsCard
+
+File: `src/modules/widget/components/widget-allowed-origins-card.tsx`
+Last updated: 2026-10-15
+
+| Property         | Class |
+| ---------------- | ----- |
+| Background       | PageCard (`bg-muted/60`, body `rounded-3xl border-t bg-card`) |
+| Border           | PageCard |
+| Border radius    | PageCard |
+| Text — primary   | title via PageCard `text-lg` |
+| Text — secondary | description via PageCard, empty warning `text-sm text-muted-foreground`, errors `text-xs text-destructive` |
+| Spacing          | rows `space-y-2`, row `gap-2`, actions `mt-4` `gap-2`, error `mt-4` |
+| Hover state      | ghost `icon-sm` remove, outline `sm` add, default `sm` Save |
+| Shadow           | none |
+| Accent usage     | none |
+
+**Pattern notes:**
+Sits under the install snippet on Widget. Editors get one Input per row, ghost `icon-sm` Trash2 to remove, outline Add website, then Save. Staff see the stored origins as `text-sm break-all` with no add, remove, or Save. Empty list shows the iframe warning. Paste a full URL; the server keeps the origin.
