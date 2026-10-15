@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 
-import { LocationSwitcher, useSuspenseLocationSelection } from "#/modules/location";
+import { DashboardEmptyPlace } from "#/modules/dashboard/components/dashboard-empty-place";
+import { useSuspenseDashboardScope } from "#/modules/dashboard/hooks/use-dashboard-scope";
 import { PageCard, PageHeader } from "#/modules/shared";
 import { useActiveTenantRole } from "#/modules/tenant";
 import { useSuspenseTenantHours } from "../hooks";
@@ -26,27 +27,31 @@ export function ScheduleSuspensePanelMain() {
 }
 
 function SchedulePanelView() {
-  const selection = useSuspenseLocationSelection();
-  const { data } = useSuspenseTenantHours(selection.locationId);
+  const selection = useSuspenseDashboardScope();
+  if (selection.emptyPlace && selection.country) {
+    return <DashboardEmptyPlace country={selection.country} />;
+  }
+  return <ScheduleHoursBody locationId={selection.locationId} />;
+}
+
+function ScheduleHoursBody({ locationId }: { locationId: string | undefined }) {
+  const { data } = useSuspenseTenantHours(locationId);
   const { canEdit } = useActiveTenantRole();
 
   return (
-    <div className="space-y-8">
-      <LocationSwitcher locations={selection.locations} value={selection.locationId} onChange={selection.select} />
-      <div className="grid items-start gap-8 lg:grid-cols-[2fr_3fr] lg:gap-x-16">
-        <div className="space-y-8">
-          {canEdit ? (
-            <PageCard title="Add a special date" description="A holiday or other day with different hours.">
-              <ScheduleSpecialDateForm locationId={selection.locationId} />
-            </PageCard>
-          ) : (
-            <p className="text-muted-foreground text-xs">Only an owner or manager can change these.</p>
-          )}
-        </div>
-        <div className="space-y-8">
-          <ScheduleWeeklyHours weekly={data.weekly} timezone={data.timezone} canEdit={canEdit} locationId={selection.locationId} />
-          <ScheduleSpecialDates specialDates={data.specialDates} canEdit={canEdit} locationId={selection.locationId} />
-        </div>
+    <div className="grid items-start gap-8 lg:grid-cols-[2fr_3fr] lg:gap-x-16">
+      <div className="space-y-8">
+        {canEdit ? (
+          <PageCard title="Add a special date" description="A holiday or other day with different hours.">
+            <ScheduleSpecialDateForm locationId={locationId} />
+          </PageCard>
+        ) : (
+          <p className="text-muted-foreground text-xs">Only an owner or manager can change these.</p>
+        )}
+      </div>
+      <div className="space-y-8">
+        <ScheduleWeeklyHours weekly={data.weekly} timezone={data.timezone} canEdit={canEdit} locationId={locationId} />
+        <ScheduleSpecialDates specialDates={data.specialDates} canEdit={canEdit} locationId={locationId} />
       </div>
     </div>
   );

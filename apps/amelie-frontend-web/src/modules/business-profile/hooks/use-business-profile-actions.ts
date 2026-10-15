@@ -9,6 +9,7 @@ export function useBusinessProfileActions(locationId?: string) {
   const save = useMutation({
     mutationFn: (body: UpdateBusinessProfileBody) => updateBusinessProfile({ data: { ...body, locationId } }),
     onSuccess: (profile) => queryClient.setQueryData(businessProfileKeys.detail(locationId), profile),
+    meta: { successMessage: "Profile saved" },
   });
 
   return { save };

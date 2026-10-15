@@ -6,6 +6,7 @@ import { Button } from "#/components/ui/button";
 import { Card } from "#/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#/components/ui/select";
 import { CountrySwitcher, useSuspenseCountrySelection } from "#/modules/country";
+import { useSuspenseDashboardScope } from "#/modules/dashboard/hooks/use-dashboard-scope";
 import { LocationSwitcher, useSuspenseLocationSelection } from "#/modules/location";
 import { PageCard, PageHeader } from "#/modules/shared";
 import { useActiveTenantRole } from "#/modules/tenant";
@@ -48,8 +49,11 @@ function MenuImportReviewView({ importId }: MenuImportSuspenseReviewMainProps) {
   const { data } = useSuspenseMenuImport(importId);
   const { approveAll, publish } = useMenuImportActions();
   const { canEdit } = useActiveTenantRole();
+  const dashboard = useSuspenseDashboardScope();
   const locationSelection = useSuspenseLocationSelection();
   const countrySelection = useSuspenseCountrySelection();
+  const [countryId, setCountryId] = useState(dashboard.countryId);
+  const [locationId, setLocationId] = useState(dashboard.locationId);
   const [chosenMode, setMode] = useState<PublishMode>("replace");
   const mode = usableMode(chosenMode, countrySelection.multiple);
 
@@ -94,14 +98,14 @@ function MenuImportReviewView({ importId }: MenuImportSuspenseReviewMainProps) {
               </Select>
               <CountrySwitcher
                 countries={countrySelection.countries}
-                value={countrySelection.countryId}
-                onChange={countrySelection.select}
+                value={countryId}
+                onChange={setCountryId}
                 label="Menu prices are in"
               />
               <LocationSwitcher
                 locations={locationSelection.locations}
-                value={locationSelection.locationId}
-                onChange={locationSelection.select}
+                value={locationId}
+                onChange={setLocationId}
                 label="Hours and contact details go to"
               />
               {publish.isError ? <p className="text-xs text-destructive">{publish.error.message}</p> : null}
@@ -113,7 +117,7 @@ function MenuImportReviewView({ importId }: MenuImportSuspenseReviewMainProps) {
                   onClick={() => {
                     const warning = mode === "replace" ? "Publish and replace your current menu?" : "Publish and add to your menu?";
                     if (window.confirm(warning)) publish.mutate({
-                        data: { importId, mode, locationId: locationSelection.locationId, countryId: countrySelection.countryId },
+                        data: { importId, mode, locationId, countryId },
                       });
                   }}
                 >

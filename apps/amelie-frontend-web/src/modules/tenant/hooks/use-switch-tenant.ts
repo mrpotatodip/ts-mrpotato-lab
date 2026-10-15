@@ -11,5 +11,6 @@ export function useSwitchTenant() {
   return useMutation({
     mutationFn: (tenantId: string) => switchTenant({ data: { tenantId } }),
     onSuccess: () => queryClient.invalidateQueries(),
+    meta: { successMessage: "Cafe switched" },
   });
 }

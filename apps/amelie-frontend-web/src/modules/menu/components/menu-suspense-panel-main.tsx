@@ -2,7 +2,7 @@ import { Suspense, useState } from "react";
 import { Eye } from "lucide-react";
 
 import { Button } from "#/components/ui/button";
-import { CountrySwitcher, useSuspenseCountrySelection } from "#/modules/country";
+import { useSuspenseDashboardScope } from "#/modules/dashboard/hooks/use-dashboard-scope";
 import { PageCard, PageHeader } from "#/modules/shared";
 import { useActiveTenantRole } from "#/modules/tenant";
 import { useMenuActions, useSuspenseMenu } from "../hooks";
@@ -28,7 +28,7 @@ export function MenuSuspensePanelMain() {
 }
 
 function MenuPanelView() {
-  const selection = useSuspenseCountrySelection();
+  const selection = useSuspenseDashboardScope();
   const { data } = useSuspenseMenu(selection.countryId);
   const { addCategory, reorderCategories } = useMenuActions();
   const { canEdit } = useActiveTenantRole();
@@ -47,7 +47,6 @@ function MenuPanelView() {
 
   return (
     <div className="flex flex-col gap-8">
-    <CountrySwitcher countries={selection.countries} value={selection.countryId} onChange={selection.select} />
     <div className="grid items-start gap-8 lg:grid-cols-[2fr_3fr] lg:gap-x-16">
       <div className="space-y-8 lg:sticky lg:top-20 lg:max-h-[calc(100vh-6.5rem)] lg:-mr-4 lg:overflow-y-auto lg:pr-4 lg:pb-1 lg:[overflow-anchor:none] lg:[scrollbar-width:thin]">
         {canEdit ? (
@@ -87,7 +86,7 @@ function MenuPanelView() {
             categories={refs}
             dietaryTags={data.dietaryTags}
             canEdit={canEdit}
-            country={selection.selected}
+            country={selection.country}
             isFirst={index === 0}
             isLast={index === data.categories.length - 1}
             onlyItemId={activeFocus ? activeFocus.itemId : null}

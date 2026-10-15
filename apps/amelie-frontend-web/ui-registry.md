@@ -332,3 +332,62 @@ Last updated: 2026-10-15
 
 **Pattern notes:**
 Uses shadcn `SidebarMenuSub` / `SidebarMenuSubButton` under FAQs, inside Base UI `Collapsible`. Sub labels match the parent nav size (`text-[0.9375rem] tracking-tight`), quieter when idle (`text-sidebar-foreground/70`), `font-medium` when selected. The FAQs row is the trigger; a `ChevronRight` with `ml-auto` rotates `group-data-[open]/collapsible:rotate-90`. Open by default on `/faqs`, closed elsewhere. General first, then the tenant's categories. Do not add icons on the sub rows.
+
+### DashboardScopeControls
+
+File: `src/modules/dashboard/components/dashboard-scope-pickers.tsx`
+Last updated: 2026-10-15
+
+| Property         | Class |
+| ---------------- | ----- |
+| Background       | shadcn Select |
+| Border           | SelectTrigger default |
+| Border radius    | SelectTrigger `rounded-md` |
+| Text — primary   | `text-sm` via Select |
+| Text — secondary | none (unlabeled) |
+| Spacing          | header stack `gap-3 p-4` with cafe picker |
+| Hover state      | Select default |
+| Shadow           | none |
+| Accent usage     | none |
+
+**Pattern notes:**
+Matches `TenantPicker`: compact unlabeled `SelectTrigger` `w-48`, `aria-label` only. Country then Location, under the cafe name in `SidebarHeader`. Hidden while there is one open Country or one open Location in the current Country. Do not copy into the top bar.
+
+### DashboardEmptyPlace
+
+File: `src/modules/dashboard/components/dashboard-empty-place.tsx`
+Last updated: 2026-10-15
+
+| Property         | Class |
+| ---------------- | ----- |
+| Background       | Empty default |
+| Border           | `border` dashed via Empty |
+| Border radius    | Empty `rounded-lg` |
+| Text — primary   | EmptyTitle `text-lg font-medium tracking-tight` |
+| Text — secondary | EmptyDescription `text-muted-foreground text-sm/relaxed` |
+| Spacing          | Empty `p-6` / `md:p-12`, header `gap-2` |
+| Hover state      | none |
+| Shadow           | none |
+| Accent usage     | none |
+
+**Pattern notes:**
+Hours and Profile only, when the sidebar Country has no open Locations. Use shadcn `Empty`. Menu still prices that Country.
+
+### Toaster
+
+File: `src/components/ui/sonner.tsx`
+Last updated: 2026-10-15
+
+| Property         | Class |
+| ---------------- | ----- |
+| Background       | `bg-background` on the toast |
+| Border           | `border-border` |
+| Border radius    | sonner default |
+| Text — primary   | `text-foreground` |
+| Text — secondary | description `text-muted-foreground` |
+| Spacing          | lucide icons `h-4 w-4` |
+| Shadow           | `shadow-lg` |
+| Accent usage     | success/error icons from lucide; no extra color classes |
+
+**Pattern notes:**
+Mounted once in `__root.tsx`, `position="top-right"`. Action mutations toast through Query `MutationCache` (`src/lib/mutation-toast.ts`): success copy lives in `meta.successMessage`, failures use the thrown `Error` message. Skip a success toast with `successMessage: false` (drag reorders). Do not add a second toaster, and do not call `toast` from components when the mutation already has meta.

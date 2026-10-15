@@ -7,8 +7,9 @@ import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { TanStackDevtools } from "@tanstack/react-devtools";
 import type { QueryClient } from "@tanstack/react-query";
 import { scan } from "react-scan";
-import { getSession } from "#/modules/auth";
-import type { SessionUser } from "#/modules/auth";
+import { Toaster } from "#/components/ui/sonner";
+import { loadSession } from "#/modules/auth/hooks";
+import type { SessionUser } from "#/modules/auth/types";
 import appCss from "../styles/globals.css?url";
 
 // -----
@@ -32,8 +33,8 @@ export const Route = createRootRouteWithContext<{
   queryClient: QueryClient;
   user: SessionUser | null;
 }>()({
-  beforeLoad: async () => ({
-    user: await getSession(),
+  beforeLoad: async ({ context }) => ({
+    user: await loadSession(context.queryClient),
   }),
   head: () => ({
     meta: [
@@ -121,6 +122,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body className="font-sans antialiased [overflow-wrap:anywhere] ">
         {children}
+        <Toaster />
         <TanStackDevtools
           config={{
             position: "bottom-right",

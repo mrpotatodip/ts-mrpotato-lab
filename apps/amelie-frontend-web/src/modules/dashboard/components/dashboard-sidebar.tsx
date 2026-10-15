@@ -19,6 +19,7 @@ import { LogoutButton } from "#/modules/auth";
 import { TenantPicker, useTenants } from "#/modules/tenant";
 import { DASHBOARD_ADMIN_GROUP, DASHBOARD_NAV_GROUPS } from "../constants";
 import { DashboardFaqNav } from "./dashboard-faq-subnav";
+import { DashboardScopePickers } from "./dashboard-scope-pickers";
 
 type DashboardSidebarProps = {
   userName: string;
@@ -42,6 +43,7 @@ export function DashboardSidebar({ userName }: DashboardSidebarProps) {
       <SidebarHeader className="gap-3 p-4">
         <span className="text-base font-semibold tracking-tight">Amelie</span>
         <TenantPicker />
+        <DashboardScopePickers />
       </SidebarHeader>
       <SidebarContent>
         {groups.map((group) => (

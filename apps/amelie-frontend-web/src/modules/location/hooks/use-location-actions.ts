@@ -23,8 +23,16 @@ export function useLocationActions() {
     void queryClient.invalidateQueries({ queryKey: businessProfileKeys.all });
   };
 
-  const createLocation = useMutation({ mutationFn: createLocationRequest, onSuccess: invalidateLocationsAndTheirData });
-  const updateLocation = useMutation({ mutationFn: updateLocationRequest, onSuccess: invalidateLocationsAndTheirData });
+  const createLocation = useMutation({
+    mutationFn: createLocationRequest,
+    onSuccess: invalidateLocationsAndTheirData,
+    meta: { successMessage: "Location added" },
+  });
+  const updateLocation = useMutation({
+    mutationFn: updateLocationRequest,
+    onSuccess: invalidateLocationsAndTheirData,
+    meta: { successMessage: "Location saved" },
+  });
   // -----
   // The notice is written here, not in the section:
   // reloading the profile unmounts the section
@@ -32,6 +40,7 @@ export function useLocationActions() {
   // -----
   const archiveLocation = useMutation({
     mutationFn: archiveLocationRequest,
+    meta: { successMessage: "Location archived" },
     onSuccess: async (archived) => {
       const known = queryClient.getQueryData<Location[]>(locationsKeys.all);
       queryClient.setQueryData<LocationArchivedNotice>(locationsKeys.archivedNotice, toArchivedNotice(known, archived));

@@ -1,6 +1,8 @@
 import { Suspense } from "react";
 
-import { LocationSection, LocationSwitcher, useSuspenseLocationSelection } from "#/modules/location";
+import { DashboardEmptyPlace } from "#/modules/dashboard/components/dashboard-empty-place";
+import { useSuspenseDashboardScope } from "#/modules/dashboard/hooks/use-dashboard-scope";
+import { LocationSection } from "#/modules/location";
 import { PageCard, PageHeader } from "#/modules/shared";
 import { useActiveTenantRole, useTenants } from "#/modules/tenant";
 import { useSuspenseBusinessProfile } from "../hooks";
@@ -31,27 +33,36 @@ export function BusinessProfileSuspensePanelMain() {
 // sit beside the details, not inside the form.
 // -----
 function BusinessProfilePanelView() {
-  const selection = useSuspenseLocationSelection();
-  const { data } = useSuspenseBusinessProfile(selection.locationId);
+  const selection = useSuspenseDashboardScope();
+  if (selection.emptyPlace && selection.country) {
+    return (
+      <div className="flex flex-col gap-8">
+        <DashboardEmptyPlace country={selection.country} />
+        <LocationSection />
+      </div>
+    );
+  }
+  return <BusinessProfileDetails locationId={selection.locationId} />;
+}
+
+function BusinessProfileDetails({ locationId }: { locationId: string | undefined }) {
+  const { data } = useSuspenseBusinessProfile(locationId);
   const { canEdit } = useActiveTenantRole();
   const { data: tenants } = useTenants();
 
   return (
-    <div className="flex flex-col gap-8">
-      <LocationSwitcher locations={selection.locations} value={selection.locationId} onChange={selection.select} />
-      <div className="grid items-start gap-8 lg:grid-cols-[2fr_3fr] lg:gap-x-16">
-        <PageCard title="Cafe details" description="Shown to customers by the assistant.">
-          <BusinessProfileForm
-            key={`${tenants?.activeTenantId ?? "none"}:${selection.locationId ?? "only"}`}
-            profile={data}
-            canEdit={canEdit}
-            locationId={selection.locationId}
-          />
-        </PageCard>
-        <div className="flex flex-col gap-8">
-          <BusinessProfileRegion />
-          <LocationSection />
-        </div>
+    <div className="grid items-start gap-8 lg:grid-cols-[2fr_3fr] lg:gap-x-16">
+      <PageCard title="Cafe details" description="Shown to customers by the assistant.">
+        <BusinessProfileForm
+          key={`${tenants?.activeTenantId ?? "none"}:${locationId ?? "only"}`}
+          profile={data}
+          canEdit={canEdit}
+          locationId={locationId}
+        />
+      </PageCard>
+      <div className="flex flex-col gap-8">
+        <BusinessProfileRegion />
+        <LocationSection />
       </div>
     </div>
   );
