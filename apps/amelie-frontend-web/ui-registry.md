@@ -271,4 +271,4 @@ Last updated: 2026-10-15
 | Accent usage     | country `Badge variant="outline"`, errors `text-xs text-destructive` |
 
 **Pattern notes:**
-Same list chrome as menu items: `PageCard` `contentClassName="p-0"`, `ul.divide-y`, `p-6` rows. Fields are unlabeled (`aria-label` plus placeholder) like the menu item form. Timezone uses `SelectTrigger` `w-fit min-w-40`.
+Same list chrome as menu items: `PageCard` `contentClassName="p-0"`, `ul.divide-y`, `p-6` rows. Fields are unlabeled (`aria-label` plus placeholder) like the menu item form. Timezone uses `SelectTrigger` `w-fit min-w-56` so IANA names such as `America/New_York` fit; other form selects stay at `min-w-40`.

@@ -20,7 +20,7 @@ export function LocationTimezoneSelect({ value, onChange, disabled }: LocationTi
         if (timezone) onChange(timezone);
       }}
     >
-      <SelectTrigger aria-label="Timezone" className="w-fit min-w-40">
+      <SelectTrigger aria-label="Timezone" className="w-fit min-w-56">
         <SelectValue>{value}</SelectValue>
       </SelectTrigger>
       <SelectContent>
