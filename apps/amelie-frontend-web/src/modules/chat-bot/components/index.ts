@@ -27,4 +27,3 @@ export * from "./chat-bot-thread-menu-item";
 export * from "./chat-bot-thread-overflow";
 export * from "./chat-bot-thread-skeleton";
 export * from "./chat-bot-thread-rename-dialog";
-export * from "./public-chat-room";

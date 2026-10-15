@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { publicChatFrameHeaders, PublicChatRoom, PublicChatSearchSchema } from "#/modules/chat-bot";
+import { publicChatFrameHeaders } from "#/modules/chat-bot/api/public-chat-frame-headers";
+import { PublicChatRoom } from "#/modules/chat-bot/components/public-chat-room";
+import { PublicChatSearchSchema } from "#/modules/chat-bot";
 import { AppErrorComponent } from "#/modules/shared";
 
 // -----

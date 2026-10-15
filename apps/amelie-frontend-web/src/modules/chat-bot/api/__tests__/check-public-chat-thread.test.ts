@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 
-import { livePublicChatThreadId } from "../check-public-chat-thread";
+import { livePublicChatThreadId } from "../live-public-chat-thread-id";
 import { readPublicChatThreadId, writePublicChatThreadId } from "../../utils";
 
 const slug = "sorella";

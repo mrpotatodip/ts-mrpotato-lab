@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { MessageSquarePlus } from "lucide-react";
 
 import { Button } from "#/components/ui/button";
-import { livePublicChatThreadId } from "../api/check-public-chat-thread";
+import { livePublicChatThreadId } from "../api/live-public-chat-thread-id";
 import { CHAT_BOT_CUSTOMER_SURFACE } from "../constants";
 import { ChatBotSurfaceContext } from "../contexts";
 import { usePublicChat } from "../hooks/use-public-chat";
