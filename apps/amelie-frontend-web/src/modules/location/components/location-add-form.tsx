@@ -12,6 +12,7 @@ import { needsCountryChoice, toLocationCreateBody } from "../utils";
 type LocationAddFormProps = {
   onAdded?: () => void;
   onCancel?: () => void;
+  lockedCountryId?: string;
 };
 
 const EMPTY_VALUES: LocationAddFormValues = { name: "", countryId: "" };
@@ -22,13 +23,13 @@ const EMPTY_VALUES: LocationAddFormValues = { name: "", countryId: "" };
 // it is added). Its timezone starts from the last
 // Location in that Country, else the cafe's.
 // -----
-export function LocationAddForm({ onAdded, onCancel }: LocationAddFormProps) {
+export function LocationAddForm({ onAdded, onCancel, lockedCountryId }: LocationAddFormProps) {
   const { createLocation } = useLocationActions();
   const { countries } = useActiveCountries();
-  const choosesCountry = needsCountryChoice(countries);
+  const choosesCountry = !lockedCountryId && needsCountryChoice(countries);
 
   const form = useForm({
-    defaultValues: EMPTY_VALUES,
+    defaultValues: { ...EMPTY_VALUES, countryId: lockedCountryId ?? "" },
     validators: {
       onChange: ({ value }) => {
         const result = CreateLocationBodySchema.safeParse(toLocationCreateBody(value.name, value.countryId, countries));
@@ -38,7 +39,7 @@ export function LocationAddForm({ onAdded, onCancel }: LocationAddFormProps) {
     },
     onSubmit: ({ value }) =>
       createLocation.mutate(
-        { data: CreateLocationBodySchema.parse(toLocationCreateBody(value.name, value.countryId, countries)) },
+        { data: CreateLocationBodySchema.parse(toLocationCreateBody(value.name, lockedCountryId ?? value.countryId, countries)) },
         {
           onSuccess: () => {
             form.reset();

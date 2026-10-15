@@ -1,5 +1,7 @@
 import type { UnansweredQuestionsSummary } from "@repo/contracts/amelie";
 
+import { unansweredWeekCopy } from "../utils";
+
 type UnansweredQuestionSummaryProps = {
   summary: UnansweredQuestionsSummary;
 };
@@ -9,11 +11,10 @@ type UnansweredQuestionSummaryProps = {
 // the week is the Tenant's last 7 days.
 // -----
 export function UnansweredQuestionSummary({ summary }: UnansweredQuestionSummaryProps) {
-  const { weekQuestions, weekUnanswered } = summary;
+  const { lead, need } = unansweredWeekCopy(summary.weekQuestions, summary.weekUnanswered);
   return (
     <p className="text-muted-foreground text-sm">
-      {weekQuestions} {weekQuestions === 1 ? "question" : "questions"} in the last 7 days,{" "}
-      <span className="text-foreground font-medium">{weekUnanswered} need information</span>.
+      {lead}, <span className="text-foreground font-medium">{need}</span>.
     </p>
   );
 }

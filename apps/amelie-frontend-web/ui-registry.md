@@ -2,6 +2,85 @@
 
 Last updated: 2026-10-15
 
+### MenuImportList
+
+File: `src/modules/menu-import/components/menu-import-suspense-list-main.tsx`
+Last updated: 2026-10-15
+
+| Property         | Class |
+| ---------------- | ----- |
+| Background       | PageCard `bg-muted/60` header, body `bg-card` |
+| Border           | PageCard `border` plus `border-t` on the body |
+| Border radius    | `rounded-3xl` |
+| Text — primary   | row title `text-sm font-medium` |
+| Text — secondary | `stat-label` |
+| Spacing          | page grid `gap-8 lg:grid-cols-[2fr_3fr] lg:gap-x-16`, rows `DASHBOARD_ROW_LINK_CLASS` (`px-6 py-5`) |
+| Hover state      | `hover:bg-accent/40 transition-colors` |
+| Shadow           | PageCard `shadow-none` |
+| Accent usage     | `DashboardStatusBadge` (`info` reading, `warning` review, `danger` failed, `success` published, `neutral` reviewed) |
+
+**Pattern notes:**
+Same list-in-card as Overview / Unanswered / Chats. Empty copy stays a `p-6 text-sm` sentence inside the card. Upload is a PageCard with the native file input. Status is `.status-badge`, not `Badge`.
+
+### MenuImportDraft
+
+File: `src/modules/menu-import/components/menu-import-draft.tsx`
+Last updated: 2026-10-15
+
+| Property         | Class |
+| ---------------- | ----- |
+| Background       | list row on PageCard body |
+| Border           | `divide-y` on the list |
+| Border radius    | none on the row |
+| Text — primary   | `text-sm font-medium`; discarded also `text-muted-foreground line-through` |
+| Text — secondary | `text-muted-foreground text-sm leading-relaxed` |
+| Spacing          | row `flex flex-col gap-2 px-6 py-5`, actions `gap-1` |
+| Hover state      | none on the row (icon buttons use ghost) |
+| Shadow           | none |
+| Accent usage     | `DashboardStatusBadge` success Approved, warning Needs a look, neutral Discarded |
+
+**Pattern notes:**
+Each kind is its own PageCard (`contentClassName="p-0"`), like FAQ categories. Edit replaces the row with the form, no nested Card.
+
+### CustomerThreadSheet
+
+File: `src/modules/customer-thread/components/customer-thread-sheet.tsx`
+Last updated: 2026-10-15
+
+| Property         | Class |
+| ---------------- | ----- |
+| Background       | `bg-card` |
+| Border           | `border` |
+| Border radius    | `rounded-3xl` |
+| Text — primary   | SheetTitle `text-lg font-semibold` |
+| Text — secondary | SheetDescription `text-sm text-muted-foreground` |
+| Spacing          | inset `inset-y-4` `left-4`/`right-4`, header `shrink-0`, body `mt-6 min-h-0 flex-1 overflow-y-auto` |
+| Hover state      | header icons ghost `icon-sm` `opacity-70 hover:opacity-100` |
+| Shadow           | none (sheet default) |
+| Accent usage     | none |
+
+**Pattern notes:**
+Same floating panel as `ChatBotSheet`: `modal={false}` `disablePointerDismissal` `overlay={false}`, `w-[calc(100%-2rem)] sm:max-w-xl`, hide default close, swap side with PanelLeft/PanelRight. Used from Chats and Unanswered. No overlay dim. Messages scroll inside the panel; the page stays usable.
+
+### Button
+
+File: `src/components/ui/button.tsx`
+Last updated: 2026-10-15
+
+| Property         | Class |
+| ---------------- | ----- |
+| Background       | primary `bg-primary`; outline `bg-transparent`; ghost none |
+| Border           | outline `border border-input`; others none |
+| Border radius    | `rounded-md` |
+| Text — primary   | `text-sm font-medium`; primary `text-primary-foreground` |
+| Spacing          | size default `h-10 px-4 py-2`; sm `h-9 px-3`; lg `h-11 px-8`. Primary (`variant` default) extra x-padding: `px-8` / `px-6` / `px-12` |
+| Hover state      | primary `hover:bg-primary/90` |
+| Shadow           | none |
+| Accent usage     | `bg-primary` |
+
+**Pattern notes:**
+Primary actions use `variant="default"` (omitted). Extra horizontal padding is compound-variant only so outline, ghost, and secondary stay on the size tokens. Icon sizes stay square.
+
 ### EliseCard
 
 File: `src/modules/shared/components/elise-card.tsx`
@@ -191,7 +270,7 @@ Last updated: 2026-10-13
 | Accent usage     | Cover `Badge variant="secondary"` |
 
 **Pattern notes:**
-Opens from a ghost `icon-sm` Image control next to Delete on the item row. Sheet chrome matches `CustomerThreadSheet` (`inset-y-4 right-4`, `rounded-3xl`, overlay `bg-black/10`). Sheet thumbs are `size-24 rounded-lg object-cover`. Each photo row uses ghost `icon-sm` up/down arrows, then Cover (`outline` `sm`), then delete. Add photos is `Button variant="outline" size="sm"`. Cap is `MENU_ITEM_IMAGE_MAX`. First photo is Cover. The item row shows that cover left of the title (`size-10 rounded-lg`) with a primary count bubble (`Badge`, `min-w-5`, `text-[10px]`, `-top-1.5 -right-1.5`). The thumb is omitted when the item has no photo.
+Opens from a ghost `icon-sm` Image control next to Delete on the item row. Sheet chrome is the inset card (`inset-y-4 right-4`, `rounded-3xl`) with overlay `bg-black/10`. Chat/unanswered use `CustomerThreadSheet` instead (no overlay, same floating card as the assistant). Sheet thumbs are `size-24 rounded-lg object-cover`. Each photo row uses ghost `icon-sm` up/down arrows, then Cover (`outline` `sm`), then delete. Add photos is `Button variant="outline" size="sm"`. Cap is `MENU_ITEM_IMAGE_MAX`. First photo is Cover. The item row shows that cover left of the title (`size-10 rounded-lg`) with a primary count bubble (`Badge`, `min-w-5`, `text-[10px]`, `-top-1.5 -right-1.5`). The thumb is omitted when the item has no photo.
 
 ### CountryAddForm
 
@@ -251,7 +330,7 @@ Last updated: 2026-10-15
 | Accent usage     | errors `text-xs text-destructive` |
 
 **Pattern notes:**
-Matches menu/FAQ/country add forms: no visible labels, `aria-label` plus placeholder, name `w-56`, `SelectTrigger` `w-fit min-w-40`. Add starts as outline `size="sm"` in a `border-t p-6` footer when there are several locations, then expands to this form with Cancel. A one-location cafe still uses a muted `link` button, same as adding a country.
+Matches menu/FAQ/country add forms: no visible labels, `aria-label` plus placeholder, name `w-56`, `SelectTrigger` `w-fit min-w-40`. Add starts as outline `size="sm"` in a `border-t p-6` footer, then expands to this form with Cancel. One open Location still shows its row so name, timezone, address and phone can be saved. On Profile the Country is already picked, so the Country select is omitted and the new Location lands in that Country.
 
 ### LocationRow
 
@@ -343,15 +422,15 @@ Last updated: 2026-10-15
 | Background       | shadcn Select |
 | Border           | SelectTrigger default |
 | Border radius    | SelectTrigger `rounded-md` |
-| Text — primary   | `text-sm` via Select |
-| Text — secondary | none (unlabeled) |
-| Spacing          | header stack `gap-3 p-4` with cafe picker |
+| Text — primary   | Location name, `text-sm` via Select |
+| Text — secondary | Country line `text-muted-foreground text-xs font-normal` |
+| Spacing          | header stack `gap-3 p-4` with cafe picker; trigger `h-auto w-full py-2` |
 | Hover state      | Select default |
 | Shadow           | none |
 | Accent usage     | none |
 
 **Pattern notes:**
-Matches `TenantPicker`: compact unlabeled `SelectTrigger` `w-48`, `aria-label` only. Country then Location, under the cafe name in `SidebarHeader`. Hidden while there is one open Country or one open Location in the current Country. Do not copy into the top bar.
+One unlabeled `SelectTrigger` `w-full` under the cafe picker, `aria-label` only. Place name on the first line; Country on the second when the cafe sells in more than one. Menu groups places under `SelectLabel` Country names; a Country with no open Location is a leaf. Hidden while there is one open Country and one open Location. Matches `TenantPicker` width (`w-full`). Do not copy into the top bar.
 
 ### DashboardEmptyPlace
 

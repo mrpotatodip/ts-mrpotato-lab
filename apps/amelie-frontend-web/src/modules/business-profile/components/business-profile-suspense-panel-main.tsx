@@ -1,27 +1,32 @@
 import { Suspense } from "react";
 
-import { DashboardEmptyPlace } from "#/modules/dashboard/components/dashboard-empty-place";
+import { CountryAddLink } from "#/modules/country";
 import { useSuspenseDashboardScope } from "#/modules/dashboard/hooks/use-dashboard-scope";
 import { LocationSection } from "#/modules/location";
-import { PageCard, PageHeader } from "#/modules/shared";
+import { countryName, PageCard, PageHeader } from "#/modules/shared";
 import { useActiveTenantRole, useTenants } from "#/modules/tenant";
 import { useSuspenseBusinessProfile } from "../hooks";
 import { BusinessProfileForm } from "./business-profile-form";
 import { BusinessProfilePanelSkeleton } from "./business-profile-panel-skeleton";
-import { BusinessProfileRegion } from "./business-profile-region";
 
 // -----
 // The contact facts the assistant tells Customers. The
 // header shows at once; the rest waits behind the skeleton.
 // -----
+const PROFILE_INTRO = "What the assistant tells customers about your cafe: name, contact and address.";
+
 export function BusinessProfileSuspensePanelMain() {
   return (
-    <>
-      <PageHeader title="Business profile" description="What the assistant tells customers about your cafe: name, contact, address, country and locations." />
-      <Suspense fallback={<BusinessProfilePanelSkeleton />}>
-        <BusinessProfilePanelView />
-      </Suspense>
-    </>
+    <Suspense
+      fallback={
+        <>
+          <PageHeader title="Business profile" description={PROFILE_INTRO} />
+          <BusinessProfilePanelSkeleton />
+        </>
+      }
+    >
+      <BusinessProfilePanelView />
+    </Suspense>
   );
 }
 
@@ -29,41 +34,50 @@ export function BusinessProfileSuspensePanelMain() {
 // Keyed by the cafe and Location, so switching
 // either starts the form over with its data.
 // Phone and address are the chosen Location's.
-// Region and Locations are the cafe's, so they
-// sit beside the details, not inside the form.
+// Country and Location are the sidebar pick.
+// This column is how you add another Country, and
+// how you add or edit Locations in the picked Country.
 // -----
 function BusinessProfilePanelView() {
   const selection = useSuspenseDashboardScope();
-  if (selection.emptyPlace && selection.country) {
-    return (
-      <div className="flex flex-col gap-8">
-        <DashboardEmptyPlace country={selection.country} />
-        <LocationSection />
-      </div>
-    );
-  }
-  return <BusinessProfileDetails locationId={selection.locationId} />;
-}
-
-function BusinessProfileDetails({ locationId }: { locationId: string | undefined }) {
-  const { data } = useSuspenseBusinessProfile(locationId);
+  const { data } = useSuspenseBusinessProfile(selection.profileLocationId);
   const { canEdit } = useActiveTenantRole();
   const { data: tenants } = useTenants();
+  const emptyPlace = selection.emptyPlace && selection.country;
+  const inCountry = selection.country ? countryName(selection.country.country) : null;
 
   return (
-    <div className="grid items-start gap-8 lg:grid-cols-[2fr_3fr] lg:gap-x-16">
-      <PageCard title="Cafe details" description="Shown to customers by the assistant.">
+    <>
+      <PageHeader
+        title="Business profile"
+        description={inCountry ? `${inCountry}. ${PROFILE_INTRO}` : PROFILE_INTRO}
+      />
+      <div className="grid items-start gap-8 lg:grid-cols-[2fr_3fr] lg:gap-x-16">
+      <PageCard
+        title={inCountry ? `Cafe details · ${inCountry}` : "Cafe details"}
+        description={
+          emptyPlace
+            ? `Description, website and email are cafe-wide. Add a location in ${countryName(emptyPlace.country)} for phone and address.`
+            : "Shown to customers by the assistant."
+        }
+      >
         <BusinessProfileForm
-          key={`${tenants?.activeTenantId ?? "none"}:${locationId ?? "only"}`}
+          key={`${tenants?.activeTenantId ?? "none"}:${selection.profileLocationId ?? "only"}:${emptyPlace ? "empty" : "place"}`}
           profile={data}
           canEdit={canEdit}
-          locationId={locationId}
+          locationId={selection.profileLocationId}
+          showPlaceFields={!selection.emptyPlace}
         />
       </PageCard>
       <div className="flex flex-col gap-8">
-        <BusinessProfileRegion />
-        <LocationSection />
+        <LocationSection
+          key={selection.country?.id ?? "none"}
+          countryId={selection.country?.id}
+          inCountry={inCountry ?? undefined}
+        />
+        <CountryAddLink />
       </div>
-    </div>
+      </div>
+    </>
   );
 }

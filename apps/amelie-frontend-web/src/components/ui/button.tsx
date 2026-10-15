@@ -32,6 +32,11 @@ const buttonVariants = cva(
         "icon-sm": "h-9 w-9 shrink-0",
       },
     },
+    compoundVariants: [
+      { variant: "default", size: "default", class: "px-8" },
+      { variant: "default", size: "sm", class: "px-6" },
+      { variant: "default", size: "lg", class: "px-12" },
+    ],
     defaultVariants: {
       variant: "default",
       size: "default",

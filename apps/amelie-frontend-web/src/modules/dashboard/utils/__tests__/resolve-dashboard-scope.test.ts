@@ -36,6 +36,7 @@ describe("resolveDashboardScope", () => {
     expect(scope.location).toEqual(downtown);
     expect(scope.countryId).toBeUndefined();
     expect(scope.locationId).toBeUndefined();
+    expect(scope.profileLocationId).toBeUndefined();
     expect(scope.emptyPlace).toBe(false);
     expect(scope.showCountryPicker).toBe(false);
     expect(scope.showLocationPicker).toBe(false);
@@ -48,6 +49,7 @@ describe("resolveDashboardScope", () => {
     expect(scope.location).toEqual(airport);
     expect(scope.countryId).toBe(US_ID);
     expect(scope.locationId).toBe("airport");
+    expect(scope.profileLocationId).toBe("airport");
     expect(scope.locations.map((entry) => entry.id)).toEqual(["airport", "downtown"]);
     expect(scope.showCountryPicker).toBe(true);
     expect(scope.showLocationPicker).toBe(true);
@@ -101,7 +103,16 @@ describe("resolveDashboardScope", () => {
     expect(scope.country).toEqual(ca);
     expect(scope.location).toBeUndefined();
     expect(scope.locationId).toBeUndefined();
+    expect(scope.profileLocationId).toBeUndefined();
     expect(scope.emptyPlace).toBe(true);
     expect(scope.locations).toEqual([]);
+  });
+
+  it("borrows another Location only to load cafe-wide profile facts", () => {
+    const scope = resolveDashboardScope([us, ca], [downtown, airport], { countryId: CA_ID, locationId: null });
+
+    expect(scope.emptyPlace).toBe(true);
+    expect(scope.locationId).toBeUndefined();
+    expect(scope.profileLocationId).toBe("downtown");
   });
 });

@@ -11,10 +11,12 @@ export type StoredDashboardPick = {
 export type DashboardScope = {
   countries: Country[];
   locations: Location[];
+  openLocations: Location[];
   country: Country | undefined;
   location: Location | undefined;
   countryId: string | undefined;
   locationId: string | undefined;
+  profileLocationId: string | undefined;
   emptyPlace: boolean;
   showCountryPicker: boolean;
   showLocationPicker: boolean;
@@ -33,14 +35,18 @@ export function resolveDashboardScope(
   const locationsInCountry = country ? openLocations.filter((entry) => entry.countryId === country.id) : [];
   const location = locationsInCountry.find((entry) => entry.id === stored.locationId) ?? locationsInCountry[0];
   const emptyPlace = country !== undefined && locationsInCountry.length === 0;
+  const place = location ?? openLocations[0];
+  const namesPlace = openLocations.length > 1 && place !== undefined;
 
   return {
     countries: openCountries,
     locations: locationsInCountry,
+    openLocations,
     country,
     location,
     countryId: openCountries.length > 1 ? country?.id : undefined,
-    locationId: emptyPlace || openLocations.length <= 1 ? undefined : location?.id,
+    locationId: emptyPlace || !namesPlace ? undefined : location?.id,
+    profileLocationId: namesPlace ? place.id : undefined,
     emptyPlace,
     showCountryPicker: openCountries.length > 1,
     showLocationPicker: locationsInCountry.length > 1,

@@ -18,8 +18,8 @@ export function UnansweredQuestionItem({ item, isDismissing, onDismiss }: Unansw
   const [isChatOpen, setIsChatOpen] = useState(false);
 
   return (
-    <li className="flex items-start justify-between gap-4 p-6">
-      <div className="min-w-0 space-y-2">
+    <li className="hover:bg-accent/40 flex items-start justify-between gap-4 px-6 py-5 transition-colors">
+      <div className="flex min-w-0 flex-col gap-2">
         <p className="text-sm font-medium">{item.question ?? "(question not found)"}</p>
         <div className="flex flex-wrap items-center gap-2">
           {item.topics.map((topic) => (
@@ -27,7 +27,9 @@ export function UnansweredQuestionItem({ item, isDismissing, onDismiss }: Unansw
               {topic}
             </Badge>
           ))}
-          <span className="text-muted-foreground text-sm"><LocalDateTime iso={item.askedAt} /></span>
+          <span className="text-muted-foreground text-sm">
+            <LocalDateTime iso={item.askedAt} />
+          </span>
         </div>
       </div>
       <div className="flex shrink-0 gap-1">

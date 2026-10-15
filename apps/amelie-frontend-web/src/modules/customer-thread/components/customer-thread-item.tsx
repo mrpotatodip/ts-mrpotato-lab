@@ -1,10 +1,12 @@
 import { useState } from "react";
 import type { CustomerThreadSummary } from "@repo/contracts/amelie";
 
-import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
-import { CustomerThreadSheet } from "./customer-thread-sheet";
+import { cn } from "#/lib/utils";
+import { DASHBOARD_ROW_LINK_CLASS } from "#/modules/dashboard/constants/dashboard-nav";
+import { DashboardStatusBadge } from "#/modules/dashboard/components/dashboard-status-badge";
 import { LocalDateTime } from "#/modules/shared";
+import { CustomerThreadSheet } from "./customer-thread-sheet";
 
 type CustomerThreadItemProps = {
   thread: CustomerThreadSummary;
@@ -18,19 +20,23 @@ export function CustomerThreadItem({ thread }: CustomerThreadItemProps) {
       <Button
         type="button"
         variant="ghost"
-        className="h-auto w-full justify-between gap-4 rounded-none p-6 text-left whitespace-normal"
+        className={cn(
+          DASHBOARD_ROW_LINK_CLASS,
+          "h-auto w-full items-center justify-between gap-3 rounded-none text-left whitespace-normal",
+        )}
         onClick={() => setIsOpen(true)}
       >
-        <div className="min-w-0 space-y-1">
+        <div className="min-w-0">
           <p className="truncate text-sm font-medium">{thread.title ?? "Chat"}</p>
-          <p className="text-muted-foreground text-sm">
-            <LocalDateTime iso={thread.lastMessageAt} /> · {thread.messageCount} messages
+          <p className="stat-label">
+            {thread.messageCount} {thread.messageCount === 1 ? "message" : "messages"} ·{" "}
+            <LocalDateTime iso={thread.lastMessageAt} />
           </p>
         </div>
         {thread.unansweredCount > 0 ? (
-          <Badge variant="secondary" className="shrink-0">
+          <DashboardStatusBadge tone="warning">
             {thread.unansweredCount} unanswered
-          </Badge>
+          </DashboardStatusBadge>
         ) : null}
       </Button>
       <CustomerThreadSheet threadId={thread.id} open={isOpen} onOpenChange={setIsOpen} />
