@@ -192,3 +192,23 @@ Last updated: 2026-10-13
 
 **Pattern notes:**
 Opens from a ghost `icon-sm` Image control next to Delete on the item row. Sheet chrome matches `CustomerThreadSheet` (`inset-y-4 right-4`, `rounded-3xl`, overlay `bg-black/10`). Sheet thumbs are `size-24 rounded-lg object-cover`. Each photo row uses ghost `icon-sm` up/down arrows, then Cover (`outline` `sm`), then delete. Add photos is `Button variant="outline" size="sm"`. Cap is `MENU_ITEM_IMAGE_MAX`. First photo is Cover. The item row shows that cover left of the title (`size-10 rounded-lg`) with a primary count bubble (`Badge`, `min-w-5`, `text-[10px]`, `-top-1.5 -right-1.5`). The thumb is omitted when the item has no photo.
+
+### WidgetAllowedOriginsCard
+
+File: `src/modules/widget/components/widget-allowed-origins-card.tsx`
+Last updated: 2026-10-15
+
+| Property         | Class |
+| ---------------- | ----- |
+| Background       | PageCard (`bg-muted/60`, body `rounded-3xl border-t bg-card`) |
+| Border           | PageCard |
+| Border radius    | PageCard |
+| Text — primary   | title via PageCard `text-lg` |
+| Text — secondary | description via PageCard, empty warning `text-sm text-muted-foreground`, errors `text-xs text-destructive` |
+| Spacing          | rows `space-y-2`, row `gap-2`, actions `mt-4` `gap-2`, error `mt-4` |
+| Hover state      | ghost `icon-sm` remove, outline `sm` add, default `sm` Save |
+| Shadow           | none |
+| Accent usage     | none |
+
+**Pattern notes:**
+Sits under the install snippet on Widget. Editors get one Input per row, ghost `icon-sm` Trash2 to remove, outline Add website, then Save. Staff see the stored origins as `text-sm break-all` with no add, remove, or Save. Empty list shows the iframe warning. Paste a full URL; the server keeps the origin.
