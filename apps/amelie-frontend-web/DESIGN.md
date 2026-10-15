@@ -82,7 +82,6 @@ The `--severity-*`, `--heat-*`, `--tile-*`, `--delta-*` and `--unread` variables
 
 | Where | Classes | Purpose |
 |---|---|---|
-| `customer-thread-sheet.tsx:21` | `bg-black/10 backdrop-blur-[2px]` | Sheet overlay |
 | `routes/__root.tsx`, `use-theme.ts` | `#ffffff`, `#0d0d0d` | `theme-color` meta. Comment says "matches each theme's --background token", but see 11.4 |
 
 The sign-in banners and `AppErrorComponent` now use `status-success` / `status-danger` tokens. Elsewhere, errors use `text-destructive` (see 8).
@@ -212,7 +211,7 @@ Base: `inline-flex items-center justify-center gap-2 rounded-md text-sm font-med
 
 | Variant | Classes |
 |---|---|
-| `default` | `bg-primary text-primary-foreground hover:bg-primary/90` |
+| `default` | `bg-primary text-primary-foreground hover:bg-primary/90`. Extra x-padding vs other variants: `px-8` (default), `px-6` (sm), `px-12` (lg) |
 | `destructive` | `bg-destructive text-destructive-foreground hover:bg-destructive/90` |
 | `outline` | `border border-input bg-transparent hover:bg-accent hover:text-accent-foreground` |
 | `secondary` | `bg-secondary text-secondary-foreground hover:bg-secondary/80` |

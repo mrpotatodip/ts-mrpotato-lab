@@ -3,4 +3,5 @@ export * from "./faq-panel-skeleton";
 export * from "./faq-list";
 export * from "./faq-item";
 export * from "./faq-form";
-export * from "./faq-category-manager";
+export * from "./faq-category-nav";
+export * from "./faq-category-section";

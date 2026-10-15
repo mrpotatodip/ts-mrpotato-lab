@@ -1,6 +1,85 @@
 # UI registry
 
-Last updated: 2026-09-15
+Last updated: 2026-10-15
+
+### MenuImportList
+
+File: `src/modules/menu-import/components/menu-import-suspense-list-main.tsx`
+Last updated: 2026-10-15
+
+| Property         | Class |
+| ---------------- | ----- |
+| Background       | PageCard `bg-muted/60` header, body `bg-card` |
+| Border           | PageCard `border` plus `border-t` on the body |
+| Border radius    | `rounded-3xl` |
+| Text — primary   | row title `text-sm font-medium` |
+| Text — secondary | `stat-label` |
+| Spacing          | page grid `gap-8 lg:grid-cols-[2fr_3fr] lg:gap-x-16`, rows `DASHBOARD_ROW_LINK_CLASS` (`px-6 py-5`) |
+| Hover state      | `hover:bg-accent/40 transition-colors` |
+| Shadow           | PageCard `shadow-none` |
+| Accent usage     | `DashboardStatusBadge` (`info` reading, `warning` review, `danger` failed, `success` published, `neutral` reviewed) |
+
+**Pattern notes:**
+Same list-in-card as Overview / Unanswered / Chats. Empty copy stays a `p-6 text-sm` sentence inside the card. Upload is a PageCard with the native file input. Status is `.status-badge`, not `Badge`.
+
+### MenuImportDraft
+
+File: `src/modules/menu-import/components/menu-import-draft.tsx`
+Last updated: 2026-10-15
+
+| Property         | Class |
+| ---------------- | ----- |
+| Background       | list row on PageCard body |
+| Border           | `divide-y` on the list |
+| Border radius    | none on the row |
+| Text — primary   | `text-sm font-medium`; discarded also `text-muted-foreground line-through` |
+| Text — secondary | `text-muted-foreground text-sm leading-relaxed` |
+| Spacing          | row `flex flex-col gap-2 px-6 py-5`, actions `gap-1` |
+| Hover state      | none on the row (icon buttons use ghost) |
+| Shadow           | none |
+| Accent usage     | `DashboardStatusBadge` success Approved, warning Needs a look, neutral Discarded |
+
+**Pattern notes:**
+Each kind is its own PageCard (`contentClassName="p-0"`), like FAQ categories. Edit replaces the row with the form, no nested Card.
+
+### CustomerThreadSheet
+
+File: `src/modules/customer-thread/components/customer-thread-sheet.tsx`
+Last updated: 2026-10-15
+
+| Property         | Class |
+| ---------------- | ----- |
+| Background       | `bg-card` |
+| Border           | `border` |
+| Border radius    | `rounded-3xl` |
+| Text — primary   | SheetTitle `text-lg font-semibold` |
+| Text — secondary | SheetDescription `text-sm text-muted-foreground` |
+| Spacing          | inset `inset-y-4` `left-4`/`right-4`, header `shrink-0`, body `mt-6 min-h-0 flex-1 overflow-y-auto` |
+| Hover state      | header icons ghost `icon-sm` `opacity-70 hover:opacity-100` |
+| Shadow           | none (sheet default) |
+| Accent usage     | none |
+
+**Pattern notes:**
+Same floating panel as `ChatBotSheet`: `modal={false}` `disablePointerDismissal` `overlay={false}`, `w-[calc(100%-2rem)] sm:max-w-xl`, hide default close, swap side with PanelLeft/PanelRight. Used from Chats and Unanswered. No overlay dim. Messages scroll inside the panel; the page stays usable.
+
+### Button
+
+File: `src/components/ui/button.tsx`
+Last updated: 2026-10-15
+
+| Property         | Class |
+| ---------------- | ----- |
+| Background       | primary `bg-primary`; outline `bg-transparent`; ghost none |
+| Border           | outline `border border-input`; others none |
+| Border radius    | `rounded-md` |
+| Text — primary   | `text-sm font-medium`; primary `text-primary-foreground` |
+| Spacing          | size default `h-10 px-4 py-2`; sm `h-9 px-3`; lg `h-11 px-8`. Primary (`variant` default) extra x-padding: `px-8` / `px-6` / `px-12` |
+| Hover state      | primary `hover:bg-primary/90` |
+| Shadow           | none |
+| Accent usage     | `bg-primary` |
+
+**Pattern notes:**
+Primary actions use `variant="default"` (omitted). Extra horizontal padding is compound-variant only so outline, ghost, and secondary stay on the size tokens. Icon sizes stay square.
 
 ### EliseCard
 
@@ -191,7 +270,206 @@ Last updated: 2026-10-13
 | Accent usage     | Cover `Badge variant="secondary"` |
 
 **Pattern notes:**
-Opens from a ghost `icon-sm` Image control next to Delete on the item row. Sheet chrome matches `CustomerThreadSheet` (`inset-y-4 right-4`, `rounded-3xl`, overlay `bg-black/10`). Sheet thumbs are `size-24 rounded-lg object-cover`. Each photo row uses ghost `icon-sm` up/down arrows, then Cover (`outline` `sm`), then delete. Add photos is `Button variant="outline" size="sm"`. Cap is `MENU_ITEM_IMAGE_MAX`. First photo is Cover. The item row shows that cover left of the title (`size-10 rounded-lg`) with a primary count bubble (`Badge`, `min-w-5`, `text-[10px]`, `-top-1.5 -right-1.5`). The thumb is omitted when the item has no photo.
+Opens from a ghost `icon-sm` Image control next to Delete on the item row. Sheet chrome is the inset card (`inset-y-4 right-4`, `rounded-3xl`) with overlay `bg-black/10`. Chat/unanswered use `CustomerThreadSheet` instead (no overlay, same floating card as the assistant). Sheet thumbs are `size-24 rounded-lg object-cover`. Each photo row uses ghost `icon-sm` up/down arrows, then Cover (`outline` `sm`), then delete. Add photos is `Button variant="outline" size="sm"`. Cap is `MENU_ITEM_IMAGE_MAX`. First photo is Cover. The item row shows that cover left of the title (`size-10 rounded-lg`) with a primary count bubble (`Badge`, `min-w-5`, `text-[10px]`, `-top-1.5 -right-1.5`). The thumb is omitted when the item has no photo.
+
+### CountryAddForm
+
+File: `src/modules/country/components/country-add-form.tsx`
+Last updated: 2026-10-15
+
+| Property         | Class |
+| ---------------- | ----- |
+| Background       | PageCard body `bg-card` |
+| Border           | none on the form; section footer `border-t` |
+| Border radius    | Select/button `rounded-md` |
+| Text — primary   | `text-sm` via Input/Select |
+| Text — secondary | placeholders `text-muted-foreground` |
+| Spacing          | form `flex flex-col gap-3`, field row `flex flex-wrap gap-2`, actions `mt-3 flex gap-2` |
+| Hover state      | primary submit `size="sm"`, cancel `ghost` `size="sm"` |
+| Shadow           | none |
+| Accent usage     | errors `text-xs text-destructive` |
+
+**Pattern notes:**
+Matches menu/FAQ forms: no visible labels, `aria-label` plus placeholder, `SelectTrigger` `w-fit min-w-40`. Add starts as outline `size="sm"` in a `border-t p-6` footer, then expands to this form with Cancel, same as adding a menu item.
+
+### CountryRow
+
+File: `src/modules/country/components/country-row.tsx`
+Last updated: 2026-10-15
+
+| Property         | Class |
+| ---------------- | ----- |
+| Background       | PageCard body `bg-card` |
+| Border           | list `divide-y` |
+| Border radius    | none on the row |
+| Text — primary   | name `text-sm font-medium` |
+| Text — secondary | locations `text-muted-foreground text-sm` |
+| Spacing          | row `flex items-center justify-between gap-4 p-6`, actions `gap-2` |
+| Hover state      | none (menu item rows do not hover-fill) |
+| Shadow           | none |
+| Accent usage     | Archive `ghost` `size="sm"` |
+
+**Pattern notes:**
+Same list chrome as menu items: `PageCard` `contentClassName="p-0"`, `ul.divide-y`, `p-6` rows. Currency uses an unlabeled select (`w-fit min-w-40`) like the menu category field.
+
+### LocationAddForm
+
+File: `src/modules/location/components/location-add-form.tsx`
+Last updated: 2026-10-15
+
+| Property         | Class |
+| ---------------- | ----- |
+| Background       | PageCard body `bg-card` |
+| Border           | none on the form; section footer `border-t` |
+| Border radius    | Input/Select/button `rounded-md` |
+| Text — primary   | `text-sm` via Input/Select |
+| Text — secondary | placeholders `text-muted-foreground` |
+| Spacing          | form `flex flex-col gap-3`, field row `flex flex-wrap gap-2`, actions `mt-3 flex gap-2` |
+| Hover state      | primary submit `size="sm"`, cancel `ghost` `size="sm"` |
+| Shadow           | none |
+| Accent usage     | errors `text-xs text-destructive` |
+
+**Pattern notes:**
+Matches menu/FAQ/country add forms: no visible labels, `aria-label` plus placeholder, name `w-56`, `SelectTrigger` `w-fit min-w-40`. Add starts as outline `size="sm"` in a `border-t p-6` footer, then expands to this form with Cancel. One open Location still shows its row so name, timezone, address and phone can be saved. On Profile the Country is already picked, so the Country select is omitted and the new Location lands in that Country.
+
+### LocationRow
+
+File: `src/modules/location/components/location-row.tsx`
+Last updated: 2026-10-15
+
+| Property         | Class |
+| ---------------- | ----- |
+| Background       | PageCard body `bg-card` |
+| Border           | list `divide-y` |
+| Border radius    | Input/Select `rounded-md` |
+| Text — primary   | `text-sm` via Input/Select |
+| Text — secondary | placeholders `text-muted-foreground` |
+| Spacing          | row `p-6`, form `flex flex-col gap-3`, field rows `flex flex-wrap gap-2`, actions `mt-3 flex gap-2` |
+| Hover state      | none (menu item rows do not hover-fill); Save `size="sm"`, Archive `ghost` `size="sm"` |
+| Shadow           | none |
+| Accent usage     | country line `text-muted-foreground text-xs`, errors `text-xs text-destructive` |
+
+**Pattern notes:**
+Same list chrome as menu items: `PageCard` `contentClassName="p-0"`, `ul.divide-y`, `p-6` rows. Fields are unlabeled (`aria-label` plus placeholder) like the menu item form. When the cafe sells in several countries, the country is muted helper copy (`In {label}.`), not a badge, matching the menu item form's country line. Timezone uses `SelectTrigger` `w-fit min-w-56` so IANA names such as `America/New_York` fit; other form selects stay at `min-w-40`.
+
+### FaqCategoryNav
+
+File: `src/modules/faq/components/faq-category-nav.tsx`
+Last updated: 2026-10-15
+
+| Property         | Class |
+| ---------------- | ----- |
+| Background       | PageCard body `bg-card` |
+| Border           | none on rows; add footer `border-t` |
+| Border radius    | selected row `rounded-md` |
+| Text — primary   | row `text-sm`, selected `font-medium` |
+| Text — secondary | count `text-muted-foreground text-xs font-normal` |
+| Spacing          | list `p-3`, row `px-2 py-2`, add footer `p-6`, gap `gap-2` |
+| Hover state      | row `hover:bg-muted`; selected `bg-primary/10` |
+| Shadow           | none |
+| Accent usage     | errors `text-xs text-destructive` |
+
+**Pattern notes:**
+Matches the menu Organize tree: compact selected row (`bg-primary/10`), count on the right. Add category is the same icon-sm Plus plus unlabeled input as the old category manager, in a `border-t p-6` footer like adding a country.
+
+### FaqCategorySection
+
+File: `src/modules/faq/components/faq-category-section.tsx`
+Last updated: 2026-10-15
+
+| Property         | Class |
+| ---------------- | ----- |
+| Background       | PageCard body `bg-card` |
+| Border           | list `divide-y`; add footer `border-t` |
+| Border radius    | none on the row |
+| Text — primary   | question `text-sm font-medium` |
+| Text — secondary | answer `text-muted-foreground text-sm leading-relaxed`; empty `text-muted-foreground p-6 text-sm` |
+| Spacing          | FAQ row `p-6`, add footer `p-6` |
+| Hover state      | Edit/Delete `ghost` `icon-sm`; Add FAQ `outline` `size="sm"` |
+| Shadow           | none |
+| Accent usage     | errors `text-xs text-destructive` |
+
+**Pattern notes:**
+One category per page, same chrome as a menu category: `PageCard` `contentClassName="p-0"`, header actions, `ul.divide-y` items, Add FAQ expands in the footer like Add item. General has no rename/delete.
+
+### DashboardFaqSubnav
+
+File: `src/modules/dashboard/components/dashboard-faq-subnav.tsx`
+Last updated: 2026-10-15
+
+| Property         | Class |
+| ---------------- | ----- |
+| Background       | active `bg-sidebar-accent` |
+| Border           | rail `border-l border-sidebar-border` |
+| Border radius    | row `rounded-md` |
+| Text — primary   | `text-[0.9375rem] tracking-tight`, active `font-medium` |
+| Text — secondary | idle `text-sidebar-foreground/70` |
+| Spacing          | list `mx-3.5 px-2.5 py-0.5 gap-1`, row `h-8 px-2` |
+| Hover state      | `hover:bg-sidebar-accent hover:text-sidebar-accent-foreground` |
+| Shadow           | none |
+| Accent usage     | none |
+
+**Pattern notes:**
+Uses shadcn `SidebarMenuSub` / `SidebarMenuSubButton` under FAQs, inside Base UI `Collapsible`. Sub labels match the parent nav size (`text-[0.9375rem] tracking-tight`), quieter when idle (`text-sidebar-foreground/70`), `font-medium` when selected. The FAQs row is the trigger; a `ChevronRight` with `ml-auto` rotates `group-data-[open]/collapsible:rotate-90`. Open by default on `/faqs`, closed elsewhere. General first, then the tenant's categories. Do not add icons on the sub rows.
+
+### DashboardScopeControls
+
+File: `src/modules/dashboard/components/dashboard-scope-pickers.tsx`
+Last updated: 2026-10-15
+
+| Property         | Class |
+| ---------------- | ----- |
+| Background       | shadcn Select |
+| Border           | SelectTrigger default |
+| Border radius    | SelectTrigger `rounded-md` |
+| Text — primary   | Location name, `text-sm` via Select |
+| Text — secondary | Country line `text-muted-foreground text-xs font-normal` |
+| Spacing          | header stack `gap-3 p-4` with cafe picker; trigger `h-auto w-full py-2` |
+| Hover state      | Select default |
+| Shadow           | none |
+| Accent usage     | none |
+
+**Pattern notes:**
+One unlabeled `SelectTrigger` `w-full` under the cafe picker, `aria-label` only. Place name on the first line; Country on the second when the cafe sells in more than one. Menu groups places under `SelectLabel` Country names; a Country with no open Location is a leaf. Hidden while there is one open Country and one open Location. Matches `TenantPicker` width (`w-full`). Do not copy into the top bar.
+
+### DashboardEmptyPlace
+
+File: `src/modules/dashboard/components/dashboard-empty-place.tsx`
+Last updated: 2026-10-15
+
+| Property         | Class |
+| ---------------- | ----- |
+| Background       | Empty default |
+| Border           | `border` dashed via Empty |
+| Border radius    | Empty `rounded-lg` |
+| Text — primary   | EmptyTitle `text-lg font-medium tracking-tight` |
+| Text — secondary | EmptyDescription `text-muted-foreground text-sm/relaxed` |
+| Spacing          | Empty `p-6` / `md:p-12`, header `gap-2` |
+| Hover state      | none |
+| Shadow           | none |
+| Accent usage     | none |
+
+**Pattern notes:**
+Hours and Profile only, when the sidebar Country has no open Locations. Use shadcn `Empty`. Menu still prices that Country.
+
+### Toaster
+
+File: `src/components/ui/sonner.tsx`
+Last updated: 2026-10-15
+
+| Property         | Class |
+| ---------------- | ----- |
+| Background       | `bg-background` on the toast |
+| Border           | `border-border` |
+| Border radius    | sonner default |
+| Text — primary   | `text-foreground` |
+| Text — secondary | description `text-muted-foreground` |
+| Spacing          | lucide icons `h-4 w-4` |
+| Shadow           | `shadow-lg` |
+| Accent usage     | success/error icons from lucide; no extra color classes |
+
+**Pattern notes:**
+Mounted once in `__root.tsx`, `position="top-right"`. Action mutations toast through Query `MutationCache` (`src/lib/mutation-toast.ts`): success copy lives in `meta.successMessage`, failures use the thrown `Error` message. Skip a success toast with `successMessage: false` (drag reorders). Do not add a second toaster, and do not call `toast` from components when the mutation already has meta.
 
 ### WidgetAllowedOriginsCard
 

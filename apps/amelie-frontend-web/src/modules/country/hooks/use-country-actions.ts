@@ -23,9 +23,9 @@ export function useCountryActions() {
     void queryClient.invalidateQueries({ queryKey: locationsKeys.all });
   };
 
-  const createCountry = useMutation({ mutationFn: createCountryRequest, onSuccess: reload });
-  const updateCountry = useMutation({ mutationFn: updateCountryRequest, onSuccess: reload });
-  const archiveCountry = useMutation({ mutationFn: archiveCountryRequest, onSuccess: reload });
+  const createCountry = useMutation({ mutationFn: createCountryRequest, onSuccess: reload, meta: { successMessage: "Country added" } });
+  const updateCountry = useMutation({ mutationFn: updateCountryRequest, onSuccess: reload, meta: { successMessage: "Country saved" } });
+  const archiveCountry = useMutation({ mutationFn: archiveCountryRequest, onSuccess: reload, meta: { successMessage: "Country archived" } });
 
   return { createCountry, updateCountry, archiveCountry };
 }

@@ -1,9 +1,7 @@
-import { useId } from "react";
 import { useForm } from "@tanstack/react-form";
 import { CURRENCY_VALUES, CreateCountryBodySchema, type Country } from "@repo/contracts/amelie";
 
 import { Button } from "#/components/ui/button";
-import { Label } from "#/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#/components/ui/select";
 import { countryName, currencyForCountry } from "#/modules/shared";
 import { useCountryActions } from "../hooks";
@@ -13,6 +11,7 @@ import { addableCountryOptions } from "../utils";
 type CountryAddFormProps = {
   countries: Country[];
   onAdded?: () => void;
+  onCancel?: () => void;
 };
 
 const EMPTY_VALUES: CountryAddFormValues = { country: "", currency: "" };
@@ -22,10 +21,8 @@ const EMPTY_VALUES: CountryAddFormValues = { country: "", currency: "" };
 // can be changed. A country the cafe archived before
 // is offered too: adding it brings its prices back.
 // -----
-export function CountryAddForm({ countries, onAdded }: CountryAddFormProps) {
+export function CountryAddForm({ countries, onAdded, onCancel }: CountryAddFormProps) {
   const { createCountry } = useCountryActions();
-  const countryId = useId();
-  const currencyId = useId();
   const options = addableCountryOptions(countries);
 
   const form = useForm({
@@ -50,17 +47,16 @@ export function CountryAddForm({ countries, onAdded }: CountryAddFormProps) {
 
   return (
     <form
-      className="flex flex-wrap items-end gap-3"
+      className="flex flex-col gap-3"
       onSubmit={(event) => {
         event.preventDefault();
         event.stopPropagation();
         void form.handleSubmit();
       }}
     >
-      <form.Field name="country">
-        {(field) => (
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor={countryId}>Country</Label>
+      <div className="flex flex-wrap gap-2">
+        <form.Field name="country">
+          {(field) => (
             <Select
               value={field.state.value}
               onValueChange={(next) => {
@@ -70,7 +66,7 @@ export function CountryAddForm({ countries, onAdded }: CountryAddFormProps) {
                 form.setFieldValue("currency", currencyForCountry(picked.code));
               }}
             >
-              <SelectTrigger id={countryId} aria-label="Country" className="w-64">
+              <SelectTrigger aria-label="Country" className="w-fit min-w-40">
                 <SelectValue placeholder="Select a country">{field.state.value ? countryName(field.state.value) : null}</SelectValue>
               </SelectTrigger>
               <SelectContent>
@@ -81,13 +77,10 @@ export function CountryAddForm({ countries, onAdded }: CountryAddFormProps) {
                 ))}
               </SelectContent>
             </Select>
-          </div>
-        )}
-      </form.Field>
-      <form.Field name="currency">
-        {(field) => (
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor={currencyId}>Currency</Label>
+          )}
+        </form.Field>
+        <form.Field name="currency">
+          {(field) => (
             <Select
               value={field.state.value}
               onValueChange={(next) => {
@@ -95,7 +88,7 @@ export function CountryAddForm({ countries, onAdded }: CountryAddFormProps) {
                 if (picked) field.handleChange(picked);
               }}
             >
-              <SelectTrigger id={currencyId} aria-label="Currency" className="w-32">
+              <SelectTrigger aria-label="Currency" className="w-fit min-w-40">
                 <SelectValue placeholder="Currency">{field.state.value || null}</SelectValue>
               </SelectTrigger>
               <SelectContent>
@@ -106,17 +99,24 @@ export function CountryAddForm({ countries, onAdded }: CountryAddFormProps) {
                 ))}
               </SelectContent>
             </Select>
-          </div>
-        )}
-      </form.Field>
-      <form.Subscribe selector={(state) => state.values.country === "" || state.values.currency === ""}>
-        {(incomplete) => (
-          <Button type="submit" size="sm" disabled={incomplete || createCountry.isPending}>
-            {createCountry.isPending ? "Adding..." : "Add country"}
+          )}
+        </form.Field>
+      </div>
+      {createCountry.isError ? <p className="text-xs text-destructive">{createCountry.error.message}</p> : null}
+      <div className="mt-3 flex gap-2">
+        <form.Subscribe selector={(state) => state.values.country === "" || state.values.currency === ""}>
+          {(incomplete) => (
+            <Button type="submit" size="sm" disabled={incomplete || createCountry.isPending}>
+              {createCountry.isPending ? "Adding..." : "Add country"}
+            </Button>
+          )}
+        </form.Subscribe>
+        {onCancel ? (
+          <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
+            Cancel
           </Button>
-        )}
-      </form.Subscribe>
-      {createCountry.isError ? <span className="text-xs text-destructive">{createCountry.error.message}</span> : null}
+        ) : null}
+      </div>
     </form>
   );
 }

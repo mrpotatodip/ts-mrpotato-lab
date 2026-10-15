@@ -1,7 +1,6 @@
 import { Suspense } from "react";
 
-import { Card } from "#/components/ui/card";
-import { PageHeader } from "#/modules/shared";
+import { PageCard, PageHeader } from "#/modules/shared";
 import { useSuspenseCustomerThreads } from "../hooks";
 import { CustomerThreadItem } from "./customer-thread-item";
 import { CustomerThreadListSkeleton } from "./customer-thread-list-skeleton";
@@ -24,17 +23,21 @@ export function CustomerThreadSuspenseListMain() {
 function CustomerThreadListView() {
   const { data } = useSuspenseCustomerThreads();
 
-  if (data.length === 0) {
-    return <p className="text-muted-foreground text-sm">No Customer has chatted yet.</p>;
-  }
-
   return (
-    <Card className="overflow-hidden">
-      <ul className="divide-y">
-        {data.map((thread) => (
-          <CustomerThreadItem key={thread.id} thread={thread} />
-        ))}
-      </ul>
-    </Card>
+    <PageCard
+      title="Conversations"
+      description="Newest first. Amber means the assistant had to say it didn't know."
+      contentClassName="p-0"
+    >
+      {data.length === 0 ? (
+        <p className="stat-label p-6">No Customer has chatted yet.</p>
+      ) : (
+        <ul className="divide-y">
+          {data.map((thread) => (
+            <CustomerThreadItem key={thread.id} thread={thread} />
+          ))}
+        </ul>
+      )}
+    </PageCard>
   );
 }

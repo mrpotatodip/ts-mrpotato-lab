@@ -17,6 +17,7 @@ type OptimisticEditOptions<TData, TResult, TInput> = {
   mutationFn: (input: TInput) => Promise<TResult>;
   applyEdit: (data: TData, input: TInput) => TData;
   settle: () => Promise<void>;
+  meta?: UseMutationOptions<TResult, Error, TInput>["meta"];
 };
 
 type OptimisticContext<TData> = { previous: CacheSnapshot<TData> };
@@ -27,9 +28,11 @@ export function optimisticEdit<TData, TResult, TInput>({
   mutationFn,
   applyEdit,
   settle,
+  meta,
 }: OptimisticEditOptions<TData, TResult, TInput>): UseMutationOptions<TResult, Error, TInput, OptimisticContext<TData>> {
   return {
     mutationFn,
+    meta,
     onMutate: async (input) => {
       const previous = await snapshotQueries<TData>(queryClient, queryKey);
       queryClient.setQueriesData<TData>({ queryKey }, (data) => (data ? applyEdit(data, input) : data));

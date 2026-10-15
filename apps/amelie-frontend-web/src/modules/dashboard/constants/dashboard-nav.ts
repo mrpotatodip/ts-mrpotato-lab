@@ -14,7 +14,7 @@ import {
 
 // -----
 // The sidebar, grouped by what the owner is doing:
-// looking, setting up the cafe, or watching Customers.
+// looking, setting up the cafe, watching Customers, or installing Amelie.
 // -----
 export const DASHBOARD_NAV_GROUPS = [
   {
@@ -29,7 +29,6 @@ export const DASHBOARD_NAV_GROUPS = [
       { to: "/menu", label: "Menu", icon: UtensilsCrossed },
       { to: "/imports", label: "Import", icon: FileUp },
       { to: "/faqs", label: "FAQs", icon: CircleQuestionMark },
-      { to: "/widget", label: "Widget", icon: Code },
     ],
   },
   {
@@ -39,6 +38,10 @@ export const DASHBOARD_NAV_GROUPS = [
       { to: "/unanswered", label: "Unanswered", icon: MessageSquareWarning },
       { to: "/chat-bot", label: "Assistant", icon: Bot },
     ],
+  },
+  {
+    label: "Integration",
+    items: [{ to: "/widget", label: "Widget", icon: Code }],
   },
 ] as const;
 

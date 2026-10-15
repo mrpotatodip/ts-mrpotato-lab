@@ -24,7 +24,7 @@ export function TenantPicker() {
         if (tenantId) switchTenant.mutate(tenantId);
       }}
     >
-      <SelectTrigger className="w-48" aria-label="Cafe">
+      <SelectTrigger className="w-full" aria-label="Cafe">
         <SelectValue>{active?.name}</SelectValue>
       </SelectTrigger>
       <SelectContent>

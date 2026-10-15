@@ -3,9 +3,11 @@ import { setupRouterSsrQueryIntegration } from '@tanstack/react-router-ssr-query
 import { routeTree } from './routeTree.gen'
 
 import { QueryClient } from '@tanstack/react-query'
+import { createMutationToastCache } from './lib/mutation-toast'
 
 export function getRouter() {
   const queryClient = new QueryClient({
+    mutationCache: createMutationToastCache(),
     defaultOptions: {
       queries: {
         staleTime: 1000 * 60 * 5,

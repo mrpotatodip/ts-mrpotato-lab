@@ -2,9 +2,8 @@ import { Check, Pencil, X } from "lucide-react";
 import { useState } from "react";
 import type { ImportDraft } from "@repo/contracts/amelie";
 
-import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
-import { Card, CardContent } from "#/components/ui/card";
+import { DashboardStatusBadge } from "#/modules/dashboard/components/dashboard-status-badge";
 import { describeHours } from "#/modules/schedule";
 import { useMenuImportActions } from "../hooks";
 import { importPriceText } from "../utils";
@@ -65,20 +64,16 @@ export function MenuImportDraft({ importId, draft, canEdit, currency }: MenuImpo
 
   if (isEditing) {
     return (
-      <li className="p-2">
-        <Card className="shadow-none">
-          <CardContent className="pt-6">
-            <MenuImportDraftEditor
-              draft={draft}
-              isPending={updateDraft.isPending}
-              error={updateDraft.isError ? updateDraft.error.message : null}
-              onSave={(data) =>
-                updateDraft.mutate({ data: { importId, draftId: draft.id, body: { data } } }, { onSuccess: () => setIsEditing(false) })
-              }
-              onCancel={() => setIsEditing(false)}
-            />
-          </CardContent>
-        </Card>
+      <li className="px-6 py-5">
+        <MenuImportDraftEditor
+          draft={draft}
+          isPending={updateDraft.isPending}
+          error={updateDraft.isError ? updateDraft.error.message : null}
+          onSave={(data) =>
+            updateDraft.mutate({ data: { importId, draftId: draft.id, body: { data } } }, { onSuccess: () => setIsEditing(false) })
+          }
+          onCancel={() => setIsEditing(false)}
+        />
       </li>
     );
   }
@@ -87,7 +82,7 @@ export function MenuImportDraft({ importId, draft, canEdit, currency }: MenuImpo
   const isDiscarded = draft.status === "discarded";
 
   return (
-    <li className="space-y-2 p-6">
+    <li className="flex flex-col gap-2 px-6 py-5">
       <div className="flex items-center justify-between gap-4">
         <p className={isDiscarded ? "text-muted-foreground min-w-0 text-sm font-medium line-through" : "min-w-0 text-sm font-medium"}>
           {text.title}
@@ -126,9 +121,9 @@ export function MenuImportDraft({ importId, draft, canEdit, currency }: MenuImpo
         </p>
       ) : null}
       <div className="flex flex-wrap items-center gap-1.5">
-        {draft.status === "approved" ? <Badge variant="secondary">Approved</Badge> : null}
-        {isDiscarded ? <Badge variant="outline">Discarded</Badge> : null}
-        {draft.reviewNote ? <Badge variant="outline">Needs a look</Badge> : null}
+        {draft.status === "approved" ? <DashboardStatusBadge tone="success">Approved</DashboardStatusBadge> : null}
+        {isDiscarded ? <DashboardStatusBadge tone="neutral">Discarded</DashboardStatusBadge> : null}
+        {draft.reviewNote ? <DashboardStatusBadge tone="warning">Needs a look</DashboardStatusBadge> : null}
         {draft.reviewNote ? <span className="text-muted-foreground text-xs">{draft.reviewNote}</span> : null}
       </div>
       {updateDraft.isError ? <p className="text-xs text-destructive">{updateDraft.error.message}</p> : null}

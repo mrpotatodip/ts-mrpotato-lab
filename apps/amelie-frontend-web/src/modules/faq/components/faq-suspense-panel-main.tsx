@@ -2,64 +2,56 @@ import { Suspense } from "react";
 
 import { activeCountries, useSuspenseCountries } from "#/modules/country";
 import { useSuspenseLocations } from "#/modules/location";
-import { PageCard, PageHeader } from "#/modules/shared";
+import { PageHeader } from "#/modules/shared";
 import { useActiveTenantRole } from "#/modules/tenant";
-import { useFaqActions, useSuspenseFaqs } from "../hooks";
-import { FaqCategoryManager } from "./faq-category-manager";
-import { FaqForm } from "./faq-form";
-import { FaqList } from "./faq-list";
+import { useSuspenseFaqs } from "../hooks";
+import { faqGroupFor, faqGroups, resolveFaqCategoryKey } from "../utils";
+import { FaqCategoryNav } from "./faq-category-nav";
+import { FaqCategorySection } from "./faq-category-section";
 import { FaqPanelSkeleton } from "./faq-panel-skeleton";
 
-// -----
-// The questions the assistant answers from, grouped in
-// the Tenant's own categories. The header shows at once;
-// the panel waits behind the skeleton.
-// -----
-export function FaqSuspensePanelMain() {
+type FaqSuspensePanelMainProps = {
+  categoryKey: string | undefined;
+};
+
+export function FaqSuspensePanelMain({ categoryKey }: FaqSuspensePanelMainProps) {
   return (
     <>
       <PageHeader
         title="FAQs"
-        description="The questions your assistant answers from. Group them into categories so customers get the right answer."
+        description="The questions your assistant answers from. Open a category to add and edit its answers."
       />
       <Suspense fallback={<FaqPanelSkeleton />}>
-        <FaqPanelView />
+        <FaqPanelView categoryKey={categoryKey} />
       </Suspense>
     </>
   );
 }
 
-function FaqPanelView() {
+function FaqPanelView({ categoryKey }: { categoryKey: string | undefined }) {
   const { data } = useSuspenseFaqs();
-  const { add } = useFaqActions();
   const { canEdit } = useActiveTenantRole();
   const { data: allLocations } = useSuspenseLocations();
   const { data: allCountries } = useSuspenseCountries();
   const locations = allLocations.filter((location) => location.archivedAt === null);
+  const groups = faqGroups(data.faqs, data.categories);
+  const selectedKey = resolveFaqCategoryKey(data.categories, categoryKey);
+  const group = faqGroupFor(groups, selectedKey);
 
   return (
     <div className="grid items-start gap-8 lg:gap-x-16 lg:grid-cols-[2fr_3fr]">
-      <div className="space-y-8">
-        {canEdit ? (
-          <PageCard title="Add an FAQ" description="A question customers ask, and the answer the assistant should give.">
-            <FaqForm
-              categories={data.categories}
-              locations={locations}
-              countries={activeCountries(allCountries)}
-              initial={null}
-              submitLabel="Add FAQ"
-              isPending={add.isPending}
-              error={add.isError ? add.error.message : null}
-              onSubmit={(body) => add.mutate({ data: body })}
-              onCancel={null}
-            />
-          </PageCard>
-        ) : (
-          <p className="text-muted-foreground text-xs">Only an owner or manager can change these.</p>
-        )}
-        {canEdit ? <FaqCategoryManager categories={data.categories} /> : null}
+      <div className="lg:sticky lg:top-20 lg:max-h-[calc(100vh-6.5rem)] lg:-mr-4 lg:overflow-y-auto lg:pr-4 lg:pb-1 lg:[overflow-anchor:none] lg:[scrollbar-width:thin]">
+        <FaqCategoryNav groups={groups} selectedKey={selectedKey} canEdit={canEdit} />
       </div>
-      <FaqList faqs={data.faqs} categories={data.categories} locations={locations} countries={allCountries} canEdit={canEdit} />
+      <FaqCategorySection
+        key={`${group.key}:${group.title}`}
+        group={group}
+        categories={data.categories}
+        locations={locations}
+        countries={allCountries}
+        formCountries={activeCountries(allCountries)}
+        canEdit={canEdit}
+      />
     </div>
   );
 }

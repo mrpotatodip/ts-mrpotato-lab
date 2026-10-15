@@ -1,11 +1,13 @@
 import { Suspense } from "react";
 
-import { Card } from "#/components/ui/card";
-import { PageHeader } from "#/modules/shared";
+import { PageCard, PageHeader } from "#/modules/shared";
 import { useSuspenseUnansweredQuestions, useUnansweredQuestionActions } from "../hooks";
 import { UnansweredQuestionItem } from "./unanswered-question-item";
 import { UnansweredQuestionListSkeleton } from "./unanswered-question-list-skeleton";
 import { UnansweredQuestionSummary } from "./unanswered-question-summary";
+
+const CARD_TITLE = "Need information";
+const CARD_DESCRIPTION = "Newest first. Dismiss one once you have covered it.";
 
 // -----
 // What Customers asked that the assistant had no
@@ -30,12 +32,12 @@ function UnansweredQuestionListView() {
   const { dismiss } = useUnansweredQuestionActions();
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <UnansweredQuestionSummary summary={data.summary} />
-      {data.questions.length === 0 ? (
-        <p className="text-muted-foreground text-sm">Nothing is waiting. Every question had an answer.</p>
-      ) : (
-        <Card className="overflow-hidden">
+      <PageCard title={CARD_TITLE} description={CARD_DESCRIPTION} contentClassName="p-0">
+        {data.questions.length === 0 ? (
+          <p className="text-muted-foreground p-6 text-sm">Nothing is waiting. Every question had an answer.</p>
+        ) : (
           <ul className="divide-y">
             {data.questions.map((item) => (
               <UnansweredQuestionItem
@@ -46,8 +48,8 @@ function UnansweredQuestionListView() {
               />
             ))}
           </ul>
-        </Card>
-      )}
+        )}
+      </PageCard>
       {dismiss.error ? <p className="text-destructive text-sm">{dismiss.error.message}</p> : null}
     </div>
   );

@@ -7,8 +7,9 @@ import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { TanStackDevtools } from "@tanstack/react-devtools";
 import type { QueryClient } from "@tanstack/react-query";
 import { scan } from "react-scan";
-import { getSession } from "#/modules/auth";
-import type { SessionUser } from "#/modules/auth";
+import { Toaster } from "#/components/ui/sonner";
+import { loadSession } from "#/modules/auth/hooks";
+import type { SessionUser } from "#/modules/auth/types";
 import appCss from "../styles/globals.css?url";
 
 // -----
@@ -26,14 +27,14 @@ if (typeof window !== "undefined") {
 // with apply() in modules/shared/hooks/use-theme.ts, which cannot be
 // imported here: this has to ship as an inline string.
 // -----
-const THEME_INIT_SCRIPT = `(function(){try{var stored=window.localStorage.getItem('theme');var mode=(stored==='light'||stored==='dark'||stored==='auto')?stored:'light';var resolved=mode==='auto'?(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):mode;var root=document.documentElement;root.classList.remove('light','dark');root.classList.add(resolved);if(mode==='auto'){root.removeAttribute('data-theme')}else{root.setAttribute('data-theme',mode)}root.style.colorScheme=resolved;var tc=document.querySelector('meta[name="theme-color"]');if(tc){tc.setAttribute('content',resolved==='dark'?'#110f0e':'#fbfaf9')}}catch(e){}})();`;
+const THEME_INIT_SCRIPT = `(function(){try{var stored=window.localStorage.getItem('theme');var mode=(stored==='light'||stored==='dark'||stored==='auto')?stored:'light';var resolved=mode==='auto'?(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):mode;var root=document.documentElement;root.classList.remove('light','dark');root.classList.add(resolved);if(mode==='auto'){root.removeAttribute('data-theme')}else{root.setAttribute('data-theme',mode)}root.style.colorScheme=resolved;var tc=document.querySelector('meta[name="theme-color"]');if(tc){tc.setAttribute('content',resolved==='dark'?'#110f0e':'#fdfbf9')}}catch(e){}})();`;
 
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient;
   user: SessionUser | null;
 }>()({
-  beforeLoad: async () => ({
-    user: await getSession(),
+  beforeLoad: async ({ context }) => ({
+    user: await loadSession(context.queryClient),
   }),
   head: () => ({
     meta: [
@@ -71,7 +72,7 @@ export const Route = createRootRouteWithContext<{
       // -----
       {
         name: "theme-color",
-        content: "#fbfaf9",
+        content: "#fdfbf9",
       },
     ],
     links: [
@@ -121,6 +122,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body className="font-sans antialiased [overflow-wrap:anywhere] ">
         {children}
+        <Toaster />
         <TanStackDevtools
           config={{
             position: "bottom-right",

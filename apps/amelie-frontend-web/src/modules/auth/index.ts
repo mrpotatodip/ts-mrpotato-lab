@@ -1,6 +1,7 @@
 export {
   useAuthActions,
   useSession,
+  loadSession,
   sessionQueries,
   sessionKeys,
 } from "./hooks";

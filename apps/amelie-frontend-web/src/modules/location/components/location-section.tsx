@@ -11,43 +11,36 @@ import { LocationArchiveDialog } from "./location-archive-dialog";
 import { LocationRow } from "./location-row";
 
 // -----
-// With one Location the cafe sees only a quiet
-// way to add a second. With several, each one
-// can be edited or archived. The "now sold nowhere"
-// notice is held in the query cache, so it stays up
-// when the page reloads and the section is rebuilt.
+// Open Locations in this Country. None: the add
+// form. One or several: each can be edited or
+// archived, then add another. The "now sold
+// nowhere" notice is held in the query cache.
 // -----
-export function LocationSection() {
-  const { locations: active } = useActiveLocations();
+type LocationSectionProps = {
+  countryId?: string;
+  inCountry?: string;
+};
+
+export function LocationSection({ countryId, inCountry }: LocationSectionProps) {
+  const { locations: open } = useActiveLocations();
+  const active = countryId ? open.filter((location) => location.countryId === countryId) : open;
   const { canEdit } = useActiveTenantRole();
   const { archiveLocation } = useLocationActions();
   const { notice, dismiss } = useLocationArchivedNotice();
-  const [adding, setAdding] = useState(false);
   const [confirming, setConfirming] = useState<Location | null>(null);
 
   const noticeView = notice ? <LocationArchivedNotice notice={notice} onDismiss={dismiss} /> : null;
 
-  if (active.length === 0 || !canEdit) {
+  if (active.length === 0) {
+    if (!canEdit) return noticeView;
     return (
       <>
         {noticeView}
-        {active.length > 1 ? <LocationList active={active} canEdit={false} onArchive={setConfirming} isArchiving={false} archiveError={null} /> : null}
-      </>
-    );
-  }
-
-  if (active.length === 1) {
-    return (
-      <>
-        {noticeView}
-        <PageCard title="Locations" description="Your cafe has one location. Add another if you run more than one place.">
-          {adding ? (
-            <LocationAddForm onAdded={() => setAdding(false)} />
-          ) : (
-            <Button variant="link" size="sm" className="h-auto w-fit px-0" onClick={() => setAdding(true)}>
-              More than one place? Add a location
-            </Button>
-          )}
+        <PageCard
+          title={inCountry ? `Locations · ${inCountry}` : "Locations"}
+          description={inCountry ? `${inCountry} has no open location. Add one for a phone and address.` : "This country has no open location. Add one for a phone and address."}
+        >
+          <LocationAddForm lockedCountryId={countryId} />
         </PageCard>
       </>
     );
@@ -58,7 +51,9 @@ export function LocationSection() {
       {noticeView}
       <LocationList
         active={active}
-        canEdit
+        countryId={countryId}
+        inCountry={inCountry}
+        canEdit={canEdit}
         onArchive={setConfirming}
         isArchiving={archiveLocation.isPending}
         archiveError={archiveLocation.isError ? archiveLocation.error.message : null}
@@ -78,24 +73,44 @@ export function LocationSection() {
 
 type LocationListProps = {
   active: Location[];
+  countryId?: string;
+  inCountry?: string;
   canEdit: boolean;
   onArchive: (location: Location) => void;
   isArchiving: boolean;
   archiveError: string | null;
 };
 
-function LocationList({ active, canEdit, onArchive, isArchiving, archiveError }: LocationListProps) {
+function LocationList({ active, countryId, inCountry, canEdit, onArchive, isArchiving, archiveError }: LocationListProps) {
+  const [adding, setAdding] = useState(false);
+
   return (
-    <PageCard title="Locations" description="The name, address, phone and timezone of each place.">
-      <div className="space-y-4">
-        <ul className="space-y-3">
-          {active.map((location) => (
-            <LocationRow key={location.id} location={location} canEdit={canEdit} onArchive={onArchive} isArchiving={isArchiving} />
-          ))}
-        </ul>
-        {archiveError ? <p className="text-xs text-destructive">{archiveError}</p> : null}
-        {canEdit ? <LocationAddForm /> : null}
-      </div>
+    <PageCard
+      title={inCountry ? `Locations · ${inCountry}` : "Locations"}
+      description={inCountry ? `The name, address, phone and timezone of each place in ${inCountry}.` : "The name, address, phone and timezone of each place in this country."}
+      contentClassName="p-0"
+    >
+      <ul className="divide-y">
+        {active.map((location) => (
+          <LocationRow key={location.id} location={location} canEdit={canEdit} onArchive={onArchive} isArchiving={isArchiving} />
+        ))}
+      </ul>
+      {archiveError ? (
+        <p role="alert" className="px-6 pt-4 text-xs text-destructive">
+          {archiveError}
+        </p>
+      ) : null}
+      {canEdit ? (
+        <div className="border-t p-6">
+          {adding ? (
+            <LocationAddForm lockedCountryId={countryId} onAdded={() => setAdding(false)} onCancel={() => setAdding(false)} />
+          ) : (
+            <Button type="button" variant="outline" size="sm" onClick={() => setAdding(true)}>
+              Add location
+            </Button>
+          )}
+        </div>
+      ) : null}
     </PageCard>
   );
 }
