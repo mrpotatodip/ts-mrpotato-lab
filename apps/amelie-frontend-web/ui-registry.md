@@ -323,12 +323,12 @@ Last updated: 2026-10-15
 | Background       | active `bg-sidebar-accent` |
 | Border           | rail `border-l border-sidebar-border` |
 | Border radius    | row `rounded-md` |
-| Text — primary   | `text-xs` (`size="sm"`) |
-| Text — secondary | `text-sidebar-foreground` |
-| Spacing          | list `mx-3.5 px-2.5 py-0.5 gap-1`, row `h-7 px-2` |
+| Text — primary   | `text-[0.9375rem] tracking-tight`, active `font-medium` |
+| Text — secondary | idle `text-sidebar-foreground/70` |
+| Spacing          | list `mx-3.5 px-2.5 py-0.5 gap-1`, row `h-8 px-2` |
 | Hover state      | `hover:bg-sidebar-accent hover:text-sidebar-accent-foreground` |
 | Shadow           | none |
 | Accent usage     | none |
 
 **Pattern notes:**
-Uses shadcn `SidebarMenuSub` / `SidebarMenuSubButton` under FAQs. Always expanded. General first, then the tenant's categories. Do not add icons on the sub rows.
+Uses shadcn `SidebarMenuSub` / `SidebarMenuSubButton` under FAQs, inside Base UI `Collapsible`. Sub labels match the parent nav size (`text-[0.9375rem] tracking-tight`), quieter when idle (`text-sidebar-foreground/70`), `font-medium` when selected. The FAQs row is the trigger; a `ChevronRight` with `ml-auto` rotates `group-data-[open]/collapsible:rotate-90`. Open by default on `/faqs`, closed elsewhere. General first, then the tenant's categories. Do not add icons on the sub rows.

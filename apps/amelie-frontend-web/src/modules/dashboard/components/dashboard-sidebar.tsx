@@ -18,7 +18,7 @@ import { useAdminAccess } from "#/modules/admin";
 import { LogoutButton } from "#/modules/auth";
 import { TenantPicker, useTenants } from "#/modules/tenant";
 import { DASHBOARD_ADMIN_GROUP, DASHBOARD_NAV_GROUPS } from "../constants";
-import { DashboardFaqSubnav } from "./dashboard-faq-subnav";
+import { DashboardFaqNav } from "./dashboard-faq-subnav";
 
 type DashboardSidebarProps = {
   userName: string;
@@ -51,15 +51,18 @@ export function DashboardSidebar({ userName }: DashboardSidebarProps) {
               <SidebarMenu className="gap-0.5">
                 {group.items.map(({ to, label, icon: Icon }) => (
                   <SidebarMenuItem key={to}>
-                    <SidebarMenuButton
-                      className="h-8 gap-3 px-3 text-[0.9375rem] [&>svg]:size-[1.125rem]"
-                      isActive={pathname === to || pathname.startsWith(`${to}/`)}
-                      render={<Link to={to} onClick={() => setOpenMobile(false)} />}
-                    >
-                      <Icon />
-                      <span>{label}</span>
-                    </SidebarMenuButton>
-                    {to === "/faqs" ? <DashboardFaqSubnav /> : null}
+                    {to === "/faqs" ? (
+                      <DashboardFaqNav label={label} icon={Icon} isActive={pathname === to} />
+                    ) : (
+                      <SidebarMenuButton
+                        className="h-8 gap-3 px-3 text-[0.9375rem] [&>svg]:size-[1.125rem]"
+                        isActive={pathname === to || pathname.startsWith(`${to}/`)}
+                        render={<Link to={to} onClick={() => setOpenMobile(false)} />}
+                      >
+                        <Icon />
+                        <span>{label}</span>
+                      </SidebarMenuButton>
+                    )}
                   </SidebarMenuItem>
                 ))}
               </SidebarMenu>
