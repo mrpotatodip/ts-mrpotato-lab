@@ -52,7 +52,7 @@ export function DashboardFaqNav({ label, icon: Icon, isActive }: DashboardFaqNav
                 <SidebarMenuSubButton
                   size="md"
                   isActive={selectedKey === entry.key}
-                  className="h-8 text-[0.9375rem] tracking-tight text-sidebar-foreground/70 data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground"
+                  className="h-8 text-sm tracking-tight text-sidebar-foreground/70 data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground"
                   render={
                     <Link
                       to="/faqs"
