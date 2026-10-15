@@ -27,5 +27,7 @@ export function resolveFaqCategoryKey(categories: FaqCategory[], key: string | u
 }
 
 export function faqGroupFor(groups: FaqGroup[], key: string): FaqGroup {
-  return groups.find((group) => group.key === key) ?? groups[0];
+  const found = groups.find((group) => group.key === key);
+  if (found) return found;
+  return groups[0] ?? { key: FAQ_NO_CATEGORY, title: "General", category: null, faqs: [] };
 }

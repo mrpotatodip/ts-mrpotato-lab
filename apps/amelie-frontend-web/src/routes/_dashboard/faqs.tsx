@@ -1,17 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { prefetchFaqsPage } from "#/modules/dashboard";
-import { FaqSuspensePanelMain } from "#/modules/faq";
+import { FaqSearchSchema, FaqSuspensePanelMain } from "#/modules/faq";
 
-// -----
-// The questions the assistant answers from,
-// grouped in the Tenant's own categories.
-// -----
 export const Route = createFileRoute("/_dashboard/faqs")({
+  validateSearch: FaqSearchSchema,
   loader: ({ context }) => prefetchFaqsPage(context.queryClient),
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  return <FaqSuspensePanelMain />;
+  const { category } = Route.useSearch();
+  return <FaqSuspensePanelMain categoryKey={category} />;
 }
