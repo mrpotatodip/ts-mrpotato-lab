@@ -1,7 +1,14 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { getPublicChatSession, setChatBotStreamThreadId, setPublicChatSession } from "../../stores";
-import { dropPublicChatPlace, isPublicChatPlaceRejection, toPublicChatBody } from "../public-chat-options";
+import { getChatBotStreamThreadId, getPublicChatSession, setChatBotStreamThreadId, setPublicChatSession } from "../../stores";
+import { readPublicChatThreadId, writePublicChatThreadId } from "../../utils";
+import {
+  dropPublicChatPlace,
+  isPublicChatPlaceRejection,
+  publicChatFetchClient,
+  publicChatUrl,
+  toPublicChatBody,
+} from "../public-chat-options";
 
 const post = (content: string) => ({
   method: "POST",
@@ -14,6 +21,8 @@ const parse = (init: RequestInit) =>
 afterEach(() => {
   setChatBotStreamThreadId(undefined);
   setPublicChatSession(undefined);
+  writePublicChatThreadId("maple", null);
+  vi.unstubAllGlobals();
 });
 
 describe("toPublicChatBody", () => {
@@ -62,5 +71,35 @@ describe("isPublicChatPlaceRejection", () => {
 
   it("is false for other failures", () => {
     for (const status of [401, 403, 429, 500]) expect(isPublicChatPlaceRejection(status)).toBe(false);
+  });
+});
+
+describe("publicChatUrl", () => {
+  it("names the cafe and the Thread when one is in play", () => {
+    setPublicChatSession({ slug: "maple", anonymousId: "a" });
+    setChatBotStreamThreadId("4f1c2d9e-0000-4000-8000-000000000001");
+
+    expect(publicChatUrl()).toContain("slug=maple");
+    expect(publicChatUrl()).toContain("threadId=4f1c2d9e-0000-4000-8000-000000000001");
+  });
+});
+
+describe("publicChatFetchClient", () => {
+  it("turns a gone Thread hydrate into an empty chat instead of a 404", async () => {
+    setPublicChatSession({ slug: "maple", anonymousId: "a" });
+    setChatBotStreamThreadId("4f1c2d9e-0000-4000-8000-000000000001");
+    writePublicChatThreadId("maple", "4f1c2d9e-0000-4000-8000-000000000001");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response(JSON.stringify({ error: { message: "Chat thread not found" } }), { status: 404, statusText: "Not Found" })),
+    );
+
+    const response = await publicChatFetchClient("http://localhost:8788/public/chat-bot?slug=maple", { method: "GET" });
+
+    expect(response.ok).toBe(true);
+    expect(await response.json()).toEqual({ messages: [], activeRun: null });
+    expect(getChatBotStreamThreadId()).toBeUndefined();
+    expect(readPublicChatThreadId("maple")).toBeNull();
+    vi.unstubAllGlobals();
   });
 });

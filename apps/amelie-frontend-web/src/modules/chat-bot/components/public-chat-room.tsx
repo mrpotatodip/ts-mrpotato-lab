@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { MessageSquarePlus } from "lucide-react";
 
 import { Button } from "#/components/ui/button";
-import { checkPublicChatThread } from "../api/check-public-chat-thread";
+import { livePublicChatThreadId } from "../api/check-public-chat-thread";
 import { CHAT_BOT_CUSTOMER_SURFACE } from "../constants";
 import { ChatBotSurfaceContext } from "../contexts";
 import { usePublicChat } from "../hooks/use-public-chat";
@@ -12,7 +12,7 @@ import {
   setOnChatBotThreadCreated,
   setPublicChatSession,
 } from "../stores";
-import { publicChatAnonymousId, readPublicChatThreadId, writePublicChatThreadId } from "../utils";
+import { publicChatAnonymousId, writePublicChatThreadId } from "../utils";
 import { ChatBotChatFrame } from "./chat-bot-chat-frame";
 import { ChatBotThreadSkeleton } from "./chat-bot-thread-skeleton";
 
@@ -28,19 +28,6 @@ type PublicChatStart = {
 };
 
 // -----
-// An expired anonymous thread is gone: drop
-// it and start fresh rather than show an error.
-// -----
-async function liveStoredThreadId(slug: string, anonymousId: string): Promise<string | null> {
-  const stored = readPublicChatThreadId(slug);
-  if (!stored) return null;
-  const { live } = await checkPublicChatThread({ data: { slug, threadId: stored, anonymousId } }).catch(() => ({ live: true }));
-  if (live) return stored;
-  writePublicChatThreadId(slug, null);
-  return null;
-}
-
-// -----
 // Client-only: the Customer's id lives in
 // this browser's storage, not on the server.
 // -----
@@ -52,7 +39,7 @@ export function PublicChatRoom({ slug, location, country }: PublicChatRoomProps)
     const anonymousId = publicChatAnonymousId();
     setPublicChatSession({ slug, anonymousId, location, country });
     setOnChatBotThreadCreated((id) => writePublicChatThreadId(slug, id));
-    void liveStoredThreadId(slug, anonymousId).then((threadId) => {
+    void livePublicChatThreadId(slug, anonymousId).then((threadId) => {
       if (cancelled) return;
       setChatBotStreamThreadId(threadId ?? undefined);
       setStart({ threadId, generation: 0 });

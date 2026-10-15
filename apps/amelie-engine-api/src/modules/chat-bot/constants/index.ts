@@ -164,6 +164,9 @@ export const CHAT_BOT_FAQ_SCOPE_NOT_FOUND = (ref: string, choices: string): stri
 export const CHAT_BOT_LOCATION_REF_IGNORED = (ref: string, names: string): string =>
   `locationId "${ref}" is not one of this cafe's locations, so it was ignored. The cafe's locations: ${names}.`;
 
+export const CHAT_BOT_ASK_LOCATION = (names: string): string =>
+  `This cafe has several locations. Ask which one: ${names}. Then call setThreadLocation.`;
+
 // -----
 // An embed named a Country and a Location that is not in it
 // -----

@@ -16,9 +16,10 @@ import {
   notifyChatBotThreadCreated,
   recordChatBotStreamEvent,
   recordChatBotToolDisplay,
+  setChatBotStreamThreadId,
   setPublicChatSession,
 } from "../stores";
-import { lastUserContent } from "../utils";
+import { lastUserContent, writePublicChatThreadId } from "../utils";
 
 const PUBLIC_CHAT_FALLBACK_ERROR = "The chat isn't available right now. Please try again.";
 
@@ -92,27 +93,50 @@ export function dropPublicChatPlace(): void {
   if (session) setPublicChatSession({ ...session, location: undefined, country: undefined });
 }
 
+export function publicChatUrl(): string {
+  const params = new URLSearchParams({ slug: requirePublicChatSession().slug });
+  const threadId = getChatBotStreamThreadId();
+  if (threadId) params.set("threadId", threadId);
+  return `${API_BASE_URL}/public/chat-bot?${params}`;
+}
+
+export function dropGonePublicChatThread(): void {
+  const session = getPublicChatSession();
+  if (session) writePublicChatThreadId(session.slug, null);
+  setChatBotStreamThreadId(undefined);
+}
+
+export function emptyPublicChatHydrateResponse(): Response {
+  return new Response(JSON.stringify({ messages: [], activeRun: null }), {
+    status: 200,
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+export async function publicChatFetchClient(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  const { slug, location, country } = requirePublicChatSession();
+  const sending = init?.method === "POST";
+  const startsNewThread = sending && getChatBotStreamThreadId() === undefined;
+  const response = await fetch(input, sending ? { ...init, body: toPublicChatBody(init, slug, { location, country }) } : init);
+  if (!response.ok) {
+    if (response.status === PUBLIC_CHAT_THREAD_NOT_FOUND_STATUS) {
+      dropGonePublicChatThread();
+      if (!sending) return emptyPublicChatHydrateResponse();
+    }
+    if (sending && startsNewThread && isPublicChatPlaceRejection(response.status)) dropPublicChatPlace();
+    return sending ? toPublicChatErrorStream(response, init) : response;
+  }
+  const threadId = response.headers.get("X-Thread-Id");
+  if (threadId) markChatBotPendingReply(threadId);
+  if (threadId && startsNewThread) notifyChatBotThreadCreated(threadId);
+  return response;
+}
+
 export const publicChatOptions = {
-  connection: fetchServerSentEvents(
-    () => `${API_BASE_URL}/public/chat-bot?slug=${encodeURIComponent(requirePublicChatSession().slug)}`,
-    () => ({
-      headers: { "X-Anonymous-Id": requirePublicChatSession().anonymousId },
-      fetchClient: async (input: RequestInfo | URL, init?: RequestInit) => {
-        const { slug, location, country } = requirePublicChatSession();
-        const sending = init?.method === "POST";
-        const startsNewThread = sending && getChatBotStreamThreadId() === undefined;
-        const response = await fetch(input, sending ? { ...init, body: toPublicChatBody(init, slug, { location, country }) } : init);
-        if (!response.ok) {
-          if (sending && startsNewThread && isPublicChatPlaceRejection(response.status)) dropPublicChatPlace();
-          return sending ? toPublicChatErrorStream(response, init) : response;
-        }
-        const threadId = response.headers.get("X-Thread-Id");
-        if (threadId) markChatBotPendingReply(threadId);
-        if (threadId && startsNewThread) notifyChatBotThreadCreated(threadId);
-        return response;
-      },
-    }),
-  ),
+  connection: fetchServerSentEvents(publicChatUrl, () => ({
+    headers: { "X-Anonymous-Id": requirePublicChatSession().anonymousId },
+    fetchClient: publicChatFetchClient,
+  })),
   outputSchema: ChatBotOutputSchema,
   onChunk: (chunk: StreamChunk) => {
     recordChatBotStreamEvent(chunk);

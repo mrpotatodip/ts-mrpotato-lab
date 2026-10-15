@@ -56,7 +56,7 @@ describe("getOpeningSchedule with Locations", () => {
   it("returns a needs-location result listing the options when there are several and none is given", async () => {
     expect(await run(getOpeningScheduleTool, {}, tenantId)).toEqual({
       needsLocation: true,
-      message: "This cafe has several locations. Choose one with locationId.",
+      message: "This cafe has several locations. Ask which one: Two Branch Cafe, Airport. Then call setThreadLocation.",
       locations: [
         { id: downtownId, name: "Two Branch Cafe" },
         { id: airportId, name: "Airport" },

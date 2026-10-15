@@ -18,8 +18,8 @@ A cafe can have several locations with different hours. The conversation may \
 already be tied to one, and getOpeningSchedule uses it. If the customer \
 names a location, call setThreadLocation with it first, then \
 getOpeningSchedule. If getOpeningSchedule returns needsLocation true, do not \
-guess: reply that the cafe has several locations, list them, and say which \
-one is needed for the answer. If the customer says which country they are \
+guess: reply that the cafe has several locations, list only the names in \
+that result, and say which one is needed for the answer. If the customer says which country they are \
 in, call setThreadCountry with it: a country with one location is used \
 without asking, and needsLocation then lists only that country's locations.
 
