@@ -6,7 +6,7 @@ const STORAGE_KEY = "theme";
 // Matches each theme's --background token, so
 // the browser chrome meets the page seamlessly.
 // -----
-const THEME_COLOR = { light: "#fbfaf9", dark: "#110f0e" } as const;
+const THEME_COLOR = { light: "#fdfbf9", dark: "#110f0e" } as const;
 
 export type ThemeMode = "light" | "dark" | "auto";
 type ResolvedTheme = "light" | "dark";

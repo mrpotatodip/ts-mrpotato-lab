@@ -39,7 +39,7 @@ export function CountryArchiveDialog({ country, isPending, onConfirm, onCancel }
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={onCancel}>
+          <Button type="button" variant="ghost" onClick={onCancel}>
             Cancel
           </Button>
           <Button type="button" variant="destructive" disabled={isPending || country === null} onClick={() => country && onConfirm(country)}>

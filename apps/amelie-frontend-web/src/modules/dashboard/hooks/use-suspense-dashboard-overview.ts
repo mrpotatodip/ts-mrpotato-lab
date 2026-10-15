@@ -6,6 +6,7 @@ import { useSuspenseTenantHours } from "#/modules/schedule";
 import { useHydrated } from "#/modules/shared";
 import { useSuspenseUnansweredQuestions } from "#/modules/unanswered-question";
 import { DASHBOARD_ACTIVITY_DAYS } from "../constants";
+import { useSuspenseDashboardScope } from "./use-dashboard-scope";
 import {
   buildDashboardChecklist,
   countByDay,
@@ -21,15 +22,17 @@ import {
 // Everything the overview shows, built from the
 // queries the other screens already use. No new
 // endpoint: each number is a count over a list.
-// Suspends until all six have answered.
+// Menu and hours follow the dashboard Country and
+// Location, because several of either need an id.
 // -----
 export function useSuspenseDashboardOverview() {
+  const scope = useSuspenseDashboardScope();
   const { data: threads } = useSuspenseCustomerThreads();
   const { data: unanswered } = useSuspenseUnansweredQuestions();
-  const { data: menu } = useSuspenseMenu();
+  const { data: menu } = useSuspenseMenu(scope.countryId);
   const { data: faqs } = useSuspenseFaqs();
   const { data: imports } = useSuspenseMenuImports();
-  const { data: hours } = useSuspenseTenantHours();
+  const { data: hours } = useSuspenseTenantHours(scope.locationId ?? scope.profileLocationId);
   const hydrated = useHydrated();
 
   const activity = countByDay(

@@ -39,9 +39,9 @@ export function useMenuActions() {
   const queryClient = useQueryClient();
   const reload = () => queryClient.invalidateQueries({ queryKey: menuKeys.all });
 
-  const addCategory = useMutation({ mutationFn: addMenuCategory, onSuccess: reload });
-  const updateCategory = useMutation({ mutationFn: updateMenuCategory, onSuccess: reload });
-  const removeCategory = useMutation({ mutationFn: deleteMenuCategory, onSuccess: reload });
+  const addCategory = useMutation({ mutationFn: addMenuCategory, onSuccess: reload, meta: { successMessage: "Category added" } });
+  const updateCategory = useMutation({ mutationFn: updateMenuCategory, onSuccess: reload, meta: { successMessage: "Category saved" } });
+  const removeCategory = useMutation({ mutationFn: deleteMenuCategory, onSuccess: reload, meta: { successMessage: "Category deleted" } });
   const reorderCategories = useMutation(
     optimisticEdit({
       queryClient,
@@ -49,6 +49,7 @@ export function useMenuActions() {
       mutationFn: reorderMenuCategories,
       applyEdit: (menu: MenuEditor, { data }) => withCategoriesOrder(menu, data.ids),
       settle: reload,
+      meta: { successMessage: false },
     }),
   );
   const reorderItems = useMutation(
@@ -58,15 +59,16 @@ export function useMenuActions() {
       mutationFn: reorderMenuItems,
       applyEdit: (menu: MenuEditor, { data }) => withItemsOrder(menu, data.categoryId, data.ids),
       settle: reload,
+      meta: { successMessage: false },
     }),
   );
-  const addItem = useMutation({ mutationFn: addMenuItem, onSuccess: reload });
-  const updateItem = useMutation({ mutationFn: updateMenuItem, onSuccess: reload });
-  const removeItem = useMutation({ mutationFn: deleteMenuItem, onSuccess: reload });
-  const setLocations = useMutation({ mutationFn: setMenuItemLocations, onSuccess: reload });
-  const setCountryPrice = useMutation({ mutationFn: setMenuItemCountryPrice, onSuccess: reload });
-  const addImages = useMutation({ mutationFn: addMenuItemImages, onSuccess: reload });
-  const removeImage = useMutation({ mutationFn: deleteMenuItemImage, onSuccess: reload });
+  const addItem = useMutation({ mutationFn: addMenuItem, onSuccess: reload, meta: { successMessage: "Item added" } });
+  const updateItem = useMutation({ mutationFn: updateMenuItem, onSuccess: reload, meta: { successMessage: "Item saved" } });
+  const removeItem = useMutation({ mutationFn: deleteMenuItem, onSuccess: reload, meta: { successMessage: "Item deleted" } });
+  const setLocations = useMutation({ mutationFn: setMenuItemLocations, onSuccess: reload, meta: { successMessage: "Locations saved" } });
+  const setCountryPrice = useMutation({ mutationFn: setMenuItemCountryPrice, onSuccess: reload, meta: { successMessage: "Price saved" } });
+  const addImages = useMutation({ mutationFn: addMenuItemImages, onSuccess: reload, meta: { successMessage: "Photos added" } });
+  const removeImage = useMutation({ mutationFn: deleteMenuItemImage, onSuccess: reload, meta: { successMessage: "Photo deleted" } });
   const setCover = useMutation(
     optimisticEdit({
       queryClient,
@@ -74,6 +76,7 @@ export function useMenuActions() {
       mutationFn: setMenuItemImageCover,
       applyEdit: (menu: MenuEditor, { data }) => withItemImageCover(menu, data.itemId, data.imageId),
       settle: reload,
+      meta: { successMessage: "Cover photo set" },
     }),
   );
   const reorderSave = useRef<{ persist: PersistReorder; inflight: Promise<void> }>({
@@ -84,6 +87,7 @@ export function useMenuActions() {
 
   const reorderImagesMutation = useMutation({
     mutationFn: reorderMenuItemImages,
+    meta: { successMessage: false },
     onSettled: async () => {
       if (reorderDebounce.current?.hasPending()) return;
       await reload();

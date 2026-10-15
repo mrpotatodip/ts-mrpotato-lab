@@ -21,12 +21,7 @@ export function CountryAddLink() {
   if (adding) {
     return (
       <PageCard title="Add a country" description="Pick the country and the currency its menu is priced in.">
-        <div className="space-y-3">
-          <CountryAddForm countries={countries} onAdded={() => setAdding(false)} />
-          <Button type="button" variant="ghost" size="sm" onClick={() => setAdding(false)}>
-            Cancel
-          </Button>
-        </div>
+        <CountryAddForm countries={countries} onAdded={() => setAdding(false)} onCancel={() => setAdding(false)} />
       </PageCard>
     );
   }

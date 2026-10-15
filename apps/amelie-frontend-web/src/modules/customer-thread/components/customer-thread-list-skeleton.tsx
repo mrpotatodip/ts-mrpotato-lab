@@ -1,9 +1,9 @@
-import { Card } from "#/components/ui/card";
 import { Skeleton } from "#/components/ui/skeleton";
+import { PageCard } from "#/modules/shared";
 
 function CustomerThreadRowSkeleton() {
   return (
-    <li className="flex items-center justify-between gap-4 p-6">
+    <li className="flex items-center justify-between gap-3 px-6 py-5">
       <div className="space-y-2">
         <Skeleton className="h-4 w-40" />
         <Skeleton className="h-4 w-56" />
@@ -19,12 +19,16 @@ function CustomerThreadRowSkeleton() {
 // -----
 export function CustomerThreadListSkeleton() {
   return (
-    <Card className="overflow-hidden">
+    <PageCard
+      title="Conversations"
+      description="Newest first. Amber means the assistant had to say it didn't know."
+      contentClassName="p-0"
+    >
       <ul className="divide-y">
         <CustomerThreadRowSkeleton />
         <CustomerThreadRowSkeleton />
         <CustomerThreadRowSkeleton />
       </ul>
-    </Card>
+    </PageCard>
   );
 }

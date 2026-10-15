@@ -4,7 +4,6 @@ import type { Country, Faq, FaqCategory, Location } from "@repo/contracts/amelie
 
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
-import { Card, CardContent } from "#/components/ui/card";
 import { useFaqActions } from "../hooks";
 import { faqBadgeLabel } from "../utils";
 import { FaqForm } from "./faq-form";
@@ -24,22 +23,18 @@ export function FaqItem({ faq, categories, locations, countries, canEdit }: FaqI
 
   if (isEditing) {
     return (
-      <li className="p-2">
-        <Card className="shadow-none">
-          <CardContent className="pt-6">
-            <FaqForm
-              categories={categories}
-              locations={locations}
-              countries={countries}
-              initial={faq}
-              submitLabel="Save"
-              isPending={update.isPending}
-              error={update.isError ? update.error.message : null}
-              onSubmit={(body) => update.mutate({ data: { faqId: faq.id, ...body } }, { onSuccess: () => setIsEditing(false) })}
-              onCancel={() => setIsEditing(false)}
-            />
-          </CardContent>
-        </Card>
+      <li className="p-6">
+        <FaqForm
+          categories={categories}
+          locations={locations}
+          countries={countries}
+          initial={faq}
+          submitLabel="Save"
+          isPending={update.isPending}
+          error={update.isError ? update.error.message : null}
+          onSubmit={(body) => update.mutate({ data: { faqId: faq.id, ...body } }, { onSuccess: () => setIsEditing(false) })}
+          onCancel={() => setIsEditing(false)}
+        />
       </li>
     );
   }

@@ -3,9 +3,9 @@ import { Suspense, useState } from "react";
 import type { ImportDraft } from "@repo/contracts/amelie";
 
 import { Button } from "#/components/ui/button";
-import { Card } from "#/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#/components/ui/select";
 import { CountrySwitcher, useSuspenseCountrySelection } from "#/modules/country";
+import { useSuspenseDashboardScope } from "#/modules/dashboard/hooks/use-dashboard-scope";
 import { LocationSwitcher, useSuspenseLocationSelection } from "#/modules/location";
 import { PageCard, PageHeader } from "#/modules/shared";
 import { useActiveTenantRole } from "#/modules/tenant";
@@ -48,13 +48,28 @@ function MenuImportReviewView({ importId }: MenuImportSuspenseReviewMainProps) {
   const { data } = useSuspenseMenuImport(importId);
   const { approveAll, publish } = useMenuImportActions();
   const { canEdit } = useActiveTenantRole();
+  const dashboard = useSuspenseDashboardScope();
   const locationSelection = useSuspenseLocationSelection();
   const countrySelection = useSuspenseCountrySelection();
+  const [countryId, setCountryId] = useState(dashboard.countryId);
+  const [locationId, setLocationId] = useState(dashboard.locationId);
   const [chosenMode, setMode] = useState<PublishMode>("replace");
   const mode = usableMode(chosenMode, countrySelection.multiple);
 
-  if (data.status === "running") return <p className="text-muted-foreground text-sm">Amelie is reading your menu...</p>;
-  if (data.status === "failed") return <p className="text-sm text-destructive">{data.error ?? "The menu could not be read."}</p>;
+  if (data.status === "running") {
+    return (
+      <PageCard title="Review">
+        <p className="text-muted-foreground text-sm">Amelie is reading your menu...</p>
+      </PageCard>
+    );
+  }
+  if (data.status === "failed") {
+    return (
+      <PageCard title="Review">
+        <p className="text-destructive text-sm">{data.error ?? "The menu could not be read."}</p>
+      </PageCard>
+    );
+  }
 
   const published = publish.data;
   const files = [...new Set(data.drafts.map((draft) => draft.sourceFile))];
@@ -63,7 +78,7 @@ function MenuImportReviewView({ importId }: MenuImportSuspenseReviewMainProps) {
 
   return (
     <div className="grid items-start gap-8 lg:grid-cols-[2fr_3fr] lg:gap-x-16">
-      <div className="space-y-8 lg:sticky lg:top-20">
+      <div className="flex flex-col gap-8 lg:sticky lg:top-20">
         {canPublish ? (
           <PageCard title="Publish" description={fileNames}>
             <div className="flex flex-col gap-3">
@@ -94,14 +109,14 @@ function MenuImportReviewView({ importId }: MenuImportSuspenseReviewMainProps) {
               </Select>
               <CountrySwitcher
                 countries={countrySelection.countries}
-                value={countrySelection.countryId}
-                onChange={countrySelection.select}
+                value={countryId}
+                onChange={setCountryId}
                 label="Menu prices are in"
               />
               <LocationSwitcher
                 locations={locationSelection.locations}
-                value={locationSelection.locationId}
-                onChange={locationSelection.select}
+                value={locationId}
+                onChange={setLocationId}
                 label="Hours and contact details go to"
               />
               {publish.isError ? <p className="text-xs text-destructive">{publish.error.message}</p> : null}
@@ -112,8 +127,9 @@ function MenuImportReviewView({ importId }: MenuImportSuspenseReviewMainProps) {
                   disabled={data.approvedCount === 0 || publish.isPending}
                   onClick={() => {
                     const warning = mode === "replace" ? "Publish and replace your current menu?" : "Publish and add to your menu?";
-                    if (window.confirm(warning)) publish.mutate({
-                        data: { importId, mode, locationId: locationSelection.locationId, countryId: countrySelection.countryId },
+                    if (window.confirm(warning))
+                      publish.mutate({
+                        data: { importId, mode, locationId, countryId },
                       });
                   }}
                 >
@@ -128,7 +144,7 @@ function MenuImportReviewView({ importId }: MenuImportSuspenseReviewMainProps) {
               {data.publishedAt ? "This menu is live." : "Only an owner or manager can publish this menu."}
             </p>
             {published ? (
-              <p className="text-muted-foreground mt-2 text-sm">
+              <p className="stat-label mt-2">
                 {published.menuCategories} categories, {published.menuItems} items, {published.businessHours} days of hours,{" "}
                 {published.profileFieldsFilled} contact fields.
               </p>
@@ -137,38 +153,41 @@ function MenuImportReviewView({ importId }: MenuImportSuspenseReviewMainProps) {
         )}
       </div>
 
-      <div className="space-y-8">
+      <div className="flex flex-col gap-8">
         {files.map((file) => (
-          <div key={file} className="space-y-8">
+          <div key={file} className="flex flex-col gap-8">
             {files.length > 1 ? <h3 className="text-lg font-semibold">{file}</h3> : null}
             {KINDS.map((kind) => {
               const drafts = data.drafts.filter((draft) => draft.sourceFile === file && draft.kind === kind);
               if (drafts.length === 0) return null;
               return (
-                <section key={kind} className="space-y-4">
-                  <h3 className="flex items-baseline gap-2 text-lg font-semibold">
-                    {KIND_TITLE[kind]}
-                    <span className="text-muted-foreground text-sm font-normal">{drafts.length}</span>
-                  </h3>
-                  <Card className="overflow-hidden">
-                    <ul className="divide-y">
-                      {drafts.map((draft) => (
-                        <MenuImportDraft
-                          key={`${draft.id}:${draft.status}:${JSON.stringify(draft.data)}`}
-                          importId={importId}
-                          draft={draft}
-                          canEdit={canPublish}
-                          currency={countrySelection.selected?.currency}
-                        />
-                      ))}
-                    </ul>
-                  </Card>
-                </section>
+                <PageCard
+                  key={kind}
+                  title={KIND_TITLE[kind]}
+                  description={`${drafts.length} ${drafts.length === 1 ? "draft" : "drafts"}`}
+                  contentClassName="p-0"
+                >
+                  <ul className="divide-y">
+                    {drafts.map((draft) => (
+                      <MenuImportDraft
+                        key={`${draft.id}:${draft.status}:${JSON.stringify(draft.data)}`}
+                        importId={importId}
+                        draft={draft}
+                        canEdit={canPublish}
+                        currency={countrySelection.selected?.currency}
+                      />
+                    ))}
+                  </ul>
+                </PageCard>
               );
             })}
           </div>
         ))}
-        {data.drafts.length === 0 ? <p className="text-muted-foreground text-sm">Nothing was found in this file.</p> : null}
+        {data.drafts.length === 0 ? (
+          <PageCard title="Drafts">
+            <p className="text-muted-foreground text-sm">Nothing was found in this file.</p>
+          </PageCard>
+        ) : null}
       </div>
     </div>
   );

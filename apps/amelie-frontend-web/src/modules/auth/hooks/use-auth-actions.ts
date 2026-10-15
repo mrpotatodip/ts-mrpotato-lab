@@ -17,11 +17,13 @@ export function useAuthActions() {
   const signin = useMutation({
     mutationFn: (values: SigninFormValues) => signinEmail({ data: values }),
     onSuccess: enterDashboard,
+    meta: { successMessage: "Signed in" },
   });
 
   const signUp = useMutation({
     mutationFn: (body: SignUpBody) => signUpCafe({ data: body }),
     onSuccess: enterDashboard,
+    meta: { successMessage: "Cafe created" },
   });
 
   const logout = useMutation({
@@ -30,6 +32,7 @@ export function useAuthActions() {
       queryClient.clear();
       navigate({ to: "/" });
     },
+    meta: { successMessage: "Signed out" },
   });
 
   return { signin, signUp, logout };

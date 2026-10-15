@@ -22,6 +22,7 @@ export function useChatBotThreadActions() {
   const rename = useMutation({
     mutationFn: (input: ChatBotTitleInput) =>
       patchChatBotThreadTitle({ data: input }),
+    meta: { successMessage: "Chat renamed" },
     onMutate: async ({ id, title }) => {
       const previous = await snapshotQueries<ChatBotThreadDetail | ChatBotThreadListItem[]>(
         queryClient,
@@ -50,6 +51,7 @@ export function useChatBotThreadActions() {
 
   const remove = useMutation({
     mutationFn: (id: string) => deleteChatBotThread({ data: { id } }),
+    meta: { successMessage: "Chat deleted" },
     onSuccess: async ({ id }) => {
       await queryClient.cancelQueries({ queryKey: chatBotKeys.detail(id) });
       if (routeThreadId === id) {

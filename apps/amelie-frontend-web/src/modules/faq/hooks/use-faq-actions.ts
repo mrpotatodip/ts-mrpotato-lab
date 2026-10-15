@@ -20,10 +20,10 @@ export function useFaqActions() {
   const queryClient = useQueryClient();
   const reload = () => queryClient.invalidateQueries({ queryKey: faqsKeys.all });
 
-  const add = useMutation({ mutationFn: addFaq, onSuccess: reload });
-  const update = useMutation({ mutationFn: updateFaq, onSuccess: reload });
-  const remove = useMutation({ mutationFn: deleteFaq, onSuccess: reload });
-  const addCategory = useMutation({ mutationFn: addFaqCategory, onSuccess: reload });
+  const add = useMutation({ mutationFn: addFaq, onSuccess: reload, meta: { successMessage: "FAQ added" } });
+  const update = useMutation({ mutationFn: updateFaq, onSuccess: reload, meta: { successMessage: "FAQ saved" } });
+  const remove = useMutation({ mutationFn: deleteFaq, onSuccess: reload, meta: { successMessage: "FAQ deleted" } });
+  const addCategory = useMutation({ mutationFn: addFaqCategory, onSuccess: reload, meta: { successMessage: "Category added" } });
   const renameCategory = useMutation(
     optimisticEdit({
       queryClient,
@@ -31,9 +31,10 @@ export function useFaqActions() {
       mutationFn: renameFaqCategory,
       applyEdit: (list: FaqList, { data }) => withCategoryRenamed(list, data.categoryId, data.name),
       settle: reload,
+      meta: { successMessage: "Category renamed" },
     }),
   );
-  const removeCategory = useMutation({ mutationFn: deleteFaqCategory, onSuccess: reload });
+  const removeCategory = useMutation({ mutationFn: deleteFaqCategory, onSuccess: reload, meta: { successMessage: "Category deleted" } });
 
   return { add, update, remove, addCategory, renameCategory, removeCategory };
 }
