@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { EventType, type StreamChunk } from "@tanstack/ai";
 import { pgChatBotDurableStreamStore } from "../pg-stream-store";
 import { pgChatBotDurableStream } from "../pg-durable-stream";
-import type { ChatBotDurableStreamDb } from "../types";
+import type { ChatBotDurableStreamDb } from "../../pg-types";
 
 type StubChain = () => StubChain;
 

@@ -2,7 +2,8 @@ import { resolveResumeRunId, type StreamDurability } from "@tanstack/ai";
 import { createChatBotDurableStream } from "./durable-stream";
 import { pgChatBotDurableStreamStore } from "./pg-stream-store";
 import { readChatBotDurableStreamResumeOffset } from "./stream-offset";
-import type { ChatBotDurableStreamInit, ChatBotDurableStreamOptions } from "./types";
+import type { ChatBotDurableStreamOptions } from "../pg-types";
+import type { ChatBotDurableStreamInit } from "./types";
 
 // -----
 // The one-call form, like durableStream(). A

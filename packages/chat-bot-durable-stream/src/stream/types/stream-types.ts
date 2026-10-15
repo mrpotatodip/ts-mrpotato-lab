@@ -1,5 +1,4 @@
 import type { StreamChunk } from "@tanstack/ai";
-import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
 import type {
   CHAT_BOT_DURABLE_STREAM_OFFSET_INVALID,
   CHAT_BOT_DURABLE_STREAM_OFFSET_OTHER_RUN,
@@ -24,8 +23,6 @@ export type ChatBotDurableStreamStore = {
   waitForChange: (key: ChatBotDurableStreamKey, signal?: AbortSignal) => Promise<void>;
 };
 
-export type ChatBotDurableStreamDb = PgDatabase<PgQueryResultHKT>;
-
 export type ChatBotDurableStreamStoreOptions = { pollMs?: number };
 
 // -----
@@ -39,11 +36,6 @@ export type ChatBotDurableStreamInit = {
   staleMs?: number | null;
   onPruneError?: (error: unknown) => void;
 };
-
-export type ChatBotDurableStreamOptions = ChatBotDurableStreamStoreOptions &
-  Pick<ChatBotDurableStreamInit, "streamPrefix" | "retainMs" | "staleMs" | "onPruneError"> & {
-    db: ChatBotDurableStreamDb;
-  };
 
 // -----
 // Offsets

@@ -167,17 +167,24 @@ export function MenuItemRow({ item, categoryId, categories, dietaryTags, canEdit
           itemName={item.name}
           images={item.images}
           open={isPhotosOpen}
-          onOpenChange={setIsPhotosOpen}
-          isPending={addImages.isPending || removeImage.isPending || setCover.isPending || reorderImages.isPending}
+          onOpenChange={(open) => {
+            if (!open) void reorderImages.flush();
+            setIsPhotosOpen(open);
+          }}
+          isPending={addImages.isPending || removeImage.isPending || setCover.isPending}
           isUploading={addImages.isPending}
           error={firstMutationError(addImages, removeImage, setCover, reorderImages)}
           onAdd={(files) => {
-            const form = new FormData();
-            form.append("itemId", item.id);
-            for (const file of files) form.append("files", file);
-            addImages.mutate({ data: form });
+            void reorderImages.flush().then(() => {
+              const form = new FormData();
+              form.append("itemId", item.id);
+              for (const file of files) form.append("files", file);
+              addImages.mutate({ data: form });
+            });
           }}
-          onCover={(imageId) => setCover.mutate({ data: { itemId: item.id, imageId } })}
+          onCover={(imageId) => {
+            void reorderImages.flush().then(() => setCover.mutate({ data: { itemId: item.id, imageId } }));
+          }}
           onMove={(imageId, direction) => {
             const ids = moveId(
               item.images.map((image) => image.id),
@@ -186,7 +193,9 @@ export function MenuItemRow({ item, categoryId, categories, dietaryTags, canEdit
             );
             reorderImages.mutate({ data: { itemId: item.id, ids } });
           }}
-          onDelete={(imageId) => removeImage.mutate({ data: { itemId: item.id, imageId } })}
+          onDelete={(imageId) => {
+            void reorderImages.flush().then(() => removeImage.mutate({ data: { itemId: item.id, imageId } }));
+          }}
         />
       ) : null}
       {country && canEdit ? (

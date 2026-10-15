@@ -13,13 +13,22 @@
   "scripts": {
     "test": "vitest run"
   },
-  "dependencies": {
-    "@tanstack/ai": "^0.63.0",
-    "drizzle-orm": "0.45.2",
-    "zod": "^4.4.3"
-  },
+  "dependencies": {},
   "devDependencies": {
+    "@tanstack/ai": "^0.63.0",
+    "zod": "^4.4.3",
+    "drizzle-orm": "0.45.2",
     "@types/node": "^22.10.2",
     "vitest": "^4.1.7"
+  },
+  "peerDependencies": {
+    "@tanstack/ai": "^0.63.0",
+    "zod": "^4.4.3",
+    "drizzle-orm": "0.45.2"
+  },
+  "peerDependenciesMeta": {
+    "drizzle-orm": {
+      "optional": true
+    }
   }
 }

@@ -42,6 +42,20 @@ describe("MenuItemImages", () => {
     expect(screen.getAllByRole("button", { name: "Cover" })[0]).toHaveProperty("disabled", true);
   });
 
+  it("lets an editor keep rearranging while a save is in progress", () => {
+    const onMove = vi.fn<(imageId: string, direction: -1 | 1) => void>();
+    renderSheet([photo(0), photo(1), photo(2)], { isPending: true, onMove });
+
+    const moveDown = screen.getAllByRole("button", { name: "Move down" });
+    expect(moveDown[0]).toHaveProperty("disabled", false);
+    fireEvent.click(moveDown[0]);
+    expect(onMove).toHaveBeenCalledWith(photo(0).id, 1);
+
+    expect(screen.getAllByRole("button", { name: "Cover" })[1]).toHaveProperty("disabled", true);
+    expect(screen.getAllByRole("button", { name: "Remove photo" })[0]).toHaveProperty("disabled", true);
+    expect(screen.getByLabelText("Add photos to Latte")).toHaveProperty("disabled", true);
+  });
+
   it("lets an editor rearrange, set a cover, add photos, and remove one after confirming", () => {
     const onAdd = vi.fn<(files: File[]) => void>();
     const onCover = vi.fn<(imageId: string) => void>();

@@ -1,0 +1,64 @@
+{
+  "name": "@repo/chat-bot-api",
+  "version": "1.0.0",
+  "description": "Domain-free chat-bot engine: runs, threads, streaming, tools. A host plugs in a store, agents and an owner.",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./contracts": "./src/contracts/index.ts",
+    "./hono": "./src/hono/index.ts",
+    "./memory": "./src/memory/index.ts",
+    "./testing": "./src/testing/index.ts",
+    "./drizzle": "./src/drizzle/index.ts",
+    "./drizzle/tables": "./src/drizzle/tables.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@repo/chat-bot-durable-stream": "workspace:*"
+  },
+  "peerDependencies": {
+    "@tanstack/ai": "^0.63.0",
+    "effect": "^3.21.2",
+    "zod": "^4.4.3",
+    "hono": "^4.3.7",
+    "hono-openapi": "^1.3.3",
+    "vitest": "^4.1.7",
+    "drizzle-orm": "0.45.2"
+  },
+  "peerDependenciesMeta": {
+    "hono": {
+      "optional": true
+    },
+    "hono-openapi": {
+      "optional": true
+    },
+    "vitest": {
+      "optional": true
+    },
+    "drizzle-orm": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@tanstack/ai": "^0.63.0",
+    "effect": "^3.21.2",
+    "zod": "^4.4.3",
+    "hono": "^4.3.7",
+    "hono-openapi": "^1.3.3",
+    "typescript": "^5.4.5",
+    "vitest": "^4.1.7",
+    "drizzle-orm": "0.45.2",
+    "@electric-sql/pglite": "^0.5.8",
+    "@types/node": "^22.10.2"
+  },
+  "files": [
+    "src",
+    "sql",
+    "README.md"
+  ]
+}
