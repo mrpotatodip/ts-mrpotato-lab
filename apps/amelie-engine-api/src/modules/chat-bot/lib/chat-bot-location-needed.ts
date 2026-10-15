@@ -7,7 +7,7 @@ import {
   resolveReadLocationSvc,
   type LocationOption,
 } from "#/modules/location";
-import { CHAT_BOT_LOCATION_REF_IGNORED } from "#/modules/chat-bot/constants";
+import { CHAT_BOT_ASK_LOCATION, CHAT_BOT_LOCATION_REF_IGNORED } from "#/modules/chat-bot/constants";
 import { findChatBotThreadCountryIdEffect, findChatBotThreadLocationIdEffect } from "#/modules/chat-bot/queries";
 import type { LocationNeededResult } from "#/modules/chat-bot/schemas";
 import type { ChatBotRuntime, IgnoredLocationRef, ToolLocation } from "#/modules/chat-bot/types";
@@ -19,7 +19,7 @@ import type { ChatBotRuntime, IgnoredLocationRef, ToolLocation } from "#/modules
 // -----
 export const toLocationNeededResult = (failure: NeedsLocation): LocationNeededResult => ({
   needsLocation: true,
-  message: failure.message,
+  message: CHAT_BOT_ASK_LOCATION(failure.locations.map((location) => location.name).join(", ")),
   locations: failure.locations,
 });
 

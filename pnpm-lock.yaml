@@ -121,6 +121,12 @@ importers:
         specifier: ^4.147.0
         version: 4.147.0(@cloudflare/workers-types@4.20260702.1)(@types/node@25.9.3)
 
+  apps/amelie-frontend-host:
+    devDependencies:
+      vite:
+        specifier: ^8.0.0
+        version: 8.0.13(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.0)(yaml@2.9.0)
+
   apps/amelie-frontend-web:
     dependencies:
       '@ag-ui/core':
@@ -9685,7 +9691,9 @@ snapshots:
       metro-runtime: 0.84.5
     transitivePeerDependencies:
       - '@babel/core'
+      - bufferutil
       - supports-color
+      - utf-8-validate
     optional: true
 
   '@react-native/normalize-colors@0.86.3':

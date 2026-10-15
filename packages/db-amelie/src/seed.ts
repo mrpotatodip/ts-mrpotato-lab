@@ -1,4 +1,4 @@
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, isNull } from "drizzle-orm";
 import { hashPassword } from "better-auth/crypto";
 import { db } from "./client";
 import {
@@ -167,6 +167,39 @@ async function seedKnowledge(tenantId: string, countryId: string) {
   if (links.length) await db.insert(tenantMenuItemDietaryTags).values(links);
 }
 
+const AIRPORT = {
+  name: "Airport",
+  slug: "airport",
+  timezone: "America/New_York",
+  address: "Terminal 2",
+  phone: "845-555-2010",
+};
+
+async function seedAirport(tenantId: string, countryId: string) {
+  const active = await db
+    .select({ id: tenantLocations.id })
+    .from(tenantLocations)
+    .where(and(eq(tenantLocations.tenantId, tenantId), isNull(tenantLocations.archivedAt)));
+  if (active.length >= 2) return;
+  const [existing] = await db
+    .select()
+    .from(tenantLocations)
+    .where(and(eq(tenantLocations.tenantId, tenantId), eq(tenantLocations.slug, AIRPORT.slug)));
+  if (existing) return;
+  const [location] = await db
+    .insert(tenantLocations)
+    .values({ tenantId, countryId, ...AIRPORT })
+    .returning();
+  await db.insert(tenantBusinessHours).values(
+    laSorella.businessHours.map((h) => ({
+      tenantId,
+      locationId: location.id,
+      ...h,
+      ...(h.dayOfWeek !== 1 && { opensAt: "05:00", closesAt: "23:00" }),
+    })),
+  );
+}
+
 async function main() {
   if (!OWNER_PASSWORD) throw new Error("Set SEED_OWNER_PASSWORD to seed the Sorella owner");
   const tenantId = await seedTenant();
@@ -183,7 +216,9 @@ async function main() {
     .insert(partyRoles)
     .values({ partyId, tenantId, roleId: ownerRole.id, roleKey: ownerRole.key })
     .onConflictDoNothing();
-  await seedKnowledge(tenantId, await seedCountry(tenantId));
+  const countryId = await seedCountry(tenantId);
+  await seedKnowledge(tenantId, countryId);
+  await seedAirport(tenantId, countryId);
   console.log(`seeded ${SORELLA.slug} with owner ${OWNER_EMAIL} and La Sorella's knowledge`);
 }
 

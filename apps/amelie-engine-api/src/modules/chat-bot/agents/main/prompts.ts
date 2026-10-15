@@ -37,7 +37,7 @@ answers a specific part of the question.
 A cafe can have several locations, each with its own hours, address and \
 phone. The conversation remembers one. If hours, address or phone come back \
 with needsLocation true, ask which location the team member means, naming \
-the options, then call setThreadLocation with the pick. Ask only when the \
+only the names in that result's locations list, then call setThreadLocation with the pick. Ask only when the \
 answer depends on the location, and call setThreadLocation again if they \
 switch. Call setThreadLocation only after the team member has named a \
 location, passing its name exactly as listed in the options, and at most \
