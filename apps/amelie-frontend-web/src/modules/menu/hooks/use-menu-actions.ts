@@ -1,5 +1,7 @@
+import { useEffect, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { MenuEditor } from "@repo/contracts/amelie";
+import { createDebouncedCall, type DebouncedCall } from "#/lib/debounced-call";
 import { optimisticEdit } from "#/lib/optimistic-cache";
 import {
   addMenuCategory,
@@ -17,8 +19,16 @@ import {
   updateMenuCategory,
   updateMenuItem,
 } from "../api";
+import { MENU_ITEM_IMAGE_REORDER_DEBOUNCE_MS } from "../constants";
 import { withCategoriesOrder, withItemImageCover, withItemImagesOrder, withItemsOrder } from "../utils";
 import { menuKeys } from "./use-menu";
+
+type ReorderMenuItemImagesInput = Parameters<typeof reorderMenuItemImages>[0];
+type PersistReorder = (input: ReorderMenuItemImagesInput) => Promise<void>;
+
+const noopPersist: PersistReorder = async () => {
+  return;
+};
 
 // -----
 // Every change reloads the menu: deleting a
@@ -66,15 +76,60 @@ export function useMenuActions() {
       settle: reload,
     }),
   );
-  const reorderImages = useMutation(
-    optimisticEdit({
-      queryClient,
-      queryKey: menuKeys.all,
-      mutationFn: reorderMenuItemImages,
-      applyEdit: (menu: MenuEditor, { data }) => withItemImagesOrder(menu, data.itemId, data.ids),
-      settle: reload,
-    }),
-  );
+  const reorderSave = useRef<{ persist: PersistReorder; inflight: Promise<void> }>({
+    persist: noopPersist,
+    inflight: Promise.resolve(),
+  });
+  const reorderDebounce = useRef<DebouncedCall<ReorderMenuItemImagesInput> | undefined>(undefined);
+
+  const reorderImagesMutation = useMutation({
+    mutationFn: reorderMenuItemImages,
+    onSettled: async () => {
+      if (reorderDebounce.current?.hasPending()) return;
+      await reload();
+    },
+  });
+
+  const persistLatest = async (input: ReorderMenuItemImagesInput) => {
+    await reorderImagesMutation.mutateAsync(input);
+  };
+
+  const getReorderDebounce = () => {
+    const existing = reorderDebounce.current;
+    if (existing) return existing;
+    const created = createDebouncedCall<ReorderMenuItemImagesInput>(MENU_ITEM_IMAGE_REORDER_DEBOUNCE_MS, (input) => {
+      reorderSave.current.inflight = reorderSave.current.persist(input);
+    });
+    reorderDebounce.current = created;
+    return created;
+  };
+
+  useEffect(() => {
+    const flushOnLeave = () => reorderDebounce.current?.flush();
+    window.addEventListener("pagehide", flushOnLeave);
+    return () => {
+      window.removeEventListener("pagehide", flushOnLeave);
+      reorderDebounce.current?.cancel();
+    };
+  }, []);
+
+  const reorderImages = {
+    isPending: reorderImagesMutation.isPending,
+    isError: reorderImagesMutation.isError,
+    error: reorderImagesMutation.error,
+    mutate: (input: ReorderMenuItemImagesInput) => {
+      reorderSave.current.persist = persistLatest;
+      queryClient.setQueriesData<MenuEditor>({ queryKey: menuKeys.all }, (menu) =>
+        menu ? withItemImagesOrder(menu, input.data.itemId, input.data.ids) : menu,
+      );
+      getReorderDebounce().schedule(input);
+    },
+    flush: () => {
+      reorderSave.current.persist = persistLatest;
+      getReorderDebounce().flush();
+      return reorderSave.current.inflight;
+    },
+  };
 
   return {
     addCategory,

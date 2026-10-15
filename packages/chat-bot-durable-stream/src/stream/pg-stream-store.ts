@@ -2,8 +2,8 @@ import { and, asc, eq, gt, isNotNull, isNull, lt, max } from "drizzle-orm";
 import type { StreamChunk } from "@tanstack/ai";
 import { chatBotDurableStreamChunks, chatBotDurableStreams } from "../tables";
 import { CHAT_BOT_DURABLE_STREAM_DEFAULT_POLL_MS } from "./constants";
+import type { ChatBotDurableStreamDb } from "../pg-types";
 import type {
-  ChatBotDurableStreamDb,
   ChatBotDurableStreamKey,
   ChatBotDurableStreamStore,
   ChatBotDurableStreamStoreOptions,

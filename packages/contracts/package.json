@@ -11,6 +11,7 @@
     "./amelie": "./src/amelie/index.ts"
   },
   "dependencies": {
+    "@repo/chat-bot-api": "workspace:*",
     "zod": "^4.4.3"
   }
 }

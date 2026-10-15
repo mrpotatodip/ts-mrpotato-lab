@@ -1,0 +1,39 @@
+{
+  "name": "chat-bot-example-notes-start",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The notes assistant inside a TanStack Start app, with the engine copied into src/vendor instead of installed.",
+  "scripts": {
+    "dev": "node --env-file-if-exists=.env node_modules/vite/bin/vite.js dev --port 3010",
+    "build": "vite build",
+    "test": "vitest run",
+    "vendor": "./scripts/vendor.sh",
+    "zip": "./scripts/zip-bundle.sh"
+  },
+  "dependencies": {
+    "@ag-ui/core": "^1.0.0",
+    "@tanstack/ai": "^0.63.0",
+    "@tanstack/ai-openai": "^0.25.1",
+    "@tanstack/ai-react": "^0.29.3",
+    "@tanstack/react-router": "^1.170.44",
+    "@tanstack/react-start": "^1.169.1",
+    "clsx": "^2.1.1",
+    "effect": "^3.21.2",
+    "hono": "^4.3.7",
+    "hono-openapi": "^1.3.3",
+    "motion": "^13.4.2",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "^6.0.1",
+    "typescript": "^5.4.5",
+    "vite": "^8.0.0",
+    "vitest": "^4.1.7"
+  }
+}

@@ -68,7 +68,7 @@ export function MenuItemImages({
                         size="icon-sm"
                         aria-label="Move up"
                         title="Move up"
-                        disabled={isPending || index === 0}
+                        disabled={index === 0}
                         onClick={() => onMove(image.id, -1)}
                       >
                         <ArrowUp />
@@ -78,7 +78,7 @@ export function MenuItemImages({
                         size="icon-sm"
                         aria-label="Move down"
                         title="Move down"
-                        disabled={isPending || index === images.length - 1}
+                        disabled={index === images.length - 1}
                         onClick={() => onMove(image.id, 1)}
                       >
                         <ArrowDown />

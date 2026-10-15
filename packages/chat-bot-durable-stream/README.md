@@ -15,7 +15,7 @@ A client that drops mid-reply reconnects with `Last-Event-ID` and gets the rest 
      chatBotDurableStreams,
    } from "@repo/chat-bot-durable-stream/tables";
    ```
-   Then run `drizzle-kit generate` and `drizzle-kit migrate`. Import from `/tables`, not the root entry: drizzle-kit loads schema files with `require`, and the other entries pull in ESM-only `@tanstack/ai`.
+   Then run `drizzle-kit generate` and `drizzle-kit migrate`. Import from `/tables`, not the root entry: drizzle-kit loads schema files with `require`, and the root pulls in ESM-only `@tanstack/ai`.
 
    No drizzle-kit? Run [`sql/chat-bot-durable-stream.sql`](sql/chat-bot-durable-stream.sql) against the database instead. It's safe to run twice, and a test fails if it drifts from the Drizzle tables.
 3. Pick a `streamPrefix` for the app (for example `"my-agent"`). Apps sharing a database keep their runs apart by prefix.
@@ -122,3 +122,13 @@ If `waitUntil` is cut off (a crash or a deploy), the stream stays open. A reader
 ## Limits
 
 Readers poll Postgres every `pollMs` (default 50ms, two queries per poll, sent in parallel). That's fine at low traffic. Under heavy concurrent streaming, raise `pollMs` or move to `@tanstack/ai-durable-stream`, where readers wait on a Durable Object instead of polling.
+
+## Entry points and dependencies
+
+| Import | Needs | For |
+|---|---|---|
+| `@repo/chat-bot-durable-stream` | `@tanstack/ai` | The adapter, offsets, `produceChatBotDurableRun`, the memory store. No database. |
+| `.../server` | `drizzle-orm` | `pgChatBotDurableStream`, the Postgres store and its `db` type. |
+| `.../tables` | `drizzle-orm` | The two Drizzle tables, for your migrations. |
+
+`@tanstack/ai` and `zod` are peer dependencies, so the host and the package share one copy. `drizzle-orm` is an optional peer: a host that keeps its stream log in memory never installs it.

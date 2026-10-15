@@ -1,0 +1,41 @@
+{
+  "name": "@repo/chat-bot-react-loader",
+  "version": "1.0.0",
+  "description": "A step-by-step progress display (AG-UI loader) for @repo/chat-bot-react.",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./loader.css": "./src/loader.css"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@ag-ui/core": "^1.0.0",
+    "@repo/chat-bot-react": "workspace:*",
+    "clsx": "^2.1.1",
+    "motion": "^13.4.2"
+  },
+  "peerDependencies": {
+    "@tanstack/ai": "^0.63.0",
+    "react": "^19.2.0"
+  },
+  "devDependencies": {
+    "@repo/chat-bot-api": "workspace:*",
+    "@tanstack/ai": "^0.63.0",
+    "@tanstack/ai-react": "^0.29.3",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/react": "^16.3.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "jsdom": "^28.1.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "typescript": "^5.4.5",
+    "vitest": "^4.1.7",
+    "zod": "^4.4.3"
+  }
+}

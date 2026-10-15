@@ -8,12 +8,18 @@ pnpm workspace with two layers:
 
 - `apps/` — runnable applications
   - `amelie-engine-api` — Amelie backend (Hono on Cloudflare Workers): auth, tenants, menu, FAQs, chat bot, public widget. Domain terms: `apps/amelie-engine-api/GLOSSARY.md`
+  - `amelie-engine-api-2-0` — the chat bot alone, wired onto `@repo/chat-bot-api` (a minimal host; start at `src/chat-bot.ts`); port 8789
+  - `chat-bot-example-notes` — a second, non-Amelie host of `@repo/chat-bot-api`; its test fails if the engine drags in Amelie code
+  - `chat-bot-example-notes-start` — the notes assistant inside a TanStack Start app with the engine copied into `src/vendor` (no `@repo` dependencies)
   - `amelie-frontend-web` — cafe owner dashboard and public customer chat (TanStack Start + React 19)
   - `amelie-frontend-host` — stand-in cafe website for embedding the Customer widget (`http://localhost:5174`)
 - `packages/` — shared libraries
   - `@repo/db-amelie` — Drizzle ORM schema + Neon client (single source of truth for Amelie DB types)
-  - `@repo/contracts` — Zod schemas shared between the API and frontend (`amelie/` and `chat-bots/` families)
+  - `@repo/contracts` — Zod schemas shared between the API and frontend (`amelie/` and `chat-bots/` families; the generic chat-bot protocol lives in `@repo/chat-bot-api/contracts` and is re-exported here)
   - `@repo/chat-bot` — chat-bot runtime used by the frontend
+  - `@repo/chat-bot-react` — React chat UI for the engine (`<ChatBot />`, hooks, CSS)
+  - `@repo/chat-bot-react-loader` — optional step-by-step progress display (the AG-UI loader, plain CSS) for `chat-bot-react`
+  - `@repo/chat-bot-api` — domain-free chat-bot engine (threads, runs, streaming, tools) behind a storage port; see its README
   - `@repo/chat-bot-durable-stream` — Durable Object stream helpers used by the API
 
 This repo is an amelie-only lab copy of `ts-clarice`. Clarice and Elise apps are not present.

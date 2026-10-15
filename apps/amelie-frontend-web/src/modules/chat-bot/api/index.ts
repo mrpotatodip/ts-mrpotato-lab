@@ -3,7 +3,3 @@ export * from "./fetch-chat-bot-thread";
 export * from "./patch-chat-bot-thread-title";
 export * from "./delete-chat-bot-thread";
 export * from "./chat-bot-options";
-export * from "./public-chat-options";
-export * from "./check-public-chat-thread";
-export * from "./fetch-public-chat-frame-policy";
-export * from "./public-chat-frame-headers";
