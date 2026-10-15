@@ -1,14 +1,14 @@
 import { getAuthCookie } from "#/lib/auth-cookie";
 import { API_BASE_URL } from "#/lib/api-base-url";
 import { withActiveTenant } from "#/lib/active-tenant";
-import type { ChatBotStreamBody } from "@repo/contracts/chat-bots";
+import type { StaffChatStreamBody } from "@repo/contracts/amelie";
 
 type ChatBotUpstreamInit = {
   method: "GET" | "POST";
   accept: string;
   signal: AbortSignal;
   incoming?: Headers;
-  body?: ChatBotStreamBody;
+  body?: StaffChatStreamBody;
 };
 
 // -----

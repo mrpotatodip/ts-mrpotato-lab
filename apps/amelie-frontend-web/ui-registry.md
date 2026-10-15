@@ -1,6 +1,6 @@
 # UI registry
 
-Last updated: 2026-10-15
+Last updated: 2026-10-16
 
 ### Skeleton loaders
 
@@ -630,3 +630,23 @@ Last updated: 2026-10-15
 
 **Pattern notes:**
 Customer iframe header is icon-only. New chat is ghost `icon-sm` `MessageSquarePlus` with `aria-label` and `title` "New chat". The cafe name is not shown in the iframe or on the host bubble.
+
+### ChatBotLocationCard
+
+File: `src/modules/chat-bot/components/tools/chat-bot-location-card.tsx`
+Last updated: 2026-10-16
+
+| Property         | Class |
+| ---------------- | ----- |
+| Background       | `bg-accent` |
+| Border           | none |
+| Border radius    | `rounded-xl` |
+| Text — primary   | location name `font-medium` |
+| Text — secondary | country `text-muted-foreground`, labels `text-muted-foreground` |
+| Spacing          | tile `gap-3 px-4 py-3`, rows `gap-x-4 gap-y-2` |
+| Hover state      | address and phone `buttonVariants` `link` `sm` |
+| Shadow           | none |
+| Accent usage     | same accent tile as `ChatBotRowsTile` |
+
+**Pattern notes:**
+Place facts for `getBusinessProfile`. Location name, then country as `Name (CODE)` like `setThreadCountry`. Address and phone stay on this tile as links; email, website and about stay on `ChatBotRowsTile`. Empty tile is omitted.

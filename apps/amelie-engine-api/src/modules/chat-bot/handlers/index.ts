@@ -7,6 +7,7 @@ export * from "./resume-chat-bot-sse-svc";
 export * from "./update-chat-bot-thread-title-svc";
 export * from "./delete-chat-bot-thread-svc";
 export * from "./prepare-customer-turn-svc";
+export * from "./resolve-chat-bot-place-svc";
 export * from "./guard-public-chat-turn-svc";
 export * from "./get-public-chat-frame-policy-svc";
 export * from "./get-public-chat-appearance-svc";

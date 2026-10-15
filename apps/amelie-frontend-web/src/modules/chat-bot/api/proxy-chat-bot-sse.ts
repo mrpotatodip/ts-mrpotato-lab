@@ -1,4 +1,5 @@
-import { ChatBotStreamBodySchema, ChatBotThreadIdSchema } from "@repo/contracts/chat-bots";
+import { ChatBotThreadIdSchema } from "@repo/contracts/chat-bots";
+import { StaffChatStreamBodySchema } from "@repo/contracts/amelie";
 import { ChatBotWirePayloadSchema } from "../schemas";
 import { lastUserContent } from "../utils";
 import { fetchChatBotUpstream } from "./chat-bot-upstream";
@@ -24,18 +25,18 @@ function invalidChatBotBody(): Response {
 }
 
 export async function proxyChatBotSse(request: Request): Promise<Response> {
-  const wire = ChatBotWirePayloadSchema.safeParse(
-    await request.json().catch(() => null),
-  );
-  if (!wire.success) return invalidChatBotBody();
-
+  const json = await request.json().catch(() => null);
+  const staff = StaffChatStreamBodySchema.safeParse(json);
   const queryThread = ChatBotThreadIdSchema.safeParse(
     new URL(request.url).searchParams.get("threadId"),
   );
-  const parsed = ChatBotStreamBodySchema.safeParse({
-    content: lastUserContent(wire.data) ?? "",
-    threadId: queryThread.success ? queryThread.data : undefined,
-  });
+  const wire = ChatBotWirePayloadSchema.safeParse(json);
+  const parsed = staff.success
+    ? staff
+    : StaffChatStreamBodySchema.safeParse({
+        content: wire.success ? (lastUserContent(wire.data) ?? "") : "",
+        threadId: queryThread.success ? queryThread.data : undefined,
+      });
   if (!parsed.success) return invalidChatBotBody();
 
   return fetchChatBotUpstream("/chat-bot", {

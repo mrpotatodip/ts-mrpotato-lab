@@ -79,6 +79,8 @@ describe("getBusinessProfile with Locations", () => {
     expect(await run(getBusinessProfileTool, { locationId: airportId }, tenantId)).toMatchObject({
       address: "Terminal 2",
       phone: "555-0002",
+      location: { id: airportId, name: "Airport" },
+      country: { code: "US", name: "United States" },
     });
   });
 
@@ -96,6 +98,8 @@ describe("getBusinessProfile with Locations", () => {
       email: "hello@two.test",
       address: null,
       phone: null,
+      location: null,
+      country: null,
       needsLocation: true,
       locations: [
         { id: downtownId, name: "Two Branch Cafe" },
@@ -105,6 +109,11 @@ describe("getBusinessProfile with Locations", () => {
   });
 
   it("answers a one-Location Tenant without asking", async () => {
-    expect(await run(getBusinessProfileTool, {}, oneLocationTenantId)).toMatchObject({ phone: null, address: null });
+    expect(await run(getBusinessProfileTool, {}, oneLocationTenantId)).toMatchObject({
+      phone: null,
+      address: null,
+      location: { name: "Solo Cafe" },
+      country: { code: "US", name: "United States" },
+    });
   });
 });

@@ -91,6 +91,12 @@ beforeAll(async () => {
       question: "Do you sell gift cards?",
       answer: "Yes, on lasorellafishkill.com.",
     },
+    {
+      tenantId,
+      countryId: usCountryId,
+      question: "Can I order online?",
+      answer: "Yes, through the Online ordering link on lasorellafishkill.com.",
+    },
   ]);
 });
 
@@ -99,6 +105,8 @@ describe("getBusinessProfile on a two-Country Tenant", () => {
     expect(await run(getBusinessProfileTool, {}, await newThread(usLocationId))).toMatchObject({
       email: "lasorellafishkill@gmail.com",
       websiteUrl: "https://www.lasorellafishkill.com",
+      location: { id: usLocationId, name: "Two Country Cafe" },
+      country: { code: "US", name: "United States" },
     });
   });
 
@@ -109,6 +117,8 @@ describe("getBusinessProfile on a two-Country Tenant", () => {
       description: null,
       address: null,
       phone: null,
+      location: { id: nzLocationId, name: "Britomart CBD" },
+      country: { code: "NZ", name: "New Zealand" },
     });
   });
 });
@@ -116,6 +126,7 @@ describe("getBusinessProfile on a two-Country Tenant", () => {
 describe("listFaqs on a two-Country Tenant", () => {
   it("keeps a Country-scoped FAQ at the first Country's Location", async () => {
     expect(questions(await run(listFaqsTool, {}, await newThread(usLocationId)))).toEqual([
+      "Can I order online?",
       "Do you sell gift cards?",
       "Sister restaurant?",
     ]);
@@ -123,6 +134,36 @@ describe("listFaqs on a two-Country Tenant", () => {
 
   it("hides a first-Country FAQ at another Country's Location", async () => {
     expect(questions(await run(listFaqsTool, {}, await newThread(nzLocationId)))).toEqual(["Sister restaurant?"]);
+  });
+
+  it("returns only the matching café-wide FAQ for a topic", async () => {
+    const result = ListFaqsResultSchema.parse(
+      await run(listFaqsTool, { topic: "Do you have a sister restaurant?" }, await newThread(nzLocationId)),
+    );
+
+    expect(result.faqs).toEqual([
+      expect.objectContaining({ question: "Sister restaurant?", answer: "Il Figlio Enoteca." }),
+    ]);
+    expect(result.note).toMatch(/copy the answer/i);
+  });
+
+  it("does not treat a US-only FAQ as a no at an NZ Location", async () => {
+    const result = ListFaqsResultSchema.parse(
+      await run(listFaqsTool, { topic: "Can I order online?" }, await newThread(nzLocationId)),
+    );
+
+    expect(result.faqs).toEqual([]);
+    expect(result.note).toMatch(/United States/i);
+    expect(result.note).toMatch(/not a/i);
+  });
+
+  it("says there is no FAQ when nothing matches anywhere", async () => {
+    const result = ListFaqsResultSchema.parse(
+      await run(listFaqsTool, { topic: "Can I bring my dog inside?" }, await newThread(nzLocationId)),
+    );
+
+    expect(result.faqs).toEqual([]);
+    expect(result.note).toMatch(/do not invent/i);
   });
 });
 

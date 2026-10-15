@@ -10,9 +10,21 @@ const PROFILE_LABELS = [
   ["description", "About"],
 ] as const satisfies ReadonlyArray<readonly [keyof BusinessProfileResult, string]>;
 
-export function toChatBotProfileRows(profile: BusinessProfileResult): ChatBotProfileRow[] {
-  return PROFILE_LABELS.flatMap(([key, label]) => {
+const TENANT_PROFILE_LABELS = PROFILE_LABELS.filter(([key]) => key !== "address" && key !== "phone");
+
+const toRows = (
+  profile: BusinessProfileResult,
+  labels: ReadonlyArray<readonly [keyof BusinessProfileResult, string]>,
+): ChatBotProfileRow[] =>
+  labels.flatMap(([key, label]) => {
     const value = profile[key];
     return value ? [{ label, value }] : [];
   });
+
+export function toChatBotProfileRows(profile: BusinessProfileResult): ChatBotProfileRow[] {
+  return toRows(profile, PROFILE_LABELS);
+}
+
+export function toChatBotTenantProfileRows(profile: BusinessProfileResult): ChatBotProfileRow[] {
+  return toRows(profile, TENANT_PROFILE_LABELS);
 }

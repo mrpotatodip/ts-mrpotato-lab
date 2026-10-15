@@ -11,6 +11,8 @@ export const listMenuTool = defineChatBotTool({
       "id, price, currency, Variants, availability and Dietary tags. Use it for " +
       "broad questions like \"what do you have for breakfast?\". It lists what the " +
       "conversation's location sells. " +
+      "An empty list there can mean that country's prices are missing, " +
+      "not that the cafe has no such item. " +
       "Omit locationId unless the customer names a different location; " +
       "then pass its name, slug or id. A value that is not one of the " +
       "cafe's locations is ignored and note says so. " +

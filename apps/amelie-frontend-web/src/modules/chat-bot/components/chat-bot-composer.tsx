@@ -1,11 +1,12 @@
-import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 
+import { useSuspenseDashboardScope } from "#/modules/dashboard/hooks/use-dashboard-scope";
 import { useChatBot } from "../hooks/use-chat-bot";
 import { useChatBotRouteThreadId } from "../hooks/use-chat-bot-route-thread-id";
 import { chatBotKeys, useSuspenseChatBotThread } from "../hooks/use-chat-bot-threads";
-import { setChatBotStreamThreadId, setOnChatBotThreadCreated } from "../stores";
+import { setChatBotStreamThreadId, setOnChatBotThreadCreated, setStaffChatPlace } from "../stores";
 import { toUiMessages } from "../utils";
 import { ChatBotChatFrame } from "./chat-bot-chat-frame";
 import { ChatBotThreadSkeleton } from "./chat-bot-thread-skeleton";
@@ -63,10 +64,23 @@ export function ChatBotComposerView({ threadId, onThreadCreated }: ChatBotCompos
           <ChatBotComposerHydrated threadId={threadId} />
         </Suspense>
       ) : (
-        <ChatBotComposerLive />
+        <Suspense fallback={<ChatBotThreadSkeleton />}>
+          <StaffChatPlaceSync>
+            <ChatBotComposerLive />
+          </StaffChatPlaceSync>
+        </Suspense>
       )}
     </div>
   );
+}
+
+function StaffChatPlaceSync({ children }: { children: ReactNode }) {
+  const { countryId, locationId } = useSuspenseDashboardScope();
+  setStaffChatPlace({
+    ...(locationId !== undefined && { location: locationId }),
+    ...(countryId !== undefined && { country: countryId }),
+  });
+  return children;
 }
 
 function ChatBotComposerLive() {

@@ -149,6 +149,15 @@ export const CHAT_BOT_FAQS_TENANT_WIDE_NOTE =
 export const CHAT_BOT_FAQS_COUNTRY_NOTE = (country: string): string =>
   `No location is set, so these are the FAQs that apply to every location plus ${country}'s. Some locations may have their own; ask which location if the answer depends on it.`;
 
+export const CHAT_BOT_FAQ_TOPIC_HIT_NOTE =
+  "These FAQs match the topic. Copy the answer wording, including names and URLs. Do not replace names.";
+
+export const CHAT_BOT_FAQ_TOPIC_MISS_NOTE =
+  "No FAQ on this topic for this cafe. Do not invent a policy. Say we don't have that information.";
+
+export const CHAT_BOT_FAQ_TOPIC_OTHER_NOTE = (where: string): string =>
+  `No FAQ on this topic for this location or country. There is one for ${where}. That is not a denial of the service; say we don't have that information here.`;
+
 export const CHAT_BOT_FAQ_ALL_SCOPE = "all";
 
 // -----
@@ -183,6 +192,16 @@ export const CHAT_BOT_COUNTRY_REF_IGNORED = (ref: string, names: string): string
 // -----
 export const CHAT_BOT_MENU_ASK_LOCATION_NOTE =
   "This cafe sells in several countries and none is set, so prices are left out. Ask which location the customer is at before quoting a price or a currency, then call setThreadLocation or setThreadCountry (or pass countryId) and read the menu again. Names and availability are fine to share now.";
+
+// -----
+// A Location whose Country has no sold prices: the
+// sold-here list is empty. Cafe-wide names still exist.
+// -----
+export const CHAT_BOT_MENU_LOCATION_UNPRICED_NOTE = (location: string, country: string | null): string =>
+  `${location}${country ? ` (${country})` : ""} has no priced menu in its country. ` +
+  `The items below are cafe-wide names from countries that do have prices. ` +
+  `They are not sold at this location. Name them if the customer asked whether the cafe has them. ` +
+  `Do not say they are available here. Leave prices out or say this location has none.`;
 
 // -----
 // A price write with several Countries and none named,

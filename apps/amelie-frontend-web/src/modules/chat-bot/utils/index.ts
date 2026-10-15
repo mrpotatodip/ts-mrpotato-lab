@@ -15,6 +15,7 @@ export * from "./to-chat-bot-menu";
 export * from "./to-chat-bot-hours";
 export * from "./to-chat-bot-faq";
 export * from "./to-chat-bot-profile";
+export * from "./to-chat-bot-place";
 export * from "./to-chat-bot-cache-keys";
 export * from "./to-public-chat-frame-ancestors";
 export * from "./to-customer-chat-ink";

@@ -10,13 +10,11 @@ import {
   createChatBotRunner,
 } from "#/modules/chat-bot/lib";
 import { chatBotStreamQueries } from "#/modules/chat-bot/queries";
-import { streamChatBotSvc } from "#/modules/chat-bot/handlers";
+import { resolveChatBotPlaceSvc, streamChatBotSvc } from "#/modules/chat-bot/handlers";
 import { ChatBotStreamHeaderSchema } from "#/modules/chat-bot/schemas";
 import { chatBotMainAgent } from "#/modules/chat-bot/agents";
-import {
-  ChatBotStreamBodySchema,
-  ChatBotStreamQuerySchema,
-} from "@repo/contracts/chat-bots";
+import { ChatBotStreamQuerySchema } from "@repo/contracts/chat-bots";
+import { StaffChatStreamBodySchema } from "@repo/contracts/amelie";
 
 const app = new Hono<AppEnv>();
 
@@ -25,13 +23,15 @@ app.post(
   streamChatBotDoc,
   zValidator("query", ChatBotStreamQuerySchema),
   zValidator("header", ChatBotStreamHeaderSchema),
-  zValidator("json", ChatBotStreamBodySchema),
+  zValidator("json", StaffChatStreamBodySchema),
   async (c) => {
     const body = c.req.valid("json");
     // -----
     // Realtime pool: SSE reads fresh chunks.
     // -----
     const db = db_connect(c.env.HYPERDRIVE_REALTIME.connectionString);
+    const owner = chatBotSignedInOwner(c);
+    const place = await runEffect(resolveChatBotPlaceSvc(db, owner.tenantId, body));
     return runEffect(
       streamChatBotSvc({
         db,
@@ -39,7 +39,9 @@ app.post(
         runner: createChatBotRunner(c.env),
         durableStream: chatBotDurableStreams(db),
         agent: chatBotMainAgent,
-        owner: chatBotSignedInOwner(c),
+        owner,
+        locationId: place.locationId,
+        countryId: place.countryId,
         body,
         env: c.env,
         waitUntil: (job) => c.executionCtx.waitUntil(job),

@@ -11,8 +11,14 @@ availability, and Dietary tags such as vegan or gluten-free.
 Use findMenuItems for a specific item, ingredient or tag, and listMenu for \
 broad questions. Answer only from their results. Never guess an item, price \
 or tag. An item marked unavailable is on the menu but not being served now; \
-say so. Dietary tags are labels the cafe chose, not allergy guarantees: \
-never say an item is safe for an allergy.
+say so. An empty items list for a location or country means nothing matched \
+what that place sells and prices, often because that country has no price \
+rows. Do not say the cafe does not have the dish. Call findMenuItems or \
+listMenu again with a countryId the cafe sells in (name or code like US) \
+before you give up. If it is still empty, say no matching items came back \
+for this location or country. Items that come back without prices are still \
+on the menu. Dietary tags are labels the cafe chose, not allergy \
+guarantees: never say an item is safe for an allergy.
 
 A cafe can sell in several countries with different prices and currencies. \
 The conversation may already be tied to a country or a location, and the \

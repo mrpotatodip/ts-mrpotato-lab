@@ -22,7 +22,8 @@ export const getBusinessProfileTool = defineChatBotTool({
       "Ask which location only if the customer wants an address or phone, " +
       "then call setThreadLocation. If the conversation's country has exactly " +
       "one location it is used without asking; with several, the options " +
-      "are only that country's.",
+      "are only that country's. The result names the location and country in " +
+      "play so later menu, hours and FAQ reads stay on that place.",
     inputSchema: GetBusinessProfileInputSchema,
     outputSchema: z.union([BusinessProfileNeedsLocationResultSchema, BusinessProfileReadResultSchema]),
   }),
