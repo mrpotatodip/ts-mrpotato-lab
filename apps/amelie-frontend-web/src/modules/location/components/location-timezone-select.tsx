@@ -2,7 +2,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#
 import { timezoneOptions } from "../utils";
 
 type LocationTimezoneSelectProps = {
-  id: string;
   value: string;
   onChange: (timezone: string) => void;
   disabled?: boolean;
@@ -12,7 +11,7 @@ type LocationTimezoneSelectProps = {
 // A pick from the IANA zones the browser knows,
 // as the Region card picks a country.
 // -----
-export function LocationTimezoneSelect({ id, value, onChange, disabled }: LocationTimezoneSelectProps) {
+export function LocationTimezoneSelect({ value, onChange, disabled }: LocationTimezoneSelectProps) {
   return (
     <Select
       value={value}
@@ -21,7 +20,7 @@ export function LocationTimezoneSelect({ id, value, onChange, disabled }: Locati
         if (timezone) onChange(timezone);
       }}
     >
-      <SelectTrigger id={id} aria-label="Timezone" className="w-full">
+      <SelectTrigger aria-label="Timezone" className="w-fit min-w-56">
         <SelectValue>{value}</SelectValue>
       </SelectTrigger>
       <SelectContent>

@@ -18,11 +18,12 @@ export function useMenuImportActions() {
   const queryClient = useQueryClient();
   const reload = () => queryClient.invalidateQueries({ queryKey: menuImportsKeys.all });
 
-  const upload = useMutation({ mutationFn: uploadMenuImport, onSuccess: reload });
-  const updateDraft = useMutation({ mutationFn: updateMenuImportDraft, onSuccess: reload });
-  const approveAll = useMutation({ mutationFn: approveAllMenuImportDrafts, onSuccess: reload });
+  const upload = useMutation({ mutationFn: uploadMenuImport, onSuccess: reload, meta: { successMessage: "Menu uploaded" } });
+  const updateDraft = useMutation({ mutationFn: updateMenuImportDraft, onSuccess: reload, meta: { successMessage: "Draft saved" } });
+  const approveAll = useMutation({ mutationFn: approveAllMenuImportDrafts, onSuccess: reload, meta: { successMessage: "Drafts approved" } });
   const publish = useMutation({
     mutationFn: publishMenuImport,
+    meta: { successMessage: "Menu published" },
     onSuccess: async () => {
       await reload();
       void queryClient.invalidateQueries({ queryKey: menuKeys.all });

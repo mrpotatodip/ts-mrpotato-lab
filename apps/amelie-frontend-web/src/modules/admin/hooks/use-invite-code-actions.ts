@@ -17,6 +17,7 @@ export function useInviteCodeActions() {
     mutationFn: (body: Partial<CreateInviteCodeBody>) => createInviteCode({ data: body }),
     gcTime: 0,
     onSuccess: refreshList,
+    meta: { successMessage: "Invite code created" },
   });
 
   const revoke = useMutation(
@@ -26,6 +27,7 @@ export function useInviteCodeActions() {
       mutationFn: (id: string) => revokeInviteCode({ data: { id } }),
       applyEdit: (codes: InviteCode[], id) => withInviteCodeRevoked(codes, id, new Date()),
       settle: refreshList,
+      meta: { successMessage: "Invite code revoked" },
     }),
   );
 

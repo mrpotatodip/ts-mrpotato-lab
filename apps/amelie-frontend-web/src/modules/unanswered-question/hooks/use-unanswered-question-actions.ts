@@ -15,6 +15,7 @@ export function useUnansweredQuestionActions() {
       mutationFn: (messageId: string) => dismissUnansweredQuestion({ data: { messageId } }),
       applyEdit: (list: UnansweredQuestionList, messageId) => withoutQuestion(list, messageId),
       settle: () => queryClient.invalidateQueries({ queryKey: unansweredQuestionsKeys.all }),
+      meta: { successMessage: "Question dismissed" },
     }),
   );
 

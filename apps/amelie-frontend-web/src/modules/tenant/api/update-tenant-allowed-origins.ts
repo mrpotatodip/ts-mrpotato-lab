@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { apiClient, ApiError } from "#/lib/api-client";
 import { tryCatch } from "#/lib/try-catch";
-import { UpdateTenantAllowedOriginsInputSchema, TenantResponseSchema } from "../schemas";
+import { TenantResponseSchema, UpdateTenantAllowedOriginsInputSchema } from "../schemas";
 
 export const updateTenantAllowedOrigins = createServerFn({ method: "POST" })
   .validator(UpdateTenantAllowedOriginsInputSchema)

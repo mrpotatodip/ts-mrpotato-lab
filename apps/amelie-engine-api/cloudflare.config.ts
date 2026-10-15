@@ -19,17 +19,19 @@ export default defineConfig({
       ENVIRONMENT: bindings.text("production"),
       // -----
       // Amelie's own Neon database (@repo/db-amelie).
-      // TODO: replace the ids with the output of
+      // HYPERDRIVE caches eligible reads; HYPERDRIVE_REALTIME is the
+      // same origin with caching disabled (auth, writes, and any
+      // read that must be fresh). Recreate with:
       //   wrangler hyperdrive create amelie --connection-string=<neon url>
       //   wrangler hyperdrive create amelie-realtime --connection-string=<neon url> --caching-disabled
       // Locally, the dev server reads the connection
       // string from CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_<BINDING> (see README).
       // -----
       HYPERDRIVE: bindings.hyperdrive({
-        id: "00000000000000000000000000000000",
+        id: "802e2b007b254a468dfe586f90c5a65d",
       }),
       HYPERDRIVE_REALTIME: bindings.hyperdrive({
-        id: "00000000000000000000000000000000",
+        id: "cf096098cd444c3e9bc7c424f3c87b4c",
       }),
       // -----
       // Public chat (#342): messages per Customer

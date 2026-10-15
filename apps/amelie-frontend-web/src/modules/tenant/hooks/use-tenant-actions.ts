@@ -14,6 +14,7 @@ export function useTenantActions() {
         queryClient.invalidateQueries({ queryKey: tenantsKeys.all }),
         queryClient.invalidateQueries({ queryKey: menuKeys.all }),
       ]),
+    meta: { successMessage: "Region saved" },
   });
 
   const updateAllowedOrigins = useMutation({

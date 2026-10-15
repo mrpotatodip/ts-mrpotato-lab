@@ -24,10 +24,9 @@ export const SIGN_UP_PASSWORD_MAX = 128;
 export const SIGN_UP_WEBSITE_MAX = 2048;
 
 // -----
-// Allowed origins: websites that may iframe
-// the Customer chat. Empty is allowed.
+// Widget: websites that may iframe the Customer chat
 // -----
-export const TENANT_ALLOWED_ORIGINS_MAX = 20;
+export const ALLOWED_ORIGINS_MAX = 20;
 
 // -----
 // Invite codes: limits the admin form and the server share

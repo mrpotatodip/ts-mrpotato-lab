@@ -30,15 +30,19 @@ function CustomerThreadView({ threadId }: CustomerThreadViewProps) {
   const { data } = useSuspenseCustomerThread(threadId);
 
   return (
-    <div className="space-y-4">
-      <div>
-        <Link to="/customers" className="text-muted-foreground text-xs">
-          ← All Customer chats
+    <>
+      <header className="mb-6 space-y-2">
+        <Link to="/customers" className="text-muted-foreground hover:text-foreground text-sm">
+          All Customer chats
         </Link>
-        <h2 className="text-sm font-semibold">{data.title ?? "Chat"}</h2>
-        <p className="text-muted-foreground text-xs">Started <LocalDateTime iso={data.startedAt} /></p>
+        <h1 className="text-3xl font-semibold tracking-tight">{data.title ?? "Chat"}</h1>
+        <p className="text-muted-foreground text-base">
+          Started <LocalDateTime iso={data.startedAt} />
+        </p>
+      </header>
+      <div className="mx-auto w-full max-w-2xl">
+        <CustomerThreadMessages messages={data.messages} />
       </div>
-      <CustomerThreadMessages messages={data.messages} />
-    </div>
+    </>
   );
 }

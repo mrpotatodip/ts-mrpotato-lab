@@ -20,10 +20,12 @@ export function useTenantHoursActions(locationId?: string) {
   const saveWeekday = useMutation({
     mutationFn: ({ data }: ForLocation<SetWeeklyHoursInput>) => setWeeklyHours({ data: { ...data, locationId } }),
     onSuccess: reload,
+    meta: { successMessage: "Hours saved" },
   });
   const saveSpecialDate = useMutation({
     mutationFn: ({ data }: ForLocation<SetSpecialDateInput>) => setSpecialDate({ data: { ...data, locationId } }),
     onSuccess: reload,
+    meta: { successMessage: "Special date saved" },
   });
   const removeDate = useMutation(
     optimisticEdit({
@@ -32,6 +34,7 @@ export function useTenantHoursActions(locationId?: string) {
       mutationFn: ({ data }: ForLocation<RemoveSpecialDateInput>) => removeSpecialDate({ data: { ...data, locationId } }),
       applyEdit: (hours: TenantHours, { data }) => withoutSpecialDate(hours, data.date),
       settle: reload,
+      meta: { successMessage: "Special date removed" },
     }),
   );
 

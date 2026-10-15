@@ -14,7 +14,7 @@ import {
 
 export const updateTenantAllowedOriginsDoc = describeRoute({
   tags: ["tenants"],
-  summary: "Replace the Allowed origins of a Tenant",
+  summary: "Replace the websites that may embed the Customer chat",
   security: STAFF_SECURITY,
   requestBody: {
     required: true,
@@ -22,12 +22,12 @@ export const updateTenantAllowedOriginsDoc = describeRoute({
   },
   description: routeText({
     context:
-      "An owner or manager names the websites that may iframe the Customer chat. Pasted site URLs become origins. Empty is allowed: the cafe site cannot iframe, and the Amelie chat page still works.",
+      "An owner or manager names the websites that may iframe the Customer chat. Pasted site URLs become origins. The list replaces whatever was stored. An empty list is allowed: the cafe site cannot iframe, and the Amelie chat page still works.",
     steps: [
       "The server checks that the signed-in Person is a team member of this Tenant. If not, the answer is 404.",
       "The server checks that their Role can edit. A staff member gets 403.",
-      "The server takes unique http and https origins, at most 20, in the order they were sent. Any other row, or more than 20 unique origins, is 400 and the previous list is unchanged.",
-      "The server replaces the whole list and returns the Tenant.",
+      "Each pasted value must be an http or https URL. Paths drop to the origin. Duplicates drop, keeping the first. Other schemes, `*`, and more than 20 unique origins fail the whole write with 400, and the previous list is unchanged.",
+      "The server stores the unique origins in the order they were saved and returns the Tenant.",
     ],
     example: [
       "A cafe pastes its menu URL. The saved origin is the site itself:",

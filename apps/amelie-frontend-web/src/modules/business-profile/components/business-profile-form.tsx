@@ -12,6 +12,7 @@ type BusinessProfileFormProps = {
   profile: BusinessProfile;
   canEdit: boolean;
   locationId?: string;
+  showPlaceFields?: boolean;
 };
 
 const LABEL_CLASS = "flex flex-col gap-1.5 text-sm";
@@ -20,7 +21,7 @@ const LABEL_CLASS = "flex flex-col gap-1.5 text-sm";
 // The dashboard sends the whole profile; an
 // empty box clears that field.
 // -----
-export function BusinessProfileForm({ profile, canEdit, locationId }: BusinessProfileFormProps) {
+export function BusinessProfileForm({ profile, canEdit, locationId, showPlaceFields = true }: BusinessProfileFormProps) {
   const { save } = useBusinessProfileActions(locationId);
 
   const form = useForm({
@@ -62,7 +63,7 @@ export function BusinessProfileForm({ profile, canEdit, locationId }: BusinessPr
           </label>
         )}
       </form.Field>
-      {TEXT_FIELDS.map(({ name, label, placeholder, type }) => (
+      {TEXT_FIELDS.filter((field) => showPlaceFields || field.name !== "phone").map(({ name, label, placeholder, type }) => (
         <form.Field key={name} name={name}>
           {(field) => (
             <label htmlFor={`profile-${name}`} className={LABEL_CLASS}>
@@ -79,21 +80,23 @@ export function BusinessProfileForm({ profile, canEdit, locationId }: BusinessPr
           )}
         </form.Field>
       ))}
-      <form.Field name="address">
-        {(field) => (
-          <label htmlFor="profile-address" className={LABEL_CLASS}>
-            Address
-            <Textarea
-              id="profile-address"
-              placeholder="12 Main Street, Springfield"
-              value={field.state.value}
-              disabled={!canEdit}
-              maxLength={200}
-              onChange={(event) => field.handleChange(event.target.value)}
-            />
-          </label>
-        )}
-      </form.Field>
+      {showPlaceFields ? (
+        <form.Field name="address">
+          {(field) => (
+            <label htmlFor="profile-address" className={LABEL_CLASS}>
+              Address
+              <Textarea
+                id="profile-address"
+                placeholder="12 Main Street, Springfield"
+                value={field.state.value}
+                disabled={!canEdit}
+                maxLength={200}
+                onChange={(event) => field.handleChange(event.target.value)}
+              />
+            </label>
+          )}
+        </form.Field>
+      ) : null}
 
       <form.Subscribe selector={(state) => state.errors}>
         {(errors) => (errors.length > 0 ? <p className="text-xs text-destructive">{errors.join(", ")}</p> : null)}

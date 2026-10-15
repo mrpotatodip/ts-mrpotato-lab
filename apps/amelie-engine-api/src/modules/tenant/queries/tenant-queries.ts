@@ -1,7 +1,7 @@
 import { and, asc, eq, sql } from "drizzle-orm";
 import { Effect } from "effect";
 import { authUser, partyRoles, roles, tenantCountries, tenants } from "@repo/db-amelie";
-import { TenantSchema, type Tenant, type TenantRegion, type UpdateTenantAllowedOriginsBody } from "@repo/contracts/amelie";
+import { TenantSchema, type Tenant, type TenantRegion } from "@repo/contracts/amelie";
 import type { DbConnectType } from "#/lib/db-connection";
 import { Conflict, NotFound, toDbError, type DbError } from "#/lib/effect-query";
 import { PG_UNIQUE_VIOLATION, pgErrorCode, pgErrorConstraint } from "#/lib/pg-error";
@@ -129,12 +129,15 @@ export const updateTenantAllowedOriginsEffect = (
   db: DbConnectType,
   userId: string,
   tenantId: string,
-  body: UpdateTenantAllowedOriginsBody,
+  allowedOrigins: string[],
 ): Effect.Effect<Tenant, DbError | NotFound> =>
   Effect.gen(function* () {
     yield* Effect.tryPromise({
       try: () =>
-        db.update(tenants).set({ allowedOrigins: body.allowedOrigins }).where(eq(tenants.id, tenantId)),
+        db
+          .update(tenants)
+          .set({ allowedOrigins, updatedAt: new Date() })
+          .where(eq(tenants.id, tenantId)),
       catch: toDbError,
     });
     return yield* getTenantForUserEffect(db, userId, tenantId);

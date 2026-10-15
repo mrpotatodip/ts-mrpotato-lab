@@ -2,8 +2,8 @@ import { Skeleton } from "#/components/ui/skeleton";
 import { PageCard } from "#/modules/shared";
 
 // -----
-// Same two columns as the profile page: the details
-// form on the left, region and locations on the right.
+// Same two columns as the profile page: cafe details,
+// then this Country's locations.
 // -----
 export function BusinessProfilePanelSkeleton() {
   return (
@@ -11,14 +11,9 @@ export function BusinessProfilePanelSkeleton() {
       <PageCard title="Cafe details" description="Shown to customers by the assistant.">
         <Skeleton className="h-80 w-full" />
       </PageCard>
-      <div className="flex flex-col gap-8">
-        <PageCard title="Region">
-          <Skeleton className="h-24 w-full" />
-        </PageCard>
-        <PageCard title="Locations">
-          <Skeleton className="h-24 w-full" />
-        </PageCard>
-      </div>
+      <PageCard title="Locations">
+        <Skeleton className="h-24 w-full" />
+      </PageCard>
     </div>
   );
 }

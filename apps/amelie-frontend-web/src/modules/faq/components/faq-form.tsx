@@ -14,6 +14,8 @@ type FaqFormProps = {
   locations: Location[];
   countries: Country[];
   initial: Pick<Faq, "categoryId" | "locationId" | "countryId" | "question" | "answer"> | null;
+  defaultCategoryId?: string;
+  hideCategoryField?: boolean;
   submitLabel: string;
   isPending: boolean;
   error: string | null;
@@ -28,10 +30,22 @@ type FaqFormProps = {
 // (shown only with several Locations), which can
 // also be one Country (only with several Countries).
 // -----
-export function FaqForm({ categories, locations, countries, initial, submitLabel, isPending, error, onSubmit, onCancel }: FaqFormProps) {
+export function FaqForm({
+  categories,
+  locations,
+  countries,
+  initial,
+  defaultCategoryId,
+  hideCategoryField = false,
+  submitLabel,
+  isPending,
+  error,
+  onSubmit,
+  onCancel,
+}: FaqFormProps) {
   const form = useForm({
     defaultValues: {
-      categoryId: initial?.categoryId ?? FAQ_NO_CATEGORY,
+      categoryId: initial?.categoryId ?? defaultCategoryId ?? FAQ_NO_CATEGORY,
       scope: toScopeValue(initial),
       question: initial?.question ?? "",
       answer: initial?.answer ?? "",
@@ -82,25 +96,27 @@ export function FaqForm({ categories, locations, countries, initial, submitLabel
           />
         )}
       </form.Field>
-      <form.Field name="categoryId">
-        {(field) => (
-          <Select value={field.state.value} onValueChange={(value) => field.handleChange(value ?? FAQ_NO_CATEGORY)}>
-            <SelectTrigger aria-label="Category" className="w-fit min-w-40">
-              <SelectValue>
-                {categories.find((category) => category.id === field.state.value)?.name ?? "General"}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={FAQ_NO_CATEGORY}>General</SelectItem>
-              {categories.map((category) => (
-                <SelectItem key={category.id} value={category.id}>
-                  {category.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
-      </form.Field>
+      {hideCategoryField ? null : (
+        <form.Field name="categoryId">
+          {(field) => (
+            <Select value={field.state.value} onValueChange={(value) => field.handleChange(value ?? FAQ_NO_CATEGORY)}>
+              <SelectTrigger aria-label="Category" className="w-fit min-w-40">
+                <SelectValue>
+                  {categories.find((category) => category.id === field.state.value)?.name ?? "General"}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={FAQ_NO_CATEGORY}>General</SelectItem>
+                {categories.map((category) => (
+                  <SelectItem key={category.id} value={category.id}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </form.Field>
+      )}
       {locations.length > 1 || countries.length > 1 ? (
         <form.Field name="scope">
           {(field) => (

@@ -37,7 +37,7 @@ export function LocationArchiveDialog({ location, isPending, onConfirm, onCancel
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={onCancel}>
+          <Button type="button" variant="ghost" onClick={onCancel}>
             Cancel
           </Button>
           <Button type="button" variant="destructive" disabled={isPending || location === null} onClick={() => location && onConfirm(location)}>

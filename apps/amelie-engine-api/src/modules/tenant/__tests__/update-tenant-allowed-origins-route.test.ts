@@ -10,8 +10,7 @@ import { runEffect } from "#/lib/effect-query";
 import type { AppEnv } from "#/types/variables";
 import { updateTenantAllowedOriginsAPI } from "#/modules/tenant/api";
 import { getTenantSvc, updateTenantAllowedOriginsSvc } from "#/modules/tenant/handlers";
-import { getTenantProfileSvc } from "#/modules/business-profile/handlers";
-import { upsertBusinessProfileEffect } from "#/modules/business-profile/queries";
+import { getTenantProfileSvc, updateBusinessProfileSvc } from "#/modules/business-profile/handlers";
 import { createTestDb, insertMember, insertPersonWithLogin, insertTenant } from "#/__tests__/amelie-test-db";
 
 let db: DbConnectType;
@@ -32,7 +31,12 @@ app.patch(
   zValidator("json", UpdateTenantAllowedOriginsBodySchema),
   async (c) => {
     const data = await runEffect(
-      updateTenantAllowedOriginsSvc(db, c.get("userId"), c.req.valid("param").tenantId, c.req.valid("json")),
+      updateTenantAllowedOriginsSvc(
+        db,
+        c.get("userId"),
+        c.req.valid("param").tenantId,
+        c.req.valid("json").allowedOrigins,
+      ),
     );
     return c.json({ data, error: null });
   },
@@ -59,41 +63,27 @@ const newCafe = async (slug: string, role: "owner" | "manager" | "staff") => {
   return { tenantId, userId: login.userId };
 };
 
-const seedOrigins = (tenantId: string, allowedOrigins: string[]) =>
-  db.update(tenants).set({ allowedOrigins }).where(eq(tenants.id, tenantId));
-
 beforeAll(async () => {
   db = await createTestDb();
 });
 
 describe("PATCH /tenants/:tenantId/allowed-origins", () => {
-  it("answers 200 with origins taken from pasted site URLs for an owner", async () => {
-    const { tenantId, userId } = await newCafe("origins-owner", "owner");
-
-    const res = await patch(userId, tenantId, { allowedOrigins: ["https://sorellacafe.com/menu"] });
-
-    expect(res.status).toBe(200);
-    expect(await res.json()).toMatchObject({
-      data: { id: tenantId, allowedOrigins: ["https://sorellacafe.com"] },
-      error: null,
-    });
-  });
-
-  it("drops duplicate origins and keeps the order they were saved", async () => {
-    const { tenantId, userId } = await newCafe("origins-dupes", "owner");
+  it("answers 200 with unique origins in save order for an owner", async () => {
+    const { tenantId, userId } = await newCafe("origins-route-owner", "owner");
 
     const res = await patch(userId, tenantId, {
       allowedOrigins: [
         "https://b.example/path",
         "https://a.example",
         "https://b.example/other",
-        "http://localhost:5174",
+        "http://localhost:5174/",
       ],
     });
 
     expect(res.status).toBe(200);
     expect(await res.json()).toMatchObject({
       data: {
+        id: tenantId,
         allowedOrigins: ["https://b.example", "https://a.example", "http://localhost:5174"],
       },
       error: null,
@@ -101,8 +91,8 @@ describe("PATCH /tenants/:tenantId/allowed-origins", () => {
   });
 
   it("answers 200 with an empty list", async () => {
-    const { tenantId, userId } = await newCafe("origins-empty", "owner");
-    await seedOrigins(tenantId, ["https://sorellacafe.com"]);
+    const { tenantId, userId } = await newCafe("origins-route-empty", "owner");
+    await runEffect(updateTenantAllowedOriginsSvc(db, userId, tenantId, ["https://keep.test"]));
 
     const res = await patch(userId, tenantId, { allowedOrigins: [] });
 
@@ -110,25 +100,25 @@ describe("PATCH /tenants/:tenantId/allowed-origins", () => {
     expect(await res.json()).toMatchObject({ data: { allowedOrigins: [] }, error: null });
   });
 
-  it.each(["*", "ftp://files.example", "not a url", "javascript:alert(1)"])(
+  it.each(["*", "ftp://sorellacafe.com", "not a url", "javascript:alert(1)", "https://"])(
     "answers 400 for %s and leaves the previous list unchanged",
-    async (row) => {
-      const { tenantId, userId } = await newCafe(`origins-bad-${row.slice(0, 8).replace(/\W/g, "")}`, "owner");
-      await seedOrigins(tenantId, ["https://sorellacafe.com"]);
+    async (value) => {
+      const { tenantId, userId } = await newCafe(`origins-route-bad-${value.slice(0, 8)}`.replace(/\W/g, ""), "owner");
+      await runEffect(updateTenantAllowedOriginsSvc(db, userId, tenantId, ["https://keep.test"]));
 
-      const res = await patch(userId, tenantId, { allowedOrigins: ["https://ok.example", row] });
+      const res = await patch(userId, tenantId, { allowedOrigins: ["https://ok.example", value] });
 
       expect(res.status).toBe(400);
       expect(await res.json()).toMatchObject({ data: null, error: { code: "VALIDATION_ERROR" } });
       expect(await runEffect(getTenantSvc(db, userId, tenantId))).toMatchObject({
-        allowedOrigins: ["https://sorellacafe.com"],
+        allowedOrigins: ["https://keep.test"],
       });
     },
   );
 
   it("answers 400 when more than 20 unique origins are sent, and leaves the previous list unchanged", async () => {
     const { tenantId, userId } = await newCafe("origins-too-many", "owner");
-    await seedOrigins(tenantId, ["https://sorellacafe.com"]);
+    await runEffect(updateTenantAllowedOriginsSvc(db, userId, tenantId, ["https://keep.test"]));
     const allowedOrigins = Array.from({ length: 21 }, (_, i) => `https://cafe-${i}.example`);
 
     const res = await patch(userId, tenantId, { allowedOrigins });
@@ -136,35 +126,35 @@ describe("PATCH /tenants/:tenantId/allowed-origins", () => {
     expect(res.status).toBe(400);
     expect(await res.json()).toMatchObject({ data: null, error: { code: "VALIDATION_ERROR" } });
     expect(await runEffect(getTenantSvc(db, userId, tenantId))).toMatchObject({
-      allowedOrigins: ["https://sorellacafe.com"],
+      allowedOrigins: ["https://keep.test"],
     });
   });
 
-  it("answers 403 for staff and leaves Allowed origins unchanged", async () => {
-    const { tenantId, userId } = await newCafe("origins-staff", "staff");
-    await seedOrigins(tenantId, ["https://sorellacafe.com"]);
+  it("answers 403 for staff and leaves the list unchanged", async () => {
+    const { tenantId, userId } = await newCafe("origins-route-staff", "staff");
+    await db.update(tenants).set({ allowedOrigins: ["https://keep.test"] }).where(eq(tenants.id, tenantId));
 
-    const res = await patch(userId, tenantId, { allowedOrigins: ["https://other.example"] });
+    const res = await patch(userId, tenantId, { allowedOrigins: ["https://new.test"] });
 
     expect(res.status).toBe(403);
     expect(await res.json()).toMatchObject({ data: null, error: { code: "FORBIDDEN" } });
     expect(await runEffect(getTenantSvc(db, userId, tenantId))).toMatchObject({
-      allowedOrigins: ["https://sorellacafe.com"],
+      allowedOrigins: ["https://keep.test"],
     });
   });
 
   it("answers 404 for a Tenant the login is not a member of", async () => {
-    const { tenantId } = await newCafe("origins-target", "owner");
-    const outsider = await newCafe("origins-outsider", "owner");
+    const { tenantId } = await newCafe("origins-route-target", "owner");
+    const outsider = await newCafe("origins-route-outsider", "owner");
 
-    const res = await patch(outsider.userId, tenantId, { allowedOrigins: ["https://other.example"] });
+    const res = await patch(outsider.userId, tenantId, { allowedOrigins: ["https://steal.test"] });
 
     expect(res.status).toBe(404);
   });
 
   it("does not change the Business profile website", async () => {
     const { tenantId, userId } = await newCafe("origins-website", "owner");
-    await runEffect(upsertBusinessProfileEffect(db, tenantId, { websiteUrl: "https://contact.example" }));
+    await runEffect(updateBusinessProfileSvc(db, tenantId, { websiteUrl: "https://contact.example" }));
 
     const res = await patch(userId, tenantId, { allowedOrigins: ["https://embed.example"] });
 
@@ -184,7 +174,7 @@ describe("PATCH /tenants/:tenantId/allowed-origins on the real route", () => {
   });
   realApp.route("/tenants", updateTenantAllowedOriginsAPI);
 
-  it("answers 400 before any database is read when a row is not an http or https origin", async () => {
+  it("answers 400 before any database is read when a row is rejected", async () => {
     const res = await realApp.request(
       "/tenants/00000000-0000-4000-8000-000000000000/allowed-origins",
       {
@@ -198,4 +188,3 @@ describe("PATCH /tenants/:tenantId/allowed-origins on the real route", () => {
     expect(res.status).toBe(400);
   });
 });
-

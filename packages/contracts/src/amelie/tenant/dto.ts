@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { TENANT_ALLOWED_ORIGINS_MAX } from "../constants";
+import { ALLOWED_ORIGINS_MAX } from "../constants";
 import { COUNTRY_VALUES, CURRENCY_VALUES, TENANT_ROLE_KEY_VALUES } from "../enums";
 
 // -----
@@ -18,37 +18,42 @@ export const TenantRegionSchema = z.object({
 
 export const UpdateTenantRegionBodySchema = TenantRegionSchema;
 
-const toHttpOrigin = (value: string): string | null => {
+export const ALLOWED_ORIGINS_INVALID =
+  "Each website must be an http or https URL. At most 20 unique sites.";
+
+export function parseAllowedOrigin(value: string): string | null {
   try {
     const url = new URL(value.trim());
     if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+    if (url.hostname === "*" || url.hostname === "") return null;
     return url.origin;
   } catch {
     return null;
   }
-};
+}
 
-export const AllowedOriginInputSchema = z.string().transform((value, ctx) => {
-  const origin = toHttpOrigin(value);
-  if (!origin) {
-    ctx.addIssue({ code: "custom", message: "Must be an http or https website" });
-    return z.NEVER;
+export function normalizeAllowedOrigins(rows: readonly string[]): string[] | null {
+  const unique: string[] = [];
+  for (const row of rows) {
+    const origin = parseAllowedOrigin(row);
+    if (!origin) return null;
+    if (!unique.includes(origin)) unique.push(origin);
   }
-  return origin;
-});
+  if (unique.length > ALLOWED_ORIGINS_MAX) return null;
+  return unique;
+}
 
 export const UpdateTenantAllowedOriginsBodySchema = z.object({
   allowedOrigins: z
-    .array(AllowedOriginInputSchema)
-    .transform((origins) => {
-      const unique: string[] = [];
-      for (const origin of origins) {
-        if (!unique.includes(origin)) unique.push(origin);
+    .array(z.string())
+    .superRefine((rows, ctx) => {
+      if (normalizeAllowedOrigins(rows) === null) {
+        ctx.addIssue({ code: "custom", message: ALLOWED_ORIGINS_INVALID });
       }
-      return unique;
     })
-    .refine((origins) => origins.length <= TENANT_ALLOWED_ORIGINS_MAX, {
-      message: `At most ${TENANT_ALLOWED_ORIGINS_MAX} Allowed origins`,
+    .transform((rows) => {
+      const origins = normalizeAllowedOrigins(rows);
+      return origins ?? [];
     }),
 });
 
@@ -73,6 +78,6 @@ export const TenantSchema = z.object({
 
 export type TenantParam = z.infer<typeof TenantParamSchema>;
 export type UpdateTenantRegionBody = z.infer<typeof UpdateTenantRegionBodySchema>;
+export type UpdateTenantAllowedOriginsBody = z.infer<typeof UpdateTenantAllowedOriginsBodySchema>;
 export type TenantRegion = z.infer<typeof TenantRegionSchema>;
 export type Tenant = z.infer<typeof TenantSchema>;
-export type UpdateTenantAllowedOriginsBody = z.infer<typeof UpdateTenantAllowedOriginsBodySchema>;

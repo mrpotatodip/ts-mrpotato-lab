@@ -45,7 +45,7 @@ export function CountryCurrencyDialog({ change, isPending, error, onConfirm, onC
         </DialogHeader>
         {error ? <p className="text-destructive text-sm">{error}</p> : null}
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={onCancel}>
+          <Button type="button" variant="ghost" onClick={onCancel}>
             Cancel
           </Button>
           <Button type="button" disabled={isPending || change === null} onClick={() => change && onConfirm(change)}>

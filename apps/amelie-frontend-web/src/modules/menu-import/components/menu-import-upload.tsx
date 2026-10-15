@@ -49,7 +49,7 @@ export function MenuImportUpload() {
           onChange={(event) => setCount(event.target.files?.length ?? 0)}
         />
         {upload.isError ? <p className="text-xs text-destructive">{upload.error.message}</p> : null}
-        <Button type="submit" size="sm" className="mt-3 w-fit" disabled={count === 0 || upload.isPending}>
+        <Button type="submit" size="sm" className="w-fit" disabled={count === 0 || upload.isPending}>
           {upload.isPending ? "Uploading..." : "Upload menu"}
         </Button>
       </form>

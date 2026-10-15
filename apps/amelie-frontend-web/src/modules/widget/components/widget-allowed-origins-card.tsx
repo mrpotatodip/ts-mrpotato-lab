@@ -1,49 +1,59 @@
 import { useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
+import { ALLOWED_ORIGINS_INVALID, UpdateTenantAllowedOriginsBodySchema } from "@repo/contracts/amelie";
 
 import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
 import { PageCard } from "#/modules/shared";
+import { toAllowedOriginsPayload } from "../utils";
 
 type WidgetAllowedOriginsCardProps = {
-  allowedOrigins: readonly string[];
+  allowedOrigins: string[];
   canEdit: boolean;
-  isPending?: boolean;
-  error?: string | null;
+  isPending: boolean;
+  error: string | null;
   onSave: (allowedOrigins: string[]) => void;
 };
 
-const filledRows = (rows: readonly string[]) => rows.map((row) => row.trim()).filter((row) => row.length > 0);
+const EMPTY_WARNING = "The cafe site cannot iframe the chat. Chat on Amelie still works.";
 
 export function WidgetAllowedOriginsCard({
   allowedOrigins,
   canEdit,
-  isPending = false,
-  error = null,
+  isPending,
+  error,
   onSave,
 }: WidgetAllowedOriginsCardProps) {
-  const [rows, setRows] = useState(() => (allowedOrigins.length > 0 ? [...allowedOrigins] : [""]));
-  const empty = filledRows(canEdit ? rows : allowedOrigins).length === 0;
+  const [rows, setRows] = useState(allowedOrigins);
+  const [localError, setLocalError] = useState<string | null>(null);
+
+  const payload = toAllowedOriginsPayload(rows);
+  const empty = payload.length === 0;
+
+  const save = () => {
+    const parsed = UpdateTenantAllowedOriginsBodySchema.safeParse({ allowedOrigins: payload });
+    if (!parsed.success) {
+      setLocalError(ALLOWED_ORIGINS_INVALID);
+      return;
+    }
+    setLocalError(null);
+    onSave(payload);
+  };
 
   return (
     <PageCard
       title="Allowed origins"
-      description="Websites that may embed the Customer chat. Paste a page URL; Amelie stores the origin."
+      description="Websites that may iframe the Customer chat. Paste a page URL; Amelie keeps the origin."
     >
+      {empty ? <p className="mb-4 text-sm text-muted-foreground">{EMPTY_WARNING}</p> : null}
       {canEdit ? (
-        <form
-          className="flex flex-col gap-3"
-          onSubmit={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            onSave(filledRows(rows));
-          }}
-        >
+        <ul className="space-y-2">
           {rows.map((row, index) => (
-            <div key={index} className="flex items-center gap-2">
+            <li key={index} className="flex items-center gap-2">
               <Input
-                aria-label="Allowed origin"
-                placeholder="https://yourcafe.com"
+                aria-label={`Allowed origin ${index + 1}`}
+                placeholder="https://your-cafe.com"
+                className="min-w-0 flex-1"
                 value={row}
                 onChange={(event) => {
                   const next = [...rows];
@@ -53,39 +63,38 @@ export function WidgetAllowedOriginsCard({
               />
               <Button
                 type="button"
-                variant="outline"
+                variant="ghost"
                 size="icon-sm"
-                aria-label="Remove website"
+                aria-label={`Remove allowed origin ${index + 1}`}
                 title="Remove"
                 onClick={() => setRows(rows.filter((_, i) => i !== index))}
               >
                 <Trash2 />
               </Button>
-            </div>
+            </li>
           ))}
-          <div className="flex flex-wrap items-center gap-2">
-            <Button type="button" variant="outline" size="sm" onClick={() => setRows([...rows, ""])}>
-              <Plus />
-              Add website
-            </Button>
-            <Button type="submit" size="sm" disabled={isPending}>
-              {isPending ? "Saving..." : "Save"}
-            </Button>
-          </div>
-        </form>
-      ) : (
-        <ul className="flex flex-col gap-1 text-sm">
+        </ul>
+      ) : empty ? null : (
+        <ul className="space-y-2">
           {allowedOrigins.map((origin) => (
-            <li key={origin}>{origin}</li>
+            <li key={origin} className="text-sm break-all">
+              {origin}
+            </li>
           ))}
         </ul>
       )}
-      {empty ? (
-        <p className="text-muted-foreground mt-3 text-sm">
-          The cafe site cannot iframe the chat. Customers can still use the chat on Amelie.
-        </p>
+      {canEdit ? (
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <Button type="button" variant="outline" size="sm" onClick={() => setRows([...rows, ""])}>
+            <Plus />
+            Add website
+          </Button>
+          <Button type="button" size="sm" disabled={isPending} onClick={save}>
+            {isPending ? "Saving..." : "Save"}
+          </Button>
+        </div>
       ) : null}
-      {error ? <p className="text-destructive mt-3 text-xs">{error}</p> : null}
+      {localError || error ? <p className="mt-4 text-xs text-destructive">{localError ?? error}</p> : null}
     </PageCard>
   );
 }

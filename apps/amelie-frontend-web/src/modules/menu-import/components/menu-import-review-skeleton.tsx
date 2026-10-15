@@ -1,6 +1,15 @@
 import { Skeleton } from "#/components/ui/skeleton";
 import { PageCard } from "#/modules/shared";
 
+function MenuImportDraftRowSkeleton() {
+  return (
+    <li className="flex flex-col gap-2 px-6 py-5">
+      <Skeleton className="h-4 w-48" />
+      <Skeleton className="h-4 w-64" />
+    </li>
+  );
+}
+
 // -----
 // Same two columns as the review: publish card on the
 // left, the drafts on the right.
@@ -11,10 +20,13 @@ export function MenuImportReviewSkeleton() {
       <PageCard title="Publish">
         <Skeleton className="h-48 w-full" />
       </PageCard>
-      <div className="space-y-4">
-        <Skeleton className="h-6 w-40" />
-        <Skeleton className="h-64 w-full rounded-2xl" />
-      </div>
+      <PageCard title="Menu items" description="Drafts" contentClassName="p-0">
+        <ul className="divide-y">
+          <MenuImportDraftRowSkeleton />
+          <MenuImportDraftRowSkeleton />
+          <MenuImportDraftRowSkeleton />
+        </ul>
+      </PageCard>
     </div>
   );
 }

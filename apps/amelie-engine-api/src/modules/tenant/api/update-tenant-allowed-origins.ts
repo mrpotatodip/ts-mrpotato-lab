@@ -22,7 +22,7 @@ app.patch(
     // -----
     const db = db_connect(c.env.HYPERDRIVE_REALTIME.connectionString);
     const data = await runEffect(
-      updateTenantAllowedOriginsSvc(db, c.get("userId"), tenantId, c.req.valid("json")),
+      updateTenantAllowedOriginsSvc(db, c.get("userId"), tenantId, c.req.valid("json").allowedOrigins),
     );
     return c.json({ data, error: null });
   },
