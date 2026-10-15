@@ -272,3 +272,43 @@ Last updated: 2026-10-15
 
 **Pattern notes:**
 Same list chrome as menu items: `PageCard` `contentClassName="p-0"`, `ul.divide-y`, `p-6` rows. Fields are unlabeled (`aria-label` plus placeholder) like the menu item form. Timezone uses `SelectTrigger` `w-fit min-w-56` so IANA names such as `America/New_York` fit; other form selects stay at `min-w-40`.
+
+### FaqCategoryNav
+
+File: `src/modules/faq/components/faq-category-nav.tsx`
+Last updated: 2026-10-15
+
+| Property         | Class |
+| ---------------- | ----- |
+| Background       | PageCard body `bg-card` |
+| Border           | none on rows; add footer `border-t` |
+| Border radius    | selected row `rounded-md` |
+| Text — primary   | row `text-sm`, selected `font-medium` |
+| Text — secondary | count `text-muted-foreground text-xs font-normal` |
+| Spacing          | list `p-3`, row `px-2 py-2`, add footer `p-6`, gap `gap-2` |
+| Hover state      | row `hover:bg-muted`; selected `bg-primary/10` |
+| Shadow           | none |
+| Accent usage     | errors `text-xs text-destructive` |
+
+**Pattern notes:**
+Matches the menu Organize tree: compact selected row (`bg-primary/10`), count on the right. Add category is the same icon-sm Plus plus unlabeled input as the old category manager, in a `border-t p-6` footer like adding a country.
+
+### FaqCategorySection
+
+File: `src/modules/faq/components/faq-category-section.tsx`
+Last updated: 2026-10-15
+
+| Property         | Class |
+| ---------------- | ----- |
+| Background       | PageCard body `bg-card` |
+| Border           | list `divide-y`; add footer `border-t` |
+| Border radius    | none on the row |
+| Text — primary   | question `text-sm font-medium` |
+| Text — secondary | answer `text-muted-foreground text-sm leading-relaxed`; empty `text-muted-foreground p-6 text-sm` |
+| Spacing          | FAQ row `p-6`, add footer `p-6` |
+| Hover state      | Edit/Delete `ghost` `icon-sm`; Add FAQ `outline` `size="sm"` |
+| Shadow           | none |
+| Accent usage     | errors `text-xs text-destructive` |
+
+**Pattern notes:**
+One category per page, same chrome as a menu category: `PageCard` `contentClassName="p-0"`, header actions, `ul.divide-y` items, Add FAQ expands in the footer like Add item. General has no rename/delete.
