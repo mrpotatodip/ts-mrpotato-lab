@@ -30,7 +30,7 @@ The engine's `Origin` check on chat turns still sees Amelie's origin when the ch
 
 ## Dashboard
 
-Widget under Your cafe: read-only snippet with the Tenant slug, plus a link to `/chat/$slug`. No live preview. No Allowed-origins editor (sign-up `website` still seeds the list).
+Widget under Your cafe: read-only snippet with the Tenant slug, plus a link to `/chat/$slug`. No live preview. An owner or manager edits Allowed origins on that page (paste site URLs, Save replaces the list). Staff see the list and the snippet and cannot save. Sign-up `website` still seeds the first Allowed origin when given. The Business profile website stays a contact fact.
 
 ## Local cafe host
 
@@ -38,4 +38,4 @@ Widget under Your cafe: read-only snippet with the Tenant slug, plus a link to `
 
 ## Out of this work
 
-Allowed-origins editor, cafe branding, `postMessage`, dashboard live preview, menu item images, agent / prompt / public-chat API changes.
+Cafe branding, `postMessage`, dashboard live preview, menu item images, agent / prompt / public-chat API changes.

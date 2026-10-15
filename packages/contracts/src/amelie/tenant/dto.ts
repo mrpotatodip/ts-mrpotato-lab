@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { TENANT_ALLOWED_ORIGINS_MAX } from "../constants";
 import { COUNTRY_VALUES, CURRENCY_VALUES, TENANT_ROLE_KEY_VALUES } from "../enums";
 
 // -----
@@ -16,6 +17,40 @@ export const TenantRegionSchema = z.object({
 });
 
 export const UpdateTenantRegionBodySchema = TenantRegionSchema;
+
+const toHttpOrigin = (value: string): string | null => {
+  try {
+    const url = new URL(value.trim());
+    if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+    return url.origin;
+  } catch {
+    return null;
+  }
+};
+
+export const AllowedOriginInputSchema = z.string().transform((value, ctx) => {
+  const origin = toHttpOrigin(value);
+  if (!origin) {
+    ctx.addIssue({ code: "custom", message: "Must be an http or https website" });
+    return z.NEVER;
+  }
+  return origin;
+});
+
+export const UpdateTenantAllowedOriginsBodySchema = z.object({
+  allowedOrigins: z
+    .array(AllowedOriginInputSchema)
+    .transform((origins) => {
+      const unique: string[] = [];
+      for (const origin of origins) {
+        if (!unique.includes(origin)) unique.push(origin);
+      }
+      return unique;
+    })
+    .refine((origins) => origins.length <= TENANT_ALLOWED_ORIGINS_MAX, {
+      message: `At most ${TENANT_ALLOWED_ORIGINS_MAX} Allowed origins`,
+    }),
+});
 
 // -----
 // Responses: a Tenant as one of its
@@ -40,3 +75,4 @@ export type TenantParam = z.infer<typeof TenantParamSchema>;
 export type UpdateTenantRegionBody = z.infer<typeof UpdateTenantRegionBodySchema>;
 export type TenantRegion = z.infer<typeof TenantRegionSchema>;
 export type Tenant = z.infer<typeof TenantSchema>;
+export type UpdateTenantAllowedOriginsBody = z.infer<typeof UpdateTenantAllowedOriginsBodySchema>;

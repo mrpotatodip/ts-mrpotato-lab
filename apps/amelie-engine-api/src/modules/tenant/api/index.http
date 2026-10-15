@@ -18,3 +18,11 @@ Authorization: Bearer {{token}}
 Content-Type: application/json
 
 { "country": "PH", "currency": "PHP" }
+
+###
+# Owner or manager only. Replaces the whole Allowed origins list.
+PATCH {{baseUrl}}/tenants/{{tenantId}}/allowed-origins
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "allowedOrigins": ["https://sorellacafe.com/menu"] }
