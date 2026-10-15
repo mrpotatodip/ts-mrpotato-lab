@@ -5,6 +5,7 @@ export * from "./location";
 export * from "./sign-up";
 export * from "./menu";
 export * from "./public-chat";
+export * from "./chat-bot";
 export * from "./unanswered-question";
 export * from "./business-profile";
 export * from "./schedule";

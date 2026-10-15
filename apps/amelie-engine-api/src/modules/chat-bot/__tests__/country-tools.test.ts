@@ -349,11 +349,18 @@ describe("a Country with one open Location resolves it for hours and profile", (
     const threadId = await newThread({ countryId: mxId });
 
     const schedule = out<{ needsLocation: true; locations: Array<{ name: string }> }>(await run(getOpeningScheduleTool, {}, threadId));
-    const profile = out<{ needsLocation: true; locations: Array<{ name: string }> }>(await run(getBusinessProfileTool, {}, threadId));
+    const profile = out<{
+      needsLocation: true;
+      locations: Array<{ name: string }>;
+      country: { code: string } | null;
+      location: { name: string } | null;
+    }>(await run(getBusinessProfileTool, {}, threadId));
 
     expect(schedule.needsLocation).toBe(true);
     expect(schedule.locations.map((location) => location.name)).toEqual(["Tulum", "Cancun"]);
     expect(profile.locations.map((location) => location.name)).toEqual(["Tulum", "Cancun"]);
+    expect(profile.location).toBeNull();
+    expect(profile.country?.code).toBe("MX");
   });
 
   it("never asks for a branch for prices, even when the Country has several", async () => {
@@ -373,5 +380,38 @@ describe("a Country with one open Location resolves it for hours and profile", (
     const schedule = out<{ location: { id: string } }>(await run(getOpeningScheduleTool, {}, await newThread({ countryId: mxId, locationId: tulumId })));
 
     expect(schedule.location.id).toBe(tulumId);
+  });
+});
+
+describe("a Location whose Country has no priced menu", () => {
+  let wellingtonId: string;
+
+  beforeAll(async () => {
+    const nzId = await insertCountry(db, tenantId, { country: "NZ", currency: "NZD" });
+    wellingtonId = await insertLocation(db, tenantId, {
+      name: "Wellington",
+      slug: "wellington",
+      countryId: nzId,
+      timezone: "Pacific/Auckland",
+    });
+  });
+
+  it("still names cafe-wide matches and does not pretend they are sold there", async () => {
+    const threadId = await newThread({ locationId: wellingtonId });
+    const found = out<MenuResult>(await run(findMenuItemsTool, { text: "latte", dietaryTag: null }, threadId));
+
+    expect(found.items?.map((item) => item.name)).toContain("Latte");
+    expect(found.items?.every((item) => item.price === null)).toBe(true);
+    expect(found.note).toMatch(/not sold at this location/i);
+    expect(found.location?.name).toBe("Wellington");
+  });
+
+  it("does not invent a miss when one item is absent but the Location still sells others", async () => {
+    const found = out<MenuResult>(
+      await run(findMenuItemsTool, { text: "poutine", dietaryTag: null }, await newThread({ locationId: seattleId })),
+    );
+
+    expect(found.items).toEqual([]);
+    expect(found.note ?? "").not.toMatch(/not sold at this location/i);
   });
 });

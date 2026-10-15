@@ -218,6 +218,20 @@ describe("startChatBotRunSvc", () => {
     );
   });
 
+  it("pins a new Thread to the dashboard Location and Country", async () => {
+    await runStream({
+      log,
+      locationId: "loc-1",
+      countryId: "co-1",
+      body: { content: "How many?", trigger: "chat", module: "chat" },
+    });
+
+    expect(insertChatBotThreadWithRunEffect).toHaveBeenCalledWith(
+      mockDb,
+      expect.objectContaining({ locationId: "loc-1", countryId: "co-1" }),
+    );
+  });
+
   it("creates a thread, stores the user turn, and sends stored history to runChatBot", async () => {
     const jobs: Array<Promise<unknown>> = [];
     const result = await runStream({
@@ -230,6 +244,8 @@ describe("startChatBotRunSvc", () => {
 
     expect(insertChatBotThreadWithRunEffect).toHaveBeenCalledWith(mockDb, {
       owner,
+      locationId: undefined,
+      countryId: undefined,
       title: "How many?",
       trigger: "chat",
       module: "chat",

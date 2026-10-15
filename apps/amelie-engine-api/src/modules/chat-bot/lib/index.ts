@@ -17,4 +17,6 @@ export * from "./public-chat-daily-limit-message";
 export * from "./public-chat-request";
 export * from "./chat-bot-location-needed";
 export * from "./chat-bot-country";
+export * from "./chat-bot-menu-unpriced-location";
 export * from "./chat-bot-faq-scope";
+export * from "./chat-bot-faq-topic";

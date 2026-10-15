@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { FaqResult } from "@repo/contracts/chat-bots";
 
 import { toChatBotFaqGroups } from "../to-chat-bot-faq";
-import { toChatBotProfileRows } from "../to-chat-bot-profile";
+import { toChatBotProfileRows, toChatBotTenantProfileRows } from "../to-chat-bot-profile";
 
 const faq = (id: string, category: string | null): FaqResult => ({
   id,
@@ -30,6 +30,24 @@ describe("toChatBotProfileRows", () => {
       { label: "Address", value: "1 Main St" },
       { label: "Phone", value: "555" },
       { label: "Website", value: "https://a.test" },
+    ]);
+  });
+});
+
+describe("toChatBotTenantProfileRows", () => {
+  it("leaves address and phone for the location card", () => {
+    expect(
+      toChatBotTenantProfileRows({
+        description: "Cosy",
+        websiteUrl: "https://a.test",
+        phone: "555",
+        email: "a@b.test",
+        address: "1 Main St",
+      }),
+    ).toEqual([
+      { label: "Email", value: "a@b.test" },
+      { label: "Website", value: "https://a.test" },
+      { label: "About", value: "Cosy" },
     ]);
   });
 });

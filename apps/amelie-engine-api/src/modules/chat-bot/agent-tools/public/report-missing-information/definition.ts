@@ -11,8 +11,9 @@ export const reportMissingInformationTool = defineChatBotTool({
     name: "reportMissingInformation",
     description:
       "Call this whenever any part of the customer's question can't be " +
-      "answered from the business information. Pass a 2-4 word topic, " +
-      'e.g. "parking" or "outside cake".',
+      "answered from the business information, including when listFaqs has " +
+      "no matching FAQ. Do not invent a policy instead. Pass a 2-4 word " +
+      'topic, e.g. "parking" or "outside cake".',
     inputSchema: ReportMissingInformationInputSchema,
     outputSchema: ReportMissingInformationResultSchema,
   }),

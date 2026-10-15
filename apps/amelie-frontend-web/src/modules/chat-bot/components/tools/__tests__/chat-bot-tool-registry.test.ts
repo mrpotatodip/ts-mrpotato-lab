@@ -66,6 +66,8 @@ describe("chat bot tool cards", () => {
       email: null,
       address: null,
       note: null,
+      location: null,
+      country: null,
     });
     expect(resultOf(card)).toMatchObject({ needsLocation: true, description: "Cosy cafe" });
   });

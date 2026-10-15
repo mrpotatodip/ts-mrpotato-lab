@@ -68,6 +68,8 @@ export const BusinessProfileResultSchema = z.object({
 
 export const BusinessProfileReadResultSchema = BusinessProfileResultSchema.extend({
   note: z.string().nullable(),
+  location: z.object({ id: z.string(), name: z.string() }).nullable(),
+  country: z.object({ id: z.string(), name: z.string(), code: z.string() }).nullable(),
 });
 
 // -----

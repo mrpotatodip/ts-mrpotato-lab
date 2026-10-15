@@ -1,28 +1,28 @@
 import { runEffect } from "#/lib/effect-query";
 import { listMenuSvc } from "#/modules/menu";
-import { menuReadScope } from "#/modules/chat-bot/lib";
+import { dropMenuItemPrices, locationHasNoPricedMenu, menuReadScope, noteWhenLocationUnpriced } from "#/modules/chat-bot/lib";
 import type { ChatBotRuntime } from "#/modules/chat-bot/types";
 import type { ListMenuInput, ListMenuResult } from "./schema";
 
-// -----
-// Priced in the Country in play (the model's, the Thread's,
-// its Location's, the Tenant's only). With several Countries
-// and none in play: names and availability, no prices.
-// -----
 export const listMenu = async (input: ListMenuInput, runtime: ChatBotRuntime): Promise<ListMenuResult> => {
   const scope = await menuReadScope(input, runtime);
+  const includeUnavailable = runtime.owner.kind === "user";
+  const unpriced = await locationHasNoPricedMenu(scope, runtime);
+  const categories = await runEffect(
+    listMenuSvc(
+      runtime.db,
+      runtime.owner.tenantId,
+      unpriced ? undefined : scope.locationId,
+      unpriced ? undefined : scope.countryId,
+      includeUnavailable,
+    ),
+  );
   return {
     location: scope.location,
     country: scope.country,
-    note: scope.note,
-    categories: await runEffect(
-      listMenuSvc(
-        runtime.db,
-        runtime.owner.tenantId,
-        scope.locationId,
-        scope.countryId,
-        runtime.owner.kind === "user",
-      ),
-    ),
+    note: unpriced ? noteWhenLocationUnpriced(scope) : scope.note,
+    categories: unpriced
+      ? categories.map((category) => ({ ...category, items: category.items.map(dropMenuItemPrices) }))
+      : categories,
   };
 };

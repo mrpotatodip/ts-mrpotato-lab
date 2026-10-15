@@ -41,6 +41,11 @@ export type PublicChatSession = {
   country?: string;
 };
 
+export type StaffChatPlace = {
+  location?: string;
+  country?: string;
+};
+
 export type ChatBotStepLabel = {
   busy: string;
   done: string;

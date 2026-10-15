@@ -1,14 +1,12 @@
 import { Effect } from "effect";
 import type { DbConnectType } from "#/lib/db-connection";
 import { Invalid, type DbError, type NotFound, type Forbidden, type RateLimited } from "#/lib/effect-query";
-import { readCountryIdEffect, resolveCountryRefSvc } from "#/modules/country";
-import { resolveLocationRefSvc } from "#/modules/location";
-import { CHAT_BOT_COUNTRY_LOCATION_MISMATCH } from "#/modules/chat-bot/constants";
 import { findPublicTenantSvc, type PublicTenant } from "#/modules/tenant";
 import { chatBotCustomerAgent } from "#/modules/chat-bot/agents";
 import { lookupChatBotRunEffect } from "#/modules/chat-bot/queries";
 import type { ChatBotCustomerTurn, PublicChatTurnRequest } from "#/modules/chat-bot/types";
 import { checkPublicChatOriginEffect, guardPublicChatTurnSvc } from "./guard-public-chat-turn-svc";
+import { resolveChatBotPlaceSvc } from "./resolve-chat-bot-place-svc";
 
 // -----
 // Slug to Tenant on the server, then the
@@ -55,22 +53,8 @@ export const startPublicChatTurnSvc = (
   Effect.gen(function* () {
     const { db, runId, anonymousId } = request;
     const tenant = yield* findPublicChatTenantSvc(db, request.slug, request.origin, request.ownOrigins);
-    const startsThread = request.threadId === undefined;
-    const location =
-      startsThread && request.location !== undefined
-        ? yield* resolveLocationRefSvc(db, tenant.id, request.location)
-        : null;
-    const country =
-      startsThread && request.country !== undefined
-        ? yield* resolveCountryRefSvc(db, tenant.id, request.country)
-        : null;
-    if (location && country) {
-      const locationCountryId = yield* readCountryIdEffect(db, tenant.id, location.id);
-      if (locationCountryId !== country.id) {
-        return yield* new Invalid({ message: CHAT_BOT_COUNTRY_LOCATION_MISMATCH });
-      }
-    }
-    const turn = prepareCustomerTurn(tenant, anonymousId, location?.id ?? null, country?.id ?? null);
+    const place = yield* resolveChatBotPlaceSvc(db, tenant.id, request);
+    const turn = prepareCustomerTurn(tenant, anonymousId, place.locationId, place.countryId);
     const existing = runId ? yield* lookupChatBotRunEffect(db, turn.owner, runId) : null;
     if (!existing) {
       yield* guardPublicChatTurnSvc({

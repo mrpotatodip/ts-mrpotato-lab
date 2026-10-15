@@ -139,13 +139,38 @@ describe("chat-bot agent config", () => {
     expect(text(chatBotCustomerAgent)).toMatch(/never invent.*locations/i);
     expect(text(chatBotCustomerAgent)).toMatch(/empty means this location has none/i);
     expect(text(chatBotCustomerAgent)).toMatch(/empty week means this location has no hours/i);
+    expect(text(chatBotCustomerAgent)).toMatch(/never "we don't offer that"/i);
+    expect(text(chatBotCustomerAgent)).toMatch(/empty menu for a location/i);
     const faq = chatBotCustomerAgent.subagents[2];
     expect(faq && text(faq)).toMatch(/empty email, website, address or phone/i);
+    expect(faq && text(faq)).toMatch(/has not written an FAQ/i);
+    expect(faq && text(faq)).toMatch(/copy the answer/i);
+    expect(faq && text(faq)).toMatch(/passing topic/i);
+    expect(text(chatBotCustomerAgent)).toMatch(/pass topic as the/i);
+    expect(text(chatBotCustomerAgent)).toMatch(/do-not-invent/i);
     expect(text(schedule)).toMatch(/list only the names/i);
     expect(text(menu)).toContain("setThreadCountry");
     expect(text(menu)).toMatch(/do not quote a price/i);
+    expect(text(menu)).toMatch(/no matching items came back/i);
+    expect(text(menu)).toMatch(/again with a countryId/i);
     expect(text(schedule)).toContain("setThreadCountry");
     expect(text(chatBotMainAgent)).toContain("setThreadCountry");
+  });
+
+  // -----
+  // Tone lives in the prompt. Pin the polite /
+  // unslop rules so a later edit can't drop them.
+  // -----
+  it("tells the customer assistant to be polite without chatbot filler", () => {
+    const prompt = text(chatBotCustomerAgent);
+
+    expect(prompt).toMatch(/Sorry once when we can't help/i);
+    expect(prompt).toMatch(/say sorry you don't have that/i);
+    expect(prompt).toMatch(/No greeting/i);
+    expect(prompt).toContain("Hope this helps");
+    expect(prompt).toMatch(/No em dash/i);
+    expect(prompt).toMatch(/No exclamation mark/i);
+    expect(CHAT_BOT_CUSTOMER_GUARD_RAIL_PROMPT).toMatch(/say sorry once/i);
   });
 
   it("tells the signed-in agents to ask which country for a price change", () => {

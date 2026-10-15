@@ -15,6 +15,8 @@ export const findMenuItemsTool = defineChatBotTool({
       "offers it (e.g. gluten-free bread on sandwiches). For those, say what " +
       "the note says, not that the item itself is tagged. " +
       "It searches what the conversation's location sells. " +
+      "An empty list there can mean that country's prices are missing, " +
+      "not that the cafe has no such item. " +
       "Omit locationId unless the customer names a different location; " +
       "then pass its name, slug or id. A value that is not one of the " +
       "cafe's locations is ignored and note says so. " +

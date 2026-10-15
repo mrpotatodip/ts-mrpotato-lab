@@ -15,7 +15,14 @@ export const listFaqsTool = defineChatBotTool({
       "Omit locationId unless the customer names a different location; " +
       "then pass its name, slug or id. A value that is not one of the " +
       "cafe's locations is ignored and note says so. " +
-      "With several locations or countries and none set, only the all-location FAQs come back and note says so.",
+      "With several locations or countries and none set, only the all-location FAQs come back and note says so. " +
+      "FAQs written for another country do not appear. That is not a denial " +
+      "of the service; it is missing for this country. " +
+      "Pass topic as the customer's question whenever you are answering one " +
+      "policy (gift cards, online ordering, dogs, a sister restaurant). " +
+      "Then faqs is only the match, or empty with a note: copy a hit, " +
+      "treat another country's FAQ as missing not a no, and never invent a " +
+      "policy on a miss.",
     inputSchema: ListFaqsInputSchema,
     outputSchema: ListFaqsResultSchema,
   }),
