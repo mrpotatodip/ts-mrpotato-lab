@@ -42,9 +42,9 @@ export function LocationSection() {
         {noticeView}
         <PageCard title="Locations" description="Your cafe has one location. Add another if you run more than one place.">
           {adding ? (
-            <LocationAddForm onAdded={() => setAdding(false)} />
+            <LocationAddForm onAdded={() => setAdding(false)} onCancel={() => setAdding(false)} />
           ) : (
-            <Button variant="link" size="sm" className="h-auto w-fit px-0" onClick={() => setAdding(true)}>
+            <Button variant="link" size="sm" className="text-muted-foreground h-auto w-fit px-0" onClick={() => setAdding(true)}>
               More than one place? Add a location
             </Button>
           )}
@@ -85,17 +85,31 @@ type LocationListProps = {
 };
 
 function LocationList({ active, canEdit, onArchive, isArchiving, archiveError }: LocationListProps) {
+  const [adding, setAdding] = useState(false);
+
   return (
-    <PageCard title="Locations" description="The name, address, phone and timezone of each place.">
-      <div className="space-y-4">
-        <ul className="space-y-3">
-          {active.map((location) => (
-            <LocationRow key={location.id} location={location} canEdit={canEdit} onArchive={onArchive} isArchiving={isArchiving} />
-          ))}
-        </ul>
-        {archiveError ? <p className="text-xs text-destructive">{archiveError}</p> : null}
-        {canEdit ? <LocationAddForm /> : null}
-      </div>
+    <PageCard title="Locations" description="The name, address, phone and timezone of each place." contentClassName="p-0">
+      <ul className="divide-y">
+        {active.map((location) => (
+          <LocationRow key={location.id} location={location} canEdit={canEdit} onArchive={onArchive} isArchiving={isArchiving} />
+        ))}
+      </ul>
+      {archiveError ? (
+        <p role="alert" className="px-6 pt-4 text-xs text-destructive">
+          {archiveError}
+        </p>
+      ) : null}
+      {canEdit ? (
+        <div className="border-t p-6">
+          {adding ? (
+            <LocationAddForm onAdded={() => setAdding(false)} onCancel={() => setAdding(false)} />
+          ) : (
+            <Button type="button" variant="outline" size="sm" onClick={() => setAdding(true)}>
+              Add location
+            </Button>
+          )}
+        </div>
+      ) : null}
     </PageCard>
   );
 }

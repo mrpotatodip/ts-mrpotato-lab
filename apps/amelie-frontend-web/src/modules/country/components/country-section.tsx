@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Country } from "@repo/contracts/amelie";
 
+import { Button } from "#/components/ui/button";
 import { PageCard } from "#/modules/shared";
 import { useLocations } from "#/modules/location";
 import { useActiveTenantRole } from "#/modules/tenant";
@@ -28,34 +29,45 @@ export function CountrySection() {
   const { archiveCountry, updateCountry } = useCountryActions();
   const [archiving, setArchiving] = useState<Country | null>(null);
   const [changing, setChanging] = useState<CountryCurrencyChange | null>(null);
+  const [adding, setAdding] = useState(false);
 
   if (active.length < 2) return null;
 
   return (
-    <PageCard title="Countries" description="Each country has its own currency, prices and locations.">
-      <div className="space-y-4">
-        <ul className="space-y-3">
-          {active.map((country) => (
-            <CountryRow
-              key={country.id}
-              country={country}
-              openLocations={countOpenLocationsIn(locations, country.id)}
-              canEdit={canEdit}
-              onChangeCurrency={(change) => {
-                updateCountry.reset();
-                setChanging(change);
-              }}
-              onArchive={(target) => {
-                archiveCountry.reset();
-                setArchiving(target);
-              }}
-              isArchiving={archiveCountry.isPending}
-            />
-          ))}
-        </ul>
-        {archiveCountry.isError ? <p role="alert" className="text-xs text-destructive">{archiveCountry.error.message}</p> : null}
-        {canEdit ? <CountryAddForm countries={all ?? active} /> : <p className="text-muted-foreground text-xs">Only an owner or manager can change this.</p>}
-      </div>
+    <PageCard title="Countries" description="Each country has its own currency, prices and locations." contentClassName="p-0">
+      <ul className="divide-y">
+        {active.map((country) => (
+          <CountryRow
+            key={country.id}
+            country={country}
+            openLocations={countOpenLocationsIn(locations, country.id)}
+            canEdit={canEdit}
+            onChangeCurrency={(change) => {
+              updateCountry.reset();
+              setChanging(change);
+            }}
+            onArchive={(target) => {
+              archiveCountry.reset();
+              setArchiving(target);
+            }}
+            isArchiving={archiveCountry.isPending}
+          />
+        ))}
+      </ul>
+      {archiveCountry.isError ? <p role="alert" className="px-6 pt-4 text-xs text-destructive">{archiveCountry.error.message}</p> : null}
+      {canEdit ? (
+        <div className="border-t p-6">
+          {adding ? (
+            <CountryAddForm countries={all ?? active} onAdded={() => setAdding(false)} onCancel={() => setAdding(false)} />
+          ) : (
+            <Button type="button" variant="outline" size="sm" onClick={() => setAdding(true)}>
+              Add country
+            </Button>
+          )}
+        </div>
+      ) : (
+        <p className="text-muted-foreground p-6 text-sm">Only an owner or manager can change this.</p>
+      )}
       <CountryCurrencyDialog
         change={changing}
         isPending={updateCountry.isPending}

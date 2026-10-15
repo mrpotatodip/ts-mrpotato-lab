@@ -1,6 +1,6 @@
 # UI registry
 
-Last updated: 2026-09-15
+Last updated: 2026-10-15
 
 ### EliseCard
 
@@ -192,3 +192,83 @@ Last updated: 2026-10-13
 
 **Pattern notes:**
 Opens from a ghost `icon-sm` Image control next to Delete on the item row. Sheet chrome matches `CustomerThreadSheet` (`inset-y-4 right-4`, `rounded-3xl`, overlay `bg-black/10`). Sheet thumbs are `size-24 rounded-lg object-cover`. Each photo row uses ghost `icon-sm` up/down arrows, then Cover (`outline` `sm`), then delete. Add photos is `Button variant="outline" size="sm"`. Cap is `MENU_ITEM_IMAGE_MAX`. First photo is Cover. The item row shows that cover left of the title (`size-10 rounded-lg`) with a primary count bubble (`Badge`, `min-w-5`, `text-[10px]`, `-top-1.5 -right-1.5`). The thumb is omitted when the item has no photo.
+
+### CountryAddForm
+
+File: `src/modules/country/components/country-add-form.tsx`
+Last updated: 2026-10-15
+
+| Property         | Class |
+| ---------------- | ----- |
+| Background       | PageCard body `bg-card` |
+| Border           | none on the form; section footer `border-t` |
+| Border radius    | Select/button `rounded-md` |
+| Text — primary   | `text-sm` via Input/Select |
+| Text — secondary | placeholders `text-muted-foreground` |
+| Spacing          | form `flex flex-col gap-3`, field row `flex flex-wrap gap-2`, actions `mt-3 flex gap-2` |
+| Hover state      | primary submit `size="sm"`, cancel `ghost` `size="sm"` |
+| Shadow           | none |
+| Accent usage     | errors `text-xs text-destructive` |
+
+**Pattern notes:**
+Matches menu/FAQ forms: no visible labels, `aria-label` plus placeholder, `SelectTrigger` `w-fit min-w-40`. Add starts as outline `size="sm"` in a `border-t p-6` footer, then expands to this form with Cancel, same as adding a menu item.
+
+### CountryRow
+
+File: `src/modules/country/components/country-row.tsx`
+Last updated: 2026-10-15
+
+| Property         | Class |
+| ---------------- | ----- |
+| Background       | PageCard body `bg-card` |
+| Border           | list `divide-y` |
+| Border radius    | none on the row |
+| Text — primary   | name `text-sm font-medium` |
+| Text — secondary | locations `text-muted-foreground text-sm` |
+| Spacing          | row `flex items-center justify-between gap-4 p-6`, actions `gap-2` |
+| Hover state      | none (menu item rows do not hover-fill) |
+| Shadow           | none |
+| Accent usage     | Archive `ghost` `size="sm"` |
+
+**Pattern notes:**
+Same list chrome as menu items: `PageCard` `contentClassName="p-0"`, `ul.divide-y`, `p-6` rows. Currency uses an unlabeled select (`w-fit min-w-40`) like the menu category field.
+
+### LocationAddForm
+
+File: `src/modules/location/components/location-add-form.tsx`
+Last updated: 2026-10-15
+
+| Property         | Class |
+| ---------------- | ----- |
+| Background       | PageCard body `bg-card` |
+| Border           | none on the form; section footer `border-t` |
+| Border radius    | Input/Select/button `rounded-md` |
+| Text — primary   | `text-sm` via Input/Select |
+| Text — secondary | placeholders `text-muted-foreground` |
+| Spacing          | form `flex flex-col gap-3`, field row `flex flex-wrap gap-2`, actions `mt-3 flex gap-2` |
+| Hover state      | primary submit `size="sm"`, cancel `ghost` `size="sm"` |
+| Shadow           | none |
+| Accent usage     | errors `text-xs text-destructive` |
+
+**Pattern notes:**
+Matches menu/FAQ/country add forms: no visible labels, `aria-label` plus placeholder, name `w-56`, `SelectTrigger` `w-fit min-w-40`. Add starts as outline `size="sm"` in a `border-t p-6` footer when there are several locations, then expands to this form with Cancel. A one-location cafe still uses a muted `link` button, same as adding a country.
+
+### LocationRow
+
+File: `src/modules/location/components/location-row.tsx`
+Last updated: 2026-10-15
+
+| Property         | Class |
+| ---------------- | ----- |
+| Background       | PageCard body `bg-card` |
+| Border           | list `divide-y` |
+| Border radius    | Input/Select `rounded-md` |
+| Text — primary   | `text-sm` via Input/Select |
+| Text — secondary | placeholders `text-muted-foreground` |
+| Spacing          | row `p-6`, form `flex flex-col gap-3`, field rows `flex flex-wrap gap-2`, actions `mt-3 flex gap-2` |
+| Hover state      | none (menu item rows do not hover-fill); Save `size="sm"`, Archive `ghost` `size="sm"` |
+| Shadow           | none |
+| Accent usage     | country `Badge variant="outline"`, errors `text-xs text-destructive` |
+
+**Pattern notes:**
+Same list chrome as menu items: `PageCard` `contentClassName="p-0"`, `ul.divide-y`, `p-6` rows. Fields are unlabeled (`aria-label` plus placeholder) like the menu item form. Timezone uses `SelectTrigger` `w-fit min-w-40`.

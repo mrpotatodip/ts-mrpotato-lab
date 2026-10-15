@@ -10,7 +10,6 @@ import {
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
-import { Label } from "#/components/ui/label";
 import { countryLabel, useActiveCountries } from "#/modules/country";
 import { useLocationActions } from "../hooks";
 import { isLocationChanged, toLocationBody, toLocationValues } from "../utils";
@@ -52,9 +51,9 @@ export function LocationRow({ location, canEdit, onArchive, isArchiving }: Locat
   });
 
   return (
-    <li className="px-6 py-5">
+    <li className="p-6">
       <form
-        className="space-y-3"
+        className="flex flex-col gap-3"
         onSubmit={(event) => {
           event.preventDefault();
           event.stopPropagation();
@@ -62,61 +61,52 @@ export function LocationRow({ location, canEdit, onArchive, isArchiving }: Locat
         }}
       >
         {country ? <Badge variant="outline">{countryLabel(country)}</Badge> : null}
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="flex flex-wrap gap-2">
           <form.Field name="name">
             {(field) => (
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor={`location-name-${location.id}`}>Name</Label>
-                <Input
-                  id={`location-name-${location.id}`}
-                  value={field.state.value}
-                  maxLength={LOCATION_NAME_MAX}
-                  disabled={!canEdit}
-                  onChange={(event) => field.handleChange(event.target.value)}
-                />
-              </div>
+              <Input
+                aria-label="Name"
+                placeholder="Name"
+                className="w-56"
+                value={field.state.value}
+                maxLength={LOCATION_NAME_MAX}
+                disabled={!canEdit}
+                onChange={(event) => field.handleChange(event.target.value)}
+              />
             )}
           </form.Field>
           <form.Field name="timezone">
             {(field) => (
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor={`location-timezone-${location.id}`}>Timezone</Label>
-                <LocationTimezoneSelect
-                  id={`location-timezone-${location.id}`}
-                  value={field.state.value}
-                  disabled={!canEdit}
-                  onChange={field.handleChange}
-                />
-              </div>
+              <LocationTimezoneSelect value={field.state.value} disabled={!canEdit} onChange={field.handleChange} />
             )}
           </form.Field>
+        </div>
+        <div className="flex flex-wrap gap-2">
           <form.Field name="address">
             {(field) => (
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor={`location-address-${location.id}`}>Address</Label>
-                <Input
-                  id={`location-address-${location.id}`}
-                  value={field.state.value}
-                  maxLength={LOCATION_ADDRESS_MAX}
-                  disabled={!canEdit}
-                  onChange={(event) => field.handleChange(event.target.value)}
-                />
-              </div>
+              <Input
+                aria-label="Address"
+                placeholder="Address (optional)"
+                className="min-w-56 flex-1"
+                value={field.state.value}
+                maxLength={LOCATION_ADDRESS_MAX}
+                disabled={!canEdit}
+                onChange={(event) => field.handleChange(event.target.value)}
+              />
             )}
           </form.Field>
           <form.Field name="phone">
             {(field) => (
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor={`location-phone-${location.id}`}>Phone</Label>
-                <Input
-                  id={`location-phone-${location.id}`}
-                  type="tel"
-                  value={field.state.value}
-                  maxLength={LOCATION_PHONE_MAX}
-                  disabled={!canEdit}
-                  onChange={(event) => field.handleChange(event.target.value)}
-                />
-              </div>
+              <Input
+                aria-label="Phone"
+                placeholder="Phone (optional)"
+                className="w-40"
+                type="tel"
+                value={field.state.value}
+                maxLength={LOCATION_PHONE_MAX}
+                disabled={!canEdit}
+                onChange={(event) => field.handleChange(event.target.value)}
+              />
             )}
           </form.Field>
         </div>
@@ -133,9 +123,9 @@ export function LocationRow({ location, canEdit, onArchive, isArchiving }: Locat
               Archive
             </Button>
             <form.Subscribe selector={(state) => state.errors}>
-              {(errors) => (errors.length > 0 ? <span className="text-xs text-destructive">{errors.join(", ")}</span> : null)}
+              {(errors) => (errors.length > 0 ? <p className="text-xs text-destructive">{errors.join(", ")}</p> : null)}
             </form.Subscribe>
-            {updateLocation.isError ? <span className="text-xs text-destructive">{updateLocation.error.message}</span> : null}
+            {updateLocation.isError ? <p className="text-xs text-destructive">{updateLocation.error.message}</p> : null}
           </div>
         ) : null}
       </form>
