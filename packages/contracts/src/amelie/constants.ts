@@ -27,6 +27,8 @@ export const SIGN_UP_WEBSITE_MAX = 2048;
 // Widget: websites that may iframe the Customer chat
 // -----
 export const ALLOWED_ORIGINS_MAX = 20;
+export const CUSTOMER_CHAT_LABEL_MAX = 40;
+export const CUSTOMER_CHAT_LABEL_DEFAULT = "Chat with us";
 
 // -----
 // Invite codes: limits the admin form and the server share

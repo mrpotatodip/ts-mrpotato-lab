@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardRouteRouteImport } from './routes/_dashboard/route'
 import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as NoCafeRouteImport } from './routes/no-cafe'
+import { Route as WidgetAppearanceRouteImport } from './routes/widget-appearance'
 import { Route as DashboardBusinessProfileRouteImport } from './routes/_dashboard/business-profile'
 import { Route as DashboardFaqsRouteImport } from './routes/_dashboard/faqs'
 import { Route as DashboardHoursRouteImport } from './routes/_dashboard/hours'
@@ -51,6 +52,11 @@ const AdminRouteRoute = AdminRouteRouteImport.update({
 const NoCafeRoute = NoCafeRouteImport.update({
   id: '/no-cafe',
   path: '/no-cafe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WidgetAppearanceRoute = WidgetAppearanceRouteImport.update({
+  id: '/widget-appearance',
+  path: '/widget-appearance',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardBusinessProfileRoute =
@@ -164,6 +170,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteRouteWithChildren
   '/no-cafe': typeof NoCafeRoute
+  '/widget-appearance': typeof WidgetAppearanceRoute
   '/business-profile': typeof DashboardBusinessProfileRoute
   '/faqs': typeof DashboardFaqsRoute
   '/hours': typeof DashboardHoursRoute
@@ -188,6 +195,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/no-cafe': typeof NoCafeRoute
+  '/widget-appearance': typeof WidgetAppearanceRoute
   '/business-profile': typeof DashboardBusinessProfileRoute
   '/faqs': typeof DashboardFaqsRoute
   '/hours': typeof DashboardHoursRoute
@@ -214,6 +222,7 @@ export interface FileRoutesById {
   '/_dashboard': typeof DashboardRouteRouteWithChildren
   '/admin': typeof AdminRouteRouteWithChildren
   '/no-cafe': typeof NoCafeRoute
+  '/widget-appearance': typeof WidgetAppearanceRoute
   '/_dashboard/business-profile': typeof DashboardBusinessProfileRoute
   '/_dashboard/faqs': typeof DashboardFaqsRoute
   '/_dashboard/hours': typeof DashboardHoursRoute
@@ -241,6 +250,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/no-cafe'
+    | '/widget-appearance'
     | '/business-profile'
     | '/faqs'
     | '/hours'
@@ -265,6 +275,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/no-cafe'
+    | '/widget-appearance'
     | '/business-profile'
     | '/faqs'
     | '/hours'
@@ -290,6 +301,7 @@ export interface FileRouteTypes {
     | '/_dashboard'
     | '/admin'
     | '/no-cafe'
+    | '/widget-appearance'
     | '/_dashboard/business-profile'
     | '/_dashboard/faqs'
     | '/_dashboard/hours'
@@ -317,6 +329,7 @@ export interface RootRouteChildren {
   DashboardRouteRoute: typeof DashboardRouteRouteWithChildren
   AdminRouteRoute: typeof AdminRouteRouteWithChildren
   NoCafeRoute: typeof NoCafeRoute
+  WidgetAppearanceRoute: typeof WidgetAppearanceRoute
   ApiChatBotRoute: typeof ApiChatBotRoute
   ChatSlugRoute: typeof ChatSlugRoute
   SigninIndexRoute: typeof SigninIndexRoute
@@ -352,6 +365,13 @@ declare module '@tanstack/react-router' {
       path: '/no-cafe'
       fullPath: '/no-cafe'
       preLoaderRoute: typeof NoCafeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/widget-appearance': {
+      id: '/widget-appearance'
+      path: '/widget-appearance'
+      fullPath: '/widget-appearance'
+      preLoaderRoute: typeof WidgetAppearanceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_dashboard/business-profile': {
@@ -564,6 +584,7 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRouteRoute: DashboardRouteRouteWithChildren,
   AdminRouteRoute: AdminRouteRouteWithChildren,
   NoCafeRoute: NoCafeRoute,
+  WidgetAppearanceRoute: WidgetAppearanceRoute,
   ApiChatBotRoute: ApiChatBotRoute,
   ChatSlugRoute: ChatSlugRoute,
   SigninIndexRoute: SigninIndexRoute,

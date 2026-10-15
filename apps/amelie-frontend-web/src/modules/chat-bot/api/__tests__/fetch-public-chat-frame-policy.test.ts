@@ -49,5 +49,6 @@ describe("/chat/$slug document headers", () => {
   it("sets CSP from publicChatFrameHeaders", () => {
     const route = readFileSync("src/routes/chat/$slug.tsx", "utf8");
     expect(route).toContain("headers: ({ params }) => publicChatFrameHeaders(params.slug)");
+    expect(route).toContain("loader: ({ params }) => fetchPublicChatAppearance({ data: { slug: params.slug } })");
   });
 });

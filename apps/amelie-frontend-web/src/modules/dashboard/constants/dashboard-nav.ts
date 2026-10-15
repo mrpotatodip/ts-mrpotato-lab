@@ -1,13 +1,14 @@
 import {
   Bot,
   Clock,
+  FileText,
   FileUp,
   KeyRound,
   LayoutDashboard,
+  LayoutList,
   Code,
   MessageSquareWarning,
   MessagesSquare,
-  CircleQuestionMark,
   Store,
   UtensilsCrossed,
 } from "lucide-react";
@@ -27,8 +28,7 @@ export const DASHBOARD_NAV_GROUPS = [
       { to: "/business-profile", label: "Profile", icon: Store },
       { to: "/hours", label: "Hours", icon: Clock },
       { to: "/menu", label: "Menu", icon: UtensilsCrossed },
-      { to: "/imports", label: "Import", icon: FileUp },
-      { to: "/faqs", label: "FAQs", icon: CircleQuestionMark },
+      { to: "/faqs", label: "FAQs", icon: FileText },
     ],
   },
   {
@@ -43,6 +43,11 @@ export const DASHBOARD_NAV_GROUPS = [
     label: "Integration",
     items: [{ to: "/widget", label: "Widget", icon: Code }],
   },
+] as const;
+
+export const DASHBOARD_MENU_SUBNAV = [
+  { to: "/menu", label: "Items", icon: LayoutList },
+  { to: "/imports", label: "Import", icon: FileUp },
 ] as const;
 
 // -----

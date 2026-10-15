@@ -86,7 +86,14 @@ const codeOf = (result: Either.Either<void, { _tag: string; code?: string }>) =>
 beforeAll(async () => {
   db = await createTestDb();
   const id = await insertTenant(db, "Sorella Cafe", "sorella");
-  tenant = { id, name: "Sorella Cafe", timezone: TIMEZONE, allowedOrigins: ["https://sorellacafe.com"] };
+  tenant = {
+    id,
+    name: "Sorella Cafe",
+    timezone: TIMEZONE,
+    allowedOrigins: ["https://sorellacafe.com"],
+    customerChatLabel: "Chat with us",
+    customerChatAccent: null,
+  };
   await db
     .insert(tenantBusinessProfiles)
     .values({ tenantId: id, email: "hello@sorella.test" });

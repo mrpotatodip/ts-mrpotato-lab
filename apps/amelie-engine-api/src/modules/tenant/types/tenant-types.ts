@@ -3,6 +3,8 @@ export type PublicTenant = {
   name: string;
   timezone: string;
   allowedOrigins: string[];
+  customerChatLabel: string;
+  customerChatAccent: string | null;
 };
 
 export type PublicTenantListing = { name: string; slug: string };

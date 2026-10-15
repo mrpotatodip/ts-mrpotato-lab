@@ -134,6 +134,8 @@ describe("sign-up", () => {
       country: "IT",
       currency: "EUR",
       allowedOrigins: ["https://sorellacafe.com"],
+      customerChatLabel: "Chat with us",
+      customerChatAccent: null,
       role: "owner",
       canEdit: true,
     });

@@ -28,7 +28,7 @@ Domain glossary for Amelie, an AI customer assistant that answers a small busine
 
 ## Business knowledge
 
-- **Business profile** — a Tenant's general information: description, website, email. Phone and address belong to a Location; the Business profile API still returns them, read from the chosen Location.
+- **Business profile** — a Tenant's general information: description, website, email. Phone and address belong to a Location; the Business profile API still returns them, read from the chosen Location. With several Countries, description, website and email belong to the first (sign-up) Country, not to a later one.
 
 - **Business hours** — a Location's regular opening hours for each day of the week, including days it is closed.
 

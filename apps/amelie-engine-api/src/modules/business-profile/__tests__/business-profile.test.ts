@@ -3,7 +3,13 @@ import { Effect } from "effect";
 import type { DbConnectType } from "#/lib/db-connection";
 import { runEffect } from "#/lib/effect-query";
 import { getBusinessProfileSvc, updateBusinessProfileSvc } from "#/modules/business-profile";
-import { createTestDb, defaultLocationId, insertLocation, insertTenant } from "#/__tests__/amelie-test-db";
+import {
+  createTestDb,
+  defaultLocationId,
+  insertCountry,
+  insertLocation,
+  insertTenant,
+} from "#/__tests__/amelie-test-db";
 
 let db: DbConnectType;
 let sorellaId: string;
@@ -104,5 +110,50 @@ describe("business profile of a Tenant with two Locations", () => {
     const failure = await Effect.runPromise(Effect.flip(getBusinessProfileSvc(db, tenantId, foreign)));
 
     expect(failure).toMatchObject({ _tag: "NotFound" });
+  });
+});
+
+describe("business profile of a Tenant with two Countries", () => {
+  let tenantId: string;
+  let usLocationId: string;
+  let nzLocationId: string;
+
+  beforeAll(async () => {
+    tenantId = await insertTenant(db, "Two Country Cafe", "two-country");
+    usLocationId = await defaultLocationId(db, tenantId);
+    const nzId = await insertCountry(db, tenantId, { country: "NZ", currency: "NZD" });
+    nzLocationId = await insertLocation(db, tenantId, {
+      name: "Britomart CBD",
+      slug: "britomart-cbd",
+      countryId: nzId,
+    });
+    await runEffect(
+      updateBusinessProfileSvc(db, tenantId, {
+        description: "Café in Fishkill, NY",
+        websiteUrl: "https://www.lasorellafishkill.com",
+        email: "lasorellafishkill@gmail.com",
+        address: "992 Main Street",
+        phone: "845-871-2010",
+      }, usLocationId),
+    );
+  });
+
+  it("keeps Tenant-wide email and website on the first Country's Location", async () => {
+    expect(await runEffect(getBusinessProfileSvc(db, tenantId, usLocationId))).toMatchObject({
+      email: "lasorellafishkill@gmail.com",
+      websiteUrl: "https://www.lasorellafishkill.com",
+      address: "992 Main Street",
+      phone: "845-871-2010",
+    });
+  });
+
+  it("does not give another Country's Location the first Country's email and website", async () => {
+    expect(await runEffect(getBusinessProfileSvc(db, tenantId, nzLocationId))).toEqual({
+      description: null,
+      websiteUrl: null,
+      email: null,
+      address: null,
+      phone: null,
+    });
   });
 });

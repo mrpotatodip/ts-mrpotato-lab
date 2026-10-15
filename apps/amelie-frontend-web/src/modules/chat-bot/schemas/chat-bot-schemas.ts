@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { PublicChatFramePolicySchema } from "@repo/contracts/amelie";
+import { PublicChatAppearanceSchema, PublicChatFramePolicySchema } from "@repo/contracts/amelie";
 import {
   ChatBotThreadDeletedSchema,
   ChatBotThreadDetailSchema,
@@ -57,6 +57,8 @@ export const ChatBotThreadDeletedResponseSchema = apiResponseSchema(
 export const PublicChatFramePolicyResponseSchema = apiResponseSchema(
   PublicChatFramePolicySchema,
 );
+
+export const PublicChatAppearanceResponseSchema = apiResponseSchema(PublicChatAppearanceSchema);
 
 export const ChatBotTitleInputSchema = ChatBotTitleBodySchema.extend({
   id: ChatBotThreadIdSchema,

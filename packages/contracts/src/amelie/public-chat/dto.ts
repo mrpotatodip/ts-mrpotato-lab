@@ -37,7 +37,16 @@ export const PublicChatFramePolicySchema = z.object({
   allowedOrigins: z.array(z.string()),
 });
 
+export const PublicChatAppearanceQuerySchema = PublicChatFramePolicyQuerySchema;
+
+export const PublicChatAppearanceSchema = z.object({
+  customerChatLabel: z.string(),
+  customerChatAccent: z.string().nullable(),
+});
+
 export type PublicChatStreamBody = z.infer<typeof PublicChatStreamBodySchema>;
 export type PublicChatHydrateQuery = z.infer<typeof PublicChatHydrateQuerySchema>;
 export type PublicChatFramePolicyQuery = z.infer<typeof PublicChatFramePolicyQuerySchema>;
 export type PublicChatFramePolicy = z.infer<typeof PublicChatFramePolicySchema>;
+export type PublicChatAppearanceQuery = z.infer<typeof PublicChatAppearanceQuerySchema>;
+export type PublicChatAppearance = z.infer<typeof PublicChatAppearanceSchema>;

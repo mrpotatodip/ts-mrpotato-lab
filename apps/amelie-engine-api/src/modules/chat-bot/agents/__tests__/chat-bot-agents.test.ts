@@ -137,6 +137,10 @@ describe("chat-bot agent config", () => {
     expect(text(chatBotCustomerAgent)).toMatch(/never for prices/i);
     expect(text(chatBotCustomerAgent)).toMatch(/naming only the names/i);
     expect(text(chatBotCustomerAgent)).toMatch(/never invent.*locations/i);
+    expect(text(chatBotCustomerAgent)).toMatch(/empty means this location has none/i);
+    expect(text(chatBotCustomerAgent)).toMatch(/empty week means this location has no hours/i);
+    const faq = chatBotCustomerAgent.subagents[2];
+    expect(faq && text(faq)).toMatch(/empty email, website, address or phone/i);
     expect(text(schedule)).toMatch(/list only the names/i);
     expect(text(menu)).toContain("setThreadCountry");
     expect(text(menu)).toMatch(/do not quote a price/i);

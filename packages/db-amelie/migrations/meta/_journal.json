@@ -197,6 +197,13 @@
       "when": 1791880456705,
       "tag": "0027_menu_item_images",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1792055674660,
+      "tag": "0028_customer_chat_appearance",
+      "breakpoints": true
     }
   ]
 }

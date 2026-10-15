@@ -30,7 +30,7 @@ The engine's `Origin` check on chat turns still sees Amelie's origin when the ch
 
 ## Dashboard
 
-Widget under Your cafe: read-only snippet with the Tenant slug, plus a link to `/chat/$slug`. Under that, Allowed origins. A team member whose Role has `can_edit` pastes site URLs, then Save replaces the whole list (unique `http`/`https` origins, at most 20, in save order). Empty is allowed: Widget warns, the cafe site cannot iframe, `/chat/$slug` still works. Staff see the list and the snippet and cannot save. Sign-up `website` still seeds the first Allowed origin. The Business profile website is a contact fact. No live preview. Amelie is not a row in the list.
+Widget under Your cafe: read-only snippet with the Tenant slug, plus a link to `/chat/$slug`. The snippet includes `data-location` and `data-country` when the cafe has one Location. With several, the copy stays slug-only and Widget lists a tag per Location. Under that, Allowed origins. A team member whose Role has `can_edit` pastes site URLs, then Save replaces the whole list (unique `http`/`https` origins, at most 20, in save order). Empty is allowed: Widget warns, the cafe site cannot iframe, `/chat/$slug` still works. Staff see the list and the snippet and cannot save. Sign-up `website` still seeds the first Allowed origin. The Business profile website is a contact fact. No live preview. Amelie is not a row in the list.
 
 ## Local cafe host
 
@@ -38,4 +38,4 @@ Widget under Your cafe: read-only snippet with the Tenant slug, plus a link to `
 
 ## Out of this work
 
-Cafe branding, `postMessage`, dashboard live preview, menu item images, agent / prompt / public-chat API changes.
+Logo, `postMessage`, dashboard live preview, agent / prompt / public-chat API changes. Button text and colour are on Widget as Customer chat look.
