@@ -16,7 +16,7 @@ Optional `data-location` and `data-country` become the same search params `/chat
 
 ## Cafe page
 
-Bottom-right bubble, "Chat with us". First click creates a ~380×640 iframe (near-full viewport on small screens) with `sandbox="allow-scripts allow-same-origin"`. Later clicks hide and show that iframe. No `postMessage`. No mid-page embed. No cafe colors or logo.
+Bottom-right bubble, "Chat with us". First click creates a ~380×640 iframe (near-full viewport on small screens) with `sandbox="allow-scripts allow-same-origin allow-forms"`. Later clicks hide and show that iframe. No `postMessage`. No mid-page embed. No cafe colors or logo. The chat composer is a form; without `allow-forms` the browser blocks submit inside the sandbox.
 
 ## Identity
 

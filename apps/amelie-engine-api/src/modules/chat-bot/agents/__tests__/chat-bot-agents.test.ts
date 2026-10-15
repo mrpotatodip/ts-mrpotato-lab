@@ -135,6 +135,9 @@ describe("chat-bot agent config", () => {
 
     expect(text(chatBotCustomerAgent)).toContain("setThreadCountry");
     expect(text(chatBotCustomerAgent)).toMatch(/never for prices/i);
+    expect(text(chatBotCustomerAgent)).toMatch(/naming only the names/i);
+    expect(text(chatBotCustomerAgent)).toMatch(/never invent.*locations/i);
+    expect(text(schedule)).toMatch(/list only the names/i);
     expect(text(menu)).toContain("setThreadCountry");
     expect(text(menu)).toMatch(/do not quote a price/i);
     expect(text(schedule)).toContain("setThreadCountry");

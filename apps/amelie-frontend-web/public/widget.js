@@ -53,7 +53,7 @@
       frame.id = "amelie-customer-widget-frame";
       frame.title = "Chat with us";
       frame.src = chatSrc;
-      frame.setAttribute("sandbox", "allow-scripts allow-same-origin");
+      frame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms");
       document.body.appendChild(frame);
       button.setAttribute("aria-expanded", "true");
       return;

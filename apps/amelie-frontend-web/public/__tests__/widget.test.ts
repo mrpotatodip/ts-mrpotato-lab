@@ -43,7 +43,7 @@ describe("widget.js", () => {
     button?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     const frame = document.querySelector("iframe");
     expect(frame?.getAttribute("src")).toBe("https://app.test/chat/sorella");
-    expect(frame?.getAttribute("sandbox")).toBe("allow-scripts allow-same-origin");
+    expect(frame?.getAttribute("sandbox")).toBe("allow-scripts allow-same-origin allow-forms");
   });
 
   it("forwards optional location and country as search params", () => {
