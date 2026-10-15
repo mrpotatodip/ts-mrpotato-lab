@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { useRouterState } from "@tanstack/react-router";
+import { HotkeysProvider } from "@tanstack/react-hotkeys";
 
 import { SidebarInset, SidebarProvider } from "#/components/ui/sidebar";
 import { ChatBotSheet, useChatBotCacheSync } from "#/modules/chat-bot";
@@ -8,6 +9,7 @@ import { DashboardSidebar } from "./dashboard-sidebar";
 
 type DashboardShellProps = {
   userName: string;
+  userEmail: string;
   children: ReactNode;
 };
 
@@ -17,20 +19,22 @@ type DashboardShellProps = {
 // The assistant button floats on every screen but
 // the assistant's own page.
 // -----
-export function DashboardShell({ userName, children }: DashboardShellProps) {
+export function DashboardShell({ userName, userEmail, children }: DashboardShellProps) {
   useChatBotCacheSync();
   const onAssistantPage = useRouterState({
     select: (state) => state.location.pathname.startsWith("/chat-bot"),
   });
 
   return (
-    <SidebarProvider>
-      <DashboardSidebar userName={userName} />
-      <SidebarInset>
-        <DashboardHeader />
-        <main className="dashboard-content">{children}</main>
-      </SidebarInset>
-      {onAssistantPage ? null : <ChatBotSheet />}
-    </SidebarProvider>
+    <HotkeysProvider>
+      <SidebarProvider>
+        <DashboardSidebar userName={userName} userEmail={userEmail} />
+        <SidebarInset>
+          <DashboardHeader />
+          <main className="dashboard-content">{children}</main>
+        </SidebarInset>
+        {onAssistantPage ? null : <ChatBotSheet />}
+      </SidebarProvider>
+    </HotkeysProvider>
   );
 }

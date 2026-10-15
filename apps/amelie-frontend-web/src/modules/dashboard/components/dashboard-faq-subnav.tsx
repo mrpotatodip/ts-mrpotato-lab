@@ -10,6 +10,7 @@ import {
   SidebarMenuSubItem,
   useSidebar,
 } from "#/components/ui/sidebar";
+import { Skeleton } from "#/components/ui/skeleton";
 import { FAQ_NO_CATEGORY, FaqSearchSchema, faqNavEntries, resolveFaqCategoryKey, useFaqs } from "#/modules/faq";
 
 type DashboardFaqNavProps = {
@@ -45,9 +46,9 @@ export function DashboardFaqNav({ label, icon: Icon, isActive }: DashboardFaqNav
         <ChevronRight className="ml-auto transition-transform group-data-[open]/collapsible:rotate-90" />
       </SidebarMenuButton>
       <CollapsibleContent>
-        {data ? (
-          <SidebarMenuSub>
-            {faqNavEntries(data.categories).map((entry) => (
+        <SidebarMenuSub>
+          {data ? (
+            faqNavEntries(data.categories).map((entry) => (
               <SidebarMenuSubItem key={entry.key}>
                 <SidebarMenuSubButton
                   size="md"
@@ -64,9 +65,21 @@ export function DashboardFaqNav({ label, icon: Icon, isActive }: DashboardFaqNav
                   <span>{entry.title}</span>
                 </SidebarMenuSubButton>
               </SidebarMenuSubItem>
-            ))}
-          </SidebarMenuSub>
-        ) : null}
+            ))
+          ) : (
+            <>
+              <SidebarMenuSubItem>
+                <Skeleton className="mx-2 h-4 w-16" />
+              </SidebarMenuSubItem>
+              <SidebarMenuSubItem>
+                <Skeleton className="mx-2 h-4 w-24" />
+              </SidebarMenuSubItem>
+              <SidebarMenuSubItem>
+                <Skeleton className="mx-2 h-4 w-20" />
+              </SidebarMenuSubItem>
+            </>
+          )}
+        </SidebarMenuSub>
       </CollapsibleContent>
     </Collapsible>
   );

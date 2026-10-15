@@ -5,6 +5,9 @@ import type { ChatBotStepLabel, ChatBotSurface } from "../types";
 
 export const CHAT_BOT_PENDING_REPLY_KEY = "chat-bot:pending-reply";
 
+export const CHAT_BOT_TOGGLE_HOTKEY = "Mod+.";
+export const CHAT_BOT_CLOSE_HOTKEY = "Escape";
+
 export const CHAT_BOT_STRUCTURED_OUTPUT_START = "structured-output.start";
 
 export const CHAT_BOT_TURN_STARTED: AGUILoadingStackedEvent = {

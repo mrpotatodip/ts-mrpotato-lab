@@ -2,6 +2,26 @@
 
 Last updated: 2026-10-15
 
+### Skeleton loaders
+
+File: `src/components/ui/skeleton.tsx`, `src/modules/*/components/*-skeleton.tsx`
+Last updated: 2026-10-15
+
+| Property         | Class |
+| ---------------- | ----- |
+| Background       | `bg-muted` with `animate-pulse` |
+| Border           | none on bones; PageCard chrome matches the loaded screen |
+| Border radius    | `rounded-md` bones; `rounded-lg` thumbs; `rounded-full` badges and checklist dots |
+| Text — primary   | `h-4` title bones |
+| Text — secondary | `h-3` / `h-4` subtitle bones |
+| Spacing          | same as the loaded rows: list `px-6 py-5`, fields `gap-3`, form labels `gap-1.5` |
+| Hover state      | none |
+| Shadow           | none |
+| Accent usage     | none |
+
+**Pattern notes:**
+A skeleton copies the loaded layout, not a single `h-* w-full` block. Cards keep their real titles. List rows keep title + subtitle + badge/actions. Forms keep input-height bones (`h-10`) and textarea-height bones. Chat uses Bubble/Message chrome with `bg-foreground/15` bones inside the bubble.
+
 ### MenuImportList
 
 File: `src/modules/menu-import/components/menu-import-suspense-list-main.tsx`
@@ -55,12 +75,32 @@ Last updated: 2026-10-15
 | Text — primary   | SheetTitle `text-lg font-semibold` |
 | Text — secondary | SheetDescription `text-sm text-muted-foreground` |
 | Spacing          | inset `inset-y-4` `left-4`/`right-4`, header `shrink-0`, body `mt-6 min-h-0 flex-1 overflow-y-auto` |
-| Hover state      | header icons ghost `icon-sm` `opacity-70 hover:opacity-100` |
+| Hover state      | header icons ghost `icon-sm` `opacity-70 hover:opacity-100`; move-side `sheet-move-wiggle-left` / `sheet-move-wiggle-right` |
 | Shadow           | none (sheet default) |
 | Accent usage     | none |
 
 **Pattern notes:**
-Same floating panel as `ChatBotSheet`: `modal={false}` `disablePointerDismissal` `overlay={false}`, `w-[calc(100%-2rem)] sm:max-w-xl`, hide default close, swap side with PanelLeft/PanelRight. Used from Chats and Unanswered. No overlay dim. Messages scroll inside the panel; the page stays usable.
+Same floating panel as `ChatBotSheet`: `modal={false}` `disablePointerDismissal` `overlay={false}`, hide default close, swap side with PanelLeft/PanelRight. Width is `sm:max-w-xl` (wider than the assistant). Used from Chats and Unanswered. No overlay dim. Messages scroll inside the panel; the page stays usable. Move-side button uses `sheet-move-wiggle-left` / `sheet-move-wiggle-right` so the icon wiggles toward the destination on hover. After a side swap, the panel plays `animate-sheet-wiggle-left` / `animate-sheet-wiggle-right`: one small overshoot and settle (0.55s). Skip with `motion-reduce:animate-none`.
+
+### ChatBotSheet
+
+File: `src/modules/chat-bot/components/chat-bot-sheet.tsx`
+Last updated: 2026-10-15
+
+| Property         | Class |
+| ---------------- | ----- |
+| Background       | `bg-card` |
+| Border           | `border` |
+| Border radius    | `rounded-3xl` |
+| Text — primary   | SheetTitle is the Bot icon plus `sr-only` Assistant |
+| Text — secondary | SheetDescription `text-sm text-muted-foreground` |
+| Spacing          | inset `inset-y-4` `left-4`/`right-4`, header `shrink-0`, body `mt-6 min-h-0 flex-1` |
+| Hover state      | header icons ghost `icon-sm` `opacity-70 hover:opacity-100`; move-side `sheet-move-wiggle-left` / `sheet-move-wiggle-right`; launcher Bot `assistant-bot-excited` |
+| Shadow           | panel `shadow-xs`; launcher `shadow-lg` |
+| Accent usage     | none |
+
+**Pattern notes:**
+Owner assistant floating panel. `modal={false}` `disablePointerDismissal` `overlay={false}`, `w-[calc(100%-2rem)] sm:max-w-lg`, `shadow-xs` so the lift is quieter than the default `shadow-lg`, hide default close, swap side with PanelLeft/PanelRight. Narrower than `CustomerThreadSheet` so more of the dashboard stays visible. Launcher is a fixed round Bot button bottom-right; minimized keeps the same round button plus a `bg-status-info` dot (no Assistant label). The panel title is the Bot icon. TanStack Hotkeys in `ChatBotSheet`: `Mod+.` shows the panel or minimizes it, `Escape` closes (panel visible only). After hydrate, the panel title shows `Kbd` for `Mod+.` from `formatForDisplay`. Chrome already uses `Mod+J` for Downloads, so this is not J. On hover the Bot icon plays `assistant-bot-excited` (squash, hop, little tilt, loops while hovered, only on `@media (hover: hover)`). Move-side button uses `sheet-move-wiggle-left` / `sheet-move-wiggle-right` so the icon wiggles toward the destination on hover. After a side swap, the panel plays `animate-sheet-wiggle-left` / `animate-sheet-wiggle-right`: one small overshoot and settle (0.55s). Skip with `motion-reduce:animate-none`.
 
 ### Button
 
@@ -451,6 +491,26 @@ Last updated: 2026-10-15
 
 **Pattern notes:**
 Hours and Profile only, when the sidebar Country has no open Locations. Use shadcn `Empty`. Menu still prices that Country.
+
+### DashboardAccountMenu
+
+File: `src/modules/dashboard/components/dashboard-account-menu.tsx`
+Last updated: 2026-10-15
+
+| Property         | Class |
+| ---------------- | ----- |
+| Background       | SidebarFooter, open state `data-popup-open:bg-sidebar-accent` |
+| Border           | menu `border` `rounded-md` |
+| Border radius    | trigger `rounded-md`; avatar `rounded-full` |
+| Text — primary   | name `text-sm font-medium` |
+| Text — secondary | subtitle `text-muted-foreground text-xs`; plan/role rows `text-xs` |
+| Spacing          | footer `p-2`; trigger `size="lg"`; menu `min-w-56` `sideOffset={8}` |
+| Hover state      | SidebarMenuButton hover `bg-sidebar-accent` |
+| Shadow           | menu `shadow-md` |
+| Accent usage     | avatar fallback `bg-sidebar-accent` |
+
+**Pattern notes:**
+Replaces the old name + outline Log out stack. Trigger is initials, name, `Owner · Free plan` (or Superuser with no cafe). Menu lists email, Role, Plan (`Free` until billing), then Log out. Opens `side="top"`. Keep `LogoutButton` on `/no-cafe` only. Dropdown menus snap shut: no exit fade or scale.
 
 ### Toaster
 

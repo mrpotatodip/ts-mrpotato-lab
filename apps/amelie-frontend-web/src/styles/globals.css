@@ -308,7 +308,12 @@
   --animate-fourth: moveHorizontal 40s ease infinite;
   --animate-fifth: moveInCircle 20s ease infinite;
   --animate-jump: jump 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
+  --animate-bot-excited: bot-excited 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
   --animate-shake: shake 0.6s ease-in-out infinite;
+  --animate-wiggle-left: wiggle-left 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  --animate-wiggle-right: wiggle-right 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  --animate-sheet-wiggle-left: sheet-wiggle-left 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  --animate-sheet-wiggle-right: sheet-wiggle-right 0.55s cubic-bezier(0.22, 1, 0.36, 1);
   --animate-digest-fade-in: digest-fade-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
@@ -367,6 +372,28 @@
   }
 }
 
+@keyframes bot-excited {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg) scale(1, 1);
+  }
+  12% {
+    transform: translateY(0) rotate(-10deg) scale(1.14, 0.86);
+  }
+  32% {
+    transform: translateY(-22%) rotate(10deg) scale(0.9, 1.1);
+  }
+  48% {
+    transform: translateY(-4%) rotate(-8deg) scale(1.1, 0.92);
+  }
+  64% {
+    transform: translateY(-18%) rotate(8deg) scale(0.92, 1.08);
+  }
+  80% {
+    transform: translateY(0) rotate(-4deg) scale(1.08, 0.94);
+  }
+}
+
 @keyframes shake {
   0%,
   100% {
@@ -384,6 +411,86 @@
   60%,
   80% {
     transform: translateX(4px);
+  }
+}
+
+@keyframes wiggle-left {
+  0%,
+  100% {
+    transform: translateX(0) scale(1, 1);
+  }
+  40% {
+    transform: translateX(-2px) scale(1.06, 0.94);
+  }
+}
+
+@keyframes wiggle-right {
+  0%,
+  100% {
+    transform: translateX(0) scale(1, 1);
+  }
+  40% {
+    transform: translateX(2px) scale(1.06, 0.94);
+  }
+}
+
+@keyframes sheet-wiggle-left {
+  0%,
+  100% {
+    transform-origin: 100% 50%;
+    transform: translateX(0) scale(1, 1) skewX(0deg);
+    border-radius: 1.5rem;
+  }
+  32% {
+    transform-origin: 100% 50%;
+    transform: translateX(-6px) scale(1.02, 0.99) skewX(0.8deg);
+    border-radius: 1.65rem 1.4rem 1.4rem 1.65rem;
+  }
+  68% {
+    transform-origin: 100% 50%;
+    transform: translateX(2px) scale(0.995, 1.005) skewX(-0.25deg);
+    border-radius: 1.45rem 1.55rem 1.55rem 1.45rem;
+  }
+}
+
+@keyframes sheet-wiggle-right {
+  0%,
+  100% {
+    transform-origin: 0% 50%;
+    transform: translateX(0) scale(1, 1) skewX(0deg);
+    border-radius: 1.5rem;
+  }
+  32% {
+    transform-origin: 0% 50%;
+    transform: translateX(6px) scale(1.02, 0.99) skewX(-0.8deg);
+    border-radius: 1.4rem 1.65rem 1.65rem 1.4rem;
+  }
+  68% {
+    transform-origin: 0% 50%;
+    transform: translateX(-2px) scale(0.995, 1.005) skewX(0.25deg);
+    border-radius: 1.55rem 1.45rem 1.45rem 1.55rem;
+  }
+}
+
+@media (hover: hover) {
+  .sheet-move-wiggle-left:hover svg {
+    animation: var(--animate-wiggle-left);
+  }
+
+  .sheet-move-wiggle-right:hover svg {
+    animation: var(--animate-wiggle-right);
+  }
+
+  .assistant-bot-excited:hover svg {
+    animation: var(--animate-bot-excited);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet-move-wiggle-left:hover svg,
+  .sheet-move-wiggle-right:hover svg,
+  .assistant-bot-excited:hover svg {
+    animation: none;
   }
 }
 

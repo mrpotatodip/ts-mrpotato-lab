@@ -14,4 +14,5 @@ export { emptyToNull } from "./utils/empty-to-null";
 export { PageHeader } from "./components/page-header";
 export { LocalDateTime } from "./components/local-date-time";
 export { useHydrated } from "./hooks/use-hydrated";
+export { useSheetSide, type SheetSide } from "./hooks/use-sheet-side";
 export { formatDateTime } from "./utils/format-date-time";
