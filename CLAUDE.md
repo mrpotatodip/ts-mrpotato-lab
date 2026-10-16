@@ -43,6 +43,7 @@ pnpm --filter @repo/db-amelie db:generate  # drizzle-kit generate migration
 pnpm --filter @repo/db-amelie db:migrate   # applies to the DATABASE_URL in that package's .env, a remote Neon database: ask before running
 pnpm --filter @repo/db-amelie db:studio    # drizzle-kit studio
 pnpm --filter @repo/db-amelie db:seed      # tsx src/seed.ts
+pnpm --filter @repo/db-amelie db:sync-powers  # adds catalogue Powers missing from access_master_powers (never deletes)
 ```
 
 ## Architecture: `amelie-engine-api`

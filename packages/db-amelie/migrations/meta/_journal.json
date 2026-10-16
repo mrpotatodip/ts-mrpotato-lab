@@ -204,6 +204,83 @@
       "when": 1792055674660,
       "tag": "0028_customer_chat_appearance",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1792140000000,
+      "tag": "0029_rename_tenant_role_keys",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1792200000000,
+      "tag": "0030_team_invites",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1792210000000,
+      "tag": "0031_cultured_mentallo",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1792220000000,
+      "tag": "0032_rename_access_roles",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1792230000000,
+      "tag": "0033_access_master_roles",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1792240000000,
+      "tag": "0034_access_master_powers",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1792250000000,
+      "tag": "0035_access_role_powers_master_power_fk",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1792260000000,
+      "tag": "0036_access_role_powers_master_pairs",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1792270000000,
+      "tag": "0037_roles_decouple_party",
+      "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1792280000000,
+      "tag": "0038_master_role_labels",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1792290000000,
+      "tag": "0039_access_audit_log",
+      "breakpoints": true
     }
   ]
 }

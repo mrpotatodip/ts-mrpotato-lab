@@ -9,15 +9,27 @@ export const PARTY_TYPE_VALUES = ["person", "organization"] as const;
 export type PartyTypeValue = (typeof PARTY_TYPE_VALUES)[number];
 
 // -----
-// Twin of DEFAULT_TENANT_ROLES in db-amelie;
-// change both together. Every Tenant has these
-// three Roles; superuser is global, no Tenant.
+// The Role keys the code itself relies on. Every
+// other Role key is data in access_master_roles.
 // -----
-export const TENANT_ROLE_KEY_VALUES = ["owner", "manager", "staff"] as const;
-export const ROLE_KEY_VALUES = [...TENANT_ROLE_KEY_VALUES, "superuser"] as const;
+export const TENANT_ADMIN_ROLE_KEY = "tenant_admin";
 
-export type TenantRoleKeyValue = (typeof TENANT_ROLE_KEY_VALUES)[number];
-export type RoleKeyValue = (typeof ROLE_KEY_VALUES)[number];
+// -----
+// Last segment of a Power path. The tree of
+// nodes in front of it lives in access/.
+// -----
+export const ACCESS_ACTION_VALUES = [
+  "read",
+  "create",
+  "update",
+  "delete",
+  "archive",
+  "reorder",
+  "publish",
+  "dismiss",
+] as const;
+
+export type AccessActionValue = (typeof ACCESS_ACTION_VALUES)[number];
 
 export const IMPORT_STATUS_VALUES = ["running", "ready", "failed"] as const;
 export const IMPORT_DRAFT_KIND_VALUES = ["menu_category", "menu_item", "business_hours", "business_profile"] as const;

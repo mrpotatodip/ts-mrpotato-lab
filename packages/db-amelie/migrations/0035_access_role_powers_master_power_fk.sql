@@ -1,0 +1,1 @@
+ALTER TABLE "access_role_powers" ADD CONSTRAINT "access_role_powers_power_access_master_powers_power_fk" FOREIGN KEY ("power") REFERENCES "public"."access_master_powers"("power") ON DELETE restrict ON UPDATE no action;
