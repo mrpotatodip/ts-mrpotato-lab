@@ -97,7 +97,7 @@ function RegionCard({ tenant }: { tenant: Tenant }) {
               )}
             </form.Subscribe>
           ) : (
-            <p className="text-muted-foreground text-xs">Only an owner or manager can change this.</p>
+            <p className="text-muted-foreground text-xs">Only a tenant_admin or store_admin can change this.</p>
           )}
         </form>
       </PageCard>

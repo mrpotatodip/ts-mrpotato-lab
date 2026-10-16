@@ -25,9 +25,9 @@ export const setHoursOverrideDoc = describeRoute({
   requestBody: { required: true, content: { "application/json": { schema: resolver(SetHoursOverrideBodySchema) } } },
   description: routeText({
     context:
-      "An owner or manager sets special hours for one date, such as a holiday. This replaces the weekly hours for that date only.",
+      "A tenant_admin or store_admin sets special hours for one date, such as a holiday. This replaces the weekly hours for that date only.",
     steps: [
-      "The server checks that the signed-in Person is an owner or manager of this Tenant. A staff member gets 403.",
+      "The server checks that the signed-in Person is a tenant_admin or store_admin of this Tenant. A store_staff member gets 403.",
       "The server checks the times, as for the weekly hours. The note is short text, or null.",
       "The server rejects a date that already passed in the timezone of the Tenant. Today is allowed.",
       "The server saves the special date. A second save for the same date replaces the first.",

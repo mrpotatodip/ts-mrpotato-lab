@@ -20,9 +20,9 @@ export const archiveCountryDoc = describeRoute({
   parameters: [TENANT_ID_QUERY_PARAMETER],
   description: routeText({
     context:
-      "An owner or manager stops selling in a country. It is archived, never deleted, and its prices are kept in case the country is added again.",
+      "A tenant_admin or store_admin stops selling in a country. It is archived, never deleted, and its prices are kept in case the country is added again.",
     steps: [
-      "The server checks that the signed-in Person is an owner or manager of this Tenant. A staff member gets 403.",
+      "The server checks that the signed-in Person is a tenant_admin or store_admin of this Tenant. A store_staff member gets 403.",
       "The server refuses with 409 when this is the last open Country of the Tenant.",
       "The server refuses with 409 when the Country still has open Locations. Archive those first.",
       "The server marks the Country archived and returns its id.",

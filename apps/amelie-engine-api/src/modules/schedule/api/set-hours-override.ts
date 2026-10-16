@@ -4,7 +4,7 @@ import { zValidator } from "#/lib/zod-validator";
 import type { AppEnv } from "#/types/variables";
 import { db_connect } from "#/lib/db-connection";
 import { runEffect } from "#/lib/effect-query";
-import { requireTenantEditor } from "#/modules/tenant";
+import { requirePower } from "#/modules/tenant";
 import { setHoursOverrideSvc } from "#/modules/schedule/handlers";
 import { setHoursOverrideDoc } from "#/modules/schedule/openapi";
 
@@ -13,7 +13,7 @@ const app = new Hono<AppEnv>();
 app.put(
   "/overrides/:date",
   setHoursOverrideDoc,
-  requireTenantEditor,
+  requirePower("store:hours:overrides:update"),
   zValidator("param", OverrideDateParamSchema),
   zValidator("query", LocationQuerySchema),
   zValidator("json", SetHoursOverrideBodySchema),

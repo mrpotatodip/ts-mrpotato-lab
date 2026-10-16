@@ -20,7 +20,14 @@ import {
   updateMenuItem,
 } from "../api";
 import { MENU_ITEM_IMAGE_REORDER_DEBOUNCE_MS } from "../constants";
-import { withCategoriesOrder, withItemImageCover, withItemImagesOrder, withItemsOrder } from "../utils";
+import {
+  withCategoriesOrder,
+  withItemAvailability,
+  withItemImageCover,
+  withItemImagesOrder,
+  withItemLocations,
+  withItemsOrder,
+} from "../utils";
 import { menuKeys } from "./use-menu";
 
 type ReorderMenuItemImagesInput = Parameters<typeof reorderMenuItemImages>[0];
@@ -66,6 +73,26 @@ export function useMenuActions() {
   const updateItem = useMutation({ mutationFn: updateMenuItem, onSuccess: reload, meta: { successMessage: "Item saved" } });
   const removeItem = useMutation({ mutationFn: deleteMenuItem, onSuccess: reload, meta: { successMessage: "Item deleted" } });
   const setLocations = useMutation({ mutationFn: setMenuItemLocations, onSuccess: reload, meta: { successMessage: "Locations saved" } });
+  const setSoldOut = useMutation(
+    optimisticEdit({
+      queryClient,
+      queryKey: menuKeys.all,
+      mutationFn: updateMenuItem,
+      applyEdit: (menu: MenuEditor, { data }) => withItemAvailability(menu, data.itemId, data.body.isAvailable),
+      settle: reload,
+      meta: { successMessage: "Item saved" },
+    }),
+  );
+  const setSoldOutLocations = useMutation(
+    optimisticEdit({
+      queryClient,
+      queryKey: menuKeys.all,
+      mutationFn: setMenuItemLocations,
+      applyEdit: (menu: MenuEditor, { data }) => withItemLocations(menu, data.itemId, data.body),
+      settle: reload,
+      meta: { successMessage: "Locations saved" },
+    }),
+  );
   const setCountryPrice = useMutation({ mutationFn: setMenuItemCountryPrice, onSuccess: reload, meta: { successMessage: "Price saved" } });
   const addImages = useMutation({ mutationFn: addMenuItemImages, onSuccess: reload, meta: { successMessage: "Photos added" } });
   const removeImage = useMutation({ mutationFn: deleteMenuItemImage, onSuccess: reload, meta: { successMessage: "Photo deleted" } });
@@ -145,6 +172,8 @@ export function useMenuActions() {
     updateItem,
     removeItem,
     setLocations,
+    setSoldOut,
+    setSoldOutLocations,
     setCountryPrice,
     addImages,
     removeImage,

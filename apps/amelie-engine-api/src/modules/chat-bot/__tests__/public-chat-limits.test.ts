@@ -184,7 +184,7 @@ describe("messages per Tenant per day", () => {
     const owner = customer();
     const threadId = await startThread(owner);
     const login = await insertPersonWithLogin(db, "owner@sorella.test");
-    await insertMember(db, tenant.id, login.partyId, "owner");
+    await insertMember(db, tenant.id, login.partyId, "tenant_admin");
     const staffThreadId = await startThread({ kind: "user", tenantId: tenant.id, userId: login.userId });
     const yesterday = sql`date_trunc('day', now() at time zone ${TIMEZONE}) at time zone ${TIMEZONE} - interval '1 minute'`;
 

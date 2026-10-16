@@ -37,6 +37,9 @@ export const INVITE_CODE_NOTE_MAX = 200;
 export const INVITE_CODE_MAX_USES_DEFAULT = 1;
 export const INVITE_CODE_MAX_USES_LIMIT = 1000;
 
+export const TEAM_INVITE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+export const TEAM_INVITE_TOKEN_BYTES = 32;
+
 // -----
 // Locations: limits the form and the server share
 // -----

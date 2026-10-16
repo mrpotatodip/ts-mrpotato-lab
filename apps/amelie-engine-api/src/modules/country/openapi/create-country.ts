@@ -22,9 +22,9 @@ export const createCountryDoc = describeRoute({
   parameters: [TENANT_ID_QUERY_PARAMETER],
   requestBody: { required: true, content: { "application/json": { schema: resolver(CreateCountryBodySchema) } } },
   description: routeText({
-    context: "An owner or manager starts selling in another country, such as Canada in CAD.",
+    context: "A tenant_admin or store_admin starts selling in another country, such as Canada in CAD.",
     steps: [
-      "The server checks that the signed-in Person is an owner or manager of this Tenant. A staff member gets 403.",
+      "The server checks that the signed-in Person is a tenant_admin or store_admin of this Tenant. A store_staff member gets 403.",
       "The server answers 409 when the Tenant already sells in that country.",
       "If the Tenant sold in that country before and archived it, that Country is restored with its prices, and gets the Currency sent. Otherwise a new Country is saved.",
     ],

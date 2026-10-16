@@ -6,16 +6,15 @@ import { db_connect } from "#/lib/db-connection";
 import { runEffect } from "#/lib/effect-query";
 import { chatBotSignedInOwner } from "#/modules/chat-bot/lib";
 import { updateChatBotThreadTitleSvc } from "#/modules/chat-bot/handlers";
-import {
-  ChatBotThreadParamSchema,
-  ChatBotTitleBodySchema,
-} from "@repo/contracts/chat-bots";
+import { ChatBotThreadParamSchema, ChatBotTitleBodySchema } from "@repo/contracts/chat-bots";
+import { requirePower } from "#/modules/tenant";
 
 const app = new Hono<AppEnv>();
 
 app.patch(
   "/threads/:id",
   updateChatBotThreadTitleDoc,
+  requirePower("company:assistant:threads:update"),
   zValidator("param", ChatBotThreadParamSchema),
   zValidator("json", ChatBotTitleBodySchema),
   async (c) => {

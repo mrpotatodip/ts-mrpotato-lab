@@ -25,9 +25,9 @@ export const setMenuItemCountryPriceDoc = describeRoute({
   requestBody: { required: true, content: { "application/json": { schema: resolver(SetMenuItemCountryPriceBodySchema) } } },
   description: routeText({
     context:
-      "An owner or manager prices an item in one country, such as Latte at 6.25 in Canada, or stops selling it there. Other countries are untouched.",
+      "A tenant_admin or store_admin prices an item in one country, such as Latte at 6.25 in Canada, or stops selling it there. Other countries are untouched.",
     steps: [
-      "The server checks that the signed-in Person is an owner or manager of this Tenant. A staff member gets 403.",
+      "The server checks that the signed-in Person is a tenant_admin or store_admin of this Tenant. A store_staff member gets 403.",
       "The server looks for the item and the Country in this Tenant. An unknown item, or a Country that is archived or belongs to another Tenant, is 404.",
       "With a price or Variants in the body, the server saves them for that Country (with Variants the price is the lowest Variant). With neither, only isSold changes and the price is kept, so turning sold-here off and on again loses nothing.",
       "Selling an item in a Country where it has no price yet, without sending one, is 400.",

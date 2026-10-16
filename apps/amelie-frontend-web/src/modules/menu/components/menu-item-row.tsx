@@ -1,13 +1,14 @@
 import { ArrowDown, ArrowUp, Image, MapPin, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
-import type { Country, DietaryTag, MenuCategory, MenuItem } from "@repo/contracts/amelie";
+import type { Country, DietaryTag, Location, MenuCategory, MenuItem } from "@repo/contracts/amelie";
 
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import { cn } from "#/lib/utils";
+import { countryLabel } from "#/modules/country";
 import { useActiveLocations } from "#/modules/location";
 import { useMenuActions } from "../hooks";
-import { firstMutationError, isMenuItemMuted, isMenuItemSoldNowhere, moveId, showsMenuItemLocationsControl, toMenuItemBody, toMenuItemImageUrl, toPriceEntryBody, toSoldBody } from "../utils";
+import { firstMutationError, isMenuItemMuted, isMenuItemSoldNowhere, isMenuItemSoldOutHere, moveId, showsMenuItemLocationsControl, toMenuItemBody, toMenuItemImageUrl, toMenuItemSoldOutChange, toPriceEntryBody, toSoldBody } from "../utils";
 import { MenuItemCountrySold } from "./menu-item-country-sold";
 import { MenuItemForm } from "./menu-item-form";
 import { MenuItemImages } from "./menu-item-images";
@@ -19,7 +20,9 @@ type MenuItemRowProps = {
   categories: Array<Pick<MenuCategory, "id" | "name">>;
   dietaryTags: DietaryTag[];
   canEdit: boolean;
+  kind: "catalog" | "floor";
   country: Country | undefined;
+  location: Location | undefined;
   isFirst: boolean;
   isLast: boolean;
   onMove: (direction: -1 | 1) => void;
@@ -54,8 +57,23 @@ function MenuItemCover({ item, onOpenPhotos }: { item: MenuItem; onOpenPhotos?: 
   );
 }
 
-export function MenuItemRow({ item, categoryId, categories, dietaryTags, canEdit, country, isFirst, isLast, onMove }: MenuItemRowProps) {
-  const { updateItem, removeItem, setLocations, setCountryPrice, addImages, removeImage, setCover, reorderImages } = useMenuActions();
+export function MenuItemRow({
+  item,
+  categoryId,
+  categories,
+  dietaryTags,
+  canEdit,
+  kind,
+  country,
+  location,
+  isFirst,
+  isLast,
+  onMove,
+}: MenuItemRowProps) {
+  const isCatalog = kind === "catalog";
+  const isFloor = kind === "floor";
+  const { updateItem, removeItem, setLocations, setSoldOut, setSoldOutLocations, setCountryPrice, addImages, removeImage, setCover, reorderImages } =
+    useMenuActions();
   const muted = country !== undefined && isMenuItemMuted(item);
   const { locations, isPending: locationsPending } = useActiveLocations();
   const [isEditing, setIsEditing] = useState(false);
@@ -63,9 +81,13 @@ export function MenuItemRow({ item, categoryId, categories, dietaryTags, canEdit
   const [isPhotosOpen, setIsPhotosOpen] = useState(false);
   const hasSeveralLocations = locations.length > 1;
   const locationsLoaded = locations.length > 0;
-  const soldNowhere = locationsLoaded && isMenuItemSoldNowhere(item, locations.map((location) => location.id));
+  const soldNowhere = locationsLoaded && isMenuItemSoldNowhere(item, locations.map((place) => place.id));
   const showsLocationsControl = showsMenuItemLocationsControl(item, { hasSeveralLocations, soldNowhere });
-  const locationNames = item.locationIds.map((id) => locations.find((location) => location.id === id)?.name ?? "A closed location");
+  const locationNames = item.locationIds.map((id) => locations.find((place) => place.id === id)?.name ?? "A closed location");
+  const openLocationIds = locations.map((place) => place.id);
+  const soldOutChange = toMenuItemSoldOutChange(item, location?.id, openLocationIds);
+  const soldOutHere =
+    location !== undefined && hasSeveralLocations ? isMenuItemSoldOutHere(item, location.id) : !item.isAvailable;
 
   if (isChoosingLocations) {
     return (
@@ -107,21 +129,38 @@ export function MenuItemRow({ item, categoryId, categories, dietaryTags, canEdit
     <li className={cn("space-y-2 p-6", muted && "opacity-60")}>
       <div className="flex items-center justify-between gap-4">
         <div className="flex min-w-0 items-center gap-3">
-          <MenuItemCover item={item} onOpenPhotos={canEdit ? () => setIsPhotosOpen(true) : undefined} />
+          <MenuItemCover item={item} onOpenPhotos={canEdit && isCatalog ? () => setIsPhotosOpen(true) : undefined} />
           <p className="min-w-0 text-sm font-medium">
             {item.name} <span className="text-muted-foreground font-normal">{describePrice(item)} {item.currency ?? ""}</span>
           </p>
         </div>
-        {canEdit ? (
+        {canEdit && isFloor ? (
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={setSoldOut.isPending || setSoldOutLocations.isPending || locationsPending}
+            aria-label={
+              location !== undefined && hasSeveralLocations
+                ? soldOutHere
+                  ? `Back on at ${location.name}`
+                  : `Sold out at ${location.name}`
+                : undefined
+            }
+            onClick={() => {
+              if (soldOutChange.kind === "locations") {
+                setSoldOutLocations.mutate({ data: { itemId: item.id, body: soldOutChange.body } });
+                return;
+              }
+              setSoldOut.mutate({
+                data: { itemId: item.id, body: toMenuItemBody(item, categoryId, { isAvailable: soldOutChange.isAvailable, countryId: country?.id }) },
+              });
+            }}
+          >
+            {soldOutHere ? "Back on" : "Sold out"}
+          </Button>
+        ) : null}
+        {canEdit && isCatalog ? (
           <div className="flex shrink-0 items-center gap-1">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={updateItem.isPending}
-              onClick={() => updateItem.mutate({ data: { itemId: item.id, body: toMenuItemBody(item, categoryId, { isAvailable: !item.isAvailable, countryId: country?.id }) } })}
-            >
-              {item.isAvailable ? "Sold out" : "Back on"}
-            </Button>
             {showsLocationsControl || locationsPending ? (
               <Button
                 variant="ghost"
@@ -162,7 +201,7 @@ export function MenuItemRow({ item, categoryId, categories, dietaryTags, canEdit
         ) : null}
       </div>
       {item.description ? <p className="text-muted-foreground text-sm leading-relaxed">{item.description}</p> : null}
-      {canEdit ? (
+      {canEdit && isCatalog ? (
         <MenuItemImages
           itemName={item.name}
           images={item.images}
@@ -198,9 +237,10 @@ export function MenuItemRow({ item, categoryId, categories, dietaryTags, canEdit
           }}
         />
       ) : null}
-      {country && canEdit ? (
+      {country && canEdit && isCatalog ? (
         <MenuItemCountrySold
           item={item}
+          countryLabel={countryLabel(country)}
           currency={country.currency}
           isPending={setCountryPrice.isPending}
           error={setCountryPrice.isError ? setCountryPrice.error.message : null}
@@ -209,7 +249,7 @@ export function MenuItemRow({ item, categoryId, categories, dietaryTags, canEdit
         />
       ) : null}
       <div className="flex flex-wrap items-center gap-1.5">
-        {muted && !canEdit ? <Badge variant="outline">Not sold in this country</Badge> : null}
+        {muted && !canEdit && country ? <Badge variant="outline">Not sold in {countryLabel(country)}</Badge> : null}
         {item.isAvailable ? null : <Badge variant="outline">Not available</Badge>}
         {soldNowhere ? <Badge variant="destructive">Not sold at any open location</Badge> : null}
         {locationsLoaded && item.availableAtAllLocations && locationNames.length > 0 ? (
@@ -224,6 +264,8 @@ export function MenuItemRow({ item, categoryId, categories, dietaryTags, canEdit
           </Badge>
         ))}
       </div>
+      {setSoldOut.isError ? <p className="text-xs text-destructive">{setSoldOut.error.message}</p> : null}
+      {setSoldOutLocations.isError ? <p className="text-xs text-destructive">{setSoldOutLocations.error.message}</p> : null}
       {updateItem.isError ? <p className="text-xs text-destructive">{updateItem.error.message}</p> : null}
     </li>
   );

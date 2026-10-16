@@ -25,9 +25,9 @@ export const updateImportDraftDoc = describeRoute({
   requestBody: { required: true, content: { "application/json": { schema: resolver(UpdateImportDraftBodySchema) } } },
   description: routeText({
     context:
-      "An owner or manager fixes a draft, approves it, or discards it. Only approved drafts go live when the Import is published.",
+      "A tenant_admin or store_admin fixes a draft, approves it, or discards it. Only approved drafts go live when the Import is published.",
     steps: [
-      "The server checks that the signed-in Person is an owner or manager of this Tenant. A staff member gets 403.",
+      "The server checks that the signed-in Person is a tenant_admin or store_admin of this Tenant. A store_staff member gets 403.",
       "The server looks for the draft in this Import and Tenant. If it finds none, the answer is 404.",
       "If the body has data, the server checks it with the rules of the draft kind. A bad value gives 400.",
       "The server saves the change. An Import that is already published cannot change: the answer is 409.",

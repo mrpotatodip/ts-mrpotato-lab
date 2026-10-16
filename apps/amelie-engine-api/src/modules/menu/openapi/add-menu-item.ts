@@ -23,9 +23,9 @@ export const addMenuItemDoc = describeRoute({
   requestBody: { required: true, content: { "application/json": { schema: resolver(MenuItemBodySchema) } } },
   description: routeText({
     context:
-      "An owner or manager adds a dish or a drink, with its price, Variants (such as sizes) and Dietary tags. The assistant then tells Customers about it.",
+      "A tenant_admin or store_admin adds a dish or a drink, with its price, Variants (such as sizes) and Dietary tags. The assistant then tells Customers about it.",
     steps: [
-      "The server checks that the signed-in Person is an owner or manager of this Tenant. A staff member gets 403.",
+      "The server checks that the signed-in Person is a tenant_admin or store_admin of this Tenant. A store_staff member gets 403.",
       "The server checks the item. A price has up to two decimals. An item with Variants needs no price: its price is the lowest Variant price. Variant names must differ.",
       "The price and Variants are for the Country named by countryId, an open Country of this Tenant (404 otherwise). countryId is required (400) when the Tenant has two or more open Countries; with one it is used. isSold, when sent, says whether the item is sold in that Country.",
       "The category must be a category of this Tenant. Every Dietary tag must be on the shared list.",

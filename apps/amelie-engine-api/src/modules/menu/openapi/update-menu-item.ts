@@ -24,9 +24,9 @@ export const updateMenuItemDoc = describeRoute({
   requestBody: { required: true, content: { "application/json": { schema: resolver(MenuItemBodySchema) } } },
   description: routeText({
     context:
-      "An owner or manager changes an item: its name, price, Variants, Dietary tags, category, or whether it is available. An item that is not available stays on the menu, and the assistant says it is not available.",
+      "A tenant_admin or store_admin changes an item: its name, price, Variants, Dietary tags, category, or whether it is available. An item that is not available stays on the menu, and the assistant says it is not available.",
     steps: [
-      "The server checks that the signed-in Person is an owner or manager of this Tenant. A staff member gets 403.",
+      "The server checks that the signed-in Person is a tenant_admin or store_admin of this Tenant. A store_staff member gets 403.",
       "The server looks for the item in this Tenant. If it finds none, the answer is 404.",
       "The server checks the item as for a new item. The dashboard sends the whole item.",
       "The price and Variants are saved for the Country named by countryId (required with two or more open Countries, else the only one); other Countries keep their prices. isSold, when sent, sets the sold-here flag there. With a countryId, price and Variants may both be left out (null) to change only the item's own fields: that Country's price is kept.",

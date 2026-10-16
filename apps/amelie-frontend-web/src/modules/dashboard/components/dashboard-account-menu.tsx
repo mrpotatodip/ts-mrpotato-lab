@@ -18,7 +18,6 @@ import {
   DASHBOARD_PLAN_NAME,
   dashboardAccountInitials,
   dashboardAccountSubtitle,
-  dashboardRoleLabel,
 } from "../utils";
 
 type DashboardAccountMenuProps = {
@@ -34,9 +33,8 @@ type DashboardAccountMenuProps = {
 export function DashboardAccountMenu({ userName, userEmail }: DashboardAccountMenuProps) {
   const { logout } = useAuthActions();
   const { isSuperuser } = useAdminAccess();
-  const { role } = useActiveTenantRole();
-  const roleLabel = dashboardRoleLabel(role);
-  const subtitle = dashboardAccountSubtitle({ role, isSuperuser });
+  const { roleLabel } = useActiveTenantRole();
+  const subtitle = dashboardAccountSubtitle({ roleLabel, isSuperuser });
   const initials = dashboardAccountInitials(userName);
   const displayName = userName.trim() || userEmail || "Account";
 

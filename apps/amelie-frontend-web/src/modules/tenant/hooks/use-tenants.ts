@@ -1,4 +1,5 @@
 import { queryOptions, useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { canEditCafe, hasAccessPower } from "@repo/contracts/amelie";
 import { fetchTenants } from "../api";
 import { findActiveTenant } from "../utils";
 
@@ -24,13 +25,20 @@ export function useSuspenseTenants() {
 }
 
 // -----
-// A Role with can_edit changes a cafe's data;
-// any other Role only reads it.
+// Powers come from the Role. canEdit/canManageTeam
+// are derived for screens that still take a boolean.
 // -----
 export function useActiveTenantRole() {
   const { data } = useTenants();
   const active = findActiveTenant(data);
-  return { role: active?.role ?? null, canEdit: active?.canEdit ?? false };
+  const powers = active?.powers ?? [];
+  return {
+    role: active?.role ?? null,
+    roleLabel: active?.roleLabel ?? null,
+    powers,
+    canEdit: canEditCafe(powers),
+    canManageTeam: hasAccessPower(powers, "company:team:invites:create"),
+  };
 }
 
 export function useActiveTenant() {

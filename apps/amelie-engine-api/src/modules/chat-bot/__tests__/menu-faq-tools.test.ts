@@ -56,8 +56,8 @@ beforeAll(async () => {
 
   const ownerLogin = await insertPersonWithLogin(db, "owner@sorella.test");
   const memberLogin = await insertPersonWithLogin(db, "member@sorella.test");
-  await insertMember(db, sorellaId, ownerLogin.partyId, "owner");
-  await insertMember(db, sorellaId, memberLogin.partyId, "staff");
+  await insertMember(db, sorellaId, ownerLogin.partyId, "tenant_admin");
+  await insertMember(db, sorellaId, memberLogin.partyId, "store_staff");
   owner = { kind: "user", tenantId: sorellaId, userId: ownerLogin.userId };
   member = { kind: "user", tenantId: sorellaId, userId: memberLogin.userId };
   customer = { kind: "anonymous", tenantId: sorellaId, anonymousId: "a-1" };

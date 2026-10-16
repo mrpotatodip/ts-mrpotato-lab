@@ -15,6 +15,7 @@ import { ChatBotStreamHeaderSchema } from "#/modules/chat-bot/schemas";
 import { chatBotMainAgent } from "#/modules/chat-bot/agents";
 import { ChatBotStreamQuerySchema } from "@repo/contracts/chat-bots";
 import { StaffChatStreamBodySchema } from "@repo/contracts/amelie";
+import { requirePower } from "#/modules/tenant";
 
 const app = new Hono<AppEnv>();
 
@@ -24,6 +25,7 @@ app.post(
   zValidator("query", ChatBotStreamQuerySchema),
   zValidator("header", ChatBotStreamHeaderSchema),
   zValidator("json", StaffChatStreamBodySchema),
+  requirePower("company:assistant:threads:create"),
   async (c) => {
     const body = c.req.valid("json");
     // -----

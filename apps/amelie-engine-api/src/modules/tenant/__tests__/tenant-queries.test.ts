@@ -1,11 +1,23 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { and, eq } from "drizzle-orm";
-import { menuItemPrices, partyRoles, roles, tenantCountries, tenants as tenantTable } from "@repo/db-amelie";
+import { and, eq, isNull } from "drizzle-orm";
 import {
+  menuItemPrices,
+  partyRoles,
+  accessMasterPowers,
+  accessMasterRoles,
+  accessRolePowers,
+  findTenantRole,
+  roles,
+  tenantCountries,
+  tenants as tenantTable,
+} from "@repo/db-amelie";
+import {
+  ACCESS_ROLE_GRANTS,
   ALLOWED_ORIGINS_MAX,
   COUNTRIES,
   COUNTRY_VALUES,
   CURRENCY_VALUES,
+  hasAccessPower,
   TenantRegionSchema,
   UpdateTenantAllowedOriginsBodySchema,
   UpdateTenantCustomerChatBodySchema,
@@ -43,42 +55,47 @@ beforeAll(async () => {
   otherCafeId = await insertTenant(db, "Other Cafe", "other-cafe");
   sorellaOwner = await insertPersonWithLogin(db, "owner@sorella.test");
   otherOwner = await insertPersonWithLogin(db, "owner@other.test");
-  await insertMember(db, sorellaId, sorellaOwner.partyId, "owner");
-  await insertMember(db, otherCafeId, otherOwner.partyId, "owner");
+  await insertMember(db, sorellaId, sorellaOwner.partyId, "tenant_admin");
+  await insertMember(db, otherCafeId, otherOwner.partyId, "tenant_admin");
 });
 
 describe("listTenantsSvc", () => {
   it("returns only the Tenants the login's Person belongs to, with the role", async () => {
     const tenants = await runEffect(listTenantsSvc(db, sorellaOwner.userId));
 
-    expect(tenants).toEqual([
-      {
-        id: sorellaId,
-        name: "Sorella Cafe",
-        slug: "sorella",
-        timezone: "America/New_York",
-        country: "US",
-        currency: "USD",
-        allowedOrigins: [],
-        customerChatLabel: "Chat with us",
-        customerChatAccent: null,
-        role: "owner",
-        canEdit: true,
-      },
-    ]);
+    expect(tenants).toHaveLength(1);
+    expect(tenants[0]).toMatchObject({
+      id: sorellaId,
+      name: "Sorella Cafe",
+      slug: "sorella",
+      timezone: "America/New_York",
+      country: "US",
+      currency: "USD",
+      allowedOrigins: [],
+      customerChatLabel: "Chat with us",
+      customerChatAccent: null,
+      role: "tenant_admin",
+      roleLabel: "Tenant admin",
+    });
+    expect(tenants[0].powers.toSorted()).toEqual([...ACCESS_ROLE_GRANTS.tenant_admin].toSorted());
   });
 
   it("returns every Tenant for a Person who runs two", async () => {
     const both = await insertPersonWithLogin(db, "runs-both@test");
-    await insertMember(db, sorellaId, both.partyId, "manager");
-    await insertMember(db, otherCafeId, both.partyId, "staff");
+    await insertMember(db, sorellaId, both.partyId, "store_admin");
+    await insertMember(db, otherCafeId, both.partyId, "store_staff");
 
     const tenants = await runEffect(listTenantsSvc(db, both.userId));
 
-    expect(tenants.map((t) => [t.slug, t.role, t.canEdit])).toEqual([
-      ["other-cafe", "staff", false],
-      ["sorella", "manager", true],
+    expect(tenants.map((t) => [t.slug, t.role])).toEqual([
+      ["other-cafe", "store_staff"],
+      ["sorella", "store_admin"],
     ]);
+    const bySlug = Object.fromEntries(tenants.map((t) => [t.slug, t]));
+    expect(hasAccessPower(bySlug.sorella.powers, "company:team:invites:create")).toBe(false);
+    expect(hasAccessPower(bySlug.sorella.powers, "company:menu:items:update")).toBe(true);
+    expect(hasAccessPower(bySlug["other-cafe"].powers, "company:menu:items:update")).toBe(false);
+    expect(hasAccessPower(bySlug["other-cafe"].powers, "company:menu:items:read")).toBe(true);
   });
 
   it("returns nothing for a login with no memberships", async () => {
@@ -92,7 +109,7 @@ describe("tenant region", () => {
   it("stores the country and currency a Tenant is created with", async () => {
     const manilaId = await insertTenant(db, "Manila Cafe", "manila", { country: "PH", currency: "PHP" });
     const owner = await insertPersonWithLogin(db, "owner@manila.test");
-    await insertMember(db, manilaId, owner.partyId, "owner");
+    await insertMember(db, manilaId, owner.partyId, "tenant_admin");
 
     const tenant = await runEffect(getTenantSvc(db, owner.userId, manilaId));
 
@@ -135,36 +152,42 @@ describe("TenantRegionSchema", () => {
   });
 });
 
-describe("canEdit", () => {
-  it("is true for owner and manager and false for staff", async () => {
+describe("powers", () => {
+  it("gives cafe writes to tenant_admin and store_admin, and team writes only to tenant_admin", async () => {
     const cafeId = sorellaId;
-    const canEditFor = async (key: "owner" | "manager" | "staff") => {
+    const powersFor = async (key: "tenant_admin" | "store_admin" | "store_staff") => {
       const login = await insertPersonWithLogin(db, `${key}@can-edit.test`);
       await insertMember(db, cafeId, login.partyId, key);
-      return (await runEffect(getTenantSvc(db, login.userId, cafeId))).canEdit;
+      return (await runEffect(getTenantSvc(db, login.userId, cafeId))).powers;
     };
 
-    expect(await canEditFor("owner")).toBe(true);
-    expect(await canEditFor("manager")).toBe(true);
-    expect(await canEditFor("staff")).toBe(false);
+    const tenantAdmin = await powersFor("tenant_admin");
+    const storeAdmin = await powersFor("store_admin");
+    const storeStaff = await powersFor("store_staff");
+    expect(hasAccessPower(tenantAdmin, "company:team:invites:create")).toBe(true);
+    expect(hasAccessPower(storeAdmin, "company:menu:items:update")).toBe(true);
+    expect(hasAccessPower(storeAdmin, "company:team:invites:create")).toBe(false);
+    expect(hasAccessPower(storeStaff, "company:menu:items:update")).toBe(false);
+    expect(hasAccessPower(storeStaff, "company:menu:items:read")).toBe(true);
   });
 
-  it("follows the Role's can_edit flag, not its name", async () => {
+  it("follows the Master Role's access_role_powers rows, not its name", async () => {
     const cafeId = sorellaId;
     const login = await insertPersonWithLogin(db, "flag-staff@test");
-    await insertMember(db, cafeId, login.partyId, "staff");
-
-    await db
-      .update(roles)
-      .set({ canEdit: true })
-      .where(and(eq(roles.tenantId, cafeId), eq(roles.key, "staff")));
+    await insertMember(db, cafeId, login.partyId, "store_staff");
+    const [staffMaster] = await db.select().from(accessMasterRoles).where(eq(accessMasterRoles.key, "store_staff"));
+    const [updatePower] = await db
+      .select()
+      .from(accessMasterPowers)
+      .where(eq(accessMasterPowers.power, "company:menu:items:update"));
+    await db.insert(accessRolePowers).values({ masterRoleId: staffMaster.id, masterPowerId: updatePower.id, scope: "tenant" });
 
     const tenant = await runEffect(getTenantSvc(db, login.userId, cafeId));
     await db
-      .update(roles)
-      .set({ canEdit: false })
-      .where(and(eq(roles.tenantId, cafeId), eq(roles.key, "staff")));
-    expect(tenant).toMatchObject({ role: "staff", canEdit: true });
+      .delete(accessRolePowers)
+      .where(and(eq(accessRolePowers.masterRoleId, staffMaster.id), eq(accessRolePowers.masterPowerId, updatePower.id)));
+    expect(tenant.role).toBe("store_staff");
+    expect(hasAccessPower(tenant.powers, "company:menu:items:update")).toBe(true);
   });
 });
 
@@ -188,35 +211,69 @@ describe("getTenantSvc", () => {
   });
 });
 
+describe("access_master_roles", () => {
+  it("seeds every Role key as a Master Role", async () => {
+    const rows = await db.select({ key: accessMasterRoles.key }).from(accessMasterRoles);
+    expect(rows.map((row) => row.key).toSorted()).toEqual(["store_admin", "store_staff", "superuser", "tenant_admin"]);
+  });
+
+  it("rejects a repeated Master Role key", async () => {
+    await expect(db.insert(accessMasterRoles).values({ key: "tenant_admin", label: "Again", scope: "tenant" })).rejects.toMatchObject({
+      cause: { constraint: "uq_access_master_roles_key" },
+    });
+  });
+
+  it("rejects a Role whose Master Role does not exist", async () => {
+    await expect(
+      db.insert(roles).values({ tenantId: sorellaId, masterRoleId: crypto.randomUUID(), scope: "tenant" }),
+    ).rejects.toMatchObject({ cause: { constraint: "roles_master_role_fk" } });
+  });
+
+  it("rejects a Role whose scope differs from its Master Role", async () => {
+    const [staffMaster] = await db.select().from(accessMasterRoles).where(eq(accessMasterRoles.key, "store_staff"));
+
+    await expect(
+      db.insert(roles).values({ masterRoleId: staffMaster.id, scope: "platform" }),
+    ).rejects.toMatchObject({ cause: { constraint: "roles_master_role_fk" } });
+  });
+});
+
 describe("party_roles rules", () => {
+  const masterRole = async (key: string) => {
+    const [master] = await db.select().from(accessMasterRoles).where(eq(accessMasterRoles.key, key));
+    return master;
+  };
   const roleIn = async (tenantId: string, key: string) => {
-    const [role] = await db
-      .select()
-      .from(roles)
-      .where(and(eq(roles.tenantId, tenantId), eq(roles.key, key)));
+    const role = await findTenantRole(db, tenantId, key);
+    if (!role) throw new Error(`No ${key} role in the tenant`);
     return role;
   };
   const globalRole = async () => {
-    const [role] = await db.insert(roles).values({ key: "superuser", canEdit: false }).returning();
+    const master = await masterRole("superuser");
+    await db.insert(roles).values({ masterRoleId: master.id, scope: "platform" }).onConflictDoNothing();
+    const [role] = await db
+      .select()
+      .from(roles)
+      .where(and(isNull(roles.tenantId), eq(roles.masterRoleId, master.id)));
     return role;
   };
 
   it("rejects a second role for the same Person in one Tenant", async () => {
-    await expect(insertMember(db, sorellaId, sorellaOwner.partyId, "staff")).rejects.toMatchObject({
+    await expect(insertMember(db, sorellaId, sorellaOwner.partyId, "store_staff")).rejects.toMatchObject({
       cause: { constraint: "uq_party_roles_tenant_party" },
     });
   });
 
   it("rejects an Organization holding a role", async () => {
     const organizationPartyId = await insertOrganization(db, "Not A Person");
-    const staff = await roleIn(sorellaId, "staff");
+    const staff = await roleIn(sorellaId, "store_staff");
 
     await expect(
       db.insert(partyRoles).values({
         partyId: organizationPartyId,
         tenantId: sorellaId,
         roleId: staff.id,
-        roleKey: "staff",
+        roleScope: "tenant",
       }),
     ).rejects.toMatchObject({ cause: { constraint: "party_roles_party_id_persons_party_id_fk" } });
   });
@@ -224,17 +281,17 @@ describe("party_roles rules", () => {
   it("allows a global superuser Role with no Tenant, once per Person", async () => {
     const superuser = await globalRole();
     const person = await insertPersonWithLogin(db, "root@test");
-    const row = { partyId: person.partyId, roleId: superuser.id, roleKey: "superuser" };
+    const row = { partyId: person.partyId, roleId: superuser.id, roleScope: "platform" } as const;
 
     await db.insert(partyRoles).values(row);
 
     await expect(db.insert(partyRoles).values(row)).rejects.toMatchObject({
-      cause: { constraint: "uq_party_roles_superuser" },
+      cause: { constraint: "uq_party_roles_platform" },
     });
   });
 
   it("rejects a superuser row that names a Tenant", async () => {
-    const [superuser] = await db.select().from(roles).where(eq(roles.key, "superuser"));
+    const superuser = await globalRole();
     const person = await insertPersonWithLogin(db, "root-with-cafe@test");
 
     await expect(
@@ -242,22 +299,22 @@ describe("party_roles rules", () => {
         partyId: person.partyId,
         tenantId: sorellaId,
         roleId: superuser.id,
-        roleKey: "superuser",
+        roleScope: "platform",
       }),
-    ).rejects.toMatchObject({ cause: { constraint: "party_roles_superuser_global" } });
+    ).rejects.toMatchObject({ cause: { constraint: "party_roles_platform_global" } });
   });
 
   it("rejects a cafe role without a Tenant", async () => {
-    const staff = await roleIn(sorellaId, "staff");
+    const staff = await roleIn(sorellaId, "store_staff");
     const person = await insertPersonWithLogin(db, "no-cafe@test");
 
     await expect(
-      db.insert(partyRoles).values({ partyId: person.partyId, roleId: staff.id, roleKey: "staff" }),
-    ).rejects.toMatchObject({ cause: { constraint: "party_roles_superuser_global" } });
+      db.insert(partyRoles).values({ partyId: person.partyId, roleId: staff.id, roleScope: "tenant" }),
+    ).rejects.toMatchObject({ cause: { constraint: "party_roles_platform_global" } });
   });
 
   it("rejects a cafe role used in another Tenant", async () => {
-    const staff = await roleIn(sorellaId, "staff");
+    const staff = await roleIn(sorellaId, "store_staff");
     const person = await insertPersonWithLogin(db, "wrong-cafe@test");
 
     await expect(
@@ -265,24 +322,45 @@ describe("party_roles rules", () => {
         partyId: person.partyId,
         tenantId: otherCafeId,
         roleId: staff.id,
-        roleKey: "staff",
+        roleScope: "tenant",
       }),
     ).rejects.toMatchObject({ cause: { constraint: "party_roles_role_tenant_fk" } });
   });
 
-  it("rejects a Role row that breaks the superuser rule", async () => {
-    await expect(db.insert(roles).values({ tenantId: sorellaId, key: "superuser" })).rejects.toMatchObject({
-      cause: { constraint: "roles_superuser_global" },
-    });
-    await expect(db.insert(roles).values({ key: "staff" })).rejects.toMatchObject({
-      cause: { constraint: "roles_superuser_global" },
-    });
+  it("rejects a Role row that breaks the platform rule", async () => {
+    const superuserMaster = await masterRole("superuser");
+    const staffMaster = await masterRole("store_staff");
+
+    await expect(
+      db.insert(roles).values({ tenantId: sorellaId, masterRoleId: superuserMaster.id, scope: "platform" }),
+    ).rejects.toMatchObject({ cause: { constraint: "roles_scope_tenant" } });
+    await expect(
+      db.insert(roles).values({ masterRoleId: staffMaster.id, scope: "tenant" }),
+    ).rejects.toMatchObject({ cause: { constraint: "roles_scope_tenant" } });
   });
 
-  it("rejects a repeated Role key in one Tenant", async () => {
-    await expect(db.insert(roles).values({ tenantId: sorellaId, key: "staff" })).rejects.toMatchObject({
-      cause: { constraint: "uq_roles_tenant_key" },
-    });
+  it("rejects a repeated Master Role in one Tenant", async () => {
+    const staffMaster = await masterRole("store_staff");
+
+    await expect(
+      db.insert(roles).values({ tenantId: sorellaId, masterRoleId: staffMaster.id, scope: "tenant" }),
+    ).rejects.toMatchObject({ cause: { constraint: "uq_roles_tenant_master_role" } });
+  });
+
+  it("rejects a platform Power on a tenant Master Role", async () => {
+    const staffMaster = await masterRole("store_staff");
+    const [platformPower] = await db
+      .select()
+      .from(accessMasterPowers)
+      .where(eq(accessMasterPowers.power, "platform:admin:invite_codes:read"));
+
+    await expect(
+      db.insert(accessRolePowers).values({
+        masterRoleId: staffMaster.id,
+        masterPowerId: platformPower.id,
+        scope: "tenant",
+      }),
+    ).rejects.toMatchObject({ cause: { constraint: "access_role_powers_master_power_fk" } });
   });
 });
 
@@ -299,7 +377,7 @@ describe("listPublicTenantsSvc", () => {
 });
 
 describe("updateTenantRegionSvc", () => {
-  const newCafe = async (slug: string, role: "owner" | "manager" | "staff") => {
+  const newCafe = async (slug: string, role: "tenant_admin" | "store_admin" | "store_staff") => {
     const tenantId = await insertTenant(db, slug, slug);
     const login = await insertPersonWithLogin(db, `${role}@${slug}.test`);
     await insertMember(db, tenantId, login.partyId, role);
@@ -307,7 +385,7 @@ describe("updateTenantRegionSvc", () => {
   };
 
   it("lets an owner change country and currency, and the change persists", async () => {
-    const { tenantId, userId } = await newCafe("region-owner", "owner");
+    const { tenantId, userId } = await newCafe("region-owner", "tenant_admin");
 
     const saved = await runEffect(updateTenantRegionSvc(db, userId, tenantId, { country: "PH", currency: "PHP" }));
 
@@ -316,7 +394,7 @@ describe("updateTenantRegionSvc", () => {
   });
 
   it("mirrors the new currency onto the Country and keeps every Country price's number", async () => {
-    const { tenantId, userId } = await newCafe("region-mirror", "owner");
+    const { tenantId, userId } = await newCafe("region-mirror", "tenant_admin");
     const category = await runEffect(addMenuCategorySvc(db, tenantId, { name: "Bakery", note: null }));
     const item = await runEffect(
       addMenuItemSvc(db, tenantId, {
@@ -340,7 +418,7 @@ describe("updateTenantRegionSvc", () => {
   });
 
   it("edits the only open Country, not an archived one", async () => {
-    const { tenantId, userId } = await newCafe("region-first-open", "owner");
+    const { tenantId, userId } = await newCafe("region-first-open", "tenant_admin");
     const [first] = await db.select().from(tenantCountries).where(eq(tenantCountries.tenantId, tenantId));
     await db.update(tenantCountries).set({ archivedAt: new Date() }).where(eq(tenantCountries.id, first.id));
     const open = await insertCountry(db, tenantId, { country: "CA", currency: "CAD" });
@@ -356,7 +434,7 @@ describe("updateTenantRegionSvc", () => {
   });
 
   it("refuses a country the Tenant already has in an archived Country", async () => {
-    const { tenantId, userId } = await newCafe("region-taken", "owner");
+    const { tenantId, userId } = await newCafe("region-taken", "tenant_admin");
     await insertCountry(db, tenantId, { country: "CA", currency: "CAD", archivedAt: new Date() });
 
     await expect(
@@ -366,7 +444,7 @@ describe("updateTenantRegionSvc", () => {
   });
 
   it("reads the region from the first open Country", async () => {
-    const { tenantId, userId } = await newCafe("region-read", "owner");
+    const { tenantId, userId } = await newCafe("region-read", "tenant_admin");
     await db.update(tenantCountries).set({ country: "JP", currency: "JPY" }).where(eq(tenantCountries.tenantId, tenantId));
 
     expect(await runEffect(getTenantSvc(db, userId, tenantId))).toMatchObject({ country: "JP", currency: "JPY" });
@@ -374,7 +452,7 @@ describe("updateTenantRegionSvc", () => {
   });
 
   it("lets a manager change the region", async () => {
-    const { tenantId, userId } = await newCafe("region-manager", "manager");
+    const { tenantId, userId } = await newCafe("region-manager", "store_admin");
 
     const saved = await runEffect(updateTenantRegionSvc(db, userId, tenantId, { country: "KH", currency: "USD" }));
 
@@ -382,7 +460,7 @@ describe("updateTenantRegionSvc", () => {
   });
 
   it("refuses staff and leaves the region unchanged", async () => {
-    const { tenantId, userId } = await newCafe("region-staff", "staff");
+    const { tenantId, userId } = await newCafe("region-staff", "store_staff");
 
     await expect(
       runEffect(updateTenantRegionSvc(db, userId, tenantId, { country: "PH", currency: "PHP" })),
@@ -460,7 +538,7 @@ describe("UpdateTenantCustomerChatBodySchema", () => {
 });
 
 describe("updateTenantAllowedOriginsSvc", () => {
-  const newCafe = async (slug: string, role: "owner" | "manager" | "staff") => {
+  const newCafe = async (slug: string, role: "tenant_admin" | "store_admin" | "store_staff") => {
     const tenantId = await insertTenant(db, slug, slug);
     const login = await insertPersonWithLogin(db, `${role}@${slug}.test`);
     await insertMember(db, tenantId, login.partyId, role);
@@ -468,7 +546,7 @@ describe("updateTenantAllowedOriginsSvc", () => {
   };
 
   it("lets an owner replace the list, and the change persists", async () => {
-    const { tenantId, userId } = await newCafe("origins-owner", "owner");
+    const { tenantId, userId } = await newCafe("origins-owner", "tenant_admin");
 
     const saved = await runEffect(
       updateTenantAllowedOriginsSvc(db, userId, tenantId, ["https://sorellacafe.com", "http://localhost:5174"]),
@@ -481,7 +559,7 @@ describe("updateTenantAllowedOriginsSvc", () => {
   });
 
   it("lets a manager replace the list", async () => {
-    const { tenantId, userId } = await newCafe("origins-manager", "manager");
+    const { tenantId, userId } = await newCafe("origins-manager", "store_admin");
 
     const saved = await runEffect(updateTenantAllowedOriginsSvc(db, userId, tenantId, ["https://other.test"]));
 
@@ -489,7 +567,7 @@ describe("updateTenantAllowedOriginsSvc", () => {
   });
 
   it("refuses staff and leaves the list unchanged", async () => {
-    const { tenantId, userId } = await newCafe("origins-staff", "staff");
+    const { tenantId, userId } = await newCafe("origins-staff", "store_staff");
     await db.update(tenantTable).set({ allowedOrigins: ["https://keep.test"] }).where(eq(tenantTable.id, tenantId));
 
     await expect(
@@ -507,7 +585,7 @@ describe("updateTenantAllowedOriginsSvc", () => {
   });
 
   it("does not change the Business profile website", async () => {
-    const { tenantId, userId } = await newCafe("origins-profile", "owner");
+    const { tenantId, userId } = await newCafe("origins-profile", "tenant_admin");
     await runEffect(updateBusinessProfileSvc(db, tenantId, { websiteUrl: "https://sorellacafe.com" }));
 
     await runEffect(updateTenantAllowedOriginsSvc(db, userId, tenantId, ["https://other.test"]));

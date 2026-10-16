@@ -49,7 +49,7 @@ describe("writes by the new code move updated_at", () => {
 
   it("the Region edit", async () => {
     const login = await insertPersonWithLogin(db, "owner@sorella.test");
-    await insertMember(db, tenantId, login.partyId, "owner");
+    await insertMember(db, tenantId, login.partyId, "tenant_admin");
     await pause();
 
     await runEffect(updateTenantRegionSvc(db, login.userId, tenantId, { country: "CA", currency: "CAD" }));

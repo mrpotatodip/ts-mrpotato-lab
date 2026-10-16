@@ -4,7 +4,7 @@ import { zValidator } from "#/lib/zod-validator";
 import type { AppEnv } from "#/types/variables";
 import { db_connect } from "#/lib/db-connection";
 import { runEffect } from "#/lib/effect-query";
-import { requireTenantEditor } from "#/modules/tenant";
+import { requirePower } from "#/modules/tenant";
 import { deleteFaqCategorySvc } from "#/modules/faq/handlers";
 import { deleteFaqCategoryDoc } from "#/modules/faq/openapi";
 
@@ -13,7 +13,7 @@ const app = new Hono<AppEnv>();
 app.delete(
   "/categories/:categoryId",
   deleteFaqCategoryDoc,
-  requireTenantEditor,
+  requirePower("company:faqs:categories:delete"),
   zValidator("param", FaqCategoryParamSchema),
   async (c) => {
     const { categoryId } = c.req.valid("param");

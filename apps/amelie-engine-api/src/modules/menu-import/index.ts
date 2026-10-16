@@ -10,7 +10,7 @@ import {
 } from "./api";
 
 // -----
-// Menu imports: any member reads; an owner or manager
+// Menu imports: any member reads; a tenant_admin or store_admin
 // uploads, reviews and publishes.
 // -----
 const app = new Hono<AppEnv>();

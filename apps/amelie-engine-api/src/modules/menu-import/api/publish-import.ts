@@ -4,7 +4,7 @@ import { zValidator } from "#/lib/zod-validator";
 import type { AppEnv } from "#/types/variables";
 import { db_connect } from "#/lib/db-connection";
 import { runEffect } from "#/lib/effect-query";
-import { requireTenantEditor } from "#/modules/tenant";
+import { requirePower } from "#/modules/tenant";
 import { createImportRuntime } from "#/modules/menu-import/lib";
 import { publishImportSvc } from "#/modules/menu-import/handlers";
 import { publishImportDoc } from "#/modules/menu-import/openapi";
@@ -14,7 +14,7 @@ const app = new Hono<AppEnv>();
 app.post(
   "/:importId/publish",
   publishImportDoc,
-  requireTenantEditor,
+  requirePower("company:menu:imports:publish"),
   zValidator("param", ImportParamSchema),
   zValidator("json", PublishImportBodySchema),
   async (c) => {

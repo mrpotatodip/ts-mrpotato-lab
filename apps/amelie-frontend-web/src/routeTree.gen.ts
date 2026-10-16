@@ -19,11 +19,14 @@ import { Route as DashboardFaqsRouteImport } from './routes/_dashboard/faqs'
 import { Route as DashboardHoursRouteImport } from './routes/_dashboard/hours'
 import { Route as DashboardMenuRouteImport } from './routes/_dashboard/menu'
 import { Route as DashboardOverviewRouteImport } from './routes/_dashboard/overview'
+import { Route as DashboardStoreMenuRouteImport } from './routes/_dashboard/store-menu'
+import { Route as DashboardTeamRouteImport } from './routes/_dashboard/team'
 import { Route as DashboardUnansweredRouteImport } from './routes/_dashboard/unanswered'
 import { Route as DashboardWidgetRouteImport } from './routes/_dashboard/widget'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as ApiChatBotRouteImport } from './routes/api/chat-bot'
 import { Route as ChatSlugRouteImport } from './routes/chat/$slug'
+import { Route as JoinTokenRouteImport } from './routes/join/$token'
 import { Route as SigninIndexRouteImport } from './routes/signin/index'
 import { Route as SignoutIndexRouteImport } from './routes/signout/index'
 import { Route as SignupIndexRouteImport } from './routes/signup/index'
@@ -85,6 +88,16 @@ const DashboardOverviewRoute = DashboardOverviewRouteImport.update({
   path: '/overview',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
+const DashboardStoreMenuRoute = DashboardStoreMenuRouteImport.update({
+  id: '/store-menu',
+  path: '/store-menu',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardTeamRoute = DashboardTeamRouteImport.update({
+  id: '/team',
+  path: '/team',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
 const DashboardUnansweredRoute = DashboardUnansweredRouteImport.update({
   id: '/unanswered',
   path: '/unanswered',
@@ -108,6 +121,11 @@ const ApiChatBotRoute = ApiChatBotRouteImport.update({
 const ChatSlugRoute = ChatSlugRouteImport.update({
   id: '/chat/$slug',
   path: '/chat/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JoinTokenRoute = JoinTokenRouteImport.update({
+  id: '/join/$token',
+  path: '/join/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SigninIndexRoute = SigninIndexRouteImport.update({
@@ -176,10 +194,13 @@ export interface FileRoutesByFullPath {
   '/hours': typeof DashboardHoursRoute
   '/menu': typeof DashboardMenuRoute
   '/overview': typeof DashboardOverviewRoute
+  '/store-menu': typeof DashboardStoreMenuRoute
+  '/team': typeof DashboardTeamRoute
   '/unanswered': typeof DashboardUnansweredRoute
   '/widget': typeof DashboardWidgetRoute
   '/api/chat-bot': typeof ApiChatBotRoute
   '/chat/$slug': typeof ChatSlugRoute
+  '/join/$token': typeof JoinTokenRoute
   '/admin/': typeof AdminIndexRoute
   '/signin/': typeof SigninIndexRoute
   '/signout/': typeof SignoutIndexRoute
@@ -201,10 +222,13 @@ export interface FileRoutesByTo {
   '/hours': typeof DashboardHoursRoute
   '/menu': typeof DashboardMenuRoute
   '/overview': typeof DashboardOverviewRoute
+  '/store-menu': typeof DashboardStoreMenuRoute
+  '/team': typeof DashboardTeamRoute
   '/unanswered': typeof DashboardUnansweredRoute
   '/widget': typeof DashboardWidgetRoute
   '/api/chat-bot': typeof ApiChatBotRoute
   '/chat/$slug': typeof ChatSlugRoute
+  '/join/$token': typeof JoinTokenRoute
   '/admin': typeof AdminIndexRoute
   '/signin': typeof SigninIndexRoute
   '/signout': typeof SignoutIndexRoute
@@ -228,10 +252,13 @@ export interface FileRoutesById {
   '/_dashboard/hours': typeof DashboardHoursRoute
   '/_dashboard/menu': typeof DashboardMenuRoute
   '/_dashboard/overview': typeof DashboardOverviewRoute
+  '/_dashboard/store-menu': typeof DashboardStoreMenuRoute
+  '/_dashboard/team': typeof DashboardTeamRoute
   '/_dashboard/unanswered': typeof DashboardUnansweredRoute
   '/_dashboard/widget': typeof DashboardWidgetRoute
   '/api/chat-bot': typeof ApiChatBotRoute
   '/chat/$slug': typeof ChatSlugRoute
+  '/join/$token': typeof JoinTokenRoute
   '/admin/': typeof AdminIndexRoute
   '/signin/': typeof SigninIndexRoute
   '/signout/': typeof SignoutIndexRoute
@@ -256,10 +283,13 @@ export interface FileRouteTypes {
     | '/hours'
     | '/menu'
     | '/overview'
+    | '/store-menu'
+    | '/team'
     | '/unanswered'
     | '/widget'
     | '/api/chat-bot'
     | '/chat/$slug'
+    | '/join/$token'
     | '/admin/'
     | '/signin/'
     | '/signout/'
@@ -281,10 +311,13 @@ export interface FileRouteTypes {
     | '/hours'
     | '/menu'
     | '/overview'
+    | '/store-menu'
+    | '/team'
     | '/unanswered'
     | '/widget'
     | '/api/chat-bot'
     | '/chat/$slug'
+    | '/join/$token'
     | '/admin'
     | '/signin'
     | '/signout'
@@ -307,10 +340,13 @@ export interface FileRouteTypes {
     | '/_dashboard/hours'
     | '/_dashboard/menu'
     | '/_dashboard/overview'
+    | '/_dashboard/store-menu'
+    | '/_dashboard/team'
     | '/_dashboard/unanswered'
     | '/_dashboard/widget'
     | '/api/chat-bot'
     | '/chat/$slug'
+    | '/join/$token'
     | '/admin/'
     | '/signin/'
     | '/signout/'
@@ -332,6 +368,7 @@ export interface RootRouteChildren {
   WidgetAppearanceRoute: typeof WidgetAppearanceRoute
   ApiChatBotRoute: typeof ApiChatBotRoute
   ChatSlugRoute: typeof ChatSlugRoute
+  JoinTokenRoute: typeof JoinTokenRoute
   SigninIndexRoute: typeof SigninIndexRoute
   SignoutIndexRoute: typeof SignoutIndexRoute
   SignupIndexRoute: typeof SignupIndexRoute
@@ -409,6 +446,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardOverviewRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
+    '/_dashboard/store-menu': {
+      id: '/_dashboard/store-menu'
+      path: '/store-menu'
+      fullPath: '/store-menu'
+      preLoaderRoute: typeof DashboardStoreMenuRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/_dashboard/team': {
+      id: '/_dashboard/team'
+      path: '/team'
+      fullPath: '/team'
+      preLoaderRoute: typeof DashboardTeamRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
     '/_dashboard/unanswered': {
       id: '/_dashboard/unanswered'
       path: '/unanswered'
@@ -442,6 +493,13 @@ declare module '@tanstack/react-router' {
       path: '/chat/$slug'
       fullPath: '/chat/$slug'
       preLoaderRoute: typeof ChatSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/join/$token': {
+      id: '/join/$token'
+      path: '/join/$token'
+      fullPath: '/join/$token'
+      preLoaderRoute: typeof JoinTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/signin/': {
@@ -539,6 +597,8 @@ interface DashboardRouteRouteChildren {
   DashboardHoursRoute: typeof DashboardHoursRoute
   DashboardMenuRoute: typeof DashboardMenuRoute
   DashboardOverviewRoute: typeof DashboardOverviewRoute
+  DashboardStoreMenuRoute: typeof DashboardStoreMenuRoute
+  DashboardTeamRoute: typeof DashboardTeamRoute
   DashboardUnansweredRoute: typeof DashboardUnansweredRoute
   DashboardWidgetRoute: typeof DashboardWidgetRoute
   DashboardChatBotRoomRouteRoute: typeof DashboardChatBotRoomRouteRouteWithChildren
@@ -554,6 +614,8 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardHoursRoute: DashboardHoursRoute,
   DashboardMenuRoute: DashboardMenuRoute,
   DashboardOverviewRoute: DashboardOverviewRoute,
+  DashboardStoreMenuRoute: DashboardStoreMenuRoute,
+  DashboardTeamRoute: DashboardTeamRoute,
   DashboardUnansweredRoute: DashboardUnansweredRoute,
   DashboardWidgetRoute: DashboardWidgetRoute,
   DashboardChatBotRoomRouteRoute: DashboardChatBotRoomRouteRouteWithChildren,
@@ -587,6 +649,7 @@ const rootRouteChildren: RootRouteChildren = {
   WidgetAppearanceRoute: WidgetAppearanceRoute,
   ApiChatBotRoute: ApiChatBotRoute,
   ChatSlugRoute: ChatSlugRoute,
+  JoinTokenRoute: JoinTokenRoute,
   SigninIndexRoute: SigninIndexRoute,
   SignoutIndexRoute: SignoutIndexRoute,
   SignupIndexRoute: SignupIndexRoute,

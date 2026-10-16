@@ -1,4 +1,4 @@
-import { and, eq, gt, inArray, isNull, lt, or, sql } from "drizzle-orm";
+import { and, asc, eq, gt, inArray, isNull, lt, or, sql } from "drizzle-orm";
 import { Data, Effect } from "effect";
 import {
   authAccount,
@@ -8,14 +8,16 @@ import {
   organizations,
   parties,
   persons,
-  DEFAULT_TENANT_ROLES,
   partyRoles,
-  roles,
+  accessMasterPowers,
+  accessRolePowers,
+  ensureTenantRoles,
+  findTenantRole,
   tenantCountries,
   tenantLocations,
   tenants,
 } from "@repo/db-amelie";
-import { TenantSchema, type Tenant } from "@repo/contracts/amelie";
+import { TENANT_ADMIN_ROLE_KEY, TenantSchema, type Tenant } from "@repo/contracts/amelie";
 import type { DbConnectType } from "#/lib/db-connection";
 import { Conflict, DbError, Forbidden, toDbError } from "#/lib/effect-query";
 import { PG_UNIQUE_VIOLATION, pgErrorCode, pgErrorConstraint } from "#/lib/pg-error";
@@ -149,17 +151,14 @@ export const insertAccountEffect = (
             slug: account.slug,
             timezone: account.timezone,
           });
-          const tenantRoles = await tx
-            .insert(roles)
-            .values(DEFAULT_TENANT_ROLES.map((role) => ({ tenantId: tenant.id, ...role })))
-            .returning();
-          const ownerRole = tenantRoles.find((role) => role.key === "owner");
-          if (!ownerRole) throw new Error("owner role missing after insert");
+          await ensureTenantRoles(tx, tenant.id);
+          const tenantAdminRole = await findTenantRole(tx, tenant.id, TENANT_ADMIN_ROLE_KEY);
+          if (!tenantAdminRole) throw new Error(`${TENANT_ADMIN_ROLE_KEY} role missing after ensureTenantRoles`);
           await tx.insert(partyRoles).values({
             partyId: personParty.id,
             tenantId: tenant.id,
-            roleId: ownerRole.id,
-            roleKey: ownerRole.key,
+            roleId: tenantAdminRole.id,
+            roleScope: tenantAdminRole.scope,
           });
           await tx.insert(inviteCodeRedemptions).values({
             inviteCodeId: invite.id,
@@ -168,7 +167,14 @@ export const insertAccountEffect = (
             redeemedAt: account.now,
           });
 
-          return { userId, tenant };
+          const granted = await tx
+            .select({ power: accessMasterPowers.power })
+            .from(accessRolePowers)
+            .innerJoin(accessMasterPowers, eq(accessMasterPowers.id, accessRolePowers.masterPowerId))
+            .where(eq(accessRolePowers.masterRoleId, tenantAdminRole.masterRoleId))
+            .orderBy(asc(accessMasterPowers.power));
+
+          return { userId, tenant, role: tenantAdminRole, powers: granted.map((row) => row.power) };
         }),
       catch: classifyInsertFailure,
     });
@@ -176,7 +182,7 @@ export const insertAccountEffect = (
     // Our own row, just written: a parse failure
     // is a bug, not something a caller can fix.
     // -----
-    const tenant = yield* Effect.try(() => TenantSchema.parse({ ...created.tenant, country: account.country, currency: account.currency, role: "owner", canEdit: true })).pipe(
+    const tenant = yield* Effect.try(() => TenantSchema.parse({ ...created.tenant, country: account.country, currency: account.currency, role: created.role.key, roleLabel: created.role.label, powers: created.powers })).pipe(
       Effect.orDie,
     );
     return { userId: created.userId, tenant };

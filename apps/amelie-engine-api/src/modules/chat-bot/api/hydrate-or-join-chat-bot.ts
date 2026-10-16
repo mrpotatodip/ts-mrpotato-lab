@@ -8,6 +8,7 @@ import { chatBotDurableStreams, chatBotSignedInOwner } from "#/modules/chat-bot/
 import { hydrateOrJoinChatBotSvc } from "#/modules/chat-bot/handlers";
 import { ChatBotStreamHeaderSchema } from "#/modules/chat-bot/schemas";
 import { ChatBotStreamQuerySchema } from "@repo/contracts/chat-bots";
+import { requirePower } from "#/modules/tenant";
 
 const app = new Hono<AppEnv>();
 
@@ -16,6 +17,7 @@ app.get(
   hydrateOrJoinChatBotDoc,
   zValidator("query", ChatBotStreamQuerySchema),
   zValidator("header", ChatBotStreamHeaderSchema),
+  requirePower("company:assistant:threads:read"),
   async (c) => {
     const { threadId } = c.req.valid("query");
     // -----

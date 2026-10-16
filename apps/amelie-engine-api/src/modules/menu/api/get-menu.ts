@@ -6,12 +6,14 @@ import { db_connect } from "#/lib/db-connection";
 import { runEffect } from "#/lib/effect-query";
 import { getMenuEditorSvc } from "#/modules/menu/handlers";
 import { getMenuDoc } from "#/modules/menu/openapi";
+import { requirePower } from "#/modules/tenant";
 
 const app = new Hono<AppEnv>();
 
 app.get(
   "/",
   getMenuDoc,
+  requirePower("company:menu:items:read"),
   zValidator("query", MenuQuerySchema),
   async (c) => {
     const { locationId, countryId } = c.req.valid("query");

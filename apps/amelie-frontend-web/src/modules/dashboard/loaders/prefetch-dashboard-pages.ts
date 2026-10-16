@@ -8,6 +8,7 @@ import { activeLocations, chooseLocation, locationsQueries } from "#/modules/loc
 import { menuQueries } from "#/modules/menu";
 import { menuImportsQueries } from "#/modules/menu-import";
 import { tenantHoursQueries } from "#/modules/schedule";
+import { teamQueries } from "#/modules/team";
 import { unansweredQuestionsQueries } from "#/modules/unanswered-question";
 import { prefetchQuietly } from "./prefetch-quietly";
 
@@ -53,6 +54,10 @@ export async function prefetchMenuPage(queryClient: QueryClient) {
 
 export async function prefetchFaqsPage(queryClient: QueryClient) {
   await prefetchQuietly(queryClient.query(faqsQueries.list()));
+}
+
+export async function prefetchTeamPage(queryClient: QueryClient) {
+  await prefetchQuietly(queryClient.query(teamQueries.list()));
 }
 
 export async function prefetchImportsPage(queryClient: QueryClient) {

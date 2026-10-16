@@ -24,9 +24,9 @@ export const addFaqCategoryDoc = describeRoute({
   requestBody: { required: true, content: { "application/json": { schema: resolver(FaqCategoryBodySchema) } } },
   description: routeText({
     context:
-      "An owner or manager adds a category, such as Parking or Kids. FAQs can then be grouped in it.",
+      "A tenant_admin or store_admin adds a category, such as Parking or Kids. FAQs can then be grouped in it.",
     steps: [
-      "The server checks that the signed-in Person is an owner or manager of this Tenant. A staff member gets 403.",
+      "The server checks that the signed-in Person is a tenant_admin or store_admin of this Tenant. A store_staff member gets 403.",
       "The server checks the name. It has up to 60 characters.",
       "If a category with the same name exists, ignoring case, the answer is 409.",
       "The server saves the category at the end of the order and returns it.",

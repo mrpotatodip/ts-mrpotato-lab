@@ -22,4 +22,5 @@ export const addFaq = (
       if ("needsScope" in chosen) return chosen;
       return yield* addFaqSvc(runtime.db, tenantId, { ...faq, ...chosen });
     }),
+    "company:faqs:faqs:create",
   );

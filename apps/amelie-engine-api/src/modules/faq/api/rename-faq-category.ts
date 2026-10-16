@@ -4,7 +4,7 @@ import { zValidator } from "#/lib/zod-validator";
 import type { AppEnv } from "#/types/variables";
 import { db_connect } from "#/lib/db-connection";
 import { runEffect } from "#/lib/effect-query";
-import { requireTenantEditor } from "#/modules/tenant";
+import { requirePower } from "#/modules/tenant";
 import { renameFaqCategorySvc } from "#/modules/faq/handlers";
 import { renameFaqCategoryDoc } from "#/modules/faq/openapi";
 
@@ -13,7 +13,7 @@ const app = new Hono<AppEnv>();
 app.put(
   "/categories/:categoryId",
   renameFaqCategoryDoc,
-  requireTenantEditor,
+  requirePower("company:faqs:categories:update"),
   zValidator("param", FaqCategoryParamSchema),
   zValidator("json", FaqCategoryBodySchema),
   async (c) => {

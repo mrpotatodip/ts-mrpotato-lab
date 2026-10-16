@@ -17,18 +17,17 @@ import {
   organizations,
   parties,
   persons,
-  DEFAULT_TENANT_ROLES,
   partyRoles,
-  roles,
   menuItemPrices,
   tenantCountries,
   tenants,
 } from "./schema";
+import { ensureTenantRoles, findTenantRole } from "./tenant-roles";
 import * as laSorella from "./seed-data/la-sorella";
 
 // -----
-// Dev seed: Sorella Cafe plus one owner who
-// can sign in. Safe to run more than once.
+// Dev seed: Sorella Cafe plus one tenant_admin
+// who can sign in. Safe to run more than once.
 // -----
 const SORELLA = {
   name: "Sorella Cafe",
@@ -220,26 +219,21 @@ async function seedAirport(tenantId: string, countryId: string) {
 }
 
 async function main() {
-  if (!OWNER_PASSWORD) throw new Error("Set SEED_OWNER_PASSWORD to seed the Sorella owner");
+  if (!OWNER_PASSWORD) throw new Error("Set SEED_OWNER_PASSWORD to seed the Sorella tenant_admin");
   const tenantId = await seedTenant();
   const partyId = await seedOwner(OWNER_PASSWORD);
-  await db
-    .insert(roles)
-    .values(DEFAULT_TENANT_ROLES.map((role) => ({ tenantId, ...role })))
-    .onConflictDoNothing();
-  const [ownerRole] = await db
-    .select()
-    .from(roles)
-    .where(and(eq(roles.tenantId, tenantId), eq(roles.key, "owner")));
+  await ensureTenantRoles(db, tenantId);
+  const ownerRole = await findTenantRole(db, tenantId, "tenant_admin");
+  if (!ownerRole) throw new Error("tenant_admin role missing after ensureTenantRoles");
   await db
     .insert(partyRoles)
-    .values({ partyId, tenantId, roleId: ownerRole.id, roleKey: ownerRole.key })
+    .values({ partyId, tenantId, roleId: ownerRole.id, roleScope: ownerRole.scope })
     .onConflictDoNothing();
   const countryId = await seedCountry(tenantId);
   await seedKnowledge(tenantId, countryId);
   await seedAirport(tenantId, countryId);
   await scopeFishkillFaqs(tenantId, countryId);
-  console.log(`seeded ${SORELLA.slug} with owner ${OWNER_EMAIL} and La Sorella's knowledge`);
+  console.log(`seeded ${SORELLA.slug} with tenant_admin ${OWNER_EMAIL} and La Sorella's knowledge`);
 }
 
 main();

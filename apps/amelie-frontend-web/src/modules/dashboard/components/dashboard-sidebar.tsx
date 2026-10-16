@@ -12,11 +12,12 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
+  SidebarSeparator,
   useSidebar,
 } from "#/components/ui/sidebar";
 import { useAdminAccess } from "#/modules/admin";
 import { TenantPicker, useTenants } from "#/modules/tenant";
-import { DASHBOARD_ADMIN_GROUP, DASHBOARD_MENU_SUBNAV, DASHBOARD_NAV_GROUPS } from "../constants";
+import { DASHBOARD_ADMIN_GROUP, DASHBOARD_MENU_SUBNAV, DASHBOARD_NAV_GROUPS, isDashboardNavItem } from "../constants";
 import { DashboardAccountMenu } from "./dashboard-account-menu";
 import { DashboardFaqNav } from "./dashboard-faq-subnav";
 import { DashboardMenuNav } from "./dashboard-menu-subnav";
@@ -28,9 +29,9 @@ type DashboardSidebarProps = {
 };
 
 // -----
-// The cafe on top, the screens in the middle (the cafe's,
-// then the platform's for a superuser), who is signed in
-// at the bottom.
+// The Tenant on top, the screens in the middle (Company
+// with chats under it, Store, then the platform's for a
+// superuser), who is signed in at the bottom.
 // -----
 export function DashboardSidebar({ userName, userEmail }: DashboardSidebarProps) {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
@@ -53,30 +54,42 @@ export function DashboardSidebar({ userName, userEmail }: DashboardSidebarProps)
             <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu className="gap-0.5">
-                {group.items.map(({ to, label, icon: Icon }) => (
-                  <SidebarMenuItem key={to}>
-                    {to === "/menu" ? (
-                      <DashboardMenuNav
-                        label={label}
-                        icon={Icon}
-                        isActive={DASHBOARD_MENU_SUBNAV.some(
-                          (item) => pathname === item.to || pathname.startsWith(`${item.to}/`),
-                        )}
-                      />
-                    ) : to === "/faqs" ? (
-                      <DashboardFaqNav label={label} icon={Icon} isActive={pathname === to} />
-                    ) : (
-                      <SidebarMenuButton
-                        className="h-8 gap-3 px-3 text-[0.9375rem] [&>svg]:size-[1.125rem]"
-                        isActive={pathname === to || pathname.startsWith(`${to}/`)}
-                        render={<Link to={to} onClick={() => setOpenMobile(false)} />}
-                      >
-                        <Icon />
-                        <span>{label}</span>
-                      </SidebarMenuButton>
-                    )}
-                  </SidebarMenuItem>
-                ))}
+                {group.items.map((entry, index) => {
+                  if (!isDashboardNavItem(entry)) {
+                    return (
+                      <SidebarMenuItem key={`separator-${index}`} aria-hidden>
+                        <SidebarSeparator className="mx-0 my-1.5" />
+                      </SidebarMenuItem>
+                    );
+                  }
+
+                  const Icon = entry.icon;
+
+                  return (
+                    <SidebarMenuItem key={entry.to}>
+                      {entry.to === "/menu" ? (
+                        <DashboardMenuNav
+                          label={entry.label}
+                          icon={Icon}
+                          isActive={DASHBOARD_MENU_SUBNAV.some(
+                            (item) => pathname === item.to || pathname.startsWith(`${item.to}/`),
+                          )}
+                        />
+                      ) : entry.to === "/faqs" ? (
+                        <DashboardFaqNav label={entry.label} icon={Icon} isActive={pathname === entry.to} />
+                      ) : (
+                        <SidebarMenuButton
+                          className="h-8 gap-3 px-3 text-[0.9375rem] [&>svg]:size-[1.125rem]"
+                          isActive={pathname === entry.to || pathname.startsWith(`${entry.to}/`)}
+                          render={<Link to={entry.to} onClick={() => setOpenMobile(false)} />}
+                        >
+                          <Icon />
+                          <span>{entry.label}</span>
+                        </SidebarMenuButton>
+                      )}
+                    </SidebarMenuItem>
+                  );
+                })}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>

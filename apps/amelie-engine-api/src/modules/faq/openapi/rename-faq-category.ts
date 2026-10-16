@@ -25,9 +25,9 @@ export const renameFaqCategoryDoc = describeRoute({
   requestBody: { required: true, content: { "application/json": { schema: resolver(FaqCategoryBodySchema) } } },
   description: routeText({
     context:
-      "An owner or manager gives a category a new name. Its FAQs stay in it.",
+      "A tenant_admin or store_admin gives a category a new name. Its FAQs stay in it.",
     steps: [
-      "The server checks that the signed-in Person is an owner or manager of this Tenant. A staff member gets 403.",
+      "The server checks that the signed-in Person is a tenant_admin or store_admin of this Tenant. A store_staff member gets 403.",
       "The server looks for the category in this Tenant. If it finds none, the answer is 404.",
       "If another category has the same name, ignoring case, the answer is 409.",
       "The server saves the name and returns the category.",

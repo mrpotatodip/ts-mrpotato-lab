@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { ALLOWED_ORIGINS_MAX, CUSTOMER_CHAT_LABEL_DEFAULT, CUSTOMER_CHAT_LABEL_MAX } from "../constants";
-import { COUNTRY_VALUES, CURRENCY_VALUES, TENANT_ROLE_KEY_VALUES } from "../enums";
+import { COUNTRY_VALUES, CURRENCY_VALUES } from "../enums";
 
 // -----
 // Requests: what the dashboard sends
@@ -59,8 +59,8 @@ export const UpdateTenantAllowedOriginsBodySchema = z.object({
 
 // -----
 // Responses: a Tenant as one of its
-// party sees it, with their role and
-// whether that role can edit. country and
+// party sees it, with their Role and
+// that Role's Powers. country and
 // currency are those of the Tenant's first open
 // Country; the Tenant row holds neither.
 // -----
@@ -108,8 +108,9 @@ export const TenantSchema = z.object({
   allowedOrigins: z.array(z.string()),
   customerChatLabel: z.string(),
   customerChatAccent: z.string().nullable(),
-  role: z.enum(TENANT_ROLE_KEY_VALUES),
-  canEdit: z.boolean(),
+  role: z.string(),
+  roleLabel: z.string(),
+  powers: z.array(z.string()),
 });
 
 export type TenantParam = z.infer<typeof TenantParamSchema>;

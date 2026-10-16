@@ -26,9 +26,9 @@ export const updateMenuCategoryDoc = describeRoute({
   requestBody: { required: true, content: { "application/json": { schema: resolver(MenuCategoryBodySchema) } } },
   description: routeText({
     context:
-      "An owner or manager changes the name or the note of a category. The items stay in it.",
+      "A tenant_admin or store_admin changes the name or the note of a category. The items stay in it.",
     steps: [
-      "The server checks that the signed-in Person is an owner or manager of this Tenant. A staff member gets 403.",
+      "The server checks that the signed-in Person is a tenant_admin or store_admin of this Tenant. A store_staff member gets 403.",
       "The server looks for the category in this Tenant. If it finds none, the answer is 404.",
       "The server saves the name and the note and returns the category.",
     ],

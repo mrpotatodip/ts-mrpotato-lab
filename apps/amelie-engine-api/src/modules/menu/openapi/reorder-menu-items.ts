@@ -27,9 +27,9 @@ export const reorderMenuItemsDoc = describeRoute({
   requestBody: { required: true, content: { "application/json": { schema: resolver(MenuOrderBodySchema) } } },
   description: routeText({
     context:
-      "An owner or manager moves an item up or down inside its category. The dashboard sends all item ids of the category in the new order.",
+      "A tenant_admin or store_admin moves an item up or down inside its category. The dashboard sends all item ids of the category in the new order.",
     steps: [
-      "The server checks that the signed-in Person is an owner or manager of this Tenant. A staff member gets 403.",
+      "The server checks that the signed-in Person is a tenant_admin or store_admin of this Tenant. A store_staff member gets 403.",
       "The server looks for the category in this Tenant. If it finds none, the answer is 404.",
       "The server checks that the ids are exactly the items of this category. A missing, repeated or foreign id gives 400.",
       "The server saves the new order in one transaction and returns the menu.",

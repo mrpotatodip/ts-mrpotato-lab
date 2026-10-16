@@ -23,27 +23,57 @@ const latte: MenuItem = {
 };
 
 describe("MenuItemCountrySold", () => {
-  it("shows a checked 'Sold in this country' toggle for an item the Country sells", () => {
-    render(<MenuItemCountrySold item={latte} currency="CAD" isPending={false} error={null} onSetSold={() => {}} onSetPrice={() => {}} />);
+  it("shows a checked toggle named for the Country an item sells in", () => {
+    render(
+      <MenuItemCountrySold
+        item={latte}
+        countryLabel="Canada (CAD)"
+        currency="CAD"
+        isPending={false}
+        error={null}
+        onSetSold={() => {}}
+        onSetPrice={() => {}}
+      />,
+    );
 
-    const toggle = screen.getByRole("checkbox", { name: "Sold in this country" });
+    const toggle = screen.getByRole("checkbox", { name: "Sold in Canada (CAD)" });
     expect(toggle.getAttribute("aria-checked")).toBe("true");
   });
 
   it("turning it off sends only the flag", () => {
     const onSetSold = vi.fn<(isSold: boolean) => void>();
-    render(<MenuItemCountrySold item={latte} currency="CAD" isPending={false} error={null} onSetSold={onSetSold} onSetPrice={() => {}} />);
+    render(
+      <MenuItemCountrySold
+        item={latte}
+        countryLabel="Canada (CAD)"
+        currency="CAD"
+        isPending={false}
+        error={null}
+        onSetSold={onSetSold}
+        onSetPrice={() => {}}
+      />,
+    );
 
-    fireEvent.click(screen.getByRole("checkbox", { name: "Sold in this country" }));
+    fireEvent.click(screen.getByRole("checkbox", { name: "Sold in Canada (CAD)" }));
 
     expect(onSetSold).toHaveBeenCalledWith(false);
   });
 
   it("an item not sold there but still priced can be turned back on", () => {
     const onSetSold = vi.fn<(isSold: boolean) => void>();
-    render(<MenuItemCountrySold item={{ ...latte, isSold: false }} currency="CAD" isPending={false} error={null} onSetSold={onSetSold} onSetPrice={() => {}} />);
+    render(
+      <MenuItemCountrySold
+        item={{ ...latte, isSold: false }}
+        countryLabel="Canada (CAD)"
+        currency="CAD"
+        isPending={false}
+        error={null}
+        onSetSold={onSetSold}
+        onSetPrice={() => {}}
+      />,
+    );
 
-    const toggle = screen.getByRole("checkbox", { name: "Sold in this country" });
+    const toggle = screen.getByRole("checkbox", { name: "Sold in Canada (CAD)" });
     expect(toggle.getAttribute("aria-checked")).toBe("false");
     fireEvent.click(toggle);
     expect(onSetSold).toHaveBeenCalledWith(true);
@@ -51,7 +81,17 @@ describe("MenuItemCountrySold", () => {
 
   it("an item with no price there asks for one, in the Country's currency, instead of a toggle", async () => {
     const onSetPrice = vi.fn<(price: string) => void>();
-    render(<MenuItemCountrySold item={{ ...latte, price: null, isSold: false }} currency="CAD" isPending={false} error={null} onSetSold={() => {}} onSetPrice={onSetPrice} />);
+    render(
+      <MenuItemCountrySold
+        item={{ ...latte, price: null, isSold: false }}
+        countryLabel="Canada (CAD)"
+        currency="CAD"
+        isPending={false}
+        error={null}
+        onSetSold={() => {}}
+        onSetPrice={onSetPrice}
+      />,
+    );
 
     expect(screen.queryByRole("checkbox")).toBeNull();
     const sell = screen.getByRole("button", { name: "Sell here" });
@@ -65,7 +105,17 @@ describe("MenuItemCountrySold", () => {
   });
 
   it("keeps the button off for a price that is not a number", () => {
-    render(<MenuItemCountrySold item={{ ...latte, price: null, isSold: false }} currency="CAD" isPending={false} error={null} onSetSold={() => {}} onSetPrice={() => {}} />);
+    render(
+      <MenuItemCountrySold
+        item={{ ...latte, price: null, isSold: false }}
+        countryLabel="Canada (CAD)"
+        currency="CAD"
+        isPending={false}
+        error={null}
+        onSetSold={() => {}}
+        onSetPrice={() => {}}
+      />,
+    );
 
     fireEvent.change(screen.getByRole("textbox", { name: "Price in CAD" }), { target: { value: "six" } });
 
@@ -73,7 +123,17 @@ describe("MenuItemCountrySold", () => {
   });
 
   it("shows the error from a failed save", () => {
-    render(<MenuItemCountrySold item={latte} currency="CAD" isPending={false} error="Could not save" onSetSold={() => {}} onSetPrice={() => {}} />);
+    render(
+      <MenuItemCountrySold
+        item={latte}
+        countryLabel="Canada (CAD)"
+        currency="CAD"
+        isPending={false}
+        error="Could not save"
+        onSetSold={() => {}}
+        onSetPrice={() => {}}
+      />,
+    );
 
     expect(screen.getByText("Could not save")).toBeTruthy();
   });

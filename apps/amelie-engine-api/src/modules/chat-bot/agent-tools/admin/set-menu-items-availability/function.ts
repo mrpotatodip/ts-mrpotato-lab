@@ -25,4 +25,5 @@ export const setMenuItemsAvailability = (
         notFound: results.flatMap((result) => ("missing" in result ? [result.missing] : [])),
       })),
     ),
+    "store:menu:availability:update",
   );

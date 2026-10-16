@@ -24,9 +24,9 @@ export const addFaqDoc = describeRoute({
   requestBody: { required: true, content: { "application/json": { schema: resolver(FaqBodySchema) } } },
   description: routeText({
     context:
-      "An owner or manager adds a question and its answer. The assistant then uses it for Customers.",
+      "A tenant_admin or store_admin adds a question and its answer. The assistant then uses it for Customers.",
     steps: [
-      "The server checks that the signed-in Person is an owner or manager of this Tenant. A staff member gets 403.",
+      "The server checks that the signed-in Person is a tenant_admin or store_admin of this Tenant. A store_staff member gets 403.",
       "The server checks the text. The question has up to 200 characters. The answer has up to 1000.",
       "If a categoryId is given, it must be a category of this Tenant. null means General.",
       "If a locationId is given, it must be an active Location of this Tenant and the FAQ is shown only there. null (or left out) means every Location.",

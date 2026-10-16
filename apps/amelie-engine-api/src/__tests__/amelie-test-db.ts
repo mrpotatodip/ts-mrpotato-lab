@@ -4,20 +4,19 @@ import { and, asc, eq, isNull } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/pglite";
 import { migrate } from "drizzle-orm/pglite/migrator";
 import {
-  DEFAULT_TENANT_ROLES,
+  ensureTenantRoles,
+  findTenantRole,
   authUser,
   organizations,
   parties,
   partyRoles,
   persons,
   menuItemPrices,
-  roles,
   tenantCountries,
   tenantLocations,
   tenantMenuItems,
   tenants,
 } from "@repo/db-amelie";
-import type { RoleKeyValue } from "@repo/contracts/amelie";
 import type { DbConnectType } from "#/lib/db-connection";
 
 const MIGRATIONS = fileURLToPath(
@@ -71,7 +70,7 @@ export async function insertTenant(
       .insert(tenants)
       .values({ organizationPartyId, name, slug, timezone: "America/New_York" })
       .returning();
-    await tx.insert(roles).values(DEFAULT_TENANT_ROLES.map((role) => ({ tenantId: tenant.id, ...role })));
+    await ensureTenantRoles(tx, tenant.id);
     const countryId = await insertCountry(tx, tenant.id, region);
     if (withLocation) {
       await tx.insert(tenantLocations).values({
@@ -223,17 +222,15 @@ export async function insertPersonWithLogin(db: DbConnectType, email: string) {
 
 // -----
 // Gives a Person one of the Tenant's Roles,
-// the way sign-up does for the owner.
+// the way sign-up does for the tenant_admin.
 // -----
 export async function insertMember(
   db: DbConnectType,
   tenantId: string,
   partyId: string,
-  roleKey: RoleKeyValue,
+  roleKey: string,
 ) {
-  const [role] = await db
-    .select()
-    .from(roles)
-    .where(and(eq(roles.tenantId, tenantId), eq(roles.key, roleKey)));
-  await db.insert(partyRoles).values({ partyId, tenantId, roleId: role.id, roleKey: role.key });
+  const role = await findTenantRole(db, tenantId, roleKey);
+  if (!role) throw new Error(`No ${roleKey} role in the tenant`);
+  await db.insert(partyRoles).values({ partyId, tenantId, roleId: role.id, roleScope: role.scope });
 }

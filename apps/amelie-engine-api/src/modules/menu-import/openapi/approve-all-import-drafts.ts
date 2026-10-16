@@ -23,9 +23,9 @@ export const approveAllImportDraftsDoc = describeRoute({
   ],
   description: routeText({
     context:
-      "An owner or manager trusts the reading and approves every draft that is still pending. Drafts that were discarded stay discarded.",
+      "A tenant_admin or store_admin trusts the reading and approves every draft that is still pending. Drafts that were discarded stay discarded.",
     steps: [
-      "The server checks that the signed-in Person is an owner or manager of this Tenant. A staff member gets 403.",
+      "The server checks that the signed-in Person is a tenant_admin or store_admin of this Tenant. A store_staff member gets 403.",
       "The server looks for the Import in this Tenant. If it finds none, the answer is 404. A published Import gives 409.",
       "The server marks every pending draft of the Import as approved.",
       "The server returns the Import with its drafts.",

@@ -24,9 +24,9 @@ export const publishImportDoc = describeRoute({
   requestBody: { required: true, content: { "application/json": { schema: resolver(PublishImportBodySchema) } } },
   description: routeText({
     context:
-      "An owner or manager puts the approved drafts live. After this the assistant answers from the new menu, hours and contact facts.",
+      "A tenant_admin or store_admin puts the approved drafts live. After this the assistant answers from the new menu, hours and contact facts.",
     steps: [
-      "The server checks that the signed-in Person is an owner or manager of this Tenant. A staff member gets 403.",
+      "The server checks that the signed-in Person is a tenant_admin or store_admin of this Tenant. A store_staff member gets 403.",
       "The server checks that the Import is ready and not yet published. If not, the answer is 409.",
       "Everything below happens in one transaction. If any step fails, nothing changes.",
       "Country: menu items are priced in one Country, named with `countryId`. It is needed when the cafe has several open Countries and defaults to the only one otherwise. An archived, unknown or foreign Country is refused with 404 before anything is written. Items get a sold price row in that Country only.",

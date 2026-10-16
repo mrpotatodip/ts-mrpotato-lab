@@ -530,7 +530,7 @@ Last updated: 2026-10-15
 | Accent usage     | avatar fallback `bg-sidebar-accent` |
 
 **Pattern notes:**
-Replaces the old name + outline Log out stack. Trigger is initials, name, `Owner · Free plan` (or Superuser with no cafe). Menu lists email, Role, Plan (`Free` until billing), then Log out. Opens `side="top"`. Keep `LogoutButton` on `/no-cafe` only. Dropdown menus snap shut: no exit fade or scale.
+Replaces the old name + outline Log out stack. Trigger is initials, name, `Tenant admin · Free plan` (or Superuser with no cafe). Menu lists email, Role, Plan (`Free` until billing), then Log out. Opens `side="top"`. Keep `LogoutButton` on `/no-cafe` only. Dropdown menus snap shut: no exit fade or scale.
 
 ### Toaster
 
@@ -589,7 +589,7 @@ Last updated: 2026-10-15
 | Accent usage     | empty swatch is `--primary` as hex (`toAccentSwatchValue`) |
 
 **Pattern notes:**
-Sits between the install snippet and Allowed origins on Widget. Editors set an accessible button label and a `#rrggbb` colour. The label is not drawn on the bubble or in the iframe. Fields wrap like Profile (`flex flex-col gap-1.5 text-sm`). Empty colour is Amelie's `--primary`; the native colour input shows that swatch, not a raw near-black. Staff see the stored text and hex with no Save.
+Sits between the install snippet and Allowed origins on Widget. Editors set an accessible button label and a `#rrggbb` colour. The label is not drawn on the bubble or in the iframe. Fields wrap like Profile (`flex flex-col gap-1.5 text-sm`). Empty colour is Amelie's `--primary`; the native colour input shows that swatch, not a raw near-black. Store staff see the stored text and hex with no Save.
 
 ### WidgetAllowedOriginsCard
 
@@ -609,7 +609,7 @@ Last updated: 2026-10-15
 | Accent usage     | none |
 
 **Pattern notes:**
-Sits under the install snippet on Widget. Editors get one Input per row, ghost `icon-sm` Trash2 to remove, outline Add website, then Save. Staff see the stored origins as `text-sm break-all` with no add, remove, or Save. Empty list shows the iframe warning. Paste a full URL; the server keeps the origin.
+Sits under the install snippet on Widget. Editors get one Input per row, ghost `icon-sm` Trash2 to remove, outline Add website, then Save. Store staff see the stored origins as `text-sm break-all` with no add, remove, or Save. Empty list shows the iframe warning. Paste a full URL; the server keeps the origin.
 
 ### PublicChatRoom
 
@@ -650,3 +650,83 @@ Last updated: 2026-10-16
 
 **Pattern notes:**
 Place facts for `getBusinessProfile`. Location name, then country as `Name (CODE)` like `setThreadCountry`. Address and phone stay on this tile as links; email, website and about stay on `ChatBotRowsTile`. Empty tile is omitted.
+
+### WidgetLookPreview
+
+File: `src/modules/widget/components/widget-look-preview.tsx`
+Last updated: 2026-10-16
+
+| Property         | Class |
+| ---------------- | ----- |
+| Background       | stage `bg-muted`; fake panel `bg-card`; bubble from stored accent or `#171717` |
+| Border           | stage `border` |
+| Border radius    | stage `rounded-lg`; panel `rounded-2xl`; bubble `rounded-full` |
+| Text — primary   | PageCard title Preview |
+| Text — secondary | "Cafe site" `text-xs text-muted-foreground` |
+| Spacing          | page grid `gap-8 lg:grid-cols-[2fr_3fr] lg:gap-x-16`; stage `h-[min(24rem,calc(100vh-22rem))] min-h-80`; bubble `size-14` `right-5 bottom-5`; panel `bottom-[88px] right-5` |
+| Hover state      | none |
+| Shadow           | panel `shadow-[0_8px_32px_rgba(0,0,0,0.18)]` matching `widget.js` |
+| Accent usage     | bubble fill and type from `toWidgetBubbleLook` |
+
+**Pattern notes:**
+Mock of the cafe-site bubble, not `widget.js` and not an iframe of `/chat/$slug`. Page grid matches Overview / Profile: config cards in column 1, Preview PageCard in column 2 (`lg:sticky lg:top-8`). Store staff see the saved look. Editors see unsaved label and colour via `onDraftChange`. The bubble is decorative (`role="img"` on the stage). Default fill is `#171717`, not `--primary`.
+
+### MenuPanel
+
+File: `src/modules/menu/components/menu-suspense-panel-main.tsx`
+Last updated: 2026-10-16
+
+| Property         | Class |
+| ---------------- | ----- |
+| Background       | PageHeader none; rest PageCard |
+| Border           | none on header |
+| Border radius    | none on header |
+| Text — primary   | PageHeader title `text-3xl font-semibold tracking-tight` |
+| Text — secondary | PageHeader description `text-muted-foreground text-base`; sold toggle `font-normal` |
+| Spacing          | header `mb-6 space-y-2`; page grid `gap-8 lg:grid-cols-[2fr_3fr] lg:gap-x-16` |
+| Hover state      | none |
+| Shadow           | none |
+| Accent usage     | none |
+
+**Pattern notes:**
+PageHeader description names the dashboard Location and Country (`Downtown in Canada (CAD). …`), like Profile putting the Country in the intro. Country prices stay in `countryLabel` form `Canada (CAD)`. The sold toggle repeats that label (`Sold in Canada (CAD)`), not "this country". Do not put a CountrySwitcher back on this page. Master menu (`kind="catalog"`, `/menu`) is edit, photos, delete, country sold, and where it is sold. Store Menu (`kind="floor"`, `/store-menu`) is sold out / back on only, single column, no add-category or organize tree.
+
+### DashboardSidebar
+
+File: `src/modules/dashboard/components/dashboard-sidebar.tsx`
+Last updated: 2026-10-16
+
+| Property         | Class |
+| ---------------- | ----- |
+| Background       | sidebar tokens |
+| Border           | in-group split `SidebarSeparator` `bg-sidebar-border` |
+| Border radius    | menu rows `rounded-md` |
+| Text — primary   | brand `text-base font-semibold tracking-tight`; rows `text-[0.9375rem]` |
+| Text — secondary | group labels use sidebar default |
+| Spacing          | header `gap-3 p-4`; menu `gap-0.5`; separator `mx-0 my-1.5`; rows `h-8 gap-3 px-3` |
+| Hover state      | `SidebarMenuButton` accent |
+| Shadow           | none |
+| Accent usage     | active `bg-sidebar-accent` |
+
+**Pattern notes:**
+Company is one group: Profile, Team, Master menu, FAQs, then a `SidebarSeparator`, then Chats, Unanswered, Assistant. Do not bring back a Customers group. Put the separator in a `SidebarMenuItem` so the menu stays a list of `li`.
+
+### TeamPanel
+
+File: `src/modules/team/components/team-suspense-panel-main.tsx`
+Last updated: 2026-10-16
+
+| Property         | Class |
+| ---------------- | ----- |
+| Background       | PageHeader none; rest PageCard |
+| Border           | none on header |
+| Border radius    | none on header |
+| Text — primary   | PageHeader title `text-3xl font-semibold tracking-tight`; row title `text-sm font-medium` |
+| Text — secondary | PageHeader description `text-muted-foreground text-base`; row email/expiry `.stat-label` |
+| Spacing          | header `mb-6 space-y-2`; page grid `gap-8 lg:grid-cols-[2fr_3fr] lg:gap-x-16`; lists `ul.divide-y` rows `px-6 py-5`; invite fields `flex flex-col gap-1.5` with `.stat-label` |
+| Hover state      | list rows `hover:bg-accent/40 transition-colors` |
+| Shadow           | none |
+| Accent usage     | none |
+
+**Pattern notes:**
+Col 1 is Invite (only when `canManageTeam`) then Pending invites. Col 2 is Team members. Same grid as Profile. Lists in PageCard use `contentClassName="p-0"`; empty is `.stat-label p-6`. Row actions `outline` `sm`; Role `Select` `w-fit min-w-40`. Confirm remove in a Dialog, Cancel `ghost`. Join link is shown once in a Dialog like invite codes (`font-mono text-lg tracking-wider`). Join is an auth page: `max-w-sm border-0 shadow-floating` card, sign-up label class.

@@ -39,8 +39,8 @@ beforeAll(async () => {
   otherCafeId = await insertTenant(db, "Other Cafe", "other-cafe");
   const ownerLogin = await insertPersonWithLogin(db, "owner@sorella.test");
   const memberLogin = await insertPersonWithLogin(db, "member@sorella.test");
-  await insertMember(db, sorellaId, ownerLogin.partyId, "owner");
-  await insertMember(db, sorellaId, memberLogin.partyId, "staff");
+  await insertMember(db, sorellaId, ownerLogin.partyId, "tenant_admin");
+  await insertMember(db, sorellaId, memberLogin.partyId, "store_staff");
   owner = { kind: "user", tenantId: sorellaId, userId: ownerLogin.userId };
   member = { kind: "user", tenantId: sorellaId, userId: memberLogin.userId };
 });
@@ -104,7 +104,7 @@ describe("setBusinessHours", () => {
 describe("admin hours tools access", () => {
   const sunday = { weekday: "Sunday", isClosed: true, opensAt: null, closesAt: null };
 
-  it("refuses a member who is not an owner or manager", async () => {
+  it("refuses a member who is not a tenant_admin or store_admin", async () => {
     expect(await run(setBusinessHoursTool, sunday, member)).toEqual({ error: CHAT_BOT_EDITOR_ONLY });
     expect(await scheduleFor(owner)).toHaveProperty("weekly.0.isSet", false);
   });

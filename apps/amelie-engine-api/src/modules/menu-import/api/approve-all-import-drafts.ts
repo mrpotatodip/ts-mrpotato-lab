@@ -4,7 +4,7 @@ import { zValidator } from "#/lib/zod-validator";
 import type { AppEnv } from "#/types/variables";
 import { db_connect } from "#/lib/db-connection";
 import { runEffect } from "#/lib/effect-query";
-import { requireTenantEditor } from "#/modules/tenant";
+import { requirePower } from "#/modules/tenant";
 import { approveAllImportDraftsSvc } from "#/modules/menu-import/handlers";
 import { approveAllImportDraftsDoc } from "#/modules/menu-import/openapi";
 
@@ -13,7 +13,7 @@ const app = new Hono<AppEnv>();
 app.post(
   "/:importId/approve-all",
   approveAllImportDraftsDoc,
-  requireTenantEditor,
+  requirePower("company:menu:import_drafts:update"),
   zValidator("param", ImportParamSchema),
   async (c) => {
     const { importId } = c.req.valid("param");

@@ -23,9 +23,9 @@ export const deleteMenuItemImageDoc = describeRoute({
     { in: "path", name: "imageId", required: true, description: "The id of the Menu item image.", schema: { type: "string", format: "uuid" } },
   ],
   description: routeText({
-    context: "An owner or manager removes one photo from a Menu item. The stored object is deleted with the row.",
+    context: "A tenant_admin or store_admin removes one photo from a Menu item. The stored object is deleted with the row.",
     steps: [
-      "The server checks that the signed-in Person is an owner or manager of this Tenant. A staff member gets 403.",
+      "The server checks that the signed-in Person is a tenant_admin or store_admin of this Tenant. A store_staff member gets 403.",
       "The server deletes this Tenant's image on this item. If there is none, the answer is 404.",
       "The server returns the id.",
     ],

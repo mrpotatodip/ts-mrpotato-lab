@@ -28,4 +28,5 @@ export const updateFaq = (
         ...chosen,
       });
     }),
+    "company:faqs:faqs:update",
   );

@@ -47,7 +47,7 @@ const priceIn = async (itemId: string, countryId: string) => {
 
 const setupOwner = async (tenant: string, email: string): Promise<ChatBotOwner> => {
   const login = await insertPersonWithLogin(db, email);
-  await insertMember(db, tenant, login.partyId, "owner");
+  await insertMember(db, tenant, login.partyId, "tenant_admin");
   return { kind: "user", tenantId: tenant, userId: login.userId };
 };
 

@@ -7,12 +7,14 @@ import { runEffect } from "#/lib/effect-query";
 import { chatBotSignedInOwner } from "#/modules/chat-bot/lib";
 import { listChatBotThreadsSvc } from "#/modules/chat-bot/handlers";
 import { ChatBotThreadsQuerySchema } from "@repo/contracts/chat-bots";
+import { requirePower } from "#/modules/tenant";
 
 const app = new Hono<AppEnv>();
 
 app.get(
   "/threads",
   listChatBotThreadsDoc,
+  requirePower("company:assistant:threads:read"),
   zValidator("query", ChatBotThreadsQuerySchema),
   async (c) => {
     const query = c.req.valid("query");

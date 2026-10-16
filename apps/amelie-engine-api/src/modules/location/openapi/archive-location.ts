@@ -22,9 +22,9 @@ export const archiveLocationDoc = describeRoute({
   parameters: [TENANT_ID_QUERY_PARAMETER],
   description: routeText({
     context:
-      "An owner or manager closes a Location for good. It is archived, never deleted, and the widget and the assistant stop offering it.",
+      "A tenant_admin or store_admin closes a Location for good. It is archived, never deleted, and the widget and the assistant stop offering it.",
     steps: [
-      "The server checks that the signed-in Person is an owner or manager of this Tenant. A staff member gets 403.",
+      "The server checks that the signed-in Person is a tenant_admin or store_admin of this Tenant. A store_staff member gets 403.",
       "The server refuses with 409 when this is the last active Location of the Tenant.",
       "The server marks the Location archived and returns its id with the menu items that were sold only there and are now sold nowhere.",
     ],

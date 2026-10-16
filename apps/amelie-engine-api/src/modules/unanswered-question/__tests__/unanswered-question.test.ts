@@ -84,7 +84,7 @@ describe("unanswered questions", () => {
 
   it("does not show a signed-in staff thread", async () => {
     const { userId, partyId } = await insertPersonWithLogin(db, "owner@sorella.test");
-    await insertMember(db, sorellaId, partyId, "owner");
+    await insertMember(db, sorellaId, partyId, "tenant_admin");
     const staff = await startThread(sorellaId, { kind: "user", tenantId: sorellaId, userId });
     await addExchange(sorellaId, staff, "Staff asks about parking", "staff-parking");
 

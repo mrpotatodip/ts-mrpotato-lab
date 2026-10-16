@@ -13,11 +13,13 @@
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
     "db:seed": "tsx --env-file=.env src/seed.ts",
+    "db:sync-powers": "tsx --env-file=.env src/sync-powers.ts",
     "db:add-superuser": "tsx --env-file=.env src/add-superuser.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
     "@repo/chat-bot-durable-stream": "workspace:*",
+    "@repo/contracts": "workspace:*",
     "drizzle-orm": "^0.45.2",
     "pg": "^8.22.0"
   },

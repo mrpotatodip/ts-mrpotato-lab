@@ -34,6 +34,28 @@ export const withItemImagesOrder = (menu: MenuEditor, itemId: string, ids: strin
   })),
 });
 
+const withItem = (menu: MenuEditor, itemId: string, next: (item: MenuItem) => MenuItem): MenuEditor => ({
+  ...menu,
+  categories: menu.categories.map((category) => ({
+    ...category,
+    items: category.items.map((item) => (item.id === itemId ? next(item) : item)),
+  })),
+});
+
+export const withItemAvailability = (menu: MenuEditor, itemId: string, isAvailable: boolean): MenuEditor =>
+  withItem(menu, itemId, (item) => ({ ...item, isAvailable }));
+
+export const withItemLocations = (
+  menu: MenuEditor,
+  itemId: string,
+  locations: Pick<MenuItem, "availableAtAllLocations" | "locationIds">,
+): MenuEditor =>
+  withItem(menu, itemId, (item) => ({
+    ...item,
+    availableAtAllLocations: locations.availableAtAllLocations,
+    locationIds: locations.locationIds,
+  }));
+
 export const withItemImageCover = (menu: MenuEditor, itemId: string, imageId: string): MenuEditor => {
   const item = menu.categories.flatMap((category) => category.items).find((entry) => entry.id === itemId);
   if (!item) return menu;

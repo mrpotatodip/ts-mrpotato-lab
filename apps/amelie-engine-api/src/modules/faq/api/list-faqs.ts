@@ -7,12 +7,14 @@ import { db_connect } from "#/lib/db-connection";
 import { runEffect } from "#/lib/effect-query";
 import { listFaqsSvc } from "#/modules/faq/handlers";
 import { listFaqsDoc } from "#/modules/faq/openapi";
+import { requirePower } from "#/modules/tenant";
 
 const app = new Hono<AppEnv>();
 
 app.get(
   "/",
   listFaqsDoc,
+  requirePower("company:faqs:faqs:read"),
   zValidator("query", LocationQuerySchema),
   async (c) => {
     const { locationId } = c.req.valid("query");

@@ -4,7 +4,7 @@ import { zValidator } from "#/lib/zod-validator";
 import type { AppEnv } from "#/types/variables";
 import { db_connect } from "#/lib/db-connection";
 import { runEffect } from "#/lib/effect-query";
-import { requireTenantEditor } from "#/modules/tenant";
+import { requirePower } from "#/modules/tenant";
 import { setBusinessHoursSvc } from "#/modules/schedule/handlers";
 import { setWeeklyHoursDoc } from "#/modules/schedule/openapi";
 
@@ -13,7 +13,7 @@ const app = new Hono<AppEnv>();
 app.put(
   "/hours/:dayOfWeek",
   setWeeklyHoursDoc,
-  requireTenantEditor,
+  requirePower("store:hours:weekly:update"),
   zValidator("param", WeekdayParamSchema),
   zValidator("query", LocationQuerySchema),
   zValidator("json", SetWeeklyHoursBodySchema),

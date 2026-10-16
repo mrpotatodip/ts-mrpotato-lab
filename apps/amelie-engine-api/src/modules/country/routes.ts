@@ -3,8 +3,8 @@ import type { AppEnv } from "#/types/variables";
 import { archiveCountryAPI, createCountryAPI, listCountriesAPI, updateCountryAPI } from "./api";
 
 // -----
-// A Tenant's Countries: any member reads, an owner
-// or manager adds, edits the Currency and archives.
+// A Tenant's Countries: any member reads, a tenant_admin
+// or store_admin adds, edits the Currency and archives.
 // -----
 const app = new Hono<AppEnv>();
 

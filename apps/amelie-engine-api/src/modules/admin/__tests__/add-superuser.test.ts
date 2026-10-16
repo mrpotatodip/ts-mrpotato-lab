@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { eq } from "drizzle-orm";
-import { addSuperuser, partyRoles, roles } from "@repo/db-amelie";
+import { accessMasterRoles, addSuperuser, partyRoles, roles } from "@repo/db-amelie";
 import type { DbConnectType } from "#/lib/db-connection";
 import { runEffect } from "#/lib/effect-query";
 import { getMeSvc } from "#/modules/me";
@@ -13,8 +13,13 @@ beforeAll(async () => {
   db = await createTestDb();
 });
 
-const superuserRoles = () => db.select().from(roles).where(eq(roles.key, "superuser"));
-const superuserGrants = () => db.select().from(partyRoles).where(eq(partyRoles.roleKey, "superuser"));
+const superuserRoles = () =>
+  db
+    .select({ id: roles.id, tenantId: roles.tenantId })
+    .from(roles)
+    .innerJoin(accessMasterRoles, eq(accessMasterRoles.id, roles.masterRoleId))
+    .where(eq(accessMasterRoles.key, "superuser"));
+const superuserGrants = () => db.select().from(partyRoles).where(eq(partyRoles.roleScope, "platform"));
 
 describe("addSuperuser", () => {
   it("makes an existing login a superuser and creates the global Role if missing", async () => {
@@ -25,7 +30,7 @@ describe("addSuperuser", () => {
 
     expect(result).toEqual({ email: "boss@amelie.test", added: true });
     const [role] = await superuserRoles();
-    expect(role).toMatchObject({ tenantId: null, canEdit: false });
+    expect(role).toMatchObject({ tenantId: null });
     expect(await runEffect(getMeSvc(db, login.userId))).toEqual({ isSuperuser: true });
   });
 
@@ -66,7 +71,7 @@ describe("addSuperuser", () => {
   it("gives a superuser no cafe: the role lists no Tenant", async () => {
     const cafeId = await insertTenant(db, "Some Cafe", "some-cafe");
     const owner = await insertPersonWithLogin(db, "owner@some-cafe.test");
-    await insertMember(db, cafeId, owner.partyId, "owner");
+    await insertMember(db, cafeId, owner.partyId, "tenant_admin");
     const boss = await insertPersonWithLogin(db, "boss-no-cafe@amelie.test");
     await addSuperuser(db, "boss-no-cafe@amelie.test");
 

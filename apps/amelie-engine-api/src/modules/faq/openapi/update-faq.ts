@@ -25,9 +25,9 @@ export const updateFaqDoc = describeRoute({
   requestBody: { required: true, content: { "application/json": { schema: resolver(FaqBodySchema) } } },
   description: routeText({
     context:
-      "An owner or manager changes the question, the answer or the category of one FAQ. The dashboard sends the whole FAQ.",
+      "A tenant_admin or store_admin changes the question, the answer or the category of one FAQ. The dashboard sends the whole FAQ.",
     steps: [
-      "The server checks that the signed-in Person is an owner or manager of this Tenant. A staff member gets 403.",
+      "The server checks that the signed-in Person is a tenant_admin or store_admin of this Tenant. A store_staff member gets 403.",
       "The server looks for the FAQ in this Tenant. If it finds none, the answer is 404.",
       "If a categoryId is given, it must be a category of this Tenant. null moves the FAQ to General.",
       "If a locationId is given, it must be an active Location of this Tenant and the FAQ is shown only there. null (or left out) makes it show at every Location.",

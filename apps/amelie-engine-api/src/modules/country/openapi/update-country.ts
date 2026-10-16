@@ -21,9 +21,9 @@ export const updateCountryDoc = describeRoute({
   requestBody: { required: true, content: { "application/json": { schema: resolver(UpdateCountryBodySchema) } } },
   description: routeText({
     context:
-      "An owner or manager changes the Currency a Country is priced in. The country itself is its identity and cannot change.",
+      "A tenant_admin or store_admin changes the Currency a Country is priced in. The country itself is its identity and cannot change.",
     steps: [
-      "The server checks that the signed-in Person is an owner or manager of this Tenant. A staff member gets 403.",
+      "The server checks that the signed-in Person is a tenant_admin or store_admin of this Tenant. A store_staff member gets 403.",
       "The server saves the new Currency. Prices keep their numbers: nothing is converted.",
       "An archived Country, or one of another Tenant, is 404.",
     ],

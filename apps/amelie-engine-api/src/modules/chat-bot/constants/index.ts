@@ -113,7 +113,7 @@ export const CHAT_BOT_TOOL_ERROR_LIMIT_REACHED = "tool call limit reached for th
 // Admin tools: who may change a Tenant's
 // data from chat, and what the model hears.
 // -----
-export const CHAT_BOT_EDITOR_ONLY = "Only a Tenant owner or manager can change this";
+export const CHAT_BOT_EDITOR_ONLY = "Only a tenant_admin or store_admin can change this";
 
 // -----
 // Public chat limits. The per-minute ones

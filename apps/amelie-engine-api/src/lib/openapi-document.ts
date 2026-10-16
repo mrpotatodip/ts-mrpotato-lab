@@ -46,6 +46,7 @@ export const openApiDocument: OpenApiOptions["documentation"] = {
     { name: "me", description: "Who the signed-in login is: superuser or not." },
     { name: "admin", description: "The platform admin area. Superusers only." },
     { name: "invite-codes", description: "Invite codes for sign-up: create, list, revoke. Superusers only." },
+    { name: "team", description: "Team members and Team invites on one Tenant." },
     { name: "chat-bot", description: "Chat for a signed-in team member (dashboard)." },
     { name: "unanswered-questions", description: "Questions that Customers asked and the assistant could not answer." },
     { name: "public-chat-bot", description: "Chat for an anonymous Customer (widget)." },

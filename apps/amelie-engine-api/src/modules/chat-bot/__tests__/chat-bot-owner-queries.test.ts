@@ -43,7 +43,7 @@ beforeAll(async () => {
   sorellaId = await insertTenant(db, "Sorella Cafe", "sorella");
   otherCafeId = await insertTenant(db, "Other Cafe", "other-cafe");
   const login = await insertPersonWithLogin(db, "owner@sorella.test");
-  await insertMember(db, sorellaId, login.partyId, "owner");
+  await insertMember(db, sorellaId, login.partyId, "tenant_admin");
   customer = { kind: "anonymous", tenantId: sorellaId, anonymousId: crypto.randomUUID() };
   member = { kind: "user", tenantId: sorellaId, userId: login.userId };
   anonymousThreadId = await startThread(customer, "run-anon");

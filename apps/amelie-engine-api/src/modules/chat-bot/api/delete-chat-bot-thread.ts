@@ -7,12 +7,14 @@ import { runEffect } from "#/lib/effect-query";
 import { chatBotSignedInOwner } from "#/modules/chat-bot/lib";
 import { deleteChatBotThreadSvc } from "#/modules/chat-bot/handlers";
 import { ChatBotThreadParamSchema } from "@repo/contracts/chat-bots";
+import { requirePower } from "#/modules/tenant";
 
 const app = new Hono<AppEnv>();
 
 app.delete(
   "/threads/:id",
   deleteChatBotThreadDoc,
+  requirePower("company:assistant:threads:delete"),
   zValidator("param", ChatBotThreadParamSchema),
   async (c) => {
     const { id } = c.req.valid("param");

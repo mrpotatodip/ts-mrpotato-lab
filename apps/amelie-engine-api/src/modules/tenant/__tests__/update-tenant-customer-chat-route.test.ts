@@ -53,7 +53,7 @@ const put = (
     env,
   );
 
-const newCafe = async (slug: string, role: "owner" | "manager" | "staff") => {
+const newCafe = async (slug: string, role: "tenant_admin" | "store_admin" | "store_staff") => {
   const tenantId = await insertTenant(db, slug, slug);
   const login = await insertPersonWithLogin(db, `${role}@${slug}.test`);
   await insertMember(db, tenantId, login.partyId, role);
@@ -66,7 +66,7 @@ beforeAll(async () => {
 
 describe("PUT /tenants/:tenantId/customer-chat", () => {
   it("answers 200 with the saved look for an owner", async () => {
-    const { tenantId, userId } = await newCafe("chat-look-owner", "owner");
+    const { tenantId, userId } = await newCafe("chat-look-owner", "tenant_admin");
 
     const res = await put(userId, tenantId, {
       customerChatLabel: " Ask Sorella ",
@@ -81,7 +81,7 @@ describe("PUT /tenants/:tenantId/customer-chat", () => {
   });
 
   it("clears the colour when it is null", async () => {
-    const { tenantId, userId } = await newCafe("chat-look-clear", "owner");
+    const { tenantId, userId } = await newCafe("chat-look-clear", "tenant_admin");
     await runEffect(updateTenantCustomerChatSvc(db, userId, tenantId, "Ask us", "#111111"));
 
     const res = await put(userId, tenantId, { customerChatLabel: "Ask us", customerChatAccent: null });
@@ -91,7 +91,7 @@ describe("PUT /tenants/:tenantId/customer-chat", () => {
   });
 
   it("answers 403 for staff and leaves the look unchanged", async () => {
-    const { tenantId, userId } = await newCafe("chat-look-staff", "staff");
+    const { tenantId, userId } = await newCafe("chat-look-staff", "store_staff");
 
     const res = await put(userId, tenantId, { customerChatLabel: "Nope", customerChatAccent: "#ff0000" });
 
@@ -103,8 +103,8 @@ describe("PUT /tenants/:tenantId/customer-chat", () => {
   });
 
   it("answers 404 for a Tenant the login is not a member of", async () => {
-    const { tenantId } = await newCafe("chat-look-target", "owner");
-    const outsider = await newCafe("chat-look-outsider", "owner");
+    const { tenantId } = await newCafe("chat-look-target", "tenant_admin");
+    const outsider = await newCafe("chat-look-outsider", "tenant_admin");
 
     const res = await put(outsider.userId, tenantId, { customerChatLabel: "Steal", customerChatAccent: null });
 

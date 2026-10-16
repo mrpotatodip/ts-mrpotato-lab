@@ -66,7 +66,7 @@ export function CountrySection() {
           )}
         </div>
       ) : (
-        <p className="text-muted-foreground p-6 text-sm">Only an owner or manager can change this.</p>
+        <p className="text-muted-foreground p-6 text-sm">Only a tenant_admin or store_admin can change this.</p>
       )}
       <CountryCurrencyDialog
         change={changing}

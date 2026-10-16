@@ -10,10 +10,14 @@ const renderCard = (
     customerChatAccent: string | null;
     canEdit: boolean;
     onSave: (look: { customerChatLabel: string; customerChatAccent: string | null }) => void;
+    onDraftChange: (look: { customerChatLabel: string; customerChatAccent: string | null }) => void;
   }> = {},
 ) => {
   const onSave =
     overrides.onSave ?? vi.fn<(look: { customerChatLabel: string; customerChatAccent: string | null }) => void>();
+  const onDraftChange =
+    overrides.onDraftChange ??
+    vi.fn<(look: { customerChatLabel: string; customerChatAccent: string | null }) => void>();
   render(
     <WidgetCustomerChatCard
       customerChatLabel={overrides.customerChatLabel ?? "Chat with us"}
@@ -22,14 +26,15 @@ const renderCard = (
       isPending={false}
       error={null}
       onSave={onSave}
+      onDraftChange={onDraftChange}
     />,
   );
-  return onSave;
+  return { onSave, onDraftChange };
 };
 
 describe("WidgetCustomerChatCard", () => {
   it("lets an editor save button text and a colour", () => {
-    const onSave = renderCard();
+    const { onSave } = renderCard();
 
     fireEvent.change(screen.getByLabelText("Button label"), { target: { value: "Ask Sorella" } });
     fireEvent.change(screen.getByLabelText("Colour"), { target: { value: "#b4532a" } });
@@ -44,5 +49,13 @@ describe("WidgetCustomerChatCard", () => {
     expect(screen.getByText("Ask Sorella")).toBeTruthy();
     expect(screen.getByText("#b4532a")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Save" })).toBeNull();
+  });
+
+  it("reports the draft look as the editor types a label", () => {
+    const { onDraftChange } = renderCard();
+
+    fireEvent.change(screen.getByLabelText("Button label"), { target: { value: "Ask Sorella" } });
+
+    expect(onDraftChange).toHaveBeenCalledWith({ customerChatLabel: "Ask Sorella", customerChatAccent: null });
   });
 });

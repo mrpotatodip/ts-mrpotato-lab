@@ -1,6 +1,15 @@
 import { and, asc, eq, sql } from "drizzle-orm";
 import { Effect } from "effect";
-import { authUser, partyRoles, roles, tenantCountries, tenants } from "@repo/db-amelie";
+import {
+  authUser,
+  partyRoles,
+  accessMasterPowers,
+  accessMasterRoles,
+  accessRolePowers,
+  roles,
+  tenantCountries,
+  tenants,
+} from "@repo/db-amelie";
 import { TenantSchema, type Tenant, type TenantRegion } from "@repo/contracts/amelie";
 import type { DbConnectType } from "#/lib/db-connection";
 import { Conflict, NotFound, toDbError, type DbError } from "#/lib/effect-query";
@@ -27,8 +36,14 @@ const tenantColumns = {
   allowedOrigins: tenants.allowedOrigins,
   customerChatLabel: tenants.customerChatLabel,
   customerChatAccent: tenants.customerChatAccent,
-  role: roles.key,
-  canEdit: roles.canEdit,
+  role: accessMasterRoles.key,
+  roleLabel: accessMasterRoles.label,
+  powers: sql<string[]>`coalesce((
+    select array_agg(${accessMasterPowers.power} order by ${accessMasterPowers.power})
+    from ${accessRolePowers}
+    join ${accessMasterPowers} on ${accessMasterPowers.id} = ${accessRolePowers.masterPowerId}
+    where ${accessRolePowers.masterRoleId} = ${roles.masterRoleId}
+  ), '{}'::text[])`.as("powers"),
 };
 
 // -----
@@ -48,6 +63,7 @@ const memberTenants = (db: DbConnectType) =>
     .from(tenants)
     .innerJoin(partyRoles, eq(partyRoles.tenantId, tenants.id))
     .innerJoin(roles, eq(roles.id, partyRoles.roleId))
+    .innerJoin(accessMasterRoles, eq(accessMasterRoles.id, roles.masterRoleId))
     .innerJoin(authUser, eq(authUser.partyId, partyRoles.partyId))
     .innerJoin(tenantCountries, eq(tenantCountries.id, regionCountryId));
 
