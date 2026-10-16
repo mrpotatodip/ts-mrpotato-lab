@@ -8,7 +8,7 @@ import { DashboardStatusBadge } from "./dashboard-status-badge";
 import { DashboardThemeToggle } from "./dashboard-theme-toggle";
 
 // -----
-// Names the screen, and tells a staff member they can
+// Names the screen, and tells a store_staff member they can
 // look but not change anything.
 // -----
 export function DashboardHeader() {

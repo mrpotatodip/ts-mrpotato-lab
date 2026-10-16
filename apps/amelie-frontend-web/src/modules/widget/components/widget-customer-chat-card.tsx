@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   CUSTOMER_CHAT_APPEARANCE_INVALID,
   CUSTOMER_CHAT_LABEL_DEFAULT,
@@ -10,13 +10,19 @@ import { Input } from "#/components/ui/input";
 import { PageCard } from "#/modules/shared";
 import { toAccentSwatchValue } from "../utils";
 
+type WidgetLookDraft = {
+  customerChatLabel: string;
+  customerChatAccent: string | null;
+};
+
 type WidgetCustomerChatCardProps = {
   customerChatLabel: string;
   customerChatAccent: string | null;
   canEdit: boolean;
   isPending: boolean;
   error: string | null;
-  onSave: (look: { customerChatLabel: string; customerChatAccent: string | null }) => void;
+  onSave: (look: WidgetLookDraft) => void;
+  onDraftChange: (look: WidgetLookDraft) => void;
 };
 
 const FIELD_CLASS = "flex flex-col gap-1.5 text-sm";
@@ -28,10 +34,18 @@ export function WidgetCustomerChatCard({
   isPending,
   error,
   onSave,
+  onDraftChange,
 }: WidgetCustomerChatCardProps) {
   const [label, setLabel] = useState(customerChatLabel);
   const [accent, setAccent] = useState(customerChatAccent);
   const [localError, setLocalError] = useState<string | null>(null);
+
+  useEffect(() => {
+    onDraftChange({
+      customerChatLabel: canEdit ? label : customerChatLabel,
+      customerChatAccent: canEdit ? accent : customerChatAccent,
+    });
+  }, [accent, canEdit, customerChatAccent, customerChatLabel, label, onDraftChange]);
 
   const save = () => {
     const trimmed = label.trim();

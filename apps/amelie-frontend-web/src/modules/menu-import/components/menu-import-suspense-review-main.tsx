@@ -141,7 +141,7 @@ function MenuImportReviewView({ importId }: MenuImportSuspenseReviewMainProps) {
         ) : (
           <PageCard title={data.publishedAt ? "Published" : "Review"} description={fileNames}>
             <p className="text-sm">
-              {data.publishedAt ? "This menu is live." : "Only an owner or manager can publish this menu."}
+              {data.publishedAt ? "This menu is live." : "Only a tenant_admin or store_admin can publish this menu."}
             </p>
             {published ? (
               <p className="stat-label mt-2">

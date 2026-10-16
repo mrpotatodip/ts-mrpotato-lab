@@ -10,6 +10,7 @@ import { needsCountryPrice, toPriceEntryBody } from "../utils";
 
 type MenuItemCountrySoldProps = {
   item: MenuItem;
+  countryLabel: string;
   currency: string;
   isPending: boolean;
   error: string | null;
@@ -23,7 +24,7 @@ type MenuItemCountrySoldProps = {
 // no price here has nothing to switch on: it asks for
 // a price, which also starts selling it.
 // -----
-export function MenuItemCountrySold({ item, currency, isPending, error, onSetSold, onSetPrice }: MenuItemCountrySoldProps) {
+export function MenuItemCountrySold({ item, countryLabel, currency, isPending, error, onSetSold, onSetPrice }: MenuItemCountrySoldProps) {
   const id = useId();
 
   const form = useForm({
@@ -73,7 +74,7 @@ export function MenuItemCountrySold({ item, currency, isPending, error, onSetSol
             onCheckedChange={(checked) => onSetSold(checked === true)}
           />
           <Label htmlFor={id} className="font-normal">
-            Sold in this country
+            Sold in {countryLabel}
           </Label>
         </div>
       )}

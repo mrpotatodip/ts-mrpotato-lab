@@ -30,7 +30,7 @@ export function MenuImportSuspenseListMain() {
           <MenuImportUpload />
         ) : (
           <PageCard title="Upload a menu" description="One PDF, or up to 10 photos.">
-            <p className="text-muted-foreground text-sm">Only an owner or manager can upload a menu.</p>
+            <p className="text-muted-foreground text-sm">Only a tenant_admin or store_admin can upload a menu.</p>
           </PageCard>
         )}
         <Suspense fallback={<MenuImportListSkeleton />}>

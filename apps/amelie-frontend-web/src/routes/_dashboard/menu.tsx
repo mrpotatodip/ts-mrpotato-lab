@@ -13,5 +13,5 @@ export const Route = createFileRoute("/_dashboard/menu")({
 });
 
 function RouteComponent() {
-  return <MenuSuspensePanelMain />;
+  return <MenuSuspensePanelMain kind="catalog" />;
 }

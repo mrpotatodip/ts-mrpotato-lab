@@ -46,7 +46,7 @@ function ScheduleHoursBody({ locationId }: { locationId: string | undefined }) {
             <ScheduleSpecialDateForm locationId={locationId} />
           </PageCard>
         ) : (
-          <p className="text-muted-foreground text-xs">Only an owner or manager can change these.</p>
+          <p className="text-muted-foreground text-xs">Only a tenant_admin or store_admin can change these.</p>
         )}
       </div>
       <div className="space-y-8">

@@ -1,6 +1,6 @@
 import { ArrowDown, ArrowUp, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
-import type { Country, DietaryTag, MenuCategory } from "@repo/contracts/amelie";
+import type { Country, DietaryTag, Location, MenuCategory } from "@repo/contracts/amelie";
 
 import { Button } from "#/components/ui/button";
 import { PageCard } from "#/modules/shared";
@@ -15,7 +15,9 @@ type MenuCategorySectionProps = {
   categories: Array<Pick<MenuCategory, "id" | "name">>;
   dietaryTags: DietaryTag[];
   canEdit: boolean;
+  kind: "catalog" | "floor";
   country: Country | undefined;
+  location: Location | undefined;
   isFirst: boolean;
   isLast: boolean;
   onlyItemId: string | null;
@@ -26,7 +28,20 @@ type MenuCategorySectionProps = {
 // One category: its name and note, its items in
 // order, and a form to add an item to it.
 // -----
-export function MenuCategorySection({ category, categories, dietaryTags, canEdit, country, isFirst, isLast, onlyItemId, onMove }: MenuCategorySectionProps) {
+export function MenuCategorySection({
+  category,
+  categories,
+  dietaryTags,
+  canEdit,
+  kind,
+  country,
+  location,
+  isFirst,
+  isLast,
+  onlyItemId,
+  onMove,
+}: MenuCategorySectionProps) {
+  const canEditCatalog = canEdit && kind === "catalog";
   const { updateCategory, removeCategory, addItem, reorderItems } = useMenuActions();
   const [isEditing, setIsEditing] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
@@ -38,7 +53,7 @@ export function MenuCategorySection({ category, categories, dietaryTags, canEdit
       description={isEditing ? undefined : category.note ?? undefined}
       contentClassName="p-0"
       action={
-        canEdit && !isEditing ? (
+        canEditCatalog && !isEditing ? (
           <div className="flex gap-1">
             <Button variant="ghost" size="icon-sm" aria-label="Move category up" title="Move up" disabled={isFirst} onClick={() => onMove(-1)}>
               <ArrowUp />
@@ -87,13 +102,15 @@ export function MenuCategorySection({ category, categories, dietaryTags, canEdit
         <ul className="divide-y">
           {category.items.map((item, index) => onlyItemId !== null && item.id !== onlyItemId ? null : (
             <MenuItemRow
-              key={`${item.id}:${item.name}:${item.price}:${item.currency}:${item.isSold}:${item.isAvailable}:${item.availableAtAllLocations}:${item.locationIds.join(",")}:${item.dietaryTags.join(",")}`}
+              key={`${item.id}:${item.name}:${item.price}:${item.currency}:${item.isSold}:${item.dietaryTags.join(",")}`}
               item={item}
               categoryId={category.id}
               categories={categories}
               dietaryTags={dietaryTags}
               canEdit={canEdit}
+              kind={kind}
               country={country}
+              location={location}
               isFirst={index === 0}
               isLast={index === category.items.length - 1}
               onMove={(direction) => reorderItems.mutate({ data: { categoryId: category.id, ids: moveId(itemIds, item.id, direction) } })}
@@ -103,7 +120,7 @@ export function MenuCategorySection({ category, categories, dietaryTags, canEdit
       )}
       {reorderItems.isError ? <p className="px-6 pt-4 text-xs text-destructive">{reorderItems.error.message}</p> : null}
 
-      {canEdit ? (
+      {canEditCatalog ? (
         <div className="border-t p-6">
           {isAdding ? (
             <MenuItemForm

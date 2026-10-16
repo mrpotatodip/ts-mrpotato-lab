@@ -1,5 +1,5 @@
 type DashboardAccountSubtitleInput = {
-  role: "owner" | "manager" | "staff" | null;
+  roleLabel: string | null;
   isSuperuser: boolean;
 };
 
@@ -10,13 +10,7 @@ type DashboardAccountSubtitleInput = {
 export const DASHBOARD_PLAN_NAME = "Free";
 export const DASHBOARD_PLAN_LABEL = "Free plan";
 
-export function dashboardRoleLabel(role: DashboardAccountSubtitleInput["role"]): string | null {
-  if (!role) return null;
-  return `${role.charAt(0).toUpperCase()}${role.slice(1)}`;
-}
-
-export function dashboardAccountSubtitle({ role, isSuperuser }: DashboardAccountSubtitleInput): string {
-  const roleLabel = dashboardRoleLabel(role);
+export function dashboardAccountSubtitle({ roleLabel, isSuperuser }: DashboardAccountSubtitleInput): string {
   if (roleLabel) return `${roleLabel} · ${DASHBOARD_PLAN_LABEL}`;
   if (isSuperuser) return "Superuser";
   return DASHBOARD_PLAN_LABEL;

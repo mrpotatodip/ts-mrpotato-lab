@@ -136,7 +136,7 @@ export function FaqCategorySection({ group, categories, locations, countries, fo
               )}
             </div>
           ) : (
-            <p className="text-muted-foreground p-6 text-sm">Only an owner or manager can change these.</p>
+            <p className="text-muted-foreground p-6 text-sm">Only a tenant_admin or store_admin can change these.</p>
           )}
         </>
       )}

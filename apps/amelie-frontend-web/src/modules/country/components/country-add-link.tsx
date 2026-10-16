@@ -8,7 +8,7 @@ import { CountryAddForm } from "./country-add-form";
 
 // -----
 // All a one-country cafe sees: a quiet way to sell in
-// another country. Only an owner or manager sees it;
+// another country. Only a tenant_admin or store_admin sees it;
 // it opens the add form in place.
 // -----
 export function CountryAddLink() {

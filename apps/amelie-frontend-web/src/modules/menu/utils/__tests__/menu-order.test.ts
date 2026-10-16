@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 import type { MenuEditor } from "@repo/contracts/amelie";
-import { withCategoriesOrder, withItemImageCover, withItemImagesOrder, withItemsOrder } from "../menu-order";
+import {
+  withCategoriesOrder,
+  withItemAvailability,
+  withItemImageCover,
+  withItemImagesOrder,
+  withItemLocations,
+  withItemsOrder,
+} from "../menu-order";
 
 const ID = (n: number) => `00000000-0000-4000-8000-00000000000${n}`;
 
@@ -62,6 +69,23 @@ describe("withItemImagesOrder", () => {
     const next = withItemImagesOrder(withPhotos, ID(4), [ID(8), ID(7)]);
     expect(next.categories[0].items[0].images.map((image) => image.id)).toEqual([ID(8), ID(7)]);
     expect(next.categories[0].items[0].coverPath).toBe(`/menu-item-images/${ID(8)}`);
+  });
+});
+
+describe("withItemAvailability", () => {
+  it("marks one item sold out and leaves the others", () => {
+    const next = withItemAvailability(menu, ID(4), false);
+    expect(next.categories[0].items[0].isAvailable).toBe(false);
+    expect(next.categories[0].items[1].isAvailable).toBe(true);
+  });
+});
+
+describe("withItemLocations", () => {
+  it("records the Locations where an all-Locations item is sold out", () => {
+    const next = withItemLocations(menu, ID(4), { availableAtAllLocations: true, locationIds: [ID(9)] });
+    expect(next.categories[0].items[0].availableAtAllLocations).toBe(true);
+    expect(next.categories[0].items[0].locationIds).toEqual([ID(9)]);
+    expect(next.categories[0].items[1].locationIds).toEqual([]);
   });
 });
 

@@ -111,7 +111,7 @@ export function BusinessProfileForm({ profile, canEdit, locationId, showPlaceFie
           </Button>
         </div>
       ) : (
-        <p className="text-muted-foreground text-xs">Only an owner or manager can change this.</p>
+        <p className="text-muted-foreground text-xs">Only a tenant_admin or store_admin can change this.</p>
       )}
     </form>
   );

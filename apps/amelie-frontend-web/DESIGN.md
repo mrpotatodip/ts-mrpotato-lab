@@ -265,12 +265,12 @@ Bottom-sheet motion utilities `.sheet-slide-up` (2.2s) and `.sheet-slide-down` (
 ### 6.6 Tables and lists
 
 - **Table** (`ui/table.tsx`): `text-sm`, head `h-12 px-4 text-muted-foreground font-medium`, cell `p-4`, row `border-b hover:bg-muted/50`, selected `bg-muted`. 1 usage (`admin-invite-code-table.tsx`).
-- Elsewhere, "tables" are `<ul class="divide-y">` lists in cards.
+- Elsewhere, "tables" are `<ul class="divide-y">` lists in cards, including Team members and pending invites (`px-6 py-5`, `hover:bg-accent/40`).
 
 ### 6.7 Navigation
 
 - **Sidebar** (`ui/sidebar.tsx`, shadcn): width `16rem`, mobile `18rem`, icon-collapsed `3rem`, keyboard shortcut `b`, state cookie `sidebar_state` (7 days). Used with `collapsible="offcanvas"`. Menu button `p-2 text-sm`, active `bg-sidebar-accent font-medium`, focus `ring-2 ring-sidebar-ring`.
-- **Dashboard sidebar** (`dashboard-sidebar.tsx`): brand text `text-base font-semibold tracking-tight`, then `TenantPicker`, grouped nav (Overview, Your cafe, Customers, plus an admin group), footer with user name (`text-xs text-muted-foreground`) and `LogoutButton`. Nav items are defined in `modules/dashboard/constants/dashboard-nav.ts`, each with a lucide icon.
+- **Dashboard sidebar** (`dashboard-sidebar.tsx`): brand text `text-base font-semibold tracking-tight`, then `TenantPicker`, grouped nav (Overview, Company, Store, Integration, plus an admin group), footer with user name (`text-xs text-muted-foreground`) and `LogoutButton`. Nav items are defined in `modules/dashboard/constants/dashboard-nav.ts`, each with a lucide icon. Store is Hours and Menu (`/store-menu`, sold out / back on). Company is Profile, Team, Master menu (`/menu`, with Items and Import subnav: edit, photos, delete), FAQs, then a `SidebarSeparator` and Chats, Unanswered, Assistant.
 - **Top bar** (`dashboard-header.tsx`): `sticky top-0 z-10 h-14 border-b px-4 bg-background/80 backdrop-blur`, with `SidebarTrigger`, a vertical `Separator`, the current screen label, then a right cluster (view-only badge, theme toggle).
 - **Breadcrumb** (`ui/breadcrumb.tsx`, `shared/components/app-breadcrumb.tsx`): present. Usage not measured.
 - **Tabs** (`ui/tabs.tsx`): `TabsList h-10 rounded-md bg-muted p-1`, active trigger `bg-background shadow-sm`. 0 usages.
@@ -414,7 +414,7 @@ Consumers: `dashboard-overview-skeleton.tsx`, `menu-panel-skeleton.tsx`, `faq-pa
 14. ~~Import aliases~~ **Fixed**: all imports use `#/`.
 15. ~~README is boilerplate~~ **Fixed**: `README.md` now describes this app.
 
-16. **Five label styles.** Sign-in and sign-up: `text-[10px] uppercase tracking-wide text-muted-foreground`. Admin invite form: `.stat-label`. Business profile and location rows: `flex flex-col gap-1.5 text-sm` wrapped around the field. `ui/label`: `text-sm font-medium leading-none` (checkboxes and menu fields). FAQ, menu and schedule inputs: no visible label. Some of this was in uncommitted work when this was written, so recheck before standardizing.
+16. **Five label styles.** Sign-in, sign-up and join (`/join/$token`): `text-[10px] uppercase tracking-wide text-muted-foreground`. Admin invite form and Team invite form: `.stat-label`. Business profile and location rows: `flex flex-col gap-1.5 text-sm` wrapped around the field. `ui/label`: `text-sm font-medium leading-none` (checkboxes and menu fields). FAQ, menu and schedule inputs: no visible label. Some of this was in uncommitted work when this was written, so recheck before standardizing.
 17. **Table styling duplicated.** The admin invite table uses `ui/table`; the chat table card hand-rolls a table with its own classes.
 18. **Menu board active state.** `menu-tree-board.tsx` marks the active item with `bg-primary/15 text-primary`, a pattern used nowhere else (sidebar uses `bg-sidebar-accent`).
 

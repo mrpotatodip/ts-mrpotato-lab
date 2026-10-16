@@ -26,7 +26,7 @@ function MenuTreeCategorySkeleton({ itemCount }: { itemCount: number }) {
   );
 }
 
-function MenuItemRowSkeleton() {
+function MenuItemRowSkeleton({ kind }: { kind: "catalog" | "floor" }) {
   return (
     <li className="flex items-center justify-between gap-4 p-6">
       <div className="flex min-w-0 items-center gap-3">
@@ -34,41 +34,60 @@ function MenuItemRowSkeleton() {
         <Skeleton className="h-4 w-48" />
       </div>
       <div className="flex shrink-0 gap-1">
-        <Skeleton className="h-9 w-20 rounded-md" />
-        <Skeleton className="size-8 rounded-md" />
-        <Skeleton className="size-8 rounded-md" />
+        {kind === "floor" ? (
+          <Skeleton className="h-9 w-20 rounded-md" />
+        ) : (
+          <>
+            <Skeleton className="size-8 rounded-md" />
+            <Skeleton className="size-8 rounded-md" />
+            <Skeleton className="size-8 rounded-md" />
+          </>
+        )}
       </div>
     </li>
   );
 }
 
-function MenuCategoryCardSkeleton() {
+function MenuCategoryCardSkeleton({ kind }: { kind: "catalog" | "floor" }) {
   return (
     <PageCard
       title="Category"
       action={
-        <div className="flex gap-1">
-          <Skeleton className="size-8 rounded-md" />
-          <Skeleton className="size-8 rounded-md" />
-          <Skeleton className="size-8 rounded-md" />
-          <Skeleton className="size-8 rounded-md" />
-        </div>
+        kind === "catalog" ? (
+          <div className="flex gap-1">
+            <Skeleton className="size-8 rounded-md" />
+            <Skeleton className="size-8 rounded-md" />
+            <Skeleton className="size-8 rounded-md" />
+            <Skeleton className="size-8 rounded-md" />
+          </div>
+        ) : undefined
       }
       contentClassName="p-0"
     >
       <ul className="divide-y">
-        <MenuItemRowSkeleton />
-        <MenuItemRowSkeleton />
-        <MenuItemRowSkeleton />
+        <MenuItemRowSkeleton kind={kind} />
+        <MenuItemRowSkeleton kind={kind} />
+        <MenuItemRowSkeleton kind={kind} />
       </ul>
-      <div className="border-t p-6">
-        <Skeleton className="h-9 w-24 rounded-md" />
-      </div>
+      {kind === "catalog" ? (
+        <div className="border-t p-6">
+          <Skeleton className="h-9 w-24 rounded-md" />
+        </div>
+      ) : null}
     </PageCard>
   );
 }
 
-export function MenuPanelSkeleton() {
+export function MenuPanelSkeleton({ kind }: { kind: "catalog" | "floor" }) {
+  const cards = (
+    <div className="space-y-6">
+      <MenuCategoryCardSkeleton kind={kind} />
+      <MenuCategoryCardSkeleton kind={kind} />
+    </div>
+  );
+
+  if (kind === "floor") return cards;
+
   return (
     <div className="grid items-start gap-8 lg:grid-cols-[2fr_3fr] lg:gap-x-16">
       <div className="space-y-8">
@@ -86,10 +105,7 @@ export function MenuPanelSkeleton() {
           </ul>
         </PageCard>
       </div>
-      <div className="space-y-6">
-        <MenuCategoryCardSkeleton />
-        <MenuCategoryCardSkeleton />
-      </div>
+      {cards}
     </div>
   );
 }

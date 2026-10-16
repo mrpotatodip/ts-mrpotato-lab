@@ -10,12 +10,16 @@ import {
   MessageSquareWarning,
   MessagesSquare,
   Store,
+  Users,
   UtensilsCrossed,
 } from "lucide-react";
 
+const DASHBOARD_NAV_SEPARATOR = { kind: "separator" } as const;
+
 // -----
 // The sidebar, grouped by what the owner is doing:
-// looking, setting up the cafe, watching Customers, or installing Amelie.
+// looking, setting up the Tenant (catalog then chats),
+// running a Location, or installing Amelie.
 // -----
 export const DASHBOARD_NAV_GROUPS = [
   {
@@ -23,20 +27,23 @@ export const DASHBOARD_NAV_GROUPS = [
     items: [{ to: "/overview", label: "Overview", icon: LayoutDashboard }],
   },
   {
-    label: "Your cafe",
+    label: "Company",
     items: [
       { to: "/business-profile", label: "Profile", icon: Store },
-      { to: "/hours", label: "Hours", icon: Clock },
-      { to: "/menu", label: "Menu", icon: UtensilsCrossed },
+      { to: "/team", label: "Team", icon: Users },
+      { to: "/menu", label: "Master menu", icon: UtensilsCrossed },
       { to: "/faqs", label: "FAQs", icon: FileText },
-    ],
-  },
-  {
-    label: "Customers",
-    items: [
+      DASHBOARD_NAV_SEPARATOR,
       { to: "/customers", label: "Chats", icon: MessagesSquare },
       { to: "/unanswered", label: "Unanswered", icon: MessageSquareWarning },
       { to: "/chat-bot", label: "Assistant", icon: Bot },
+    ],
+  },
+  {
+    label: "Store",
+    items: [
+      { to: "/hours", label: "Hours", icon: Clock },
+      { to: "/store-menu", label: "Menu", icon: UtensilsCrossed },
     ],
   },
   {
@@ -58,12 +65,20 @@ export const DASHBOARD_ADMIN_GROUP = {
   items: [{ to: "/admin", label: "Invite codes", icon: KeyRound }],
 } as const;
 
+type DashboardNavGroupEntry = (typeof DASHBOARD_NAV_GROUPS)[number]["items"][number];
+
 export type DashboardNavItem =
-  | (typeof DASHBOARD_NAV_GROUPS)[number]["items"][number]
+  | Exclude<DashboardNavGroupEntry, { kind: "separator" }>
   | (typeof DASHBOARD_ADMIN_GROUP)["items"][number];
 
+export function isDashboardNavItem(
+  item: DashboardNavGroupEntry | (typeof DASHBOARD_ADMIN_GROUP)["items"][number],
+): item is DashboardNavItem {
+  return !("kind" in item);
+}
+
 export const DASHBOARD_NAV_ITEMS = [...DASHBOARD_NAV_GROUPS, DASHBOARD_ADMIN_GROUP].flatMap<DashboardNavItem>(
-  (group) => group.items,
+  (group) => group.items.filter(isDashboardNavItem),
 );
 
 export const DASHBOARD_ACTIVITY_DAYS = 7;
