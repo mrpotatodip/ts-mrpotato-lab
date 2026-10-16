@@ -85,7 +85,7 @@ describe("Customer threads", () => {
 
   it("does not list a signed-in staff thread", async () => {
     const { userId, partyId } = await insertPersonWithLogin(db, "owner@sorella.test");
-    await insertMember(db, sorellaId, partyId, "owner");
+    await insertMember(db, sorellaId, partyId, "tenant_admin");
     const staff = await startThread(sorellaId, { kind: "user", tenantId: sorellaId, userId });
     await addExchange(sorellaId, staff, "Staff question", null, 2);
 

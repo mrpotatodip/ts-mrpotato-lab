@@ -3,8 +3,8 @@ import type { AppEnv } from "#/types/variables";
 import { getMenuAPI, addMenuCategoryAPI, reorderMenuCategoriesAPI, updateMenuCategoryAPI, deleteMenuCategoryAPI, reorderMenuItemsAPI, addMenuItemAPI, updateMenuItemAPI, deleteMenuItemAPI, setMenuItemLocationsAPI, setMenuItemCountryPriceAPI, addMenuItemImagesAPI, reorderMenuItemImagesAPI, deleteMenuItemImageAPI, setMenuItemImageCoverAPI } from "./api";
 
 // -----
-// A Tenant's menu: any member reads, an owner or
-// admin changes. The order route is mounted before
+// A Tenant's menu: any member reads, a tenant_admin
+// or store_admin changes. The order route is mounted before
 // the id route, so "order" is never read as an id.
 // -----
 const app = new Hono<AppEnv>();

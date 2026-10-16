@@ -4,7 +4,7 @@ import { zValidator } from "#/lib/zod-validator";
 import type { AppEnv } from "#/types/variables";
 import { db_connect } from "#/lib/db-connection";
 import { runEffect } from "#/lib/effect-query";
-import { requireTenantEditor } from "#/modules/tenant";
+import { requirePower } from "#/modules/tenant";
 import { updateMenuCategorySvc } from "#/modules/menu/handlers";
 import { updateMenuCategoryDoc } from "#/modules/menu/openapi";
 
@@ -13,7 +13,7 @@ const app = new Hono<AppEnv>();
 app.put(
   "/categories/:categoryId",
   updateMenuCategoryDoc,
-  requireTenantEditor,
+  requirePower("company:menu:categories:update"),
   zValidator("param", MenuCategoryParamSchema),
   zValidator("json", MenuCategoryBodySchema),
   async (c) => {

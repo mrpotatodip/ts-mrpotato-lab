@@ -1,0 +1,10 @@
+export const TEAM_NOT_FOUND = "Team invite not found";
+export const TEAM_MEMBER_NOT_FOUND = "Team member not found";
+export const TEAM_EMAIL_ON_TENANT = "That email is already on this cafe";
+export const TEAM_LAST_ADMIN = "This cafe needs at least one tenant_admin";
+export const TEAM_WRONG_ACCOUNT = "Sign in with the invited email to join";
+export const TEAM_ACCOUNT_REQUIRED = "Sign in with the invited email to join";
+export const TEAM_NEW_ACCOUNT_REQUIRED = "First name, last name and password are required to join";
+export const TEAM_INVITE_CONSTRAINT = "uq_team_invites_pending_email";
+export const TEAM_ROLE_ABOVE_YOURS = "You can only assign roles whose powers you have yourself";
+export const TEAM_MEMBER_ABOVE_YOURS = "You can only manage members whose role has powers you have yourself";

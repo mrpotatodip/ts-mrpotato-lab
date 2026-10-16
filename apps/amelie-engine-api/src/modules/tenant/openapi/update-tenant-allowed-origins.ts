@@ -22,10 +22,10 @@ export const updateTenantAllowedOriginsDoc = describeRoute({
   },
   description: routeText({
     context:
-      "An owner or manager lists the cafe websites that may iframe the Customer chat. The list replaces whatever was stored. An empty list is allowed: the widget cannot iframe, and chat on Amelie still works.",
+      "A tenant_admin or store_admin lists the cafe websites that may iframe the Customer chat. The list replaces whatever was stored. An empty list is allowed: the widget cannot iframe, and chat on Amelie still works.",
     steps: [
       "The server checks that the signed-in Person is a team member of this Tenant. If not, the answer is 404.",
-      "The server checks that their Role can edit. A staff member gets 403.",
+      "The server checks that their Role can edit. A store_staff member gets 403.",
       "Each pasted value must be an http or https URL. Paths drop to the origin. Duplicates drop, keeping the first. Other schemes, `*`, and more than 20 unique origins fail the whole write with 400.",
       "The server stores the unique origins in the order they were saved and returns the Tenant.",
     ],
@@ -37,7 +37,7 @@ export const updateTenantAllowedOriginsDoc = describeRoute({
         '  -d \'{"allowedOrigins":["https://sorellacafe.com/menu"]}\'',
       ),
       json(
-        `{\n  "data": { "id": "${EXAMPLE_TENANT_ID}", "name": "Sorella Cafe", "slug": "sorella-cafe", "timezone": "Europe/Rome", "country": "IT", "currency": "EUR", "allowedOrigins": ["https://sorellacafe.com"], "role": "owner", "canEdit": true },\n  "error": null\n}`,
+        `{\n  "data": { "id": "${EXAMPLE_TENANT_ID}", "name": "Sorella Cafe", "slug": "sorella-cafe", "timezone": "Europe/Rome", "country": "IT", "currency": "EUR", "allowedOrigins": ["https://sorellacafe.com"], "role": "tenant_admin", "powers": ["integration:widget:origins:update"] },\n  "error": null\n}`,
       ),
     ],
   }),

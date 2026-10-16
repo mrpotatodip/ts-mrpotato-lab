@@ -77,7 +77,7 @@ beforeAll(async () => {
     { tenantId, locationId: airportId, dayOfWeek: 6, opensAt: "05:00", closesAt: "23:00" },
   ]);
   const login = await insertPersonWithLogin(db, "owner@two-branch.test");
-  await insertMember(db, tenantId, login.partyId, "owner");
+  await insertMember(db, tenantId, login.partyId, "tenant_admin");
   ownerUserId = login.userId;
 });
 

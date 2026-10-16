@@ -7,10 +7,12 @@ import { db_connect } from "#/lib/db-connection";
 import { runEffect } from "#/lib/effect-query";
 import { getTenantScheduleSvc } from "#/modules/schedule/handlers";
 import { getTenantHoursDoc } from "#/modules/schedule/openapi";
+import { requirePower } from "#/modules/tenant";
 
 const app = new Hono<AppEnv>();
 
-app.get("/", getTenantHoursDoc, zValidator("query", LocationQuerySchema), async (c) => {
+app.get("/", getTenantHoursDoc,
+  requirePower("store:hours:weekly:read"), zValidator("query", LocationQuerySchema), async (c) => {
   const { locationId } = c.req.valid("query");
   const db = db_connect(c.env.HYPERDRIVE_REALTIME.connectionString);
   const data = await runEffect(

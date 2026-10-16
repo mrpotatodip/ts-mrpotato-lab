@@ -23,9 +23,9 @@ export const removeHoursOverrideDoc = describeRoute({
   ],
   description: routeText({
     context:
-      "An owner or manager removes special hours. The date then follows the weekly hours again.",
+      "A tenant_admin or store_admin removes special hours. The date then follows the weekly hours again.",
     steps: [
-      "The server checks that the signed-in Person is an owner or manager of this Tenant. A staff member gets 403.",
+      "The server checks that the signed-in Person is a tenant_admin or store_admin of this Tenant. A store_staff member gets 403.",
       "The server deletes the special date of this Tenant. If there is none, the answer is 404.",
       "The server returns the date.",
     ],

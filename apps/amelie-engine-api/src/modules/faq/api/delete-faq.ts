@@ -4,7 +4,7 @@ import { zValidator } from "#/lib/zod-validator";
 import type { AppEnv } from "#/types/variables";
 import { db_connect } from "#/lib/db-connection";
 import { runEffect } from "#/lib/effect-query";
-import { requireTenantEditor } from "#/modules/tenant";
+import { requirePower } from "#/modules/tenant";
 import { deleteFaqSvc } from "#/modules/faq/handlers";
 import { deleteFaqDoc } from "#/modules/faq/openapi";
 
@@ -13,7 +13,7 @@ const app = new Hono<AppEnv>();
 app.delete(
   "/:faqId",
   deleteFaqDoc,
-  requireTenantEditor,
+  requirePower("company:faqs:faqs:delete"),
   zValidator("param", FaqParamSchema),
   async (c) => {
     const { faqId } = c.req.valid("param");

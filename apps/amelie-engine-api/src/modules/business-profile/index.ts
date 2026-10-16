@@ -4,7 +4,7 @@ import { getBusinessProfileAPI, updateBusinessProfileAPI } from "./api";
 
 // -----
 // A Tenant's contact facts: any member reads,
-// an owner or manager changes.
+// a tenant_admin or store_admin changes.
 // -----
 const app = new Hono<AppEnv>();
 

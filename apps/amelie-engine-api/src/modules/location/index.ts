@@ -3,8 +3,8 @@ import type { AppEnv } from "#/types/variables";
 import { archiveLocationAPI, createLocationAPI, listLocationsAPI, updateLocationAPI } from "./api";
 
 // -----
-// A Tenant's Locations: any member reads, an
-// owner or manager adds, edits and archives.
+// A Tenant's Locations: any member reads, a
+// tenant_admin or store_admin adds, edits and archives.
 // -----
 const app = new Hono<AppEnv>();
 

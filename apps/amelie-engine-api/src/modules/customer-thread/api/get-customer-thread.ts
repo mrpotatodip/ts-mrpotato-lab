@@ -6,10 +6,12 @@ import { db_connect } from "#/lib/db-connection";
 import { runEffect } from "#/lib/effect-query";
 import { getCustomerThreadSvc } from "#/modules/customer-thread/handlers";
 import { getCustomerThreadDoc } from "#/modules/customer-thread/openapi";
+import { requirePower } from "#/modules/tenant";
 
 const app = new Hono<AppEnv>();
 
-app.get("/:threadId", getCustomerThreadDoc, zValidator("param", CustomerThreadParamSchema), async (c) => {
+app.get("/:threadId", getCustomerThreadDoc,
+  requirePower("company:chats:threads:read"), zValidator("param", CustomerThreadParamSchema), async (c) => {
   const { threadId } = c.req.valid("param");
   const db = db_connect(c.env.HYPERDRIVE_REALTIME.connectionString);
   const data = await runEffect(getCustomerThreadSvc(db, c.get("tenantId"), threadId));

@@ -29,7 +29,7 @@ export const listTenantsDoc = describeRoute({
       "A Person runs two cafes. They get two Tenants:",
       bash(`curl ${EXAMPLE_BASE_URL}/tenants -H "Authorization: Bearer $TOKEN"`),
       json(
-        `{\n  "data": [\n    { "id": "${EXAMPLE_TENANT_ID}", "name": "Sorella Cafe", "slug": "sorella-cafe", "timezone": "Europe/Rome", "country": "IT", "currency": "EUR", "allowedOrigins": ["https://sorellacafe.com"], "role": "owner" }\n  ],\n  "error": null\n}`,
+        `{\n  "data": [\n    { "id": "${EXAMPLE_TENANT_ID}", "name": "Sorella Cafe", "slug": "sorella-cafe", "timezone": "Europe/Rome", "country": "IT", "currency": "EUR", "allowedOrigins": ["https://sorellacafe.com"], "role": "tenant_admin" }\n  ],\n  "error": null\n}`,
       ),
       "Keep the `id`. The chat routes need it as `tenantId`.",
     ],

@@ -26,4 +26,5 @@ export const updateMenuItemPrice = (
         countryId: chosen.countryId,
       });
     }),
+    "company:menu:country_prices:update",
   );

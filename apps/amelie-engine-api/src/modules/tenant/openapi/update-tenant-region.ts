@@ -19,10 +19,10 @@ export const updateTenantRegionDoc = describeRoute({
   requestBody: { required: true, content: { "application/json": { schema: resolver(UpdateTenantRegionBodySchema) } } },
   description: routeText({
     context:
-      "An owner or manager moves the business to another country or currency. Prices keep their numbers: changing the currency relabels them, it does not convert them.",
+      "A tenant_admin or store_admin moves the business to another country or currency. Prices keep their numbers: changing the currency relabels them, it does not convert them.",
     steps: [
       "The server checks that the signed-in Person is a team member of this Tenant. If not, the answer is 404.",
-      "The server checks that their Role can edit. A staff member gets 403.",
+      "The server checks that their Role can edit. A store_staff member gets 403.",
       "The server checks that the country and the currency are in the lists the dashboard offers. If not, the answer is 400.",
       "The server saves both on the Tenant's first open Country and returns the Tenant. If the cafe already has another Country with that country, the answer is 409.",
     ],
@@ -34,7 +34,7 @@ export const updateTenantRegionDoc = describeRoute({
         '  -d \'{"country":"PH","currency":"PHP"}\'',
       ),
       json(
-        `{\n  "data": { "id": "${EXAMPLE_TENANT_ID}", "name": "Sorella Cafe", "slug": "sorella-cafe", "timezone": "Asia/Manila", "country": "PH", "currency": "PHP", "allowedOrigins": [], "role": "owner", "canEdit": true },\n  "error": null\n}`,
+        `{\n  "data": { "id": "${EXAMPLE_TENANT_ID}", "name": "Sorella Cafe", "slug": "sorella-cafe", "timezone": "Asia/Manila", "country": "PH", "currency": "PHP", "allowedOrigins": [], "role": "tenant_admin", "powers": ["company:profile:region:update"] },\n  "error": null\n}`,
       ),
     ],
   }),

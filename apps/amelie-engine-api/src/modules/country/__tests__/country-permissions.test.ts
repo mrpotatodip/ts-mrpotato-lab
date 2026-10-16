@@ -19,12 +19,12 @@ import {
 // is served over a socket; the session is faked by a
 // header and the Tenant and Role checks are real.
 // -----
-type TestUsers = { owner: string; manager: string; staff: string };
+type TestUsers = { tenant_admin: string; store_admin: string; store_staff: string };
 
 let tenantId: string;
 let spareCountryId: string;
 let connectionString: string;
-const users: TestUsers = { owner: "", manager: "", staff: "" };
+const users: TestUsers = { tenant_admin: "", store_admin: "", store_staff: "" };
 
 const app = new Hono<AppEnv>();
 app.onError((err, c) => {
@@ -63,7 +63,7 @@ beforeAll(async () => {
   connectionString = `postgresql://postgres@${server.getServerConn()}/postgres`;
   tenantId = await insertTenant(db, "Sorella", "sorella");
   spareCountryId = await insertCountry(db, tenantId, { country: "MX", currency: "MXN" });
-  for (const role of ["owner", "manager", "staff"] as const) {
+  for (const role of ["tenant_admin", "store_admin", "store_staff"] as const) {
     const login = await insertPersonWithLogin(db, `${role}@test`);
     await insertMember(db, tenantId, login.partyId, role);
     users[role] = login.userId;
@@ -72,7 +72,7 @@ beforeAll(async () => {
 
 describe("Country routes by Role", () => {
   it("lets staff read the Countries, archived ones included", async () => {
-    const res = await call("staff", "GET", "");
+    const res = await call("store_staff", "GET", "");
 
     expect(res.status).toBe(200);
     const { data } = await res.json();
@@ -84,14 +84,14 @@ describe("Country routes by Role", () => {
     ["editing a Country", "PATCH", "/COUNTRY", { currency: "USD" }],
     ["archiving a Country", "POST", "/COUNTRY/archive", undefined],
   ])("keeps staff (can_edit false) out of %s with a 403", async (_label, method, path, body) => {
-    const res = await call("staff", method, path.replace("COUNTRY", spareCountryId), body);
+    const res = await call("store_staff", method, path.replace("COUNTRY", spareCountryId), body);
 
     expect(res.status).toBe(403);
   });
 
   it.each([
-    ["owner", "CA", "CAD"],
-    ["manager", "FR", "EUR"],
+    ["tenant_admin", "CA", "CAD"],
+    ["store_admin", "FR", "EUR"],
   ] as const)("lets a %s add, edit and archive a Country", async (role, code, currency) => {
     const added = await call(role, "POST", "", { country: code, currency });
     expect(added.status).toBe(201);
@@ -108,12 +108,12 @@ describe("Country routes by Role", () => {
   });
 
   it("answers 409 for the last open Country and 400 for a code outside the list", async () => {
-    const countries = await (await call("owner", "GET", "")).json();
+    const countries = await (await call("tenant_admin", "GET", "")).json();
     const us = countries.data[0];
-    await call("owner", "POST", `/${spareCountryId}/archive`);
+    await call("tenant_admin", "POST", `/${spareCountryId}/archive`);
 
-    const last = await call("owner", "POST", `/${us.id}/archive`);
-    const bad = await call("owner", "POST", "", { country: "ZZ", currency: "USD" });
+    const last = await call("tenant_admin", "POST", `/${us.id}/archive`);
+    const bad = await call("tenant_admin", "POST", "", { country: "ZZ", currency: "USD" });
 
     expect(last.status).toBe(409);
     expect(bad.status).toBe(400);

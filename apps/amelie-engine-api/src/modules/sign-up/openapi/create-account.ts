@@ -30,7 +30,7 @@ export const createAccountDoc = describeRoute({
         `curl -X POST ${EXAMPLE_BASE_URL}/public/sign-up -H "Content-Type: application/json" -d '{"inviteCode":"<invite-code>","firstName":"Ada","lastName":"Rossi","email":"ada@sorellacafe.com","password":"correct-horse-battery","cafeName":"Sorella Cafe","timezone":"Europe/Rome","country":"IT","currency":"EUR","website":"https://sorellacafe.com"}'`,
       ),
       json(
-        `{\n  "data": {\n    "userId": "3f2a9c1e-7b64-4d0a-8e5f-1c2d3e4f5a6b",\n    "tenant": { "id": "${EXAMPLE_TENANT_ID}", "name": "Sorella Cafe", "slug": "sorella-cafe", "timezone": "Europe/Rome", "country": "IT", "currency": "EUR", "allowedOrigins": ["https://sorellacafe.com"], "role": "owner" }\n  },\n  "error": null\n}`,
+        `{\n  "data": {\n    "userId": "3f2a9c1e-7b64-4d0a-8e5f-1c2d3e4f5a6b",\n    "tenant": { "id": "${EXAMPLE_TENANT_ID}", "name": "Sorella Cafe", "slug": "sorella-cafe", "timezone": "Europe/Rome", "country": "IT", "currency": "EUR", "allowedOrigins": ["https://sorellacafe.com"], "role": "tenant_admin" }\n  },\n  "error": null\n}`,
       ),
     ],
   }),

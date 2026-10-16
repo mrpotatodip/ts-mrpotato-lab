@@ -15,11 +15,12 @@ import {
   tenantFaqs,
   partyRoles,
   roles,
+  accessMasterRoles,
   tenantLocations,
   tenantMenuCategories,
   tenants,
 } from "@repo/db-amelie";
-import { SignUpBodySchema, type SignUpBody } from "@repo/contracts/amelie";
+import { ACCESS_ROLE_GRANTS, SignUpBodySchema, type SignUpBody } from "@repo/contracts/amelie";
 import app from "#/index";
 import { buildAuth } from "#/lib/auth";
 import type { DbConnectType } from "#/lib/db-connection";
@@ -110,7 +111,7 @@ beforeEach(async () => {
 });
 
 describe("sign-up", () => {
-  it("creates one Person, login, Organization, Tenant, its three Roles and an owner Party role, and an empty cafe", async () => {
+  it("creates one Person, login, Organization, Tenant, its three Roles and a tenant_admin Party role, and an empty cafe", async () => {
     const result = await signUp(db, { website: "https://sorellacafe.com/menu?x=1" });
 
     expect(await rowCounts(db)).toEqual({
@@ -136,19 +137,23 @@ describe("sign-up", () => {
       allowedOrigins: ["https://sorellacafe.com"],
       customerChatLabel: "Chat with us",
       customerChatAccent: null,
-      role: "owner",
-      canEdit: true,
+      role: "tenant_admin",
+      roleLabel: "Tenant admin",
+      powers: [...ACCESS_ROLE_GRANTS.tenant_admin].toSorted(),
     });
     const [partyRole] = await db.select().from(partyRoles);
     const [user] = await db.select().from(authUser).where(eq(authUser.id, result.userId));
-    expect(partyRole).toMatchObject({ tenantId: result.tenant.id, roleKey: "owner", partyId: user.partyId });
-    const tenantRoles = await db.select().from(roles);
-    expect(tenantRoles.map((r) => [r.key, r.canEdit, r.tenantId]).toSorted()).toEqual([
-      ["manager", true, result.tenant.id],
-      ["owner", true, result.tenant.id],
-      ["staff", false, result.tenant.id],
+    expect(partyRole).toMatchObject({ tenantId: result.tenant.id, roleScope: "tenant", partyId: user.partyId });
+    const tenantRoles = await db
+      .select({ id: roles.id, key: accessMasterRoles.key, tenantId: roles.tenantId })
+      .from(roles)
+      .innerJoin(accessMasterRoles, eq(accessMasterRoles.id, roles.masterRoleId));
+    expect(tenantRoles.map((r) => [r.key, r.tenantId]).toSorted()).toEqual([
+      ["store_admin", result.tenant.id],
+      ["store_staff", result.tenant.id],
+      ["tenant_admin", result.tenant.id],
     ]);
-    expect(partyRole.roleId).toBe(tenantRoles.find((r) => r.key === "owner")?.id);
+    expect(partyRole.roleId).toBe(tenantRoles.find((r) => r.key === "tenant_admin")?.id);
     expect(user).toMatchObject({ id: result.userId, email: "ada@sorella.test", emailVerified: false });
     const [person] = await db.select().from(persons).where(eq(persons.partyId, user.partyId));
     expect(person).toMatchObject({ firstName: "Ada", lastName: "Rossi" });

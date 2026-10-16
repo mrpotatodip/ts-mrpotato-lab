@@ -4,7 +4,7 @@ import { zValidator } from "#/lib/zod-validator";
 import type { AppEnv } from "#/types/variables";
 import { db_connect } from "#/lib/db-connection";
 import { runEffect } from "#/lib/effect-query";
-import { requireTenantEditor } from "#/modules/tenant";
+import { requirePower } from "#/modules/tenant";
 import { deleteMenuCategoryWithImagesSvc } from "#/modules/menu/handlers";
 import { createMenuImageStorage } from "#/modules/menu/lib";
 import { deleteMenuCategoryDoc } from "#/modules/menu/openapi";
@@ -14,7 +14,7 @@ const app = new Hono<AppEnv>();
 app.delete(
   "/categories/:categoryId",
   deleteMenuCategoryDoc,
-  requireTenantEditor,
+  requirePower("company:menu:categories:delete"),
   zValidator("param", MenuCategoryParamSchema),
   async (c) => {
     const { categoryId } = c.req.valid("param");

@@ -34,9 +34,9 @@ export const createImportDoc = describeRoute({
   },
   description: routeText({
     context:
-      "An owner or manager has a menu as a PDF or as photos. They upload it, and Amelie reads it. The result is a set of drafts to review. Nothing goes live from an upload.",
+      "A tenant_admin or store_admin has a menu as a PDF or as photos. They upload it, and Amelie reads it. The result is a set of drafts to review. Nothing goes live from an upload.",
     steps: [
-      "The server checks that the signed-in Person is an owner or manager of this Tenant. A staff member gets 403.",
+      "The server checks that the signed-in Person is a tenant_admin or store_admin of this Tenant. A store_staff member gets 403.",
       "The server checks the files. Send one PDF, or up to 10 images (JPEG, PNG or WebP), each up to 10 MB. A PDF and an image together give 400.",
       "The server saves the files under imports/<tenant id>/<import id>/ and creates the Import with the status `running`.",
       "The server puts one message on the queue and returns the Import. It does not wait for the reading.",

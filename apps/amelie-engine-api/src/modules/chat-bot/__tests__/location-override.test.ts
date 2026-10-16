@@ -86,7 +86,7 @@ beforeAll(async () => {
   const [coffee] = await db.insert(tenantMenuCategories).values({ tenantId, name: "Coffee" }).returning();
   await insertMenuItem(db, tenantId, { categoryId: coffee.id, name: "Latte", price: "4.75" });
   const login = await insertPersonWithLogin(db, "owner@two-branch.test");
-  await insertMember(db, tenantId, login.partyId, "owner");
+  await insertMember(db, tenantId, login.partyId, "tenant_admin");
   ownerUserId = login.userId;
 });
 

@@ -26,9 +26,9 @@ export const updateLocationDoc = describeRoute({
   parameters: [TENANT_ID_QUERY_PARAMETER],
   requestBody: { required: true, content: { "application/json": { schema: resolver(UpdateLocationBodySchema) } } },
   description: routeText({
-    context: "An owner or manager renames a Location or changes its address, phone or timezone.",
+    context: "A tenant_admin or store_admin renames a Location or changes its address, phone or timezone.",
     steps: [
-      "The server checks that the signed-in Person is an owner or manager of this Tenant. A staff member gets 403.",
+      "The server checks that the signed-in Person is a tenant_admin or store_admin of this Tenant. A store_staff member gets 403.",
       "The server changes the fields sent. A field left out is kept, and address or phone sent as null is cleared.",
       "A countryId sent here is ignored: a Location's Country is fixed when it is added.",
       "An archived Location, or one of another Tenant, is 404.",

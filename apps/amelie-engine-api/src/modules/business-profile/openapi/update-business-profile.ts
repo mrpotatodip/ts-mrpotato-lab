@@ -22,9 +22,9 @@ export const updateBusinessProfileDoc = describeRoute({
   requestBody: { required: true, content: { "application/json": { schema: resolver(UpdateBusinessProfileBodySchema) } } },
   description: routeText({
     context:
-      "An owner or manager changes the contact facts of the Tenant. The dashboard sends the whole profile. A field that is null is cleared.",
+      "A tenant_admin or store_admin changes the contact facts of the Tenant. The dashboard sends the whole profile. A field that is null is cleared.",
     steps: [
-      "The server checks that the signed-in Person is an owner or manager of this Tenant. A staff member gets 403.",
+      "The server checks that the signed-in Person is a tenant_admin or store_admin of this Tenant. A store_staff member gets 403.",
       "The server checks the body. The email must look like an email. The website must be a full URL.",
       "The server saves the profile. It creates the profile on the first save.",
       "The server returns the saved profile.",

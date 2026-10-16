@@ -41,9 +41,9 @@ export const addMenuItemImagesDoc = describeRoute({
   },
   description: routeText({
     context:
-      "An owner or manager adds photos to a Menu item in one request. The item can have up to 10. Files are stored as sent: they are not resized. The first photo is the one cards show.",
+      "A tenant_admin or store_admin adds photos to a Menu item in one request. The item can have up to 10. Files are stored as sent: they are not resized. The first photo is the one cards show.",
     steps: [
-      "The server checks that the signed-in Person is an owner or manager of this Tenant. A staff member gets 403.",
+      "The server checks that the signed-in Person is a tenant_admin or store_admin of this Tenant. A store_staff member gets 403.",
       "The server checks each file: JPEG, PNG or WebP, up to 10 MB, and that existing photos plus this batch stay at 10 or fewer.",
       "The server stores the objects under menu-items/<tenantId>/<itemId>/<imageId>-<name> and returns the new images in order.",
     ],

@@ -24,12 +24,12 @@ import {
 // their pools open, and closing it under them
 // raises connection errors.
 // -----
-type TestUsers = { owner: string; manager: string; staff: string };
+type TestUsers = { tenant_admin: string; store_admin: string; store_staff: string };
 
 let tenantId: string;
 let locationId: string;
 let connectionString: string;
-const users: TestUsers = { owner: "", manager: "", staff: "" };
+const users: TestUsers = { tenant_admin: "", store_admin: "", store_staff: "" };
 
 const app = new Hono<AppEnv>();
 app.onError((err, c) => {
@@ -72,7 +72,7 @@ beforeAll(async () => {
   tenantId = await insertTenant(db, "Sorella", "sorella");
   locationId = await defaultLocationId(db, tenantId);
   await insertLocation(db, tenantId, { name: "Airport", slug: "airport" });
-  for (const role of ["owner", "manager", "staff"] as const) {
+  for (const role of ["tenant_admin", "store_admin", "store_staff"] as const) {
     const login = await insertPersonWithLogin(db, `${role}@test`);
     await insertMember(db, tenantId, login.partyId, role);
     users[role] = login.userId;
@@ -81,7 +81,7 @@ beforeAll(async () => {
 
 describe("Location routes by Role", () => {
   it("lets staff read the Locations", async () => {
-    const res = await call("staff", "GET", "");
+    const res = await call("store_staff", "GET", "");
 
     expect(res.status).toBe(200);
   });
@@ -91,12 +91,12 @@ describe("Location routes by Role", () => {
     ["editing a Location", "PATCH", "/LOCATION", { name: "Renamed" }],
     ["archiving a Location", "POST", "/LOCATION/archive", undefined],
   ])("keeps staff (can_edit false) out of %s with a 403", async (_label, method, path, body) => {
-    const res = await call("staff", method, path.replace("LOCATION", locationId), body);
+    const res = await call("store_staff", method, path.replace("LOCATION", locationId), body);
 
     expect(res.status).toBe(403);
   });
 
-  it.each(["owner", "manager"] as const)("lets a %s add, edit and archive a Location", async (role) => {
+  it.each(["tenant_admin", "store_admin"] as const)("lets a %s add, edit and archive a Location", async (role) => {
     const added = await call(role, "POST", "", { name: `Added by ${role}` });
     expect(added.status).toBe(201);
     const { data } = await added.json();

@@ -15,5 +15,6 @@ export const removeHoursOverride = async (
     answerNeedsLocation(
       removeHoursOverrideSvc(runtime.db, runtime.owner.tenantId, date, chosenLocationId),
     ),
+    "store:hours:overrides:delete",
   );
 };

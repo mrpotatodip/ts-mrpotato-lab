@@ -11,4 +11,5 @@ export const setMenuItemAvailability = (
   runAsChatBotEditor(
     runtime,
     setMenuItemAvailabilitySvc(runtime.db, runtime.owner.tenantId, itemId, isAvailable),
+    "store:menu:availability:update",
   );

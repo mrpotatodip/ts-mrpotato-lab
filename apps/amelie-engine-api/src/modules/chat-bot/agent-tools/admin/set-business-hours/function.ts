@@ -20,5 +20,6 @@ export const setBusinessHours = async (
         chosenLocationId,
       ),
     ),
+    "store:hours:weekly:update",
   );
 };

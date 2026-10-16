@@ -15,5 +15,6 @@ export const setHoursOverride = async (
     answerNeedsLocation(
       setHoursOverrideSvc(runtime.db, runtime.owner.tenantId, override, chosenLocationId),
     ),
+    "store:hours:overrides:update",
   );
 };

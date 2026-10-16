@@ -55,7 +55,7 @@ const put = (userId: string, tenantId: string, body: { allowedOrigins: string[] 
     env,
   );
 
-const newCafe = async (slug: string, role: "owner" | "manager" | "staff") => {
+const newCafe = async (slug: string, role: "tenant_admin" | "store_admin" | "store_staff") => {
   const tenantId = await insertTenant(db, slug, slug);
   const login = await insertPersonWithLogin(db, `${role}@${slug}.test`);
   await insertMember(db, tenantId, login.partyId, role);
@@ -68,7 +68,7 @@ beforeAll(async () => {
 
 describe("PUT /tenants/:tenantId/allowed-origins", () => {
   it("answers 200 with unique origins in save order for an owner", async () => {
-    const { tenantId, userId } = await newCafe("origins-route-owner", "owner");
+    const { tenantId, userId } = await newCafe("origins-route-owner", "tenant_admin");
 
     const res = await put(userId, tenantId, {
       allowedOrigins: ["https://sorellacafe.com/menu", "http://localhost:5174/"],
@@ -82,7 +82,7 @@ describe("PUT /tenants/:tenantId/allowed-origins", () => {
   });
 
   it("answers 200 with an empty list", async () => {
-    const { tenantId, userId } = await newCafe("origins-route-empty", "owner");
+    const { tenantId, userId } = await newCafe("origins-route-empty", "tenant_admin");
     await runEffect(updateTenantAllowedOriginsSvc(db, userId, tenantId, ["https://keep.test"]));
 
     const res = await put(userId, tenantId, { allowedOrigins: [] });
@@ -92,7 +92,7 @@ describe("PUT /tenants/:tenantId/allowed-origins", () => {
   });
 
   it("answers 403 for staff and leaves the list unchanged", async () => {
-    const { tenantId, userId } = await newCafe("origins-route-staff", "staff");
+    const { tenantId, userId } = await newCafe("origins-route-staff", "store_staff");
     await db.update(tenants).set({ allowedOrigins: ["https://keep.test"] }).where(eq(tenants.id, tenantId));
 
     const res = await put(userId, tenantId, { allowedOrigins: ["https://new.test"] });
@@ -105,8 +105,8 @@ describe("PUT /tenants/:tenantId/allowed-origins", () => {
   });
 
   it("answers 404 for a Tenant the login is not a member of", async () => {
-    const { tenantId } = await newCafe("origins-route-target", "owner");
-    const outsider = await newCafe("origins-route-outsider", "owner");
+    const { tenantId } = await newCafe("origins-route-target", "tenant_admin");
+    const outsider = await newCafe("origins-route-outsider", "tenant_admin");
 
     const res = await put(outsider.userId, tenantId, { allowedOrigins: ["https://steal.test"] });
 
@@ -116,7 +116,7 @@ describe("PUT /tenants/:tenantId/allowed-origins", () => {
   it.each(["*", "ftp://sorellacafe.com", "https://"])(
     "answers 400 for %s and leaves the previous list unchanged",
     async (value) => {
-      const { tenantId, userId } = await newCafe(`origins-route-bad-${value.slice(0, 8)}`.replace(/\W/g, ""), "owner");
+      const { tenantId, userId } = await newCafe(`origins-route-bad-${value.slice(0, 8)}`.replace(/\W/g, ""), "tenant_admin");
       await runEffect(updateTenantAllowedOriginsSvc(db, userId, tenantId, ["https://keep.test"]));
 
       const res = await put(userId, tenantId, { allowedOrigins: [value] });

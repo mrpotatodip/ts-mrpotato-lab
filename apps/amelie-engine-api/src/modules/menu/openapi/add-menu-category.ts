@@ -25,9 +25,9 @@ export const addMenuCategoryDoc = describeRoute({
   requestBody: { required: true, content: { "application/json": { schema: resolver(MenuCategoryBodySchema) } } },
   description: routeText({
     context:
-      "An owner or manager adds a menu category, such as Coffee or Pastries. A category can have a short note, such as: Gluten-free bread +2.",
+      "A tenant_admin or store_admin adds a menu category, such as Coffee or Pastries. A category can have a short note, such as: Gluten-free bread +2.",
     steps: [
-      "The server checks that the signed-in Person is an owner or manager of this Tenant. A staff member gets 403.",
+      "The server checks that the signed-in Person is a tenant_admin or store_admin of this Tenant. A store_staff member gets 403.",
       "The server checks the name and the note. The name has up to 80 characters.",
       "The server saves the category at the end of the order and returns it.",
     ],

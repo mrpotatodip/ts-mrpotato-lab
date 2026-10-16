@@ -4,7 +4,7 @@ import { listFaqsAPI, addFaqAPI, updateFaqAPI, deleteFaqAPI, addFaqCategoryAPI, 
 
 // -----
 // A Tenant's FAQs and FAQ categories: any member
-// reads, an owner or manager changes.
+// reads, a tenant_admin or store_admin changes.
 // -----
 const app = new Hono<AppEnv>();
 

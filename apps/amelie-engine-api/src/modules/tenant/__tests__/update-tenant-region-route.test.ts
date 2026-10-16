@@ -48,7 +48,7 @@ const patch = (userId: string, tenantId: string, body: Record<string, string>) =
     env,
   );
 
-const newCafe = async (slug: string, role: "owner" | "manager" | "staff") => {
+const newCafe = async (slug: string, role: "tenant_admin" | "store_admin" | "store_staff") => {
   const tenantId = await insertTenant(db, slug, slug);
   const login = await insertPersonWithLogin(db, `${role}@${slug}.test`);
   await insertMember(db, tenantId, login.partyId, role);
@@ -61,7 +61,7 @@ beforeAll(async () => {
 
 describe("PATCH /tenants/:tenantId/region", () => {
   it("answers 200 with the saved region for an owner", async () => {
-    const { tenantId, userId } = await newCafe("route-owner", "owner");
+    const { tenantId, userId } = await newCafe("route-owner", "tenant_admin");
 
     const res = await patch(userId, tenantId, { country: "PH", currency: "PHP" });
 
@@ -70,7 +70,7 @@ describe("PATCH /tenants/:tenantId/region", () => {
   });
 
   it("answers 403 for staff and leaves the region unchanged", async () => {
-    const { tenantId, userId } = await newCafe("route-staff", "staff");
+    const { tenantId, userId } = await newCafe("route-staff", "store_staff");
 
     const res = await patch(userId, tenantId, { country: "PH", currency: "PHP" });
 
@@ -80,8 +80,8 @@ describe("PATCH /tenants/:tenantId/region", () => {
   });
 
   it("answers 404 for a Tenant the login is not a member of", async () => {
-    const { tenantId } = await newCafe("route-target", "owner");
-    const outsider = await newCafe("route-outsider", "owner");
+    const { tenantId } = await newCafe("route-target", "tenant_admin");
+    const outsider = await newCafe("route-outsider", "tenant_admin");
 
     const res = await patch(outsider.userId, tenantId, { country: "PH", currency: "PHP" });
 
@@ -89,7 +89,7 @@ describe("PATCH /tenants/:tenantId/region", () => {
   });
 
   it("answers 409 pointing at the Countries settings when the café sells in 2 or more Countries, and changes nothing", async () => {
-    const { tenantId, userId } = await newCafe("route-many", "owner");
+    const { tenantId, userId } = await newCafe("route-many", "tenant_admin");
     await insertCountry(db, tenantId, { country: "CA", currency: "CAD" });
 
     const res = await patch(userId, tenantId, { country: "PH", currency: "PHP" });
@@ -100,7 +100,7 @@ describe("PATCH /tenants/:tenantId/region", () => {
   });
 
   it("still edits the only open Country when another is archived", async () => {
-    const { tenantId, userId } = await newCafe("route-one-open", "owner");
+    const { tenantId, userId } = await newCafe("route-one-open", "tenant_admin");
     await insertCountry(db, tenantId, { country: "CA", currency: "CAD", archivedAt: new Date() });
 
     const res = await patch(userId, tenantId, { country: "PH", currency: "PHP" });
@@ -112,7 +112,7 @@ describe("PATCH /tenants/:tenantId/region", () => {
     { country: "ZZ", currency: "PHP" },
     { country: "PH", currency: "XXX" },
   ])("answers 400 for $country / $currency, outside the shared lists", async (body) => {
-    const { tenantId, userId } = await newCafe(`route-bad-${body.country}-${body.currency}`.toLowerCase(), "owner");
+    const { tenantId, userId } = await newCafe(`route-bad-${body.country}-${body.currency}`.toLowerCase(), "tenant_admin");
 
     const res = await patch(userId, tenantId, body);
 

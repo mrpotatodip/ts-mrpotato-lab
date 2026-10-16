@@ -78,7 +78,7 @@ beforeAll(async () => {
   foreignCountryId = await insertCountry(db, otherId, { country: "FR", currency: "EUR" });
   foreignLocationId = await defaultLocationId(db, otherId);
   const login = await insertPersonWithLogin(db, "owner@maple.test");
-  await insertMember(db, tenantId, login.partyId, "owner");
+  await insertMember(db, tenantId, login.partyId, "tenant_admin");
   owner = { kind: "user", tenantId, userId: login.userId };
   await db.insert(tenantFaqs).values([
     { tenantId, question: "Do you take cards?", answer: "Yes." },

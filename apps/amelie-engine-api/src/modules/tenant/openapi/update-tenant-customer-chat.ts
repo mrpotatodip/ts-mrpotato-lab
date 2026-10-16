@@ -22,10 +22,10 @@ export const updateTenantCustomerChatDoc = describeRoute({
   },
   description: routeText({
     context:
-      "An owner or manager sets how the Customer chat looks on the cafe site and on Amelie's public chat page. The dashboard assistant is unchanged.",
+      "A tenant_admin or store_admin sets how the Customer chat looks on the cafe site and on Amelie's public chat page. The dashboard assistant is unchanged.",
     steps: [
       "The server checks that the signed-in Person is a team member of this Tenant. If not, the answer is 404.",
-      "The server checks that their Role can edit. A staff member gets 403.",
+      "The server checks that their Role can edit. A store_staff member gets 403.",
       "The button text must be 1 to 40 characters after trim. The colour is a #rrggbb hex value, or null to use Amelie's default.",
       "The server stores the look and returns the Tenant.",
     ],
@@ -37,7 +37,7 @@ export const updateTenantCustomerChatDoc = describeRoute({
         '  -d \'{"customerChatLabel":"Ask Sorella","customerChatAccent":"#b4532a"}\'',
       ),
       json(
-        `{\n  "data": { "id": "${EXAMPLE_TENANT_ID}", "name": "Sorella Cafe", "slug": "sorella-cafe", "timezone": "Europe/Rome", "country": "IT", "currency": "EUR", "allowedOrigins": ["https://sorellacafe.com"], "customerChatLabel": "Ask Sorella", "customerChatAccent": "#b4532a", "role": "owner", "canEdit": true },\n  "error": null\n}`,
+        `{\n  "data": { "id": "${EXAMPLE_TENANT_ID}", "name": "Sorella Cafe", "slug": "sorella-cafe", "timezone": "Europe/Rome", "country": "IT", "currency": "EUR", "allowedOrigins": ["https://sorellacafe.com"], "customerChatLabel": "Ask Sorella", "customerChatAccent": "#b4532a", "role": "tenant_admin", "powers": ["integration:widget:look:update"] },\n  "error": null\n}`,
       ),
     ],
   }),

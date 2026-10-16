@@ -7,6 +7,7 @@ import { publicChatBotRestAPI } from "#/modules/chat-bot";
 import systemRestAPI from "#/modules/system";
 import mcpRestAPI from "#/modules/mcp";
 import signUpRestAPI from "#/modules/sign-up";
+import { publicTeamInviteAPI } from "#/modules/team";
 import { getMenuItemImageAPI } from "#/modules/menu";
 
 // -----
@@ -40,6 +41,10 @@ app.route("/public/chat-bot", publicChatBotRestAPI);
 app.route("/public/mcp", mcpRestAPI);
 // invite-only: the invite code is the guard (#350)
 app.route("/public/sign-up", signUpRestAPI);
+// -----
+// Join a cafe: the Team invite token is the guard.
+// -----
+app.route("/public/team-invites", publicTeamInviteAPI);
 // -----
 // Menu item photos: the id is the secret.
 // Chat cards load them without a session.

@@ -6,7 +6,7 @@ import type { AppEnv } from "#/types/variables";
 import { db_connect } from "#/lib/db-connection";
 import { runEffect } from "#/lib/effect-query";
 import { PayloadTooLargeError } from "#/lib/errors";
-import { requireTenantEditor } from "#/modules/tenant";
+import { requirePower } from "#/modules/tenant";
 import { addMenuItemImagesSvc } from "#/modules/menu/handlers";
 import { createMenuImageStorage, toMenuItemImageFiles } from "#/modules/menu/lib";
 import { addMenuItemImagesDoc } from "#/modules/menu/openapi";
@@ -17,7 +17,7 @@ const app = new Hono<AppEnv>();
 app.post(
   "/items/:itemId/images",
   addMenuItemImagesDoc,
-  requireTenantEditor,
+  requirePower("company:menu:images:create"),
   zValidator("param", MenuItemParamSchema),
   bodyLimit({
     maxSize: IMPORT_MAX_FILE_BYTES * MENU_ITEM_IMAGE_MAX + 1024 * 1024,

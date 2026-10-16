@@ -24,9 +24,9 @@ export const reorderMenuItemImagesDoc = describeRoute({
   requestBody: { required: true, content: { "application/json": { schema: resolver(MenuOrderBodySchema) } } },
   description: routeText({
     context:
-      "An owner or manager rearranges the photos of a Menu item. The first photo is the cover. The dashboard sends every image id of the item in the new order.",
+      "A tenant_admin or store_admin rearranges the photos of a Menu item. The first photo is the cover. The dashboard sends every image id of the item in the new order.",
     steps: [
-      "The server checks that the signed-in Person is an owner or manager of this Tenant. A staff member gets 403.",
+      "The server checks that the signed-in Person is a tenant_admin or store_admin of this Tenant. A store_staff member gets 403.",
       "The server looks for the item in this Tenant. If it finds none, the answer is 404.",
       "The server checks that the ids are exactly the images of this item. A missing, repeated or foreign id gives 400.",
       "The server saves the new order and returns the images.",

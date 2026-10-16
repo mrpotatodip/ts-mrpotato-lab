@@ -4,7 +4,7 @@ import { zValidator } from "#/lib/zod-validator";
 import type { AppEnv } from "#/types/variables";
 import { db_connect } from "#/lib/db-connection";
 import { runEffect } from "#/lib/effect-query";
-import { requireTenantEditor } from "#/modules/tenant";
+import { requirePower } from "#/modules/tenant";
 import { deleteMenuItemWithImagesSvc } from "#/modules/menu/handlers";
 import { createMenuImageStorage } from "#/modules/menu/lib";
 import { deleteMenuItemDoc } from "#/modules/menu/openapi";
@@ -14,7 +14,7 @@ const app = new Hono<AppEnv>();
 app.delete(
   "/items/:itemId",
   deleteMenuItemDoc,
-  requireTenantEditor,
+  requirePower("company:menu:items:delete"),
   zValidator("param", MenuItemParamSchema),
   async (c) => {
     const { itemId } = c.req.valid("param");

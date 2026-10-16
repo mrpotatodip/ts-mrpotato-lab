@@ -14,7 +14,9 @@ import customerThreadRestAPI from "#/modules/customer-thread";
 import menuImportRestAPI from "#/modules/menu-import";
 import meRestAPI from "#/modules/me";
 import adminRestAPI, { requireSuperuser } from "#/modules/admin";
+import adminRoleRestAPI from "#/modules/admin-role";
 import inviteCodeRestAPI from "#/modules/invite-code";
+import teamRestAPI from "#/modules/team";
 import { requireTenantMember } from "#/modules/tenant";
 
 // -----
@@ -25,6 +27,7 @@ import { requireTenantMember } from "#/modules/tenant";
 // -----
 const app = new Hono<AppEnv>();
 
+app.use("/chat-bot", requireSession, requireTenantMember);
 app.use("/chat-bot/*", requireSession, requireTenantMember);
 app.use("/unanswered-questions/*", requireSession, requireTenantMember);
 app.use("/unanswered-questions", requireSession, requireTenantMember);
@@ -43,6 +46,8 @@ app.use("/customer-threads/*", requireSession, requireTenantMember);
 app.use("/customer-threads", requireSession, requireTenantMember);
 app.use("/imports/*", requireSession, requireTenantMember);
 app.use("/imports", requireSession, requireTenantMember);
+app.use("/team/*", requireSession, requireTenantMember);
+app.use("/team", requireSession, requireTenantMember);
 app.use("/tenants", requireSession);
 app.use("/tenants/*", requireSession);
 app.use("/me", requireSession);
@@ -53,6 +58,7 @@ app.route("/chat-bot", chatBotRestAPI);
 app.route("/tenants", tenantRestAPI);
 app.route("/me", meRestAPI);
 app.route("/admin", adminRestAPI);
+app.route("/admin", adminRoleRestAPI);
 app.route("/admin/invite-codes", inviteCodeRestAPI);
 app.route("/unanswered-questions", unansweredQuestionRestAPI);
 app.route("/business-profile", businessProfileRestAPI);
@@ -63,5 +69,6 @@ app.route("/countries", countryRestAPI);
 app.route("/menu", menuRestAPI);
 app.route("/customer-threads", customerThreadRestAPI);
 app.route("/imports", menuImportRestAPI);
+app.route("/team", teamRestAPI);
 
 export default app;

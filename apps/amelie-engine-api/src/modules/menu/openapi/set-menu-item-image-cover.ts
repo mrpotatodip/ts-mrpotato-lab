@@ -23,9 +23,9 @@ export const setMenuItemImageCoverDoc = describeRoute({
     { in: "path", name: "imageId", required: true, description: "The id of the Menu item image.", schema: { type: "string", format: "uuid" } },
   ],
   description: routeText({
-    context: "An owner or manager makes one photo the cover of a Menu item. Cards show that photo.",
+    context: "A tenant_admin or store_admin makes one photo the cover of a Menu item. Cards show that photo.",
     steps: [
-      "The server checks that the signed-in Person is an owner or manager of this Tenant. A staff member gets 403.",
+      "The server checks that the signed-in Person is a tenant_admin or store_admin of this Tenant. A store_staff member gets 403.",
       "The server puts this Tenant's image first on this item. If there is none, the answer is 404.",
       "The server returns the images in the new order.",
     ],

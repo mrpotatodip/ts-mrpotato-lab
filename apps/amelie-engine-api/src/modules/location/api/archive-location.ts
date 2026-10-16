@@ -4,7 +4,7 @@ import { zValidator } from "#/lib/zod-validator";
 import type { AppEnv } from "#/types/variables";
 import { db_connect } from "#/lib/db-connection";
 import { runEffect } from "#/lib/effect-query";
-import { requireTenantEditor } from "#/modules/tenant";
+import { requirePower } from "#/modules/tenant";
 import { archiveLocationReturningIdSvc } from "#/modules/location/handlers";
 import { archiveLocationDoc } from "#/modules/location/openapi";
 
@@ -13,7 +13,7 @@ const app = new Hono<AppEnv>();
 app.post(
   "/:locationId/archive",
   archiveLocationDoc,
-  requireTenantEditor,
+  requirePower("company:profile:locations:archive"),
   zValidator("param", LocationParamSchema),
   async (c) => {
     const { locationId } = c.req.valid("param");

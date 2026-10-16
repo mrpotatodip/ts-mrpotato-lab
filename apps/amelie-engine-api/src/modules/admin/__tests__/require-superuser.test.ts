@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { Hono } from "hono";
 import { addSuperuser } from "@repo/db-amelie";
-import type { RoleKeyValue } from "@repo/contracts/amelie";
+
 import type { DbConnectType } from "#/lib/db-connection";
 import { AppError } from "#/lib/errors";
 import type { AppEnv } from "#/types/variables";
@@ -35,12 +35,12 @@ const asUser = (userId: string, path = "/admin") =>
 
 let cafeId: string;
 // SAFETY: beforeAll fills every key before a test reads it.
-const users = {} as Record<RoleKeyValue | "none", string>;
+const users = {} as Record<string, string>;
 
 beforeAll(async () => {
   db = await createTestDb();
   cafeId = await insertTenant(db, "Sorella Cafe", "sorella");
-  for (const key of ["owner", "manager", "staff"] as const) {
+  for (const key of ["tenant_admin", "store_admin", "store_staff"] as const) {
     const login = await insertPersonWithLogin(db, `${key}@sorella.test`);
     await insertMember(db, cafeId, login.partyId, key);
     users[key] = login.userId;
@@ -58,7 +58,7 @@ describe("requireSuperuser", () => {
     expect(res.status).toBe(200);
   });
 
-  it.each(["owner", "manager", "staff", "none"] as const)("answers not found for %s, never forbidden", async (who) => {
+  it.each(["tenant_admin", "store_admin", "store_staff", "none"] as const)("answers not found for %s, never forbidden", async (who) => {
     const res = await asUser(users[who]);
 
     expect(res.status).toBe(404);
@@ -75,6 +75,6 @@ describe("a superuser's role", () => {
   it("grants no access to a cafe's data", async () => {
     await expect(runEffect(getTenantSvc(db, users.superuser, cafeId))).rejects.toThrow(TENANT_NOT_FOUND);
 
-    await expect(runEffect(getTenantSvc(db, users.owner, cafeId))).resolves.toMatchObject({ role: "owner" });
+    await expect(runEffect(getTenantSvc(db, users.tenant_admin, cafeId))).resolves.toMatchObject({ role: "tenant_admin" });
   });
 });

@@ -4,7 +4,7 @@ import { zValidator } from "#/lib/zod-validator";
 import type { AppEnv } from "#/types/variables";
 import { db_connect } from "#/lib/db-connection";
 import { runEffect } from "#/lib/effect-query";
-import { requireTenantEditor } from "#/modules/tenant";
+import { requirePower } from "#/modules/tenant";
 import { updateBusinessProfileSvc } from "#/modules/business-profile/handlers";
 import { updateBusinessProfileDoc } from "#/modules/business-profile/openapi";
 
@@ -13,7 +13,7 @@ const app = new Hono<AppEnv>();
 app.put(
   "/",
   updateBusinessProfileDoc,
-  requireTenantEditor,
+  requirePower("company:profile:business_profile:update"),
   zValidator("query", LocationQuerySchema),
   zValidator("json", UpdateBusinessProfileBodySchema),
   async (c) => {

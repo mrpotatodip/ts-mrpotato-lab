@@ -4,7 +4,7 @@ import { zValidator } from "#/lib/zod-validator";
 import type { AppEnv } from "#/types/variables";
 import { db_connect } from "#/lib/db-connection";
 import { runEffect } from "#/lib/effect-query";
-import { requireTenantEditor } from "#/modules/tenant";
+import { requirePower } from "#/modules/tenant";
 import { addFaqSvc } from "#/modules/faq/handlers";
 import { addFaqDoc } from "#/modules/faq/openapi";
 
@@ -13,7 +13,7 @@ const app = new Hono<AppEnv>();
 app.post(
   "/",
   addFaqDoc,
-  requireTenantEditor,
+  requirePower("company:faqs:faqs:create"),
   zValidator("json", FaqBodySchema),
   async (c) => {
     const db = db_connect(c.env.HYPERDRIVE_REALTIME.connectionString);

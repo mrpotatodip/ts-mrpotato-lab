@@ -21,4 +21,4 @@ export const updateBusinessProfile = (
   input: UpdateBusinessProfileInput,
   runtime: ChatBotRuntime,
 ): Promise<BusinessProfileResult> =>
-  runAsChatBotEditor(runtime, updateBusinessProfileSvc(runtime.db, runtime.owner.tenantId, toChange(input)));
+  runAsChatBotEditor(runtime, updateBusinessProfileSvc(runtime.db, runtime.owner.tenantId, toChange(input)), "company:profile:business_profile:update");

@@ -8,4 +8,4 @@ export const addMenuCategory = (
   input: AddMenuCategoryInput,
   runtime: ChatBotRuntime,
 ): Promise<MenuCategoryResult> =>
-  runAsChatBotEditor(runtime, addMenuCategorySvc(runtime.db, runtime.owner.tenantId, input));
+  runAsChatBotEditor(runtime, addMenuCategorySvc(runtime.db, runtime.owner.tenantId, input), "company:menu:categories:create");

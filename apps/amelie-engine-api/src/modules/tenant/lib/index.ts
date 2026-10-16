@@ -1,3 +1,3 @@
 export * from "./require-tenant-member";
-export * from "./require-tenant-editor";
+export * from "./require-power";
 export * from "./tenant-clock";

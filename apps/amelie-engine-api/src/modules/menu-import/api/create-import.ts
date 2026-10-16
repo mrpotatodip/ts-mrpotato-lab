@@ -5,7 +5,7 @@ import type { AppEnv } from "#/types/variables";
 import { db_connect } from "#/lib/db-connection";
 import { runEffect } from "#/lib/effect-query";
 import { PayloadTooLargeError, ValidationError } from "#/lib/errors";
-import { requireTenantEditor } from "#/modules/tenant";
+import { requirePower } from "#/modules/tenant";
 import { IMPORT_NO_FILES } from "#/modules/menu-import/constants";
 import { createImportSvc } from "#/modules/menu-import/handlers";
 import { createImportRuntime } from "#/modules/menu-import/lib";
@@ -16,7 +16,7 @@ const app = new Hono<AppEnv>();
 app.post(
   "/",
   createImportDoc,
-  requireTenantEditor,
+  requirePower("company:menu:imports:create"),
   bodyLimit({
     maxSize: IMPORT_MAX_FILE_BYTES * IMPORT_MAX_IMAGES + 1024 * 1024,
     onError: () => {

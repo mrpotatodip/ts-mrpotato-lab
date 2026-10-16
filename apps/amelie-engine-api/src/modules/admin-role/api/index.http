@@ -1,0 +1,47 @@
+@baseUrl = http://localhost:8788
+# Paste the "token" of a superuser from POST {{baseUrl}}/auth/sign-in/email
+@token = <session-token>
+@roleId = <master-role-id>
+
+GET {{baseUrl}}/admin/roles
+Authorization: Bearer {{token}}
+
+###
+GET {{baseUrl}}/admin/roles/{{roleId}}
+Authorization: Bearer {{token}}
+
+###
+POST {{baseUrl}}/admin/roles
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "key": "shift_lead", "label": "Shift lead", "description": "Runs a shift" }
+
+###
+PATCH {{baseUrl}}/admin/roles/{{roleId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "label": "Shift leader" }
+
+###
+PUT {{baseUrl}}/admin/roles/{{roleId}}/enabled
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "enabled": true }
+
+###
+PUT {{baseUrl}}/admin/roles/{{roleId}}/powers
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "powers": ["company:menu:items:read", "store:hours:weekly:read"] }
+
+###
+DELETE {{baseUrl}}/admin/roles/{{roleId}}
+Authorization: Bearer {{token}}
+
+###
+GET {{baseUrl}}/admin/role-audit-log?roleId={{roleId}}&limit=50
+Authorization: Bearer {{token}}

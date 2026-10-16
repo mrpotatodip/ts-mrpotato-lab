@@ -4,7 +4,7 @@ import { zValidator } from "#/lib/zod-validator";
 import type { AppEnv } from "#/types/variables";
 import { db_connect } from "#/lib/db-connection";
 import { runEffect } from "#/lib/effect-query";
-import { requireTenantEditor } from "#/modules/tenant";
+import { requirePower } from "#/modules/tenant";
 import { updateCountryCurrencySvc } from "#/modules/country/handlers";
 import { updateCountryDoc } from "#/modules/country/openapi";
 
@@ -13,7 +13,7 @@ const app = new Hono<AppEnv>();
 app.patch(
   "/:countryId",
   updateCountryDoc,
-  requireTenantEditor,
+  requirePower("company:profile:countries:update"),
   zValidator("param", CountryParamSchema),
   zValidator("json", UpdateCountryBodySchema),
   async (c) => {

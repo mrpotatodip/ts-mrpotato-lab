@@ -4,7 +4,7 @@ import { getTenantHoursAPI, removeHoursOverrideAPI, setHoursOverrideAPI, setWeek
 
 // -----
 // Business hours and Hours overrides: any member
-// reads, an owner or manager changes.
+// reads, a tenant_admin or store_admin changes.
 // -----
 const app = new Hono<AppEnv>();
 
