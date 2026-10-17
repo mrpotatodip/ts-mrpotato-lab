@@ -12,7 +12,7 @@ import { CustomerThreadListSkeleton } from "./customer-thread-list-skeleton";
 export function CustomerThreadSuspenseListMain() {
   return (
     <>
-      <PageHeader title="Customer chats" description="Every conversation customers have had with the assistant." />
+      <PageHeader title="Customer chats" description="Every conversation customers have had with the assistant." power="company:chats:threads:read" />
       <Suspense fallback={<CustomerThreadListSkeleton />}>
         <CustomerThreadListView />
       </Suspense>

@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#
 import { CountrySwitcher, useSuspenseCountrySelection } from "#/modules/country";
 import { useSuspenseDashboardScope } from "#/modules/dashboard/hooks/use-dashboard-scope";
 import { LocationSwitcher, useSuspenseLocationSelection } from "#/modules/location";
-import { PageCard, PageHeader } from "#/modules/shared";
+import { PageCard, PageHeader, PowerMark } from "#/modules/shared";
 import { useActiveTenantRole } from "#/modules/tenant";
 import { KIND_TITLE, MODE_LABEL } from "../constants";
 import { useMenuImportActions, useSuspenseMenuImport } from "../hooks";
@@ -31,7 +31,7 @@ export function MenuImportSuspenseReviewMain({ importId }: MenuImportSuspenseRev
       <Link to="/imports" className="text-muted-foreground hover:text-foreground -mb-4 text-sm">
         ← All menu uploads
       </Link>
-      <PageHeader title="Review menu import" description="Check what Amelie read, fix or discard anything wrong, then publish." />
+      <PageHeader title="Review menu import" description="Check what Amelie read, fix or discard anything wrong, then publish." power="company:menu:imports:read" />
       <Suspense fallback={<MenuImportReviewSkeleton />}>
         <MenuImportReviewView importId={importId} />
       </Suspense>
@@ -47,7 +47,7 @@ export function MenuImportSuspenseReviewMain({ importId }: MenuImportSuspenseRev
 function MenuImportReviewView({ importId }: MenuImportSuspenseReviewMainProps) {
   const { data } = useSuspenseMenuImport(importId);
   const { approveAll, publish } = useMenuImportActions();
-  const { canEdit } = useActiveTenantRole();
+  const { can } = useActiveTenantRole();
   const dashboard = useSuspenseDashboardScope();
   const locationSelection = useSuspenseLocationSelection();
   const countrySelection = useSuspenseCountrySelection();
@@ -74,74 +74,85 @@ function MenuImportReviewView({ importId }: MenuImportSuspenseReviewMainProps) {
   const published = publish.data;
   const files = [...new Set(data.drafts.map((draft) => draft.sourceFile))];
   const fileNames = data.files.map((file) => file.name).join(", ");
-  const canPublish = canEdit && !data.publishedAt;
+  const canApprove = can("company:menu:import_drafts:update") && !data.publishedAt;
+  const canPublish = can("company:menu:imports:publish") && !data.publishedAt;
 
   return (
     <div className="grid items-start gap-8 lg:grid-cols-[2fr_3fr] lg:gap-x-16">
       <div className="flex flex-col gap-8 lg:sticky lg:top-20">
-        {canPublish ? (
+        {canApprove || canPublish ? (
           <PageCard title="Publish" description={fileNames}>
             <div className="flex flex-col gap-3">
               <p className="text-sm">
                 {data.pendingCount} to review, {data.approvedCount} approved, {data.discardedCount} discarded.
               </p>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={data.pendingCount === 0 || approveAll.isPending}
-                  onClick={() => approveAll.mutate({ data: { importId } })}
-                >
-                  Approve all
-                </Button>
-              </div>
-              <Select value={mode} onValueChange={(value) => setMode(value === "add" ? "add" : "replace")}>
-                <SelectTrigger aria-label="When you publish the menu" className="w-full">
-                  <SelectValue>{MODE_LABEL[mode]}</SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {publishModesFor(countrySelection.multiple).map((option) => (
-                    <SelectItem key={option} value={option}>
-                      {MODE_LABEL[option]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <CountrySwitcher
-                countries={countrySelection.countries}
-                value={countryId}
-                onChange={setCountryId}
-                label="Menu prices are in"
-              />
-              <LocationSwitcher
-                locations={locationSelection.locations}
-                value={locationId}
-                onChange={setLocationId}
-                label="Hours and contact details go to"
-              />
+              {canApprove ? (
+                <div className="flex items-center gap-2">
+                  <PowerMark power="company:menu:import_drafts:update" />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={data.pendingCount === 0 || approveAll.isPending}
+                    onClick={() => approveAll.mutate({ data: { importId } })}
+                  >
+                    Approve all
+                  </Button>
+                </div>
+              ) : null}
+              {canPublish ? (
+                <>
+                  <Select value={mode} onValueChange={(value) => setMode(value === "add" ? "add" : "replace")}>
+                    <SelectTrigger aria-label="When you publish the menu" className="w-full">
+                      <SelectValue>{MODE_LABEL[mode]}</SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {publishModesFor(countrySelection.multiple).map((option) => (
+                        <SelectItem key={option} value={option}>
+                          {MODE_LABEL[option]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <CountrySwitcher
+                    countries={countrySelection.countries}
+                    value={countryId}
+                    onChange={setCountryId}
+                    label="Menu prices are in"
+                  />
+                  <LocationSwitcher
+                    locations={locationSelection.locations}
+                    value={locationId}
+                    onChange={setLocationId}
+                    label="Hours and contact details go to"
+                  />
+                </>
+              ) : null}
               {publish.isError ? <p className="text-xs text-destructive">{publish.error.message}</p> : null}
               {approveAll.isError ? <p className="text-xs text-destructive">{approveAll.error.message}</p> : null}
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  disabled={data.approvedCount === 0 || publish.isPending}
-                  onClick={() => {
-                    const warning = mode === "replace" ? "Publish and replace your current menu?" : "Publish and add to your menu?";
-                    if (window.confirm(warning))
-                      publish.mutate({
-                        data: { importId, mode, locationId, countryId },
-                      });
-                  }}
-                >
-                  {publish.isPending ? "Publishing..." : "Publish approved"}
-                </Button>
-              </div>
+              {canPublish ? (
+                <div className="flex items-center gap-2">
+                  <PowerMark power="company:menu:imports:publish" />
+                  <Button
+                    size="sm"
+                    disabled={data.approvedCount === 0 || publish.isPending}
+                    onClick={() => {
+                      const warning = mode === "replace" ? "Publish and replace your current menu?" : "Publish and add to your menu?";
+                      if (window.confirm(warning))
+                        publish.mutate({
+                          data: { importId, mode, locationId, countryId },
+                        });
+                    }}
+                  >
+                    {publish.isPending ? "Publishing..." : "Publish approved"}
+                  </Button>
+                </div>
+              ) : null}
             </div>
           </PageCard>
         ) : (
           <PageCard title={data.publishedAt ? "Published" : "Review"} description={fileNames}>
             <p className="text-sm">
-              {data.publishedAt ? "This menu is live." : "Only a tenant_admin or store_admin can publish this menu."}
+              {data.publishedAt ? "This menu is live." : "Your role cannot publish this menu."}
             </p>
             {published ? (
               <p className="stat-label mt-2">
@@ -173,7 +184,7 @@ function MenuImportReviewView({ importId }: MenuImportSuspenseReviewMainProps) {
                         key={`${draft.id}:${draft.status}:${JSON.stringify(draft.data)}`}
                         importId={importId}
                         draft={draft}
-                        canEdit={canPublish}
+                        canEdit={canApprove}
                         currency={countrySelection.selected?.currency}
                       />
                     ))}

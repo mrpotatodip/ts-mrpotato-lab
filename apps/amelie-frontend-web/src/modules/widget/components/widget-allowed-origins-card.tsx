@@ -4,7 +4,7 @@ import { ALLOWED_ORIGINS_INVALID, UpdateTenantAllowedOriginsBodySchema } from "@
 
 import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
-import { PageCard } from "#/modules/shared";
+import { PageCard, PowerMark } from "#/modules/shared";
 import { toAllowedOriginsPayload } from "../utils";
 
 type WidgetAllowedOriginsCardProps = {
@@ -44,6 +44,7 @@ export function WidgetAllowedOriginsCard({
     <PageCard
       title="Allowed origins"
       description="Websites that may iframe the Customer chat. Paste a page URL; Amelie keeps the origin."
+      action={canEdit ? <PowerMark power="integration:widget:origins:update" /> : undefined}
     >
       {empty ? <p className="mb-4 text-sm text-muted-foreground">{EMPTY_WARNING}</p> : null}
       {canEdit ? (

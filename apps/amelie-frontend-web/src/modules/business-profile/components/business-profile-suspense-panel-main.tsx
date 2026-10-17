@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { CountryAddLink } from "#/modules/country";
 import { useSuspenseDashboardScope } from "#/modules/dashboard/hooks/use-dashboard-scope";
 import { LocationSection } from "#/modules/location";
-import { countryName, PageCard, PageHeader } from "#/modules/shared";
+import { countryName, PageCard, PageHeader, PowerMark } from "#/modules/shared";
 import { useActiveTenantRole, useTenants } from "#/modules/tenant";
 import { useSuspenseBusinessProfile } from "../hooks";
 import { BusinessProfileForm } from "./business-profile-form";
@@ -41,7 +41,8 @@ export function BusinessProfileSuspensePanelMain() {
 function BusinessProfilePanelView() {
   const selection = useSuspenseDashboardScope();
   const { data } = useSuspenseBusinessProfile(selection.profileLocationId);
-  const { canEdit } = useActiveTenantRole();
+  const { can } = useActiveTenantRole();
+  const canEdit = can("company:profile:business_profile:update");
   const { data: tenants } = useTenants();
   const emptyPlace = selection.emptyPlace && selection.country;
   const inCountry = selection.country ? countryName(selection.country.country) : null;
@@ -51,6 +52,7 @@ function BusinessProfilePanelView() {
       <PageHeader
         title="Business profile"
         description={inCountry ? `${inCountry}. ${PROFILE_INTRO}` : PROFILE_INTRO}
+        power="company:profile:business_profile:read"
       />
       <div className="grid items-start gap-8 lg:grid-cols-[2fr_3fr] lg:gap-x-16">
       <PageCard
@@ -60,6 +62,7 @@ function BusinessProfilePanelView() {
             ? `Description, website and email are cafe-wide. Add a location in ${countryName(emptyPlace.country)} for phone and address.`
             : "Shown to customers by the assistant."
         }
+        action={canEdit ? <PowerMark power="company:profile:business_profile:update" /> : undefined}
       >
         <BusinessProfileForm
           key={`${tenants?.activeTenantId ?? "none"}:${selection.profileLocationId ?? "only"}:${emptyPlace ? "empty" : "place"}`}

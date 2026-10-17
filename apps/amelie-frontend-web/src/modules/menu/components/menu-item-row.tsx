@@ -7,8 +7,10 @@ import { Button } from "#/components/ui/button";
 import { cn } from "#/lib/utils";
 import { countryLabel } from "#/modules/country";
 import { useActiveLocations } from "#/modules/location";
+import { PowerMark } from "#/modules/shared";
 import { useMenuActions } from "../hooks";
-import { firstMutationError, isMenuItemMuted, isMenuItemSoldNowhere, isMenuItemSoldOutHere, moveId, showsMenuItemLocationsControl, toMenuItemBody, toMenuItemImageUrl, toMenuItemSoldOutChange, toPriceEntryBody, toSoldBody } from "../utils";
+import type { MenuAccess } from "../types";
+import { canManageMenuImages, firstMutationError, isMenuItemMuted, isMenuItemSoldNowhere, isMenuItemSoldOutHere, moveId, showsMenuItemLocationsControl, toMenuItemBody, toMenuItemImageUrl, toMenuItemSoldOutChange, toPriceEntryBody, toSoldBody } from "../utils";
 import { MenuItemCountrySold } from "./menu-item-country-sold";
 import { MenuItemForm } from "./menu-item-form";
 import { MenuItemImages } from "./menu-item-images";
@@ -19,7 +21,7 @@ type MenuItemRowProps = {
   categoryId: string;
   categories: Array<Pick<MenuCategory, "id" | "name">>;
   dietaryTags: DietaryTag[];
-  canEdit: boolean;
+  access: MenuAccess;
   kind: "catalog" | "floor";
   country: Country | undefined;
   location: Location | undefined;
@@ -62,7 +64,7 @@ export function MenuItemRow({
   categoryId,
   categories,
   dietaryTags,
-  canEdit,
+  access,
   kind,
   country,
   location,
@@ -88,6 +90,13 @@ export function MenuItemRow({
   const soldOutChange = toMenuItemSoldOutChange(item, location?.id, openLocationIds);
   const soldOutHere =
     location !== undefined && hasSeveralLocations ? isMenuItemSoldOutHere(item, location.id) : !item.isAvailable;
+  const soldOutPower = soldOutChange.kind === "locations" ? "store:menu:availability:update" : "company:menu:items:update";
+  const canSoldOut = isFloor && (soldOutChange.kind === "locations" ? access.canSetAvailability : access.canUpdateItem);
+  const canManageImages = isCatalog && canManageMenuImages(access);
+  const canSetCountryPrice = isCatalog && access.canSetCountryPrice;
+  const hasCatalogControls =
+    isCatalog &&
+    (access.canSetAvailability || access.canReorderItems || access.canUpdateItem || canManageImages || access.canDeleteItem);
 
   if (isChoosingLocations) {
     return (
@@ -129,12 +138,14 @@ export function MenuItemRow({
     <li className={cn("space-y-2 p-6", muted && "opacity-60")}>
       <div className="flex items-center justify-between gap-4">
         <div className="flex min-w-0 items-center gap-3">
-          <MenuItemCover item={item} onOpenPhotos={canEdit && isCatalog ? () => setIsPhotosOpen(true) : undefined} />
+          <MenuItemCover item={item} onOpenPhotos={canManageImages ? () => setIsPhotosOpen(true) : undefined} />
           <p className="min-w-0 text-sm font-medium">
             {item.name} <span className="text-muted-foreground font-normal">{describePrice(item)} {item.currency ?? ""}</span>
           </p>
         </div>
-        {canEdit && isFloor ? (
+        {canSoldOut ? (
+          <div className="flex shrink-0 items-center gap-2">
+            <PowerMark power={soldOutPower} />
           <Button
             variant="outline"
             size="sm"
@@ -158,50 +169,71 @@ export function MenuItemRow({
           >
             {soldOutHere ? "Back on" : "Sold out"}
           </Button>
+          </div>
         ) : null}
-        {canEdit && isCatalog ? (
+        {hasCatalogControls ? (
           <div className="flex shrink-0 items-center gap-1">
-            {showsLocationsControl || locationsPending ? (
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                aria-label="Locations"
-                title="Locations"
-                disabled={locationsPending}
-                onClick={() => setIsChoosingLocations(true)}
-              >
-                <MapPin />
+            {access.canSetAvailability && (showsLocationsControl || locationsPending) ? (
+              <>
+                <PowerMark power="store:menu:availability:update" />
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label="Locations"
+                  title="Locations"
+                  disabled={locationsPending}
+                  onClick={() => setIsChoosingLocations(true)}
+                >
+                  <MapPin />
+                </Button>
+              </>
+            ) : null}
+            {access.canReorderItems ? (
+              <>
+                <PowerMark power="company:menu:items:reorder" />
+                <Button variant="ghost" size="icon-sm" aria-label="Move up" title="Move up" disabled={isFirst} onClick={() => onMove(-1)}>
+                  <ArrowUp />
+                </Button>
+                <Button variant="ghost" size="icon-sm" aria-label="Move down" title="Move down" disabled={isLast} onClick={() => onMove(1)}>
+                  <ArrowDown />
+                </Button>
+              </>
+            ) : null}
+            {access.canUpdateItem ? (
+              <>
+                <PowerMark power="company:menu:items:update" />
+                <Button variant="ghost" size="icon-sm" aria-label="Edit item" title="Edit" onClick={() => setIsEditing(true)}>
+                  <Pencil />
+                </Button>
+              </>
+            ) : null}
+            {canManageImages ? (
+              <Button variant="ghost" size="icon-sm" aria-label="Photos" title="Photos" onClick={() => setIsPhotosOpen(true)}>
+                <Image />
               </Button>
             ) : null}
-            <Button variant="ghost" size="icon-sm" aria-label="Move up" title="Move up" disabled={isFirst} onClick={() => onMove(-1)}>
-              <ArrowUp />
-            </Button>
-            <Button variant="ghost" size="icon-sm" aria-label="Move down" title="Move down" disabled={isLast} onClick={() => onMove(1)}>
-              <ArrowDown />
-            </Button>
-            <Button variant="ghost" size="icon-sm" aria-label="Edit item" title="Edit" onClick={() => setIsEditing(true)}>
-              <Pencil />
-            </Button>
-            <Button variant="ghost" size="icon-sm" aria-label="Photos" title="Photos" onClick={() => setIsPhotosOpen(true)}>
-              <Image />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              aria-label="Delete item"
-              title="Delete"
-              disabled={removeItem.isPending}
-              onClick={() => {
-                if (window.confirm(`Delete "${item.name}"?`)) removeItem.mutate({ data: { itemId: item.id } });
-              }}
-            >
-              <Trash2 />
-            </Button>
+            {access.canDeleteItem ? (
+              <>
+                <PowerMark power="company:menu:items:delete" />
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label="Delete item"
+                  title="Delete"
+                  disabled={removeItem.isPending}
+                  onClick={() => {
+                    if (window.confirm(`Delete "${item.name}"?`)) removeItem.mutate({ data: { itemId: item.id } });
+                  }}
+                >
+                  <Trash2 />
+                </Button>
+              </>
+            ) : null}
           </div>
         ) : null}
       </div>
       {item.description ? <p className="text-muted-foreground text-sm leading-relaxed">{item.description}</p> : null}
-      {canEdit && isCatalog ? (
+      {canManageImages ? (
         <MenuItemImages
           itemName={item.name}
           images={item.images}
@@ -235,9 +267,10 @@ export function MenuItemRow({
           onDelete={(imageId) => {
             void reorderImages.flush().then(() => removeImage.mutate({ data: { itemId: item.id, imageId } }));
           }}
+          access={access}
         />
       ) : null}
-      {country && canEdit && isCatalog ? (
+      {country && canSetCountryPrice ? (
         <MenuItemCountrySold
           item={item}
           countryLabel={countryLabel(country)}
@@ -249,7 +282,7 @@ export function MenuItemRow({
         />
       ) : null}
       <div className="flex flex-wrap items-center gap-1.5">
-        {muted && !canEdit && country ? <Badge variant="outline">Not sold in {countryLabel(country)}</Badge> : null}
+        {muted && !canSetCountryPrice && country ? <Badge variant="outline">Not sold in {countryLabel(country)}</Badge> : null}
         {item.isAvailable ? null : <Badge variant="outline">Not available</Badge>}
         {soldNowhere ? <Badge variant="destructive">Not sold at any open location</Badge> : null}
         {locationsLoaded && item.availableAtAllLocations && locationNames.length > 0 ? (

@@ -7,7 +7,7 @@ import {
 
 import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
-import { PageCard } from "#/modules/shared";
+import { PageCard, PowerMark } from "#/modules/shared";
 import { toAccentSwatchValue } from "../utils";
 
 type WidgetLookDraft = {
@@ -61,6 +61,7 @@ export function WidgetCustomerChatCard({
     <PageCard
       title="Customer chat look"
       description="Bubble colour on the cafe site. The name is the accessible label, not title text."
+      action={canEdit ? <PowerMark power="integration:widget:look:update" /> : undefined}
     >
       {canEdit ? (
         <div className="flex flex-col gap-3">

@@ -5,6 +5,7 @@ import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
 import { Bubble, BubbleContent } from "#/components/ui/bubble";
 import { Message, MessageContent } from "#/components/ui/message";
+import { PowerMark } from "#/modules/shared";
 import { useChatBotContext } from "../hooks/use-chat-bot-contexts";
 import { ChatBotSurfaceContext } from "../contexts";
 import { startChatBotStreamTurn } from "../stores";
@@ -42,6 +43,7 @@ export function ChatBotInput() {
                 disabled={pending}
                 className="h-8 border-0 bg-transparent p-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
               />
+              {surface.sendPower ? <PowerMark power={surface.sendPower} /> : null}
               {pending ? (
                 <Button
                   type="button"

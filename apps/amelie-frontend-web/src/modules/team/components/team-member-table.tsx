@@ -10,21 +10,25 @@ import {
   DialogHeader,
   DialogTitle,
 } from "#/components/ui/dialog";
+import { PowerMark } from "#/modules/shared";
+import { useActiveTenantRole } from "#/modules/tenant";
 import { useTeamActions } from "../hooks";
 import { TeamRoleSelect } from "./team-role-select";
 
 type TeamMemberTableProps = {
   members: TeamMember[];
   roles: TeamRole[];
-  canManageTeam: boolean;
 };
 
 // -----
 // One row per person. Role and remove sit on
 // the right, same as FAQ rows.
 // -----
-export function TeamMemberTable({ members, roles, canManageTeam }: TeamMemberTableProps) {
+export function TeamMemberTable({ members, roles }: TeamMemberTableProps) {
   const { changeRole, remove } = useTeamActions();
+  const { can } = useActiveTenantRole();
+  const canChangeRole = can("company:team:members:update");
+  const canRemove = can("company:team:members:delete");
   const [pending, setPending] = useState<TeamMember | null>(null);
 
   if (members.length === 0) {
@@ -44,22 +48,28 @@ export function TeamMemberTable({ members, roles, canManageTeam }: TeamMemberTab
               <p className="stat-label break-all">{member.email}</p>
             </div>
             <div className="flex shrink-0 items-center gap-2">
-              {canManageTeam ? (
-                <TeamRoleSelect
-                  aria-label={`Role for ${member.name}`}
-                  roles={roles}
-                  value={member.role}
-                  valueLabel={member.roleLabel}
-                  disabled={changeRole.isPending || !roles.some((role) => role.key === member.role)}
-                  onChange={(role) => changeRole.mutate({ data: { partyId: member.partyId, role } })}
-                />
+              {canChangeRole ? (
+                <>
+                  <PowerMark power="company:team:members:update" />
+                  <TeamRoleSelect
+                    aria-label={`Role for ${member.name}`}
+                    roles={roles}
+                    value={member.role}
+                    valueLabel={member.roleLabel}
+                    disabled={changeRole.isPending || !roles.some((role) => role.key === member.role)}
+                    onChange={(role) => changeRole.mutate({ data: { partyId: member.partyId, role } })}
+                  />
+                </>
               ) : (
                 <p className="text-sm">{member.roleLabel}</p>
               )}
-              {canManageTeam ? (
-                <Button type="button" variant="outline" size="sm" onClick={() => setPending(member)}>
-                  Remove
-                </Button>
+              {canRemove ? (
+                <>
+                  <PowerMark power="company:team:members:delete" />
+                  <Button type="button" variant="outline" size="sm" onClick={() => setPending(member)}>
+                    Remove
+                  </Button>
+                </>
               ) : null}
             </div>
           </li>

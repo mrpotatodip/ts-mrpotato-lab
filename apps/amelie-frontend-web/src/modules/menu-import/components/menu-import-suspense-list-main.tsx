@@ -20,17 +20,17 @@ const LIST_DESCRIPTION = "Open one to review what was read from it.";
 // its skeleton.
 // -----
 export function MenuImportSuspenseListMain() {
-  const { canEdit } = useActiveTenantRole();
+  const { can } = useActiveTenantRole();
 
   return (
     <>
-      <PageHeader title="Menu import" description="Upload a menu file, review what was read from it, then publish it." />
+      <PageHeader title="Menu import" description="Upload a menu file, review what was read from it, then publish it." power="company:menu:imports:read" />
       <div className="grid items-start gap-8 lg:grid-cols-[2fr_3fr] lg:gap-x-16">
-        {canEdit ? (
+        {can("company:menu:imports:create") ? (
           <MenuImportUpload />
         ) : (
           <PageCard title="Upload a menu" description="One PDF, or up to 10 photos.">
-            <p className="text-muted-foreground text-sm">Only a tenant_admin or store_admin can upload a menu.</p>
+            <p className="text-muted-foreground text-sm">Your role cannot upload a menu.</p>
           </PageCard>
         )}
         <Suspense fallback={<MenuImportListSkeleton />}>

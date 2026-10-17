@@ -6,3 +6,4 @@ export * from "./admin-role-key";
 export * from "./admin-role-status";
 export * from "./admin-role-audit";
 export * from "./admin-role-form";
+export * from "./admin-role-power-usage";

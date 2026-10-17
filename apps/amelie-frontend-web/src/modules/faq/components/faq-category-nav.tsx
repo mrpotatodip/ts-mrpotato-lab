@@ -6,18 +6,18 @@ import { FaqCategoryBodySchema } from "@repo/contracts/amelie";
 import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
 import { cn } from "#/lib/utils";
-import { PageCard } from "#/modules/shared";
+import { PageCard, PowerMark } from "#/modules/shared";
 import { FAQ_NO_CATEGORY } from "../constants";
-import { useFaqActions } from "../hooks";
+import { useFaqAccess, useFaqActions } from "../hooks";
 import { faqCategoryNameError, type FaqGroup } from "../utils";
 
 type FaqCategoryNavProps = {
   groups: FaqGroup[];
   selectedKey: string;
-  canEdit: boolean;
 };
 
-export function FaqCategoryNav({ groups, selectedKey, canEdit }: FaqCategoryNavProps) {
+export function FaqCategoryNav({ groups, selectedKey }: FaqCategoryNavProps) {
+  const { canCreateCategory } = useFaqAccess();
   const { addCategory } = useFaqActions();
   const navigate = useNavigate();
   const form = useForm({
@@ -55,7 +55,7 @@ export function FaqCategoryNav({ groups, selectedKey, canEdit }: FaqCategoryNavP
           </li>
         ))}
       </ul>
-      {canEdit ? (
+      {canCreateCategory ? (
         <form
           className="flex flex-wrap items-center gap-2 border-t p-6"
           onSubmit={(event) => {
@@ -64,6 +64,7 @@ export function FaqCategoryNav({ groups, selectedKey, canEdit }: FaqCategoryNavP
             void form.handleSubmit();
           }}
         >
+          <PowerMark power="company:faqs:categories:create" />
           <form.Field name="name">
             {(field) => (
               <Input

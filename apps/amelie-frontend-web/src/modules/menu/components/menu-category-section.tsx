@@ -3,8 +3,9 @@ import { useState } from "react";
 import type { Country, DietaryTag, Location, MenuCategory } from "@repo/contracts/amelie";
 
 import { Button } from "#/components/ui/button";
-import { PageCard } from "#/modules/shared";
+import { PageCard, PowerMark } from "#/modules/shared";
 import { useMenuActions } from "../hooks";
+import type { MenuAccess } from "../types";
 import { moveId } from "../utils";
 import { MenuCategoryForm } from "./menu-category-form";
 import { MenuItemForm } from "./menu-item-form";
@@ -14,7 +15,7 @@ type MenuCategorySectionProps = {
   category: MenuCategory;
   categories: Array<Pick<MenuCategory, "id" | "name">>;
   dietaryTags: DietaryTag[];
-  canEdit: boolean;
+  access: MenuAccess;
   kind: "catalog" | "floor";
   country: Country | undefined;
   location: Location | undefined;
@@ -32,7 +33,7 @@ export function MenuCategorySection({
   category,
   categories,
   dietaryTags,
-  canEdit,
+  access,
   kind,
   country,
   location,
@@ -41,7 +42,8 @@ export function MenuCategorySection({
   onlyItemId,
   onMove,
 }: MenuCategorySectionProps) {
-  const canEditCatalog = canEdit && kind === "catalog";
+  const isCatalog = kind === "catalog";
+  const canShowCategoryControls = isCatalog && (access.canReorderCategories || access.canUpdateCategory || access.canDeleteCategory);
   const { updateCategory, removeCategory, addItem, reorderItems } = useMenuActions();
   const [isEditing, setIsEditing] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
@@ -53,31 +55,46 @@ export function MenuCategorySection({
       description={isEditing ? undefined : category.note ?? undefined}
       contentClassName="p-0"
       action={
-        canEditCatalog && !isEditing ? (
-          <div className="flex gap-1">
-            <Button variant="ghost" size="icon-sm" aria-label="Move category up" title="Move up" disabled={isFirst} onClick={() => onMove(-1)}>
-              <ArrowUp />
-            </Button>
-            <Button variant="ghost" size="icon-sm" aria-label="Move category down" title="Move down" disabled={isLast} onClick={() => onMove(1)}>
-              <ArrowDown />
-            </Button>
-            <Button variant="ghost" size="icon-sm" aria-label="Edit category" title="Edit" onClick={() => setIsEditing(true)}>
-              <Pencil />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              aria-label="Delete category"
-              title="Delete"
-              disabled={removeCategory.isPending}
-              onClick={() => {
-                if (window.confirm(`Delete "${category.name}" and its ${category.items.length} items?`)) {
-                  removeCategory.mutate({ data: { categoryId: category.id } });
-                }
-              }}
-            >
-              <Trash2 />
-            </Button>
+        canShowCategoryControls && !isEditing ? (
+          <div className="flex items-center gap-1">
+            {access.canReorderCategories ? (
+              <>
+                <PowerMark power="company:menu:categories:reorder" />
+                <Button variant="ghost" size="icon-sm" aria-label="Move category up" title="Move up" disabled={isFirst} onClick={() => onMove(-1)}>
+                  <ArrowUp />
+                </Button>
+                <Button variant="ghost" size="icon-sm" aria-label="Move category down" title="Move down" disabled={isLast} onClick={() => onMove(1)}>
+                  <ArrowDown />
+                </Button>
+              </>
+            ) : null}
+            {access.canUpdateCategory ? (
+              <>
+                <PowerMark power="company:menu:categories:update" />
+                <Button variant="ghost" size="icon-sm" aria-label="Edit category" title="Edit" onClick={() => setIsEditing(true)}>
+                  <Pencil />
+                </Button>
+              </>
+            ) : null}
+            {access.canDeleteCategory ? (
+              <>
+                <PowerMark power="company:menu:categories:delete" />
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label="Delete category"
+                  title="Delete"
+                  disabled={removeCategory.isPending}
+                  onClick={() => {
+                    if (window.confirm(`Delete "${category.name}" and its ${category.items.length} items?`)) {
+                      removeCategory.mutate({ data: { categoryId: category.id } });
+                    }
+                  }}
+                >
+                  <Trash2 />
+                </Button>
+              </>
+            ) : null}
           </div>
         ) : null
       }
@@ -107,7 +124,7 @@ export function MenuCategorySection({
               categoryId={category.id}
               categories={categories}
               dietaryTags={dietaryTags}
-              canEdit={canEdit}
+              access={access}
               kind={kind}
               country={country}
               location={location}
@@ -120,7 +137,7 @@ export function MenuCategorySection({
       )}
       {reorderItems.isError ? <p className="px-6 pt-4 text-xs text-destructive">{reorderItems.error.message}</p> : null}
 
-      {canEditCatalog ? (
+      {isCatalog && access.canCreateItem ? (
         <div className="border-t p-6">
           {isAdding ? (
             <MenuItemForm
@@ -136,9 +153,12 @@ export function MenuCategorySection({
               onCancel={() => setIsAdding(false)}
             />
           ) : (
-            <Button variant="outline" size="sm" onClick={() => setIsAdding(true)}>
-              Add item
-            </Button>
+            <div className="flex items-center gap-2">
+              <PowerMark power="company:menu:items:create" />
+              <Button variant="outline" size="sm" onClick={() => setIsAdding(true)}>
+                Add item
+              </Button>
+            </div>
           )}
         </div>
       ) : null}

@@ -20,3 +20,4 @@ export * from "./admin-role-power-checklist";
 export * from "./admin-role-audit-skeleton";
 export * from "./admin-role-audit-list";
 export * from "./admin-role-page";
+export * from "./admin-power-usage";

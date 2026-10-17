@@ -16,3 +16,6 @@ export { LocalDateTime } from "./components/local-date-time";
 export { useHydrated } from "./hooks/use-hydrated";
 export { useSheetSide, type SheetSide } from "./hooks/use-sheet-side";
 export { formatDateTime } from "./utils/format-date-time";
+export { PowerMark } from "./components/power-mark";
+export { PowerMarksProvider, usePowerMarksVisible } from "./components/power-marks-context";
+export { usePowerMarksPreference } from "./hooks/use-power-marks-preference";

@@ -11,7 +11,7 @@ import {
   DialogTitle,
 } from "#/components/ui/dialog";
 import { activeCountries, CountryAddLink, CountrySection, useSuspenseCountries } from "#/modules/country";
-import { PageCard, RegionFields } from "#/modules/shared";
+import { PageCard, PowerMark, RegionFields } from "#/modules/shared";
 import { useActiveTenant, useActiveTenantRole, useTenantActions } from "#/modules/tenant";
 
 // -----
@@ -34,7 +34,8 @@ export function BusinessProfileRegion() {
 }
 
 function RegionCard({ tenant }: { tenant: Tenant }) {
-  const { canEdit } = useActiveTenantRole();
+  const { can } = useActiveTenantRole();
+  const canEdit = can("company:profile:region:update");
   const { updateRegion } = useTenantActions();
   const [confirming, setConfirming] = useState(false);
 
@@ -57,7 +58,11 @@ function RegionCard({ tenant }: { tenant: Tenant }) {
 
   return (
     <>
-      <PageCard title="Region" description="Sets the country and the currency your prices are shown in.">
+      <PageCard
+        title="Region"
+        description="Sets the country and the currency your prices are shown in."
+        action={canEdit ? <PowerMark power="company:profile:region:update" /> : undefined}
+      >
         <form
           className="flex flex-col gap-4"
           onSubmit={(event) => {

@@ -1,5 +1,5 @@
 import { queryOptions, useQuery, useSuspenseQuery } from "@tanstack/react-query";
-import { canEditCafe, hasAccessPower } from "@repo/contracts/amelie";
+import { canEditCafe, hasAccessPower, type AccessPower } from "@repo/contracts/amelie";
 import { fetchTenants } from "../api";
 import { findActiveTenant } from "../utils";
 
@@ -38,6 +38,7 @@ export function useActiveTenantRole() {
     powers,
     canEdit: canEditCafe(powers),
     canManageTeam: hasAccessPower(powers, "company:team:invites:create"),
+    can: (power: AccessPower) => hasAccessPower(powers, power),
   };
 }
 

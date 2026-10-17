@@ -1,3 +1,4 @@
+import type { AccessPower } from "@repo/contracts/amelie";
 import type { ChatBotJson, ChatBotToolDisplay, FaqResult, FindMenuItemsResult } from "@repo/contracts/chat-bots";
 
 export type ChatBotCard = {
@@ -32,6 +33,7 @@ export type ChatBotSurface = {
   maxMessageLength: number | undefined;
   cardTools: ReadonlySet<string> | null;
   showFailedCards: boolean;
+  sendPower: AccessPower | null;
 };
 
 export type PublicChatSession = {

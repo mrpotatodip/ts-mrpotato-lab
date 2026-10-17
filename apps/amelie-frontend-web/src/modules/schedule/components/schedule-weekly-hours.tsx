@@ -1,5 +1,5 @@
 import type { WeeklyHours } from "@repo/contracts/amelie";
-import { PageCard } from "#/modules/shared";
+import { PageCard, PowerMark } from "#/modules/shared";
 import { ScheduleWeekdayRow } from "./schedule-weekday-row";
 
 type ScheduleWeeklyHoursProps = {
@@ -11,7 +11,11 @@ type ScheduleWeeklyHoursProps = {
 
 export function ScheduleWeeklyHours({ weekly, timezone, canEdit, locationId }: ScheduleWeeklyHoursProps) {
   return (
-    <PageCard title="Weekly hours" description={`Times are in ${timezone}.`}>
+    <PageCard
+      title="Weekly hours"
+      description={`Times are in ${timezone}.`}
+      action={canEdit ? <PowerMark power="store:hours:weekly:update" /> : undefined}
+    >
       <ul>
         {weekly.map((day, dayOfWeek) => (
           <ScheduleWeekdayRow key={`${day.weekday}:${day.isClosed}:${day.opensAt}:${day.closesAt}`} day={day} dayOfWeek={dayOfWeek} canEdit={canEdit} locationId={locationId} />

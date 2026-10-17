@@ -10,13 +10,15 @@ import {
 import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
 import { countryLabel, useActiveCountries } from "#/modules/country";
+import { PowerMark } from "#/modules/shared";
 import { useLocationActions } from "../hooks";
 import { isLocationChanged, toLocationBody, toLocationValues } from "../utils";
 import { LocationTimezoneSelect } from "./location-timezone-select";
 
 type LocationRowProps = {
   location: Location;
-  canEdit: boolean;
+  canUpdate: boolean;
+  canArchive: boolean;
   onArchive: (location: Location) => void;
   isArchiving: boolean;
 };
@@ -28,7 +30,7 @@ type LocationRowProps = {
 // by the section; the last active Location is
 // refused by the server with its reason.
 // -----
-export function LocationRow({ location, canEdit, onArchive, isArchiving }: LocationRowProps) {
+export function LocationRow({ location, canUpdate, canArchive, onArchive, isArchiving }: LocationRowProps) {
   const { updateLocation } = useLocationActions();
   const { countries } = useActiveCountries();
   const country = countries.length > 1 ? countries.find((entry) => entry.id === location.countryId) : undefined;
@@ -69,14 +71,14 @@ export function LocationRow({ location, canEdit, onArchive, isArchiving }: Locat
                 className="w-56"
                 value={field.state.value}
                 maxLength={LOCATION_NAME_MAX}
-                disabled={!canEdit}
+                disabled={!canUpdate}
                 onChange={(event) => field.handleChange(event.target.value)}
               />
             )}
           </form.Field>
           <form.Field name="timezone">
             {(field) => (
-              <LocationTimezoneSelect value={field.state.value} disabled={!canEdit} onChange={field.handleChange} />
+              <LocationTimezoneSelect value={field.state.value} disabled={!canUpdate} onChange={field.handleChange} />
             )}
           </form.Field>
         </div>
@@ -89,7 +91,7 @@ export function LocationRow({ location, canEdit, onArchive, isArchiving }: Locat
                 className="min-w-56 flex-1"
                 value={field.state.value}
                 maxLength={LOCATION_ADDRESS_MAX}
-                disabled={!canEdit}
+                disabled={!canUpdate}
                 onChange={(event) => field.handleChange(event.target.value)}
               />
             )}
@@ -103,24 +105,34 @@ export function LocationRow({ location, canEdit, onArchive, isArchiving }: Locat
                 type="tel"
                 value={field.state.value}
                 maxLength={LOCATION_PHONE_MAX}
-                disabled={!canEdit}
+                disabled={!canUpdate}
                 onChange={(event) => field.handleChange(event.target.value)}
               />
             )}
           </form.Field>
         </div>
-        {canEdit ? (
+        {canUpdate || canArchive ? (
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            <form.Subscribe selector={(state) => state.canSubmit && isLocationChanged(state.values, location)}>
-              {(canSave) => (
-                <Button type="submit" size="sm" disabled={!canSave || updateLocation.isPending}>
-                  {updateLocation.isPending ? "Saving..." : "Save"}
+            {canUpdate ? (
+              <>
+                <PowerMark power="company:profile:locations:update" />
+                <form.Subscribe selector={(state) => state.canSubmit && isLocationChanged(state.values, location)}>
+                  {(canSave) => (
+                    <Button type="submit" size="sm" disabled={!canSave || updateLocation.isPending}>
+                      {updateLocation.isPending ? "Saving..." : "Save"}
+                    </Button>
+                  )}
+                </form.Subscribe>
+              </>
+            ) : null}
+            {canArchive ? (
+              <>
+                <PowerMark power="company:profile:locations:archive" />
+                <Button type="button" variant="ghost" size="sm" disabled={isArchiving} onClick={() => onArchive(location)}>
+                  Archive
                 </Button>
-              )}
-            </form.Subscribe>
-            <Button type="button" variant="ghost" size="sm" disabled={isArchiving} onClick={() => onArchive(location)}>
-              Archive
-            </Button>
+              </>
+            ) : null}
             <form.Subscribe selector={(state) => state.errors}>
               {(errors) => (errors.length > 0 ? <p className="text-xs text-destructive">{errors.join(", ")}</p> : null)}
             </form.Subscribe>

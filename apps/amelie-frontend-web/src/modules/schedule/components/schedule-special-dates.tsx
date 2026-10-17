@@ -3,7 +3,7 @@ import type { SpecialDate } from "@repo/contracts/amelie";
 import { Trash2 } from "lucide-react";
 
 import { Button } from "#/components/ui/button";
-import { PageCard } from "#/modules/shared";
+import { PageCard, PowerMark } from "#/modules/shared";
 import { useTenantHoursActions } from "../hooks";
 import { describeHours } from "../utils";
 
@@ -32,16 +32,19 @@ export function ScheduleSpecialDates({ specialDates, canEdit, locationId }: Sche
                 </p>
               </div>
               {canEdit ? (
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  aria-label={`Remove ${date.date}`}
-                  title="Remove"
-                  disabled={removeDate.isPending}
-                  onClick={() => removeDate.mutate({ data: { date: date.date } })}
-                >
-                  <Trash2 />
-                </Button>
+                <div className="flex items-center gap-1">
+                  <PowerMark power="store:hours:overrides:delete" />
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label={`Remove ${date.date}`}
+                    title="Remove"
+                    disabled={removeDate.isPending}
+                    onClick={() => removeDate.mutate({ data: { date: date.date } })}
+                  >
+                    <Trash2 />
+                  </Button>
+                </div>
               ) : null}
             </li>
           ))}
