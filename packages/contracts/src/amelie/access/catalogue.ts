@@ -122,6 +122,21 @@ export const ACCESS_CATALOGUE = [
 
 export type AccessCatalogue = typeof ACCESS_CATALOGUE;
 
+type NodePowers<Node, Prefix extends string> = Node extends { readonly key: infer Key extends string }
+  ? `${Prefix}${Key}` extends infer Path extends string
+    ?
+        | (Node extends { readonly actions: readonly (infer Action extends string)[] } ? `${Path}:${Action}` : never)
+        | (Node extends { readonly children: readonly (infer Child)[] } ? NodePowers<Child, `${Path}:`> : never)
+    : never
+  : never;
+
+// -----
+// Every Power the catalogue holds, as a union of its exact
+// strings, built from the tree itself. A misspelt Power fails
+// the build wherever it is written.
+// -----
+export type AccessPower = NodePowers<AccessCatalogue[number], "">;
+
 const collectPowers = (node: AccessNode, prefix: string): string[] => {
   const path = prefix === "" ? node.key : `${prefix}:${node.key}`;
   const own = (node.actions ?? []).map((action) => `${path}:${action}`);
@@ -129,13 +144,14 @@ const collectPowers = (node: AccessNode, prefix: string): string[] => {
   return [...own, ...nested];
 };
 
-export const ACCESS_POWERS = ACCESS_CATALOGUE.flatMap((node) => collectPowers(node, ""));
+// SAFETY: collectPowers joins keys and Actions with the same colons NodePowers uses, so each string it builds is an AccessPower.
+export const ACCESS_POWERS = ACCESS_CATALOGUE.flatMap((node) => collectPowers(node, "")) as AccessPower[];
 
-const ACCESS_POWER_SET = new Set(ACCESS_POWERS);
+const ACCESS_POWER_SET: ReadonlySet<string> = new Set(ACCESS_POWERS);
 
-export const isAccessPower = (value: string): boolean => ACCESS_POWER_SET.has(value);
+export const isAccessPower = (value: string): value is AccessPower => ACCESS_POWER_SET.has(value);
 
-export const hasAccessPower = (grants: readonly string[], power: string): boolean => grants.includes(power);
+export const hasAccessPower = (grants: readonly string[], power: AccessPower): boolean => grants.includes(power);
 
 const powerAction = (power: string): string => power.slice(power.lastIndexOf(":") + 1);
 
