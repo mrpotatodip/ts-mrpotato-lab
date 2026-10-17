@@ -1,6 +1,7 @@
 import { z } from "zod";
 
-export const ADMIN_ROLE_KEY_PATTERN = /^[a-z][a-z0-9_]{1,62}$/;
+export const ADMIN_ROLE_KEY_MAX = 63;
+export const ADMIN_ROLE_KEY_PATTERN = new RegExp(`^[a-z][a-z0-9_]{1,${ADMIN_ROLE_KEY_MAX - 1}}$`);
 export const ADMIN_ROLE_LABEL_MAX = 60;
 export const ADMIN_ROLE_DESCRIPTION_MAX = 300;
 export const ADMIN_ROLE_POWERS_MAX = 500;
@@ -67,8 +68,8 @@ export const AdminAuditEntrySchema = z.object({
   actorEmail: z.string().nullable(),
   action: z.string(),
   subjectId: z.uuid(),
-  before: z.unknown(),
-  after: z.unknown(),
+  before: z.json(),
+  after: z.json(),
   createdAt: z.iso.datetime(),
 });
 

@@ -1,6 +1,6 @@
 # UI registry
 
-Last updated: 2026-10-16
+Last updated: 2026-10-17
 
 ### Skeleton loaders
 
@@ -730,3 +730,43 @@ Last updated: 2026-10-16
 
 **Pattern notes:**
 Col 1 is Invite (only when `canManageTeam`) then Pending invites. Col 2 is Team members. Same grid as Profile. Lists in PageCard use `contentClassName="p-0"`; empty is `.stat-label p-6`. Row actions `outline` `sm`; Role `Select` `w-fit min-w-40`. Confirm remove in a Dialog, Cancel `ghost`. Join link is shown once in a Dialog like invite codes (`font-mono text-lg tracking-wider`). Join is an auth page: `max-w-sm border-0 shadow-floating` card, sign-up label class.
+
+### AdminRoleTable
+
+File: `src/modules/admin/components/admin-role-table.tsx`, `src/modules/admin/components/admin-role-status-badge.tsx`
+Last updated: 2026-10-17
+
+| Property         | Class |
+| ---------------- | ----- |
+| Background       | table on the PageCard body |
+| Border           | table row dividers from `Table` |
+| Border radius    | none on rows |
+| Text — primary   | role label `font-medium` |
+| Text — secondary | role key `text-muted-foreground font-mono text-xs` |
+| Spacing          | `min-w-[40rem] whitespace-nowrap`, counts `tabular-nums`, actions column `text-right` |
+| Hover state      | none on the row; the Manage button is `outline` `sm` |
+| Shadow           | none |
+| Accent usage     | `status-badge` with `data-status` `info` Platform, `success` Enabled, `neutral` Disabled |
+
+**Pattern notes:**
+The role list is a table because it compares roles on four columns. A role's detail page is a two column grid like Profile.
+
+### AdminRolePowerChecklist
+
+File: `src/modules/admin/components/admin-role-power-checklist.tsx`
+Last updated: 2026-10-17
+
+| Property         | Class |
+| ---------------- | ----- |
+| Background       | PageCard body |
+| Border           | `divide-y border` on each group's list |
+| Border radius    | `rounded-2xl` on the group list (it nests inside a `rounded-3xl` card) |
+| Text — primary   | group title `text-base font-semibold`; section label `text-sm` |
+| Text — secondary | summary line `text-muted-foreground text-sm` |
+| Spacing          | groups `gap-6`, sections `gap-3`, rows `px-4 py-3` |
+| Hover state      | Select all and Clear are `ghost` `sm` |
+| Shadow           | none |
+| Accent usage     | none |
+
+**Pattern notes:**
+One group per top-level catalogue node, one row per leaf, one `Checkbox` per action. A system role's saved powers are locked: they can be added to, never taken away. Save asks first in a Dialog.

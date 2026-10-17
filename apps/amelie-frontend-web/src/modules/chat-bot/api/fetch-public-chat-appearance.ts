@@ -16,11 +16,9 @@ type AppearanceEnvelope = {
 
 type AppearanceGet = (path: string) => Promise<AppearanceEnvelope>;
 
-const getAppearance: AppearanceGet = (path) => apiClient.get(path, PublicChatAppearanceResponseSchema);
-
 export async function loadPublicChatAppearance(
   slug: string,
-  get: AppearanceGet = getAppearance,
+  get: AppearanceGet,
 ): Promise<PublicChatAppearance> {
   const { data, error } = await tryCatch(
     get(`/public/chat-bot/appearance?slug=${encodeURIComponent(slug)}`),
@@ -33,4 +31,6 @@ export async function loadPublicChatAppearance(
 
 export const fetchPublicChatAppearance = createServerFn({ method: "GET" })
   .validator(PublicChatAppearanceQuerySchema)
-  .handler(async ({ data: { slug } }) => loadPublicChatAppearance(slug));
+  .handler(async ({ data: { slug } }) =>
+    loadPublicChatAppearance(slug, (path) => apiClient.get(path, PublicChatAppearanceResponseSchema)),
+  );

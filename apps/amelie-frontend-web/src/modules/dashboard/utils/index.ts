@@ -5,3 +5,4 @@ export * from "./dashboard-import";
 export * from "./dashboard-overview";
 export * from "./dashboard-scope-storage";
 export * from "./resolve-dashboard-scope";
+export * from "./dashboard-nav";

@@ -14,8 +14,10 @@ export const AppErrorComponent = ({ error, reset }: ErrorComponentProps) => {
         variant="outline"
         size="sm"
         onClick={() => {
+          // -----
           // invalidate re-runs the loader (retries query());
           // reset clears this boundary so the retried render can show.
+          // -----
           router.invalidate();
           reset();
         }}

@@ -4,7 +4,7 @@ import type { Country, MenuItem } from "@repo/contracts/amelie";
 
 import { MenuItemRow } from "../menu-item-row";
 
-const idle = () => ({ isPending: false, isError: false, error: null, mutate: vi.fn() });
+const idle = () => ({ isPending: false, isError: false, error: null, mutate: vi.fn<() => void>() });
 
 vi.mock("../../hooks", () => ({
   useMenuActions: () => ({

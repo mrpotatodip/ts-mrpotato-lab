@@ -7,10 +7,7 @@ export function apiResponseSchema<T extends ZodType>(dataSchema: T) {
       error: z.string().nullable(),
     })
     .superRefine((val, ctx) => {
-      // -----
-      // zod v4 can't resolve `data`'s type through
-      // this generic shape — cast rather than fight it.
-      // -----
+      // SAFETY: zod v4 can't resolve `data`'s type through this generic shape, and the check below reads only `data` and `error`.
       const row = val as { data: unknown; error: string | null };
       if (row.data === null && row.error === null) {
         ctx.addIssue({

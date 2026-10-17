@@ -7,10 +7,12 @@ const DOWNTOWN = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 const AIRPORT = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
 const OPEN = [DOWNTOWN, AIRPORT];
 
+const NO_LOCATIONS: string[] = [];
+
 const latte = {
   isAvailable: true,
   availableAtAllLocations: true,
-  locationIds: [] as string[],
+  locationIds: NO_LOCATIONS,
 } satisfies Pick<MenuItem, "isAvailable" | "availableAtAllLocations" | "locationIds">;
 
 describe("isMenuItemSoldOutHere", () => {

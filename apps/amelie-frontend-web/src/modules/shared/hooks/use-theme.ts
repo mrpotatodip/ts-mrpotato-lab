@@ -38,7 +38,7 @@ function writeThemeMode(mode: ThemeMode): void {
   try {
     window.localStorage.setItem(STORAGE_KEY, mode);
   } catch {
-    // no-op
+    return;
   }
 }
 

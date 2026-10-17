@@ -5,7 +5,10 @@ import {
 } from "@tanstack/react-start/server";
 
 const AUTH_COOKIE_NAME = "elise_auth_token";
-const AUTH_COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // matches better-auth's session expiry
+// -----
+// Matches better-auth's session expiry.
+// -----
+const AUTH_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
 
 export function getAuthCookie(): string | undefined {
   return getCookie(AUTH_COOKIE_NAME);
