@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../chat-bot-upstream", () => ({
-  fetchChatBotUpstream: vi.fn(async () => new Response("ok")),
+  fetchChatBotUpstream: vi.fn<() => Promise<Response>>(async () => new Response("ok")),
 }));
 
 import { fetchChatBotUpstream } from "../chat-bot-upstream";

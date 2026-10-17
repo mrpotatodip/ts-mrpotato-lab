@@ -7,8 +7,10 @@ export const SessionUserSchema = z.object({
   emailVerified: z.boolean(),
 });
 
+// -----
 // Raw shape of GET /auth/get-session — includes session.token, which must
 // never leave the server (see getSession in api/get-session-svc.ts).
+// -----
 export const SessionResponseSchema = z
   .object({
     session: z.object({

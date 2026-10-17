@@ -19,8 +19,10 @@ export function getRouter() {
     routeTree,
     context: {
       queryClient,
+      // -----
       // overwritten by __root.tsx's beforeLoad before anything renders —
       // required here only to satisfy the root context type
+      // -----
       user: null,
     },
     scrollRestoration: true,
@@ -28,9 +30,11 @@ export function getRouter() {
     defaultPreloadStaleTime: 0,
   })
 
+  // -----
   // Dehydrates the server-populated query cache (e.g. loader query()
   // calls) into the SSR payload and rehydrates it client-side, so hydration
   // reuses that data instead of silently re-fetching from scratch.
+  // -----
   setupRouterSsrQueryIntegration({ router, queryClient })
 
   return router

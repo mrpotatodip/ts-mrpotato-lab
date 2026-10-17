@@ -7,7 +7,7 @@ import { menuKeys } from "#/modules/menu";
 import { tenantHoursKeys } from "#/modules/schedule";
 import { unansweredQuestionsKeys } from "#/modules/unanswered-question";
 
-const CHAT_BOT_WRITE_CACHE_KEYS: Readonly<Record<string, readonly QueryKey[]>> = {
+const CHAT_BOT_WRITE_CACHE_KEYS = new Map<string, readonly QueryKey[]>(Object.entries({
   setMenuItemAvailability: [menuKeys.all],
   setMenuItemsAvailability: [menuKeys.all],
   updateMenuItemPrice: [menuKeys.all],
@@ -19,7 +19,7 @@ const CHAT_BOT_WRITE_CACHE_KEYS: Readonly<Record<string, readonly QueryKey[]>> =
   removeHoursOverride: [tenantHoursKeys.all],
   updateBusinessProfile: [businessProfileKeys.all],
   reportMissingInformation: [unansweredQuestionsKeys.all],
-};
+}));
 
 const wroteNothing = (result: ChatBotJson): boolean => {
   if (isChatBotToolError(result)) return true;
@@ -29,5 +29,5 @@ const wroteNothing = (result: ChatBotJson): boolean => {
 
 export function toChatBotCacheKeys(tool: string, result: ChatBotJson): readonly QueryKey[] {
   if (wroteNothing(result)) return [];
-  return CHAT_BOT_WRITE_CACHE_KEYS[tool] ?? [];
+  return CHAT_BOT_WRITE_CACHE_KEYS.get(tool) ?? [];
 }

@@ -35,7 +35,9 @@ async function request<TSchema extends ZodTypeAny | undefined>(
   const res = await fetch(url, {
     method,
     headers: {
+      // -----
       // A multipart body sets its own Content-Type, with the boundary.
+      // -----
       ...(isForm ? {} : { "Content-Type": "application/json" }),
       Accept: "application/json",
       // -----

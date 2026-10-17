@@ -16,12 +16,12 @@ type SigninProps = {
   verificationError?: string;
 };
 
-const VERIFICATION_ERROR_MESSAGES: Record<string, string> = {
+const VERIFICATION_ERROR_MESSAGES = new Map<string, string>(Object.entries({
   TOKEN_EXPIRED:
     "That verification link expired. Sign in below and we'll send you a fresh one.",
   INVALID_TOKEN: "That verification link is invalid or already used.",
   USER_NOT_FOUND: "We couldn't find an account for that verification link.",
-};
+}));
 
 export function Signin({
   verificationSent,
@@ -47,7 +47,7 @@ export function Signin({
         )}
         {verificationError && (
           <div className="rounded-md bg-status-danger-soft px-3 py-2 text-sm text-status-danger">
-            {VERIFICATION_ERROR_MESSAGES[verificationError] ??
+            {VERIFICATION_ERROR_MESSAGES.get(verificationError) ??
               "We couldn't verify your email. Sign in below and we'll send you a fresh link."}
           </div>
         )}

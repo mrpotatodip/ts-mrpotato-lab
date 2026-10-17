@@ -136,7 +136,7 @@ export function MenuItemForm({
         )}
       </form.Field>
 
-      <div role="group" aria-labelledby={`${formId}-tags`} className="flex flex-wrap gap-x-4 gap-y-2">
+      <fieldset aria-labelledby={`${formId}-tags`} className="flex min-w-0 flex-wrap gap-x-4 gap-y-2">
         <Label id={`${formId}-tags`} className="text-muted-foreground w-full text-xs font-normal">
           Dietary tags
         </Label>
@@ -158,7 +158,7 @@ export function MenuItemForm({
             ))
           }
         </form.Field>
-      </div>
+      </fieldset>
 
       <form.Field name="isAvailable">
         {(field) => (
