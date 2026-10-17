@@ -33,6 +33,7 @@ export const CHAT_BOT_STAFF_SURFACE: ChatBotSurface = {
   maxMessageLength: undefined,
   cardTools: null,
   showFailedCards: true,
+  sendPower: "company:assistant:threads:create",
 };
 
 // -----
@@ -45,6 +46,7 @@ export const CHAT_BOT_CUSTOMER_SURFACE: ChatBotSurface = {
   maxMessageLength: PUBLIC_CHAT_MESSAGE_MAX_LENGTH,
   cardTools: new Set(["showMenuItems"]),
   showFailedCards: false,
+  sendPower: null,
 };
 
 // -----

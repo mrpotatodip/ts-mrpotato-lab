@@ -2,7 +2,7 @@ import { useState } from "react";
 import type { Location } from "@repo/contracts/amelie";
 
 import { Button } from "#/components/ui/button";
-import { PageCard } from "#/modules/shared";
+import { PageCard, PowerMark } from "#/modules/shared";
 import { useActiveTenantRole } from "#/modules/tenant";
 import { useActiveLocations, useLocationActions, useLocationArchivedNotice } from "../hooks";
 import { LocationAddForm } from "./location-add-form";
@@ -24,7 +24,10 @@ type LocationSectionProps = {
 export function LocationSection({ countryId, inCountry }: LocationSectionProps) {
   const { locations: open } = useActiveLocations();
   const active = countryId ? open.filter((location) => location.countryId === countryId) : open;
-  const { canEdit } = useActiveTenantRole();
+  const { can } = useActiveTenantRole();
+  const canCreate = can("company:profile:locations:create");
+  const canUpdate = can("company:profile:locations:update");
+  const canArchive = can("company:profile:locations:archive");
   const { archiveLocation } = useLocationActions();
   const { notice, dismiss } = useLocationArchivedNotice();
   const [confirming, setConfirming] = useState<Location | null>(null);
@@ -32,13 +35,14 @@ export function LocationSection({ countryId, inCountry }: LocationSectionProps) 
   const noticeView = notice ? <LocationArchivedNotice notice={notice} onDismiss={dismiss} /> : null;
 
   if (active.length === 0) {
-    if (!canEdit) return noticeView;
+    if (!canCreate) return noticeView;
     return (
       <>
         {noticeView}
         <PageCard
           title={inCountry ? `Locations · ${inCountry}` : "Locations"}
           description={inCountry ? `${inCountry} has no open location. Add one for a phone and address.` : "This country has no open location. Add one for a phone and address."}
+          action={<PowerMark power="company:profile:locations:create" />}
         >
           <LocationAddForm lockedCountryId={countryId} />
         </PageCard>
@@ -53,7 +57,9 @@ export function LocationSection({ countryId, inCountry }: LocationSectionProps) 
         active={active}
         countryId={countryId}
         inCountry={inCountry}
-        canEdit={canEdit}
+        canCreate={canCreate}
+        canUpdate={canUpdate}
+        canArchive={canArchive}
         onArchive={setConfirming}
         isArchiving={archiveLocation.isPending}
         archiveError={archiveLocation.isError ? archiveLocation.error.message : null}
@@ -75,13 +81,25 @@ type LocationListProps = {
   active: Location[];
   countryId?: string;
   inCountry?: string;
-  canEdit: boolean;
+  canCreate: boolean;
+  canUpdate: boolean;
+  canArchive: boolean;
   onArchive: (location: Location) => void;
   isArchiving: boolean;
   archiveError: string | null;
 };
 
-function LocationList({ active, countryId, inCountry, canEdit, onArchive, isArchiving, archiveError }: LocationListProps) {
+function LocationList({
+  active,
+  countryId,
+  inCountry,
+  canCreate,
+  canUpdate,
+  canArchive,
+  onArchive,
+  isArchiving,
+  archiveError,
+}: LocationListProps) {
   const [adding, setAdding] = useState(false);
 
   return (
@@ -89,10 +107,18 @@ function LocationList({ active, countryId, inCountry, canEdit, onArchive, isArch
       title={inCountry ? `Locations · ${inCountry}` : "Locations"}
       description={inCountry ? `The name, address, phone and timezone of each place in ${inCountry}.` : "The name, address, phone and timezone of each place in this country."}
       contentClassName="p-0"
+      action={<PowerMark power="company:profile:locations:read" />}
     >
       <ul className="divide-y">
         {active.map((location) => (
-          <LocationRow key={location.id} location={location} canEdit={canEdit} onArchive={onArchive} isArchiving={isArchiving} />
+          <LocationRow
+            key={location.id}
+            location={location}
+            canUpdate={canUpdate}
+            canArchive={canArchive}
+            onArchive={onArchive}
+            isArchiving={isArchiving}
+          />
         ))}
       </ul>
       {archiveError ? (
@@ -100,14 +126,17 @@ function LocationList({ active, countryId, inCountry, canEdit, onArchive, isArch
           {archiveError}
         </p>
       ) : null}
-      {canEdit ? (
+      {canCreate ? (
         <div className="border-t p-6">
           {adding ? (
             <LocationAddForm lockedCountryId={countryId} onAdded={() => setAdding(false)} onCancel={() => setAdding(false)} />
           ) : (
-            <Button type="button" variant="outline" size="sm" onClick={() => setAdding(true)}>
-              Add location
-            </Button>
+            <div className="flex items-center gap-2">
+              <PowerMark power="company:profile:locations:create" />
+              <Button type="button" variant="outline" size="sm" onClick={() => setAdding(true)}>
+                Add location
+              </Button>
+            </div>
           )}
         </div>
       ) : null}

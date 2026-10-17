@@ -22,6 +22,7 @@ import {
   withAdminPowersEdit,
 } from "../utils";
 import type { AdminPowerEdits, AdminPowerGroup, AdminRolePowerSave } from "../types";
+import { AdminPowerUsage } from "./admin-power-usage";
 
 type AdminRolePowerChecklistProps = {
   role: AdminRoleDetail;
@@ -67,7 +68,10 @@ function PowerGroup({ group, saved, edits, locked, disabled, onChange }: PowerGr
       <ul className="divide-y rounded-2xl border">
         {group.sections.map((section) => (
           <li key={section.path} className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 px-4 py-3">
-            <span className="text-sm">{section.label}</span>
+            <span className="flex items-center gap-1.5 text-sm">
+              {section.label}
+              <AdminPowerUsage label={section.label} options={section.options} />
+            </span>
             <div className="flex flex-wrap gap-x-4 gap-y-1">
               {section.options.map((option) => {
                 const isLocked = locked.has(option.power);

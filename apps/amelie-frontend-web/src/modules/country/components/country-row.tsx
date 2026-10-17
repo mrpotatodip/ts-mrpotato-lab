@@ -2,13 +2,14 @@ import { CURRENCY_VALUES, type Country } from "@repo/contracts/amelie";
 
 import { Button } from "#/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#/components/ui/select";
-import { countryName } from "#/modules/shared";
+import { countryName, PowerMark } from "#/modules/shared";
 import type { CountryCurrencyChange } from "../types";
 
 type CountryRowProps = {
   country: Country;
   openLocations: number;
-  canEdit: boolean;
+  canChangeCurrency: boolean;
+  canArchive: boolean;
   onChangeCurrency: (change: CountryCurrencyChange) => void;
   onArchive: (country: Country) => void;
   isArchiving: boolean;
@@ -20,7 +21,15 @@ type CountryRowProps = {
 // Locations it has. A new currency is only asked for
 // here; the section confirms it with a warning.
 // -----
-export function CountryRow({ country, openLocations, canEdit, onChangeCurrency, onArchive, isArchiving }: CountryRowProps) {
+export function CountryRow({
+  country,
+  openLocations,
+  canChangeCurrency,
+  canArchive,
+  onChangeCurrency,
+  onArchive,
+  isArchiving,
+}: CountryRowProps) {
   return (
     <li className="flex items-center justify-between gap-4 p-6">
       <div className="min-w-0">
@@ -30,9 +39,10 @@ export function CountryRow({ country, openLocations, canEdit, onChangeCurrency, 
         </p>
       </div>
       <div className="flex shrink-0 items-center gap-2">
+        {canChangeCurrency ? <PowerMark power="company:profile:countries:update" /> : null}
         <Select
           value={country.currency}
-          disabled={!canEdit}
+          disabled={!canChangeCurrency}
           onValueChange={(next) => {
             const picked = CURRENCY_VALUES.find((value) => value === next);
             if (picked && picked !== country.currency) onChangeCurrency({ country, currency: picked });
@@ -49,10 +59,13 @@ export function CountryRow({ country, openLocations, canEdit, onChangeCurrency, 
             ))}
           </SelectContent>
         </Select>
-        {canEdit ? (
-          <Button type="button" variant="ghost" size="sm" disabled={isArchiving} onClick={() => onArchive(country)}>
-            Archive
-          </Button>
+        {canArchive ? (
+          <>
+            <PowerMark power="company:profile:countries:archive" />
+            <Button type="button" variant="ghost" size="sm" disabled={isArchiving} onClick={() => onArchive(country)}>
+              Archive
+            </Button>
+          </>
         ) : null}
       </div>
     </li>

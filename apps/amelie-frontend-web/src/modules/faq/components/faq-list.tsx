@@ -7,10 +7,9 @@ type FaqListProps = {
   categories: FaqCategory[];
   locations: Location[];
   countries: Country[];
-  canEdit: boolean;
 };
 
-export function FaqList({ faqs, categories, locations, countries, canEdit }: FaqListProps) {
+export function FaqList({ faqs, categories, locations, countries }: FaqListProps) {
   if (faqs.length === 0) {
     return <p className="text-muted-foreground p-6 text-sm">No FAQs in this category yet.</p>;
   }
@@ -24,7 +23,6 @@ export function FaqList({ faqs, categories, locations, countries, canEdit }: Faq
           categories={categories}
           locations={locations}
           countries={countries}
-          canEdit={canEdit}
         />
       ))}
     </ul>

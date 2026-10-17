@@ -15,6 +15,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
+import { PowerMark } from "#/modules/shared";
+import { useActiveTenantRole } from "#/modules/tenant";
 import { useChatBotThreadActions } from "../hooks/use-chat-bot-thread-actions";
 import { toThreadTitle } from "../utils";
 import { ChatBotThreadRenameDialog } from "./chat-bot-thread-rename-dialog";
@@ -29,6 +31,9 @@ export function ChatBotThreadOverflow({
   title,
 }: ChatBotThreadOverflowProps) {
   const { remove } = useChatBotThreadActions();
+  const { can } = useActiveTenantRole();
+  const canRename = can("company:assistant:threads:update");
+  const canDelete = can("company:assistant:threads:delete");
   const [renameOpen, setRenameOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const label = toThreadTitle(title);
@@ -36,6 +41,8 @@ export function ChatBotThreadOverflow({
   const confirmDelete = () => {
     remove.mutate(threadId);
   };
+
+  if (!canRename && !canDelete) return null;
 
   return (
     <>
@@ -55,15 +62,21 @@ export function ChatBotThreadOverflow({
           <MoreHorizontal />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => setTimeout(() => setRenameOpen(true), 0)}>
-            Rename
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            className="text-destructive"
-            onClick={() => setTimeout(() => setDeleteOpen(true), 0)}
-          >
-            Delete
-          </DropdownMenuItem>
+          {canRename ? (
+            <DropdownMenuItem className="justify-between gap-4" onClick={() => setTimeout(() => setRenameOpen(true), 0)}>
+              Rename
+              <PowerMark inMenu power="company:assistant:threads:update" />
+            </DropdownMenuItem>
+          ) : null}
+          {canDelete ? (
+            <DropdownMenuItem
+              className="text-destructive justify-between gap-4"
+              onClick={() => setTimeout(() => setDeleteOpen(true), 0)}
+            >
+              Delete
+              <PowerMark inMenu power="company:assistant:threads:delete" />
+            </DropdownMenuItem>
+          ) : null}
         </DropdownMenuContent>
       </DropdownMenu>
 

@@ -37,6 +37,7 @@ pnpm --filter amelie-frontend-web dev    # vite dev --port 3000
 pnpm --filter amelie-frontend-host dev   # vite --port 5174, loads widget.js from :3000
 pnpm --filter amelie-engine-api test     # vitest run
 pnpm --filter amelie-engine-api lint     # oxlint src
+UPDATE_POWER_USAGE=1 pnpm --filter amelie-engine-api test   # rewrites ACCESS_POWER_USAGE (where each Power is checked) after a requirePower change
 
 # Database
 pnpm --filter @repo/db-amelie db:generate  # drizzle-kit generate migration

@@ -2,9 +2,11 @@ import { useRouterState } from "@tanstack/react-router";
 
 import { Separator } from "#/components/ui/separator";
 import { SidebarTrigger } from "#/components/ui/sidebar";
+import { useAdminAccess } from "#/modules/admin";
 import { useActiveTenantRole } from "#/modules/tenant";
 import { DASHBOARD_MENU_SUBNAV, DASHBOARD_NAV_ITEMS } from "../constants";
 import { findDashboardNavItem } from "../utils";
+import { DashboardPowerMarksToggle } from "./dashboard-power-marks-toggle";
 import { DashboardStatusBadge } from "./dashboard-status-badge";
 import { DashboardThemeToggle } from "./dashboard-theme-toggle";
 
@@ -15,6 +17,7 @@ import { DashboardThemeToggle } from "./dashboard-theme-toggle";
 export function DashboardHeader() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const { role, canEdit } = useActiveTenantRole();
+  const { isSuperuser } = useAdminAccess();
   const current = findDashboardNavItem(pathname, [...DASHBOARD_MENU_SUBNAV, ...DASHBOARD_NAV_ITEMS]);
 
   return (
@@ -24,6 +27,7 @@ export function DashboardHeader() {
       <span className="text-sm font-medium">{current?.label ?? "Dashboard"}</span>
       <div className="ml-auto flex items-center gap-2">
         {role && !canEdit ? <DashboardStatusBadge tone="neutral">View only</DashboardStatusBadge> : null}
+        {isSuperuser ? <DashboardPowerMarksToggle /> : null}
         <DashboardThemeToggle />
       </div>
     </header>

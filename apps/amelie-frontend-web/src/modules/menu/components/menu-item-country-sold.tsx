@@ -6,6 +6,7 @@ import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
 import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
+import { PowerMark } from "#/modules/shared";
 import { needsCountryPrice, toPriceEntryBody } from "../utils";
 
 type MenuItemCountrySoldProps = {
@@ -45,6 +46,7 @@ export function MenuItemCountrySold({ item, countryLabel, currency, isPending, e
             void form.handleSubmit();
           }}
         >
+          <PowerMark power="company:menu:country_prices:update" />
           <form.Field name="price">
             {(field) => (
               <Input
@@ -76,6 +78,7 @@ export function MenuItemCountrySold({ item, countryLabel, currency, isPending, e
           <Label htmlFor={id} className="font-normal">
             Sold in {countryLabel}
           </Label>
+          <PowerMark power="company:menu:country_prices:update" />
         </div>
       )}
       {error ? <p className="text-xs text-destructive">{error}</p> : null}

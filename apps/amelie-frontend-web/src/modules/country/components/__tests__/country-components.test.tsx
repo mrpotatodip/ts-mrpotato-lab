@@ -5,6 +5,7 @@ import type { Country } from "@repo/contracts/amelie";
 import type { CountryCurrencyChange } from "../../types";
 import { CountryArchiveDialog } from "../country-archive-dialog";
 import { CountryCurrencyDialog } from "../country-currency-dialog";
+import { PowerMarksProvider } from "#/modules/shared";
 import { CountryRow } from "../country-row";
 import { CountrySwitcher } from "../country-switcher";
 
@@ -67,7 +68,7 @@ describe("CountryArchiveDialog", () => {
 
 describe("CountryRow", () => {
   it("shows the country, its currency and how many open locations it has", () => {
-    render(<CountryRow country={ca} openLocations={2} canEdit onChangeCurrency={() => {}} onArchive={() => {}} isArchiving={false} />);
+    render(<CountryRow country={ca} openLocations={2} canChangeCurrency canArchive onChangeCurrency={() => {}} onArchive={() => {}} isArchiving={false} />);
 
     expect(screen.getByText("Canada")).toBeTruthy();
     expect(screen.getByText("2 open locations")).toBeTruthy();
@@ -76,12 +77,24 @@ describe("CountryRow", () => {
 
   it("offers Archive to an editor and hides it from anyone else", () => {
     const onArchive = vi.fn<(country: Country) => void>();
-    const { rerender } = render(<CountryRow country={ca} openLocations={0} canEdit onChangeCurrency={() => {}} onArchive={onArchive} isArchiving={false} />);
+    const { rerender } = render(<CountryRow country={ca} openLocations={0} canChangeCurrency canArchive onChangeCurrency={() => {}} onArchive={onArchive} isArchiving={false} />);
 
     fireEvent.click(screen.getByRole("button", { name: "Archive" }));
     expect(onArchive).toHaveBeenCalledWith(ca);
 
-    rerender(<CountryRow country={ca} openLocations={0} canEdit={false} onChangeCurrency={() => {}} onArchive={onArchive} isArchiving={false} />);
+    rerender(<CountryRow country={ca} openLocations={0} canChangeCurrency={false} canArchive={false} onChangeCurrency={() => {}} onArchive={onArchive} isArchiving={false} />);
     expect(screen.queryByRole("button", { name: "Archive" })).toBeNull();
+  });
+
+  it("gates the currency and Archive by their own Powers, and marks each", () => {
+    render(
+      <PowerMarksProvider visible>
+        <CountryRow country={ca} openLocations={0} canChangeCurrency canArchive={false} onChangeCurrency={() => {}} onArchive={() => {}} isArchiving={false} />
+      </PowerMarksProvider>,
+    );
+
+    expect(screen.queryByRole("button", { name: "Archive" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Needs Profile › Country · Update" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Needs Profile › Country · Archive" })).toBeNull();
   });
 });

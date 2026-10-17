@@ -4,7 +4,8 @@ import type { Country, Faq, FaqCategory, Location } from "@repo/contracts/amelie
 
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
-import { useFaqActions } from "../hooks";
+import { PowerMark } from "#/modules/shared";
+import { useFaqAccess, useFaqActions } from "../hooks";
 import { faqBadgeLabel } from "../utils";
 import { FaqForm } from "./faq-form";
 
@@ -13,10 +14,10 @@ type FaqItemProps = {
   categories: FaqCategory[];
   locations: Location[];
   countries: Country[];
-  canEdit: boolean;
 };
 
-export function FaqItem({ faq, categories, locations, countries, canEdit }: FaqItemProps) {
+export function FaqItem({ faq, categories, locations, countries }: FaqItemProps) {
+  const { canUpdateFaq, canDeleteFaq } = useFaqAccess();
   const { update, remove } = useFaqActions();
   const [isEditing, setIsEditing] = useState(false);
   const badge = faqBadgeLabel(faq, locations, countries);
@@ -43,23 +44,33 @@ export function FaqItem({ faq, categories, locations, countries, canEdit }: FaqI
     <li className="space-y-2 p-6">
       <div className="flex items-center justify-between gap-4">
         <p className="min-w-0 text-sm font-medium">{faq.question}</p>
-        {canEdit ? (
-          <div className="flex shrink-0 gap-1">
-            <Button variant="ghost" size="icon-sm" aria-label="Edit FAQ" title="Edit" onClick={() => setIsEditing(true)}>
-              <Pencil />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              aria-label="Delete FAQ"
-              title="Delete"
-              disabled={remove.isPending}
-              onClick={() => {
-                if (window.confirm("Delete this FAQ?")) remove.mutate({ data: { faqId: faq.id } });
-              }}
-            >
-              <Trash2 />
-            </Button>
+        {canUpdateFaq || canDeleteFaq ? (
+          <div className="flex shrink-0 items-center gap-1">
+            {canUpdateFaq ? (
+              <>
+                <PowerMark power="company:faqs:faqs:update" />
+                <Button variant="ghost" size="icon-sm" aria-label="Edit FAQ" title="Edit" onClick={() => setIsEditing(true)}>
+                  <Pencil />
+                </Button>
+              </>
+            ) : null}
+            {canDeleteFaq ? (
+              <>
+                <PowerMark power="company:faqs:faqs:delete" />
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label="Delete FAQ"
+                  title="Delete"
+                  disabled={remove.isPending}
+                  onClick={() => {
+                    if (window.confirm("Delete this FAQ?")) remove.mutate({ data: { faqId: faq.id } });
+                  }}
+                >
+                  <Trash2 />
+                </Button>
+              </>
+            ) : null}
           </div>
         ) : null}
       </div>

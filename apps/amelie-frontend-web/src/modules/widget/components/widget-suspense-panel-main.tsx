@@ -30,7 +30,7 @@ function WidgetPanelView() {
   const { data } = useSuspenseTenants();
   const { data: locations } = useSuspenseLocations();
   const { data: countries } = useSuspenseCountries();
-  const { canEdit } = useActiveTenantRole();
+  const { can } = useActiveTenantRole();
   const { updateAllowedOrigins, updateCustomerChat } = useTenantActions();
   const tenant = findActiveTenant(data);
   const [draft, setDraft] = useState({
@@ -50,7 +50,7 @@ function WidgetPanelView() {
           key={`${tenant.customerChatLabel}\0${tenant.customerChatAccent ?? ""}`}
           customerChatLabel={tenant.customerChatLabel}
           customerChatAccent={tenant.customerChatAccent}
-          canEdit={canEdit}
+          canEdit={can("integration:widget:look:update")}
           isPending={updateCustomerChat.isPending}
           error={updateCustomerChat.isError ? updateCustomerChat.error.message : null}
           onDraftChange={setDraft}
@@ -59,7 +59,7 @@ function WidgetPanelView() {
         <WidgetAllowedOriginsCard
           key={tenant.allowedOrigins.join("\0")}
           allowedOrigins={tenant.allowedOrigins}
-          canEdit={canEdit}
+          canEdit={can("integration:widget:origins:update")}
           isPending={updateAllowedOrigins.isPending}
           error={updateAllowedOrigins.isError ? updateAllowedOrigins.error.message : null}
           onSave={(allowedOrigins) => updateAllowedOrigins.mutate({ tenantId: tenant.id, allowedOrigins })}

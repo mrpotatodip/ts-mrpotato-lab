@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 
 import { Button } from "#/components/ui/button";
-import { PageCard } from "#/modules/shared";
+import { PageCard, PowerMark } from "#/modules/shared";
 import { useMenuImportActions } from "../hooks";
 
 const ACCEPT = "application/pdf,image/jpeg,image/png,image/webp";
@@ -16,7 +16,11 @@ export function MenuImportUpload() {
   const [count, setCount] = useState(0);
 
   return (
-    <PageCard title="Upload a menu" description="One PDF, or up to 10 photos.">
+    <PageCard
+      title="Upload a menu"
+      description="One PDF, or up to 10 photos."
+      action={<PowerMark power="company:menu:imports:create" />}
+    >
       <form
         className="flex flex-col gap-3"
         onSubmit={(event) => {

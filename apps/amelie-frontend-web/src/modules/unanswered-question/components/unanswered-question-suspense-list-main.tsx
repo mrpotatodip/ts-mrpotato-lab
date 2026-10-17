@@ -19,6 +19,7 @@ export function UnansweredQuestionSuspenseListMain() {
       <PageHeader
         title="Unanswered questions"
         description="What customers asked that the assistant could not answer. Add an FAQ to cover it."
+        power="company:unanswered:questions:read"
       />
       <Suspense fallback={<UnansweredQuestionListSkeleton />}>
         <UnansweredQuestionListView />

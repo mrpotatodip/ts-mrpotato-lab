@@ -28,6 +28,7 @@ const renderSheet = (images: MenuItemImage[], extra?: Partial<Parameters<typeof 
       onCover={() => {}}
       onMove={() => {}}
       onDelete={() => {}}
+      access={{ canCreateImage: true, canUpdateImage: true, canDeleteImage: true, canReorderImages: true }}
       {...extra}
     />,
   );

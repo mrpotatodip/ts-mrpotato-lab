@@ -5,6 +5,7 @@ import type { ImportDraft } from "@repo/contracts/amelie";
 import { Button } from "#/components/ui/button";
 import { DashboardStatusBadge } from "#/modules/dashboard/components/dashboard-status-badge";
 import { describeHours } from "#/modules/schedule";
+import { PowerMark } from "#/modules/shared";
 import { useMenuImportActions } from "../hooks";
 import { importPriceText } from "../utils";
 import { MenuImportDraftEditor } from "./menu-import-draft-editor";
@@ -88,7 +89,8 @@ export function MenuImportDraft({ importId, draft, canEdit, currency }: MenuImpo
           {text.title}
         </p>
         {canEdit ? (
-          <div className="flex shrink-0 gap-1">
+          <div className="flex shrink-0 items-center gap-1">
+            <PowerMark power="company:menu:import_drafts:update" />
             <Button
               variant="ghost"
               size="icon-sm"

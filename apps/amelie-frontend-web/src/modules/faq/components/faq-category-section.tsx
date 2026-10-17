@@ -6,8 +6,8 @@ import { FaqCategoryBodySchema, type Country, type FaqCategory, type Location } 
 
 import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
-import { PageCard } from "#/modules/shared";
-import { useFaqActions } from "../hooks";
+import { PageCard, PowerMark } from "#/modules/shared";
+import { useFaqAccess, useFaqActions } from "../hooks";
 import { faqCategoryNameError, type FaqGroup } from "../utils";
 import { FaqForm } from "./faq-form";
 import { FaqList } from "./faq-list";
@@ -18,10 +18,10 @@ type FaqCategorySectionProps = {
   locations: Location[];
   countries: Country[];
   formCountries: Country[];
-  canEdit: boolean;
 };
 
-export function FaqCategorySection({ group, categories, locations, countries, formCountries, canEdit }: FaqCategorySectionProps) {
+export function FaqCategorySection({ group, categories, locations, countries, formCountries }: FaqCategorySectionProps) {
+  const { canCreateFaq, canUpdateCategory, canDeleteCategory } = useFaqAccess();
   const { add, renameCategory, removeCategory } = useFaqActions();
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
@@ -44,30 +44,40 @@ export function FaqCategorySection({ group, categories, locations, countries, fo
       description={isEditing ? undefined : `${group.faqs.length} ${group.faqs.length === 1 ? "FAQ" : "FAQs"}`}
       contentClassName="p-0"
       action={
-        canEdit && group.category !== null && !isEditing ? (
-          <div className="flex gap-1">
-            <Button variant="ghost" size="icon-sm" aria-label="Edit category" title="Edit" onClick={() => setIsEditing(true)}>
-              <Pencil />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              aria-label="Delete category"
-              title="Delete"
-              disabled={removeCategory.isPending}
-              onClick={() => {
-                const categoryId = group.category?.id;
-                if (categoryId === undefined) return;
-                if (window.confirm(`Delete "${group.title}"? Its FAQs move to General.`)) {
-                  removeCategory.mutate(
-                    { data: { categoryId } },
-                    { onSuccess: () => void navigate({ to: "/faqs", search: {} }) },
-                  );
-                }
-              }}
-            >
-              <Trash2 />
-            </Button>
+        (canUpdateCategory || canDeleteCategory) && group.category !== null && !isEditing ? (
+          <div className="flex items-center gap-1">
+            {canUpdateCategory ? (
+              <>
+                <PowerMark power="company:faqs:categories:update" />
+                <Button variant="ghost" size="icon-sm" aria-label="Edit category" title="Edit" onClick={() => setIsEditing(true)}>
+                  <Pencil />
+                </Button>
+              </>
+            ) : null}
+            {canDeleteCategory ? (
+              <>
+                <PowerMark power="company:faqs:categories:delete" />
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label="Delete category"
+                  title="Delete"
+                  disabled={removeCategory.isPending}
+                  onClick={() => {
+                    const categoryId = group.category?.id;
+                    if (categoryId === undefined) return;
+                    if (window.confirm(`Delete "${group.title}"? Its FAQs move to General.`)) {
+                      removeCategory.mutate(
+                        { data: { categoryId } },
+                        { onSuccess: () => void navigate({ to: "/faqs", search: {} }) },
+                      );
+                    }
+                  }}
+                >
+                  <Trash2 />
+                </Button>
+              </>
+            ) : null}
           </div>
         ) : null
       }
@@ -111,9 +121,9 @@ export function FaqCategorySection({ group, categories, locations, countries, fo
         </form>
       ) : (
         <>
-          <FaqList faqs={group.faqs} categories={categories} locations={locations} countries={countries} canEdit={canEdit} />
+          <FaqList faqs={group.faqs} categories={categories} locations={locations} countries={countries} />
           {removeCategory.isError ? <p className="px-6 pt-4 text-xs text-destructive">{removeCategory.error.message}</p> : null}
-          {canEdit ? (
+          {canCreateFaq ? (
             <div className="border-t p-6">
               {isAdding ? (
                 <FaqForm
@@ -130,13 +140,16 @@ export function FaqCategorySection({ group, categories, locations, countries, fo
                   onCancel={() => setIsAdding(false)}
                 />
               ) : (
-                <Button type="button" variant="outline" size="sm" onClick={() => setIsAdding(true)}>
-                  Add FAQ
-                </Button>
+                <div className="flex items-center gap-2">
+                  <PowerMark power="company:faqs:faqs:create" />
+                  <Button type="button" variant="outline" size="sm" onClick={() => setIsAdding(true)}>
+                    Add FAQ
+                  </Button>
+                </div>
               )}
             </div>
           ) : (
-            <p className="text-muted-foreground p-6 text-sm">Only a tenant_admin or store_admin can change these.</p>
+            <p className="text-muted-foreground p-6 text-sm">Your role cannot add FAQs.</p>
           )}
         </>
       )}

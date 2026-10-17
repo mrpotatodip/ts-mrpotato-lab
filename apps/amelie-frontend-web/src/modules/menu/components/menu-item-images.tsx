@@ -3,7 +3,9 @@ import { useRef } from "react";
 import { IMPORT_IMAGE_TYPES, MENU_ITEM_IMAGE_MAX, type MenuItemImage } from "@repo/contracts/amelie";
 
 import { Button } from "#/components/ui/button";
+import { PowerMark } from "#/modules/shared";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "#/components/ui/sheet";
+import type { MenuAccess } from "../types";
 import { menuItemImagePath, remainingMenuItemImageSlots, toMenuItemImageUrl } from "../utils";
 
 type MenuItemImagesProps = {
@@ -18,6 +20,7 @@ type MenuItemImagesProps = {
   onCover: (imageId: string) => void;
   onMove: (imageId: string, direction: -1 | 1) => void;
   onDelete: (imageId: string) => void;
+  access: Pick<MenuAccess, "canCreateImage" | "canUpdateImage" | "canDeleteImage" | "canReorderImages">;
 };
 
 const ACCEPT = IMPORT_IMAGE_TYPES.join(",");
@@ -34,6 +37,7 @@ export function MenuItemImages({
   onCover,
   onMove,
   onDelete,
+  access,
 }: MenuItemImagesProps) {
   const input = useRef<HTMLInputElement>(null);
   const remaining = remainingMenuItemImageSlots(images.length);
@@ -63,54 +67,70 @@ export function MenuItemImages({
                       <img src={src} alt="" className="size-24 shrink-0 rounded-lg object-cover" />
                     ) : null}
                     <div className="ml-auto flex items-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        aria-label="Move up"
-                        title="Move up"
-                        disabled={index === 0}
-                        onClick={() => onMove(image.id, -1)}
-                      >
-                        <ArrowUp />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        aria-label="Move down"
-                        title="Move down"
-                        disabled={index === images.length - 1}
-                        onClick={() => onMove(image.id, 1)}
-                      >
-                        <ArrowDown />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={isPending || index === 0}
-                        onClick={() => onCover(image.id)}
-                      >
-                        Cover
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        aria-label="Remove photo"
-                        title="Remove photo"
-                        disabled={isPending}
-                        onClick={() => {
-                          if (window.confirm(`Remove this photo from "${itemName}"?`)) onDelete(image.id);
-                        }}
-                      >
-                        <Trash2 />
-                      </Button>
+                      {access.canReorderImages ? (
+                        <>
+                          <PowerMark power="company:menu:images:reorder" />
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            aria-label="Move up"
+                            title="Move up"
+                            disabled={index === 0}
+                            onClick={() => onMove(image.id, -1)}
+                          >
+                            <ArrowUp />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            aria-label="Move down"
+                            title="Move down"
+                            disabled={index === images.length - 1}
+                            onClick={() => onMove(image.id, 1)}
+                          >
+                            <ArrowDown />
+                          </Button>
+                        </>
+                      ) : null}
+                      {access.canUpdateImage ? (
+                        <>
+                          <PowerMark power="company:menu:images:update" />
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={isPending || index === 0}
+                            onClick={() => onCover(image.id)}
+                          >
+                            Cover
+                          </Button>
+                        </>
+                      ) : null}
+                      {access.canDeleteImage ? (
+                        <>
+                          <PowerMark power="company:menu:images:delete" />
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            aria-label="Remove photo"
+                            title="Remove photo"
+                            disabled={isPending}
+                            onClick={() => {
+                              if (window.confirm(`Remove this photo from "${itemName}"?`)) onDelete(image.id);
+                            }}
+                          >
+                            <Trash2 />
+                          </Button>
+                        </>
+                      ) : null}
                     </div>
                   </li>
                 );
               })}
             </ul>
           ) : null}
-          {remaining > 0 ? (
-            <div>
+          {remaining > 0 && access.canCreateImage ? (
+            <div className="flex items-center gap-2">
+              <PowerMark power="company:menu:images:create" />
               <input
                 ref={input}
                 type="file"

@@ -3,7 +3,6 @@ import { Suspense } from "react";
 import { activeCountries, useSuspenseCountries } from "#/modules/country";
 import { useSuspenseLocations } from "#/modules/location";
 import { PageHeader } from "#/modules/shared";
-import { useActiveTenantRole } from "#/modules/tenant";
 import { useSuspenseFaqs } from "../hooks";
 import { faqGroupFor, faqGroups, resolveFaqCategoryKey } from "../utils";
 import { FaqCategoryNav } from "./faq-category-nav";
@@ -20,6 +19,7 @@ export function FaqSuspensePanelMain({ categoryKey }: FaqSuspensePanelMainProps)
       <PageHeader
         title="FAQs"
         description="The questions your assistant answers from. Open a category to add and edit its answers."
+        power="company:faqs:faqs:read"
       />
       <Suspense fallback={<FaqPanelSkeleton />}>
         <FaqPanelView categoryKey={categoryKey} />
@@ -30,7 +30,6 @@ export function FaqSuspensePanelMain({ categoryKey }: FaqSuspensePanelMainProps)
 
 function FaqPanelView({ categoryKey }: { categoryKey: string | undefined }) {
   const { data } = useSuspenseFaqs();
-  const { canEdit } = useActiveTenantRole();
   const { data: allLocations } = useSuspenseLocations();
   const { data: allCountries } = useSuspenseCountries();
   const locations = allLocations.filter((location) => location.archivedAt === null);
@@ -41,7 +40,7 @@ function FaqPanelView({ categoryKey }: { categoryKey: string | undefined }) {
   return (
     <div className="grid items-start gap-8 lg:gap-x-16 lg:grid-cols-[2fr_3fr]">
       <div className="lg:sticky lg:top-20 lg:max-h-[calc(100vh-6.5rem)] lg:-mr-4 lg:overflow-y-auto lg:pr-4 lg:pb-1 lg:[overflow-anchor:none] lg:[scrollbar-width:thin]">
-        <FaqCategoryNav groups={groups} selectedKey={selectedKey} canEdit={canEdit} />
+        <FaqCategoryNav groups={groups} selectedKey={selectedKey} />
       </div>
       <FaqCategorySection
         key={`${group.key}:${group.title}`}
@@ -50,7 +49,6 @@ function FaqPanelView({ categoryKey }: { categoryKey: string | undefined }) {
         locations={locations}
         countries={allCountries}
         formCountries={activeCountries(allCountries)}
-        canEdit={canEdit}
       />
     </div>
   );
