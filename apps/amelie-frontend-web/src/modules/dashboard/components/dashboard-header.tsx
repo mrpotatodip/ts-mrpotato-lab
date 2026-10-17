@@ -4,6 +4,7 @@ import { Separator } from "#/components/ui/separator";
 import { SidebarTrigger } from "#/components/ui/sidebar";
 import { useActiveTenantRole } from "#/modules/tenant";
 import { DASHBOARD_MENU_SUBNAV, DASHBOARD_NAV_ITEMS } from "../constants";
+import { findDashboardNavItem } from "../utils";
 import { DashboardStatusBadge } from "./dashboard-status-badge";
 import { DashboardThemeToggle } from "./dashboard-theme-toggle";
 
@@ -14,9 +15,7 @@ import { DashboardThemeToggle } from "./dashboard-theme-toggle";
 export function DashboardHeader() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const { role, canEdit } = useActiveTenantRole();
-  const current = [...DASHBOARD_MENU_SUBNAV, ...DASHBOARD_NAV_ITEMS].find(
-    (item) => pathname === item.to || pathname.startsWith(`${item.to}/`),
-  );
+  const current = findDashboardNavItem(pathname, [...DASHBOARD_MENU_SUBNAV, ...DASHBOARD_NAV_ITEMS]);
 
   return (
     <header className="bg-background/80 sticky top-0 z-10 flex h-14 items-center gap-2 border-b px-4 backdrop-blur">

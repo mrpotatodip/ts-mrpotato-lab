@@ -27,6 +27,7 @@ import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as ApiChatBotRouteImport } from './routes/api/chat-bot'
 import { Route as ChatSlugRouteImport } from './routes/chat/$slug'
 import { Route as JoinTokenRouteImport } from './routes/join/$token'
+import { Route as PrototypeAdminRolesRouteImport } from './routes/prototype/admin-roles'
 import { Route as SigninIndexRouteImport } from './routes/signin/index'
 import { Route as SignoutIndexRouteImport } from './routes/signout/index'
 import { Route as SignupIndexRouteImport } from './routes/signup/index'
@@ -35,6 +36,8 @@ import { Route as DashboardCustomersIndexRouteImport } from './routes/_dashboard
 import { Route as DashboardCustomersThreadIdRouteImport } from './routes/_dashboard/customers/$threadId'
 import { Route as DashboardImportsIndexRouteImport } from './routes/_dashboard/imports/index'
 import { Route as DashboardImportsImportIdRouteImport } from './routes/_dashboard/imports/$importId'
+import { Route as AdminRolesIndexRouteImport } from './routes/admin/roles/index'
+import { Route as AdminRolesRoleIdRouteImport } from './routes/admin/roles/$roleId'
 import { Route as DashboardChatBotRoomIndexRouteImport } from './routes/_dashboard/chat-bot/_room/index'
 import { Route as DashboardChatBotRoomThreadIdRouteImport } from './routes/_dashboard/chat-bot/_room/$threadId'
 
@@ -128,6 +131,11 @@ const JoinTokenRoute = JoinTokenRouteImport.update({
   path: '/join/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrototypeAdminRolesRoute = PrototypeAdminRolesRouteImport.update({
+  id: '/prototype/admin-roles',
+  path: '/prototype/admin-roles',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SigninIndexRoute = SigninIndexRouteImport.update({
   id: '/signin/',
   path: '/signin/',
@@ -171,6 +179,16 @@ const DashboardImportsImportIdRoute =
     path: '/imports/$importId',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
+const AdminRolesIndexRoute = AdminRolesIndexRouteImport.update({
+  id: '/roles/',
+  path: '/roles/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminRolesRoleIdRoute = AdminRolesRoleIdRouteImport.update({
+  id: '/roles/$roleId',
+  path: '/roles/$roleId',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const DashboardChatBotRoomIndexRoute =
   DashboardChatBotRoomIndexRouteImport.update({
     id: '/',
@@ -201,6 +219,7 @@ export interface FileRoutesByFullPath {
   '/api/chat-bot': typeof ApiChatBotRoute
   '/chat/$slug': typeof ChatSlugRoute
   '/join/$token': typeof JoinTokenRoute
+  '/prototype/admin-roles': typeof PrototypeAdminRolesRoute
   '/admin/': typeof AdminIndexRoute
   '/signin/': typeof SigninIndexRoute
   '/signout/': typeof SignoutIndexRoute
@@ -208,8 +227,10 @@ export interface FileRoutesByFullPath {
   '/chat-bot': typeof DashboardChatBotRoomRouteRouteWithChildren
   '/customers/$threadId': typeof DashboardCustomersThreadIdRoute
   '/imports/$importId': typeof DashboardImportsImportIdRoute
+  '/admin/roles/$roleId': typeof AdminRolesRoleIdRoute
   '/customers/': typeof DashboardCustomersIndexRoute
   '/imports/': typeof DashboardImportsIndexRoute
+  '/admin/roles/': typeof AdminRolesIndexRoute
   '/chat-bot/$threadId': typeof DashboardChatBotRoomThreadIdRoute
   '/chat-bot/': typeof DashboardChatBotRoomIndexRoute
 }
@@ -229,14 +250,17 @@ export interface FileRoutesByTo {
   '/api/chat-bot': typeof ApiChatBotRoute
   '/chat/$slug': typeof ChatSlugRoute
   '/join/$token': typeof JoinTokenRoute
+  '/prototype/admin-roles': typeof PrototypeAdminRolesRoute
   '/admin': typeof AdminIndexRoute
   '/signin': typeof SigninIndexRoute
   '/signout': typeof SignoutIndexRoute
   '/signup': typeof SignupIndexRoute
   '/customers/$threadId': typeof DashboardCustomersThreadIdRoute
   '/imports/$importId': typeof DashboardImportsImportIdRoute
+  '/admin/roles/$roleId': typeof AdminRolesRoleIdRoute
   '/customers': typeof DashboardCustomersIndexRoute
   '/imports': typeof DashboardImportsIndexRoute
+  '/admin/roles': typeof AdminRolesIndexRoute
   '/chat-bot/$threadId': typeof DashboardChatBotRoomThreadIdRoute
   '/chat-bot': typeof DashboardChatBotRoomIndexRoute
 }
@@ -259,6 +283,7 @@ export interface FileRoutesById {
   '/api/chat-bot': typeof ApiChatBotRoute
   '/chat/$slug': typeof ChatSlugRoute
   '/join/$token': typeof JoinTokenRoute
+  '/prototype/admin-roles': typeof PrototypeAdminRolesRoute
   '/admin/': typeof AdminIndexRoute
   '/signin/': typeof SigninIndexRoute
   '/signout/': typeof SignoutIndexRoute
@@ -266,8 +291,10 @@ export interface FileRoutesById {
   '/_dashboard/chat-bot/_room': typeof DashboardChatBotRoomRouteRouteWithChildren
   '/_dashboard/customers/$threadId': typeof DashboardCustomersThreadIdRoute
   '/_dashboard/imports/$importId': typeof DashboardImportsImportIdRoute
+  '/admin/roles/$roleId': typeof AdminRolesRoleIdRoute
   '/_dashboard/customers/': typeof DashboardCustomersIndexRoute
   '/_dashboard/imports/': typeof DashboardImportsIndexRoute
+  '/admin/roles/': typeof AdminRolesIndexRoute
   '/_dashboard/chat-bot/_room/$threadId': typeof DashboardChatBotRoomThreadIdRoute
   '/_dashboard/chat-bot/_room/': typeof DashboardChatBotRoomIndexRoute
 }
@@ -290,6 +317,7 @@ export interface FileRouteTypes {
     | '/api/chat-bot'
     | '/chat/$slug'
     | '/join/$token'
+    | '/prototype/admin-roles'
     | '/admin/'
     | '/signin/'
     | '/signout/'
@@ -297,8 +325,10 @@ export interface FileRouteTypes {
     | '/chat-bot'
     | '/customers/$threadId'
     | '/imports/$importId'
+    | '/admin/roles/$roleId'
     | '/customers/'
     | '/imports/'
+    | '/admin/roles/'
     | '/chat-bot/$threadId'
     | '/chat-bot/'
   fileRoutesByTo: FileRoutesByTo
@@ -318,14 +348,17 @@ export interface FileRouteTypes {
     | '/api/chat-bot'
     | '/chat/$slug'
     | '/join/$token'
+    | '/prototype/admin-roles'
     | '/admin'
     | '/signin'
     | '/signout'
     | '/signup'
     | '/customers/$threadId'
     | '/imports/$importId'
+    | '/admin/roles/$roleId'
     | '/customers'
     | '/imports'
+    | '/admin/roles'
     | '/chat-bot/$threadId'
     | '/chat-bot'
   id:
@@ -347,6 +380,7 @@ export interface FileRouteTypes {
     | '/api/chat-bot'
     | '/chat/$slug'
     | '/join/$token'
+    | '/prototype/admin-roles'
     | '/admin/'
     | '/signin/'
     | '/signout/'
@@ -354,8 +388,10 @@ export interface FileRouteTypes {
     | '/_dashboard/chat-bot/_room'
     | '/_dashboard/customers/$threadId'
     | '/_dashboard/imports/$importId'
+    | '/admin/roles/$roleId'
     | '/_dashboard/customers/'
     | '/_dashboard/imports/'
+    | '/admin/roles/'
     | '/_dashboard/chat-bot/_room/$threadId'
     | '/_dashboard/chat-bot/_room/'
   fileRoutesById: FileRoutesById
@@ -369,6 +405,7 @@ export interface RootRouteChildren {
   ApiChatBotRoute: typeof ApiChatBotRoute
   ChatSlugRoute: typeof ChatSlugRoute
   JoinTokenRoute: typeof JoinTokenRoute
+  PrototypeAdminRolesRoute: typeof PrototypeAdminRolesRoute
   SigninIndexRoute: typeof SigninIndexRoute
   SignoutIndexRoute: typeof SignoutIndexRoute
   SignupIndexRoute: typeof SignupIndexRoute
@@ -502,6 +539,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JoinTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/prototype/admin-roles': {
+      id: '/prototype/admin-roles'
+      path: '/prototype/admin-roles'
+      fullPath: '/prototype/admin-roles'
+      preLoaderRoute: typeof PrototypeAdminRolesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/signin/': {
       id: '/signin/'
       path: '/signin'
@@ -557,6 +601,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/imports/$importId'
       preLoaderRoute: typeof DashboardImportsImportIdRouteImport
       parentRoute: typeof DashboardRouteRoute
+    }
+    '/admin/roles/': {
+      id: '/admin/roles/'
+      path: '/roles'
+      fullPath: '/admin/roles/'
+      preLoaderRoute: typeof AdminRolesIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/roles/$roleId': {
+      id: '/admin/roles/$roleId'
+      path: '/roles/$roleId'
+      fullPath: '/admin/roles/$roleId'
+      preLoaderRoute: typeof AdminRolesRoleIdRouteImport
+      parentRoute: typeof AdminRouteRoute
     }
     '/_dashboard/chat-bot/_room/': {
       id: '/_dashboard/chat-bot/_room/'
@@ -631,10 +689,14 @@ const DashboardRouteRouteWithChildren = DashboardRouteRoute._addFileChildren(
 
 interface AdminRouteRouteChildren {
   AdminIndexRoute: typeof AdminIndexRoute
+  AdminRolesRoleIdRoute: typeof AdminRolesRoleIdRoute
+  AdminRolesIndexRoute: typeof AdminRolesIndexRoute
 }
 
 const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminIndexRoute: AdminIndexRoute,
+  AdminRolesRoleIdRoute: AdminRolesRoleIdRoute,
+  AdminRolesIndexRoute: AdminRolesIndexRoute,
 }
 
 const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
@@ -650,6 +712,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiChatBotRoute: ApiChatBotRoute,
   ChatSlugRoute: ChatSlugRoute,
   JoinTokenRoute: JoinTokenRoute,
+  PrototypeAdminRolesRoute: PrototypeAdminRolesRoute,
   SigninIndexRoute: SigninIndexRoute,
   SignoutIndexRoute: SignoutIndexRoute,
   SignupIndexRoute: SignupIndexRoute,

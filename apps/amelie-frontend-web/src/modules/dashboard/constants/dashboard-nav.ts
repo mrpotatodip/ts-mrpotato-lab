@@ -9,6 +9,7 @@ import {
   Code,
   MessageSquareWarning,
   MessagesSquare,
+  ShieldCheck,
   Store,
   Users,
   UtensilsCrossed,
@@ -62,7 +63,10 @@ export const DASHBOARD_MENU_SUBNAV = [
 // -----
 export const DASHBOARD_ADMIN_GROUP = {
   label: "Admin",
-  items: [{ to: "/admin", label: "Invite codes", icon: KeyRound }],
+  items: [
+    { to: "/admin", label: "Invite codes", icon: KeyRound },
+    { to: "/admin/roles", label: "Roles", icon: ShieldCheck },
+  ],
 } as const;
 
 type DashboardNavGroupEntry = (typeof DASHBOARD_NAV_GROUPS)[number]["items"][number];

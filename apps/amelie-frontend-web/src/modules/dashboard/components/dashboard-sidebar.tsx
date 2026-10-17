@@ -18,6 +18,7 @@ import {
 import { useAdminAccess } from "#/modules/admin";
 import { TenantPicker, useTenants } from "#/modules/tenant";
 import { DASHBOARD_ADMIN_GROUP, DASHBOARD_MENU_SUBNAV, DASHBOARD_NAV_GROUPS, isDashboardNavItem } from "../constants";
+import { isDashboardNavActive } from "../utils";
 import { DashboardAccountMenu } from "./dashboard-account-menu";
 import { DashboardFaqNav } from "./dashboard-faq-subnav";
 import { DashboardMenuNav } from "./dashboard-menu-subnav";
@@ -80,7 +81,7 @@ export function DashboardSidebar({ userName, userEmail }: DashboardSidebarProps)
                       ) : (
                         <SidebarMenuButton
                           className="h-8 gap-3 px-3 text-[0.9375rem] [&>svg]:size-[1.125rem]"
-                          isActive={pathname === entry.to || pathname.startsWith(`${entry.to}/`)}
+                          isActive={isDashboardNavActive(pathname, entry.to)}
                           render={<Link to={entry.to} onClick={() => setOpenMobile(false)} />}
                         >
                           <Icon />
