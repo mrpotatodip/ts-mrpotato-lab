@@ -35,6 +35,7 @@ export const teamInvites = pgTable(
       columns: [t.roleId, t.tenantId],
       foreignColumns: [roles.id, roles.tenantId],
     }).onDelete("restrict"),
+    uqIdTenant: uniqueIndex("uq_team_invites_id_tenant").on(t.id, t.tenantId),
     idxTenant: index("idx_team_invites_tenant_id").on(t.tenantId),
   }),
 );

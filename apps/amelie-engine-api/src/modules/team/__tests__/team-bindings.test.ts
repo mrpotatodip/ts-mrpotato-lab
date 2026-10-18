@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
 import { TeamBindingsSchema } from "@repo/contracts/amelie";
-import { accessAuditLog, partyRoles, partyRoleScopes, tenantLocations } from "@repo/db-amelie";
+import { accessAuditLog, authUser, partyRoles, partyRoleScopes, teamInviteScopes, tenantLocations } from "@repo/db-amelie";
 import { AppError } from "#/lib/errors";
 import type { AppEnv } from "#/types/variables";
 import teamRestAPI from "#/modules/team";
@@ -19,6 +19,8 @@ import {
   insertTenant,
 } from "#/__tests__/amelie-test-db";
 import type { DbConnectType } from "#/lib/db-connection";
+import { runEffect } from "#/lib/effect-query";
+import { acceptTeamInviteSvc } from "#/modules/team/handlers";
 
 let db: DbConnectType;
 let connectionString: string;
@@ -260,5 +262,159 @@ describe("party_role_scopes in the database", () => {
     await expect(
       db.insert(partyRoleScopes).values({ tenantId: other, partyRoleId: role.id, countryId: foreignCountry }),
     ).rejects.toThrow(/Failed query/);
+  });
+});
+
+const InviteCreated = z.object({
+  data: z.object({ token: z.string(), invite: z.object({ id: z.string(), bindings: TeamBindingsSchema }) }),
+});
+
+const postInvite = (body: { email: string; role: string; bindings?: { kind: string; id: string }[] }) =>
+  app.fetch(
+    new Request(`http://localhost/team/invites?tenantId=${tenantId}`, {
+      method: "POST",
+      headers: { "X-Test-User": adminUserId, "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }),
+    env(),
+  );
+
+const invite = async (body: Parameters<typeof postInvite>[0]) => InviteCreated.parse(await (await postInvite(body)).json()).data;
+
+const memberBindings = async (email: string) => {
+  const [login] = await db.select().from(authUser).where(eq(authUser.email, email));
+  return bindingsOf(login.partyId);
+};
+
+const accept = (token: string) =>
+  runEffect(acceptTeamInviteSvc(db, token, null, { firstName: "New", lastName: "Hire", password: "correct-horse" }));
+
+describe("Inviting with Bindings", () => {
+  it("gives the new member exactly the invited Bindings, folded, in the invite's Tenant", async () => {
+    const created = await invite({
+      email: "bound@example.com",
+      role: "store_staff",
+      bindings: [
+        { kind: "country", id: caCountryId },
+        { kind: "location", id: torontoId },
+        { kind: "location", id: airportId },
+      ],
+    });
+    expect(created.invite.bindings).toHaveLength(2);
+
+    await accept(created.token);
+    const bindings = await memberBindings("bound@example.com");
+    expect(bindings).toHaveLength(2);
+    expect(bindings).toEqual(
+      expect.arrayContaining([
+        { kind: "country", id: caCountryId },
+        { kind: "location", id: airportId },
+      ]),
+    );
+    const [login] = await db.select().from(authUser).where(eq(authUser.email, "bound@example.com"));
+    const [entry] = await auditOf(login.partyId);
+    expect(entry.actorPartyId).toBe(adminPartyId);
+    expect(AuditSet.parse(entry.before).bindings).toEqual([]);
+    expect(AuditSet.parse(entry.after)).toMatchObject({ tenantId });
+    expect(AuditSet.parse(entry.after).bindings).toHaveLength(2);
+  });
+
+  it("makes a Whole cafe invite when no Bindings are sent, with no audit entry", async () => {
+    const created = await invite({ email: "wide@example.com", role: "store_staff" });
+    await accept(created.token);
+    const [login] = await db.select().from(authUser).where(eq(authUser.email, "wide@example.com"));
+    expect(await bindingsOf(login.partyId)).toEqual([]);
+    expect(await auditOf(login.partyId)).toHaveLength(0);
+  });
+
+  it("refuses a Country or Location from another Tenant", async () => {
+    const other = await insertTenant(db, "Abroad", "abroad");
+    const foreignCountry = await insertCountry(db, other, { country: "JP", currency: "JPY" });
+    const res = await postInvite({
+      email: "foreign@example.com",
+      role: "store_staff",
+      bindings: [{ kind: "country", id: foreignCountry }],
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it("refuses Bindings for a Role that cannot be bound, and still invites without them", async () => {
+    const refused = await postInvite({
+      email: "admin2@example.com",
+      role: "tenant_admin",
+      bindings: [{ kind: "country", id: usCountryId }],
+    });
+    expect(refused.status).toBe(400);
+    const ok = await postInvite({ email: "admin2@example.com", role: "tenant_admin" });
+    expect(ok.status).toBe(201);
+  });
+
+  it("leaves nothing behind when the invite is revoked or replaced", async () => {
+    const first = await invite({
+      email: "gone@example.com",
+      role: "store_staff",
+      bindings: [{ kind: "location", id: airportId }],
+    });
+    const second = await invite({
+      email: "gone@example.com",
+      role: "store_staff",
+      bindings: [{ kind: "country", id: usCountryId }],
+    });
+    expect(await db.select().from(teamInviteScopes).where(eq(teamInviteScopes.inviteId, first.invite.id))).toHaveLength(0);
+    const res = await app.fetch(
+      new Request(`http://localhost/team/invites/${second.invite.id}?tenantId=${tenantId}`, {
+        method: "DELETE",
+        headers: { "X-Test-User": adminUserId },
+      }),
+      env(),
+    );
+    expect(res.status).toBe(200);
+    expect(await db.select().from(teamInviteScopes).where(eq(teamInviteScopes.inviteId, second.invite.id))).toHaveLength(0);
+    await expect(accept(second.token)).rejects.toMatchObject({ statusCode: 404 });
+  });
+
+  it("creates no Bindings from an expired invite", async () => {
+    const created = await invite({
+      email: "late@example.com",
+      role: "store_staff",
+      bindings: [{ kind: "location", id: airportId }],
+    });
+    const later = new Date(Date.now() + 8 * 24 * 60 * 60 * 1000);
+    await expect(
+      runEffect(acceptTeamInviteSvc(db, created.token, null, { firstName: "A", lastName: "B", password: "correct-horse" }, later)),
+    ).rejects.toMatchObject({ statusCode: 404 });
+    const rows = await db.select().from(authUser).where(eq(authUser.email, "late@example.com"));
+    expect(rows).toHaveLength(0);
+  });
+
+  it("drops the pending Bindings when the invite moves to a Role that cannot be bound", async () => {
+    const created = await invite({
+      email: "switch@example.com",
+      role: "store_staff",
+      bindings: [{ kind: "location", id: airportId }],
+    });
+    const res = await app.fetch(
+      new Request(`http://localhost/team/invites/${created.invite.id}?tenantId=${tenantId}`, {
+        method: "PATCH",
+        headers: { "X-Test-User": adminUserId, "Content-Type": "application/json" },
+        body: JSON.stringify({ role: "tenant_admin" }),
+      }),
+      env(),
+    );
+    expect(res.status).toBe(200);
+    await accept(created.token);
+    expect(await memberBindings("switch@example.com")).toEqual([]);
+  });
+
+  it("keeps a invite's scope rows inside its own Tenant", async () => {
+    const created = await invite({ email: "tenant@example.com", role: "store_staff" });
+    const other = await insertTenant(db, "Fourth", "fourth");
+    const foreignCountry = await insertCountry(db, other, { country: "BR", currency: "BRL" });
+    await expect(
+      db.insert(teamInviteScopes).values({ tenantId, inviteId: created.invite.id, countryId: foreignCountry }),
+    ).rejects.toThrow(/Failed query/);
+    await expect(db.insert(teamInviteScopes).values({ tenantId, inviteId: created.invite.id })).rejects.toThrow(
+      /Failed query/,
+    );
   });
 });

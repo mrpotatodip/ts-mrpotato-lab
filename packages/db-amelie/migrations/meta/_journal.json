@@ -302,6 +302,13 @@
       "when": 1792300200000,
       "tag": "0042_party_role_scopes",
       "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1792300300000,
+      "tag": "0043_team_invite_scopes",
+      "breakpoints": true
     }
   ]
 }

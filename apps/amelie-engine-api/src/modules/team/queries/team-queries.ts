@@ -11,6 +11,7 @@ import {
   accessMasterRoles,
   roles,
   teamInvites,
+  teamInviteScopes,
   tenantCountries,
   tenantLocations,
   tenants,
@@ -39,6 +40,7 @@ const toBinding = (row: { countryId: string | null; locationId: string | null })
   row.countryId ? { kind: "country", id: row.countryId } : { kind: "location", id: row.locationId ?? "" };
 
 const toInvite = (row: {
+  bindings: TeamBinding[];
   id: string;
   email: string;
   roleKey: string;
@@ -51,6 +53,7 @@ const toInvite = (row: {
     email: row.email,
     role: row.roleKey,
     roleLabel: row.roleLabel,
+    bindings: row.bindings,
     expiresAt: row.expiresAt.toISOString(),
     createdAt: row.createdAt.toISOString(),
   });
@@ -111,6 +114,20 @@ export const listTeamEffect = (db: DbConnectType, tenantId: string): Effect.Effe
           .where(eq(partyRoleScopes.tenantId, tenantId)),
       catch: toDbError,
     });
+    const inviteScopeRows = yield* Effect.tryPromise({
+      try: () =>
+        db
+          .select({
+            inviteId: teamInviteScopes.inviteId,
+            countryId: teamInviteScopes.countryId,
+            locationId: teamInviteScopes.locationId,
+          })
+          .from(teamInviteScopes)
+          .where(eq(teamInviteScopes.tenantId, tenantId)),
+      catch: toDbError,
+    });
+    const bindingsOfInvite = (inviteId: string): TeamBinding[] =>
+      sortBindings(inviteScopeRows.filter((row) => row.inviteId === inviteId).map(toBinding));
     const bindingsOf = (partyRoleId: string): TeamBinding[] =>
       sortBindings(scopeRows.filter((row) => row.partyRoleId === partyRoleId).map(toBinding));
     const members: TeamMember[] = memberRows.map((row) =>
@@ -127,7 +144,7 @@ export const listTeamEffect = (db: DbConnectType, tenantId: string): Effect.Effe
     return yield* parseOwnRow(() =>
       TeamListSchema.parse({
         members,
-        invites: inviteRows.map(toInvite),
+        invites: inviteRows.map((row) => toInvite({ ...row, bindings: bindingsOfInvite(row.id) })),
       }),
     );
   });
@@ -357,7 +374,8 @@ export const getTeamInviteByIdEffect = (
     });
     const [row] = rows;
     if (!row) return yield* new NotFound({ message: TEAM_NOT_FOUND });
-    return yield* parseOwnRow(() => toInvite(row));
+    const bindings = yield* listInviteBindingsEffect(db, tenantId, inviteId);
+    return yield* parseOwnRow(() => toInvite({ ...row, bindings }));
   });
 
 export const findOpenInviteByTokenHashEffect = (
@@ -374,6 +392,7 @@ export const findOpenInviteByTokenHashEffect = (
           email: teamInvites.email,
           roleKey: accessMasterRoles.key,
           roleLabel: accessMasterRoles.label,
+          invitedBy: teamInvites.invitedBy,
           cafeName: tenants.name,
         })
         .from(teamInvites)
@@ -460,3 +479,20 @@ export const resolveBindingTargetsEffect = (
     }
     return new Map(locations.map((row) => [row.id, row.countryId]));
   });
+
+// -----
+// The Bindings chosen for a pending invite.
+// -----
+export const listInviteBindingsEffect = (
+  db: DbConnectType,
+  tenantId: string,
+  inviteId: string,
+): Effect.Effect<TeamBinding[], DbError> =>
+  Effect.tryPromise({
+    try: () =>
+      db
+        .select({ countryId: teamInviteScopes.countryId, locationId: teamInviteScopes.locationId })
+        .from(teamInviteScopes)
+        .where(and(eq(teamInviteScopes.tenantId, tenantId), eq(teamInviteScopes.inviteId, inviteId))),
+    catch: toDbError,
+  }).pipe(Effect.map((rows) => sortBindings(rows.map(toBinding))));

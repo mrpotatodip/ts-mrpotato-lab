@@ -3,6 +3,7 @@ import type { Country, Location, TeamBinding } from "@repo/contracts/amelie";
 import {
   accessFromBindings,
   bindingsFromAccess,
+  inviteChoiceReady,
   describeBindings,
   hasNoActiveLocations,
   toggleBinding,
@@ -92,5 +93,18 @@ describe("access choice", () => {
     expect(bindingsFromAccess({ mode: "bound", bindings: [inCountry(CA_ID)] })).toEqual([inCountry(CA_ID)]);
     expect(bindingsFromAccess(null)).toBeNull();
     expect(bindingsFromAccess({ mode: "bound", bindings: [] })).toBeNull();
+  });
+});
+
+describe("inviteChoiceReady", () => {
+  it("needs a Whole cafe, Country or Locations choice for a bindable Role", () => {
+    expect(inviteChoiceReady(true, null)).toBe(false);
+    expect(inviteChoiceReady(true, { mode: "bound", bindings: [] })).toBe(false);
+    expect(inviteChoiceReady(true, { mode: "whole" })).toBe(true);
+    expect(inviteChoiceReady(true, { mode: "bound", bindings: [{ kind: "country", id: CA_ID }] })).toBe(true);
+  });
+
+  it("asks for nothing when the Role cannot be bound", () => {
+    expect(inviteChoiceReady(false, null)).toBe(true);
   });
 });

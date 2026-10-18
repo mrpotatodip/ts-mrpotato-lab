@@ -4,9 +4,9 @@
 
 **Blocked by:** 03: Bind a team member to Countries or Locations
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Invite stays disabled until a Whole cafe, Country or Locations choice is made, for a bindable Role.
-- [ ] Accepting the invite gives the new member exactly the invited bindings, in the invite's Tenant.
-- [ ] A revoked or expired invite leaves no bindings behind.
-- [ ] Inviting to a Role that cannot be bound works as before.
+- [x] Invite stays disabled until a Whole cafe, Country or Locations choice is made, for a bindable Role.
+- [x] Accepting the invite gives the new member exactly the invited bindings, in the invite's Tenant.
+- [x] A revoked or expired invite leaves no bindings behind.
+- [x] Inviting to a Role that cannot be bound works as before.

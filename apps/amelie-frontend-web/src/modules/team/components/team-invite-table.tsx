@@ -1,17 +1,20 @@
-import type { TeamInvite, TeamRole } from "@repo/contracts/amelie";
+import type { Country, Location, TeamInvite, TeamRole } from "@repo/contracts/amelie";
 
 import { Button } from "#/components/ui/button";
 import { LocalDateTime, PowerMark } from "#/modules/shared";
 import { useActiveTenantRole } from "#/modules/tenant";
 import { useTeamActions } from "../hooks";
+import { describeBindings } from "../utils";
 import { TeamRoleSelect } from "./team-role-select";
 
 type TeamInviteTableProps = {
   invites: TeamInvite[];
   roles: TeamRole[];
+  countries: Country[];
+  locations: Location[];
 };
 
-export function TeamInviteTable({ invites, roles }: TeamInviteTableProps) {
+export function TeamInviteTable({ invites, roles, countries, locations }: TeamInviteTableProps) {
   const { changeInviteRole, revoke } = useTeamActions();
   const { can } = useActiveTenantRole();
   const canChangeRole = can("company:team:invites:update");
@@ -30,6 +33,9 @@ export function TeamInviteTable({ invites, roles }: TeamInviteTableProps) {
         >
           <div className="min-w-0">
             <p className="text-sm font-medium break-all">{invite.email}</p>
+            {invite.bindings.length > 0 ? (
+              <p className="stat-label">{describeBindings(invite.bindings, countries, locations)}</p>
+            ) : null}
             <p className="stat-label">
               Expires <LocalDateTime iso={invite.expiresAt} />
             </p>
