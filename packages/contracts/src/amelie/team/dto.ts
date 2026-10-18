@@ -47,6 +47,8 @@ export const TeamRolesSchema = z.array(TeamRoleSchema);
 
 export const CreateTeamInviteBodySchema = TeamRoleBodySchema.extend({
   email: z.email().max(SIGN_UP_EMAIL_MAX).trim().toLowerCase(),
+  // Left out or empty is Whole cafe. A Role that cannot be bound takes none.
+  bindings: TeamBindingsSchema.optional(),
 });
 
 export const AcceptTeamInviteBodySchema = z.object({
@@ -70,6 +72,7 @@ export const TeamInviteSchema = z.object({
   email: z.string(),
   role: z.string(),
   roleLabel: z.string(),
+  bindings: TeamBindingsSchema,
   expiresAt: z.iso.datetime(),
   createdAt: z.iso.datetime(),
 });

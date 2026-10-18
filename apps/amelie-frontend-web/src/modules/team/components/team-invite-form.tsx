@@ -1,23 +1,31 @@
 import { useState } from "react";
-import type { TeamRole } from "@repo/contracts/amelie";
+import type { Country, Location, TeamRole } from "@repo/contracts/amelie";
 
 import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
 import { useTeamActions } from "../hooks";
-import { toTeamJoinUrl } from "../utils";
+import { bindingsFromAccess, inviteChoiceReady, toTeamJoinUrl, type TeamAccess } from "../utils";
+import { TeamBindingPicker } from "./team-binding-picker";
 import { TeamJoinLinkDialog } from "./team-join-link-dialog";
 import { TeamRoleSelect } from "./team-role-select";
 
 // -----
 // Email and role. The join link is shown once
 // in a dialog, like an invite code. The role
-// starts on the one with the fewest Powers.
+// starts on the one with the fewest Powers. A Role
+// that can be bound asks where it applies, with no
+// default, and Invite waits for the answer.
 // -----
-export function TeamInviteForm({ roles }: { roles: TeamRole[] }) {
+type TeamInviteFormProps = { roles: TeamRole[]; countries: Country[]; locations: Location[] };
+
+export function TeamInviteForm({ roles, countries, locations }: TeamInviteFormProps) {
   const { invite } = useTeamActions();
   const [email, setEmail] = useState("");
   const [picked, setPicked] = useState<string | null>(null);
   const role = picked ?? roles[0]?.key ?? "";
+  const canBeBound = roles.find((candidate) => candidate.key === role)?.canBeBound ?? false;
+  const [access, setAccess] = useState<TeamAccess>(null);
+  const bindings = canBeBound ? bindingsFromAccess(access) : null;
   const roleLabel = roles.find((candidate) => candidate.key === role)?.label ?? "";
   const [joinUrl, setJoinUrl] = useState<string | null>(null);
 
@@ -28,12 +36,13 @@ export function TeamInviteForm({ roles }: { roles: TeamRole[] }) {
         onSubmit={(event) => {
           event.preventDefault();
           invite.mutate(
-            { data: { email, role } },
+            { data: bindings ? { email, role, bindings } : { email, role } },
             {
               onSuccess: (created) => {
                 setJoinUrl(toTeamJoinUrl(window.location.origin, created.token));
                 setEmail("");
                 setPicked(null);
+                setAccess(null);
               },
             },
           );
@@ -62,12 +71,21 @@ export function TeamInviteForm({ roles }: { roles: TeamRole[] }) {
             roles={roles}
             value={role}
             valueLabel={roleLabel}
-            onChange={setPicked}
+            onChange={(next) => {
+              setPicked(next);
+              setAccess(null);
+            }}
           />
         </div>
+        {canBeBound ? (
+          <div className="flex flex-col gap-1.5">
+            <span className="stat-label">Where</span>
+            <TeamBindingPicker value={access} onChange={setAccess} countries={countries} locations={locations} />
+          </div>
+        ) : null}
         {invite.error ? <p className="text-xs text-destructive">{invite.error.message}</p> : null}
         <div className="mt-4">
-          <Button type="submit" size="sm" disabled={invite.isPending || role === ""}>
+          <Button type="submit" size="sm" disabled={invite.isPending || role === "" || !inviteChoiceReady(canBeBound, access)}>
             {invite.isPending ? "Inviting..." : "Invite"}
           </Button>
         </div>

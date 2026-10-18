@@ -21,6 +21,13 @@ export const bindingsFromAccess = (access: TeamAccess): TeamBinding[] | null => 
   return access.bindings.length === 0 ? null : access.bindings;
 };
 
+// -----
+// Invite stays off for a Role that can be bound until
+// the admin has chosen where it applies.
+// -----
+export const inviteChoiceReady = (canBeBound: boolean, access: TeamAccess): boolean =>
+  !canBeBound || bindingsFromAccess(access) !== null;
+
 const labelOf = (binding: TeamBinding, countries: Country[], locations: Location[]): string => {
   if (binding.kind === "country") {
     const found = countries.find((country) => country.id === binding.id);

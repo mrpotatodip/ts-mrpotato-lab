@@ -14,3 +14,4 @@ export * from "./chat-bot-durable-stream";
 export * from "./imports";
 export * from "./invite-codes";
 export * from "./team-invites";
+export * from "./team-invite-scopes";
