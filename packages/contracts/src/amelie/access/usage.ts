@@ -41,7 +41,7 @@ export const ACCESS_POWER_USAGE: Readonly<Partial<Record<AccessPower, AccessPowe
   "company:menu:items:update": { guard: "plain", routes: ["PUT /menu/items/:itemId"], tools: [] },
   "company:menu:items:delete": { guard: "plain", routes: ["DELETE /menu/items/:itemId"], tools: [] },
   "company:menu:items:reorder": { guard: "plain", routes: ["PUT /menu/categories/:categoryId/items/order"], tools: [] },
-  "company:menu:locations:update": { guard: "plain", routes: ["PUT /menu/items/:itemId/locations"], tools: [] },
+  "company:menu:locations:update": { guard: "bound", routes: ["PUT /menu/items/:itemId/locations"], tools: [] },
   "company:menu:country_prices:update": { guard: "plain", routes: ["PUT /menu/items/:itemId/countries/:countryId"], tools: ["updateMenuItemPrice"] },
   "company:menu:images:create": { guard: "plain", routes: ["POST /menu/items/:itemId/images"], tools: [] },
   "company:menu:images:update": { guard: "plain", routes: ["PUT /menu/items/:itemId/images/:imageId/cover"], tools: [] },
