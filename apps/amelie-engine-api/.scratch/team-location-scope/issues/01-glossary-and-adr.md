@@ -4,7 +4,7 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [ ] The glossary defines the four terms with no implementation detail, and uses "Location", never "store".
 - [ ] The glossary entries for Party role and Location point to the new terms where they say the team belongs to the Tenant.
