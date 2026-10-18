@@ -60,6 +60,7 @@ describe("GET /openapi.json", () => {
       "GET /imports",
       "GET /imports/{importId}",
       "GET /locations",
+      "GET /locations/{locationId}/archive-preview",
       "GET /me",
       "GET /menu",
       "GET /menu-item-images/{imageId}",
