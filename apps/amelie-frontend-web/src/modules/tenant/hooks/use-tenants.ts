@@ -36,6 +36,7 @@ export function useActiveTenantRole() {
     role: active?.role ?? null,
     roleLabel: active?.roleLabel ?? null,
     powers,
+    coverage: active?.coverage ?? "all",
     canEdit: canEditCafe(powers),
     canManageTeam: hasAccessPower(powers, "company:team:invites:create"),
     can: (power: AccessPower) => hasAccessPower(powers, power),

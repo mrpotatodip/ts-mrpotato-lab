@@ -18,5 +18,6 @@ export const requireTenantMember = createMiddleware<AppEnv>(async (c, next) => {
   const tenant = await runEffect(getTenantSvc(db, c.get("userId"), parsed.data));
   c.set("tenantId", tenant.id);
   c.set("powers", tenant.powers);
+  c.set("coverage", tenant.coverage);
   await next();
 });

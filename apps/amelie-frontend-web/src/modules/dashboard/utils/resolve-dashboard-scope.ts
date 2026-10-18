@@ -1,7 +1,7 @@
-import type { Country, Location } from "@repo/contracts/amelie";
+import type { Country, Coverage, Location } from "@repo/contracts/amelie";
 
 import { activeCountries } from "#/modules/country";
-import { activeLocations } from "#/modules/location";
+import { activeLocations, coveredLocations } from "#/modules/location";
 
 export type StoredDashboardPick = {
   countryId: string | null;
@@ -18,6 +18,7 @@ export type DashboardScope = {
   locationId: string | undefined;
   profileLocationId: string | undefined;
   emptyPlace: boolean;
+  notCovered: Location | undefined;
   showCountryPicker: boolean;
   showLocationPicker: boolean;
 };
@@ -28,9 +29,14 @@ export function resolveDashboardScope(
   countries: Country[] | undefined,
   locations: Location[] | undefined,
   stored: StoredDashboardPick,
+  coverage: Coverage = "all",
 ): DashboardScope {
-  const openCountries = activeCountries(countries);
-  const openLocations = activeLocations(locations);
+  const open = activeLocations(locations);
+  const openLocations = coveredLocations(open, coverage);
+  const notCovered = open.find((entry) => entry.id === stored.locationId && !openLocations.includes(entry));
+  const openCountries = activeCountries(countries).filter(
+    (entry) => coverage === "all" || openLocations.some((place) => place.countryId === entry.id),
+  );
   const country = openCountries.find((entry) => entry.id === stored.countryId) ?? openCountries[0];
   const locationsInCountry = country ? openLocations.filter((entry) => entry.countryId === country.id) : [];
   const location = locationsInCountry.find((entry) => entry.id === stored.locationId) ?? locationsInCountry[0];
@@ -48,6 +54,7 @@ export function resolveDashboardScope(
     locationId: emptyPlace || !namesPlace ? undefined : location?.id,
     profileLocationId: namesPlace ? place.id : undefined,
     emptyPlace,
+    notCovered,
     showCountryPicker: openCountries.length > 1,
     showLocationPicker: locationsInCountry.length > 1,
   };

@@ -4,7 +4,7 @@
 
 **Blocked by:** 03: Bind a team member to Countries or Locations
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [ ] A member bound to Airport sees only Airport in the Location picker and lists; an unbound member sees all.
 - [ ] A Country binding shows every open Location in that Country, including one opened afterwards, with no re-assigning.
