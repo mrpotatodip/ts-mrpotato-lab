@@ -1,4 +1,4 @@
-import type { Location } from "@repo/contracts/amelie";
+import type { Location, LocationArchivePreview } from "@repo/contracts/amelie";
 
 import { Button } from "#/components/ui/button";
 import {
@@ -13,15 +13,18 @@ import {
 type LocationArchiveDialogProps = {
   location: Location | null;
   isPending: boolean;
+  membersWithoutLocation?: LocationArchivePreview["membersWithoutLocation"];
   onConfirm: (location: Location) => void;
   onCancel: () => void;
 };
 
 // -----
 // Asks before archiving; open while a Location is
-// waiting for the answer.
+// waiting for the answer. Names the members the archive
+// leaves with no open Location: it never blocks, but
+// they will be refused every limited action.
 // -----
-export function LocationArchiveDialog({ location, isPending, onConfirm, onCancel }: LocationArchiveDialogProps) {
+export function LocationArchiveDialog({ location, isPending, membersWithoutLocation, onConfirm, onCancel }: LocationArchiveDialogProps) {
   return (
     <Dialog
       open={location !== null}
@@ -36,6 +39,22 @@ export function LocationArchiveDialog({ location, isPending, onConfirm, onCancel
             Customers will no longer be offered it, and menu items sold only here will be sold nowhere.
           </DialogDescription>
         </DialogHeader>
+        {membersWithoutLocation && membersWithoutLocation.length > 0 ? (
+          <div className="space-y-2 text-sm">
+            <p className="text-status-warning font-medium">
+              {membersWithoutLocation.length} team {membersWithoutLocation.length === 1 ? "member" : "members"} will be
+              left with no active Location and refused every limited action until you reassign:
+            </p>
+            <ul className="list-disc pl-5">
+              {membersWithoutLocation.map((member) => (
+                <li key={member.partyId}>
+                  <span className="font-medium">{member.name}</span>{" "}
+                  <span className="text-muted-foreground">({member.email})</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
         <DialogFooter>
           <Button type="button" variant="ghost" onClick={onCancel}>
             Cancel

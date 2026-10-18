@@ -24,7 +24,7 @@ export const ACCESS_POWER_USAGE: Readonly<Partial<Record<AccessPower, AccessPowe
   "company:profile:locations:read": { guard: "plain", routes: ["GET /locations"], tools: [] },
   "company:profile:locations:create": { guard: "plain", routes: ["POST /locations"], tools: [] },
   "company:profile:locations:update": { guard: "plain", routes: ["PATCH /locations/:locationId"], tools: [] },
-  "company:profile:locations:archive": { guard: "plain", routes: ["POST /locations/:locationId/archive"], tools: [] },
+  "company:profile:locations:archive": { guard: "plain", routes: ["GET /locations/:locationId/archive-preview", "POST /locations/:locationId/archive"], tools: [] },
   "company:profile:region:update": { guard: "plain", routes: ["PATCH /tenants/:tenantId/region"], tools: [] },
   "company:team:members:read": { guard: "plain", routes: ["GET /team", "GET /team/roles"], tools: [] },
   "company:team:members:update": { guard: "plain", routes: ["PATCH /team/members/:partyId"], tools: [] },

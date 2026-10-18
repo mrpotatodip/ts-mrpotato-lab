@@ -90,6 +90,7 @@ describe("Location routes by Role", () => {
     ["adding a Location", "POST", "", { name: "Harbor" }],
     ["editing a Location", "PATCH", "/LOCATION", { name: "Renamed" }],
     ["archiving a Location", "POST", "/LOCATION/archive", undefined],
+    ["previewing an archive", "GET", "/LOCATION/archive-preview", undefined],
   ])("keeps staff (can_edit false) out of %s with a 403", async (_label, method, path, body) => {
     const res = await call("store_staff", method, path.replace("LOCATION", locationId), body);
 
@@ -107,5 +108,14 @@ describe("Location routes by Role", () => {
     const archived = await call(role, "POST", `/${data.id}/archive`);
     expect(archived.status).toBe(200);
     expect(await archived.json()).toMatchObject({ data: { id: data.id, unsoldMenuItems: [] }, error: null });
+  });
+
+  it("previews an archive for an admin without archiving", async () => {
+    const res = await call("store_admin", "GET", `/${locationId}/archive-preview`);
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({ data: { id: locationId, membersWithoutLocation: [] }, error: null });
+    const list = await (await call("store_staff", "GET", "")).json();
+    expect(list.data.find((l: { id: string }) => l.id === locationId).archivedAt).toBeNull();
   });
 });

@@ -1,6 +1,12 @@
 import { Hono } from "hono";
 import type { AppEnv } from "#/types/variables";
-import { archiveLocationAPI, createLocationAPI, listLocationsAPI, updateLocationAPI } from "./api";
+import {
+  archiveLocationAPI,
+  archiveLocationPreviewAPI,
+  createLocationAPI,
+  listLocationsAPI,
+  updateLocationAPI,
+} from "./api";
 
 // -----
 // A Tenant's Locations: any member reads, a
@@ -12,6 +18,7 @@ app.route("/", listLocationsAPI);
 app.route("/", createLocationAPI);
 app.route("/", updateLocationAPI);
 app.route("/", archiveLocationAPI);
+app.route("/", archiveLocationPreviewAPI);
 
 export default app;
 export * from "./handlers";

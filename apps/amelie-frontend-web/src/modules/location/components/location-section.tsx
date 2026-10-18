@@ -4,7 +4,7 @@ import type { Location } from "@repo/contracts/amelie";
 import { Button } from "#/components/ui/button";
 import { PageCard, PowerMark } from "#/modules/shared";
 import { useActiveTenantRole } from "#/modules/tenant";
-import { useActiveLocations, useLocationActions, useLocationArchivedNotice } from "../hooks";
+import { useActiveLocations, useLocationActions, useLocationArchivedNotice, useLocationArchivePreview } from "../hooks";
 import { LocationAddForm } from "./location-add-form";
 import { LocationArchivedNotice } from "./location-archived-notice";
 import { LocationArchiveDialog } from "./location-archive-dialog";
@@ -31,6 +31,7 @@ export function LocationSection({ countryId, inCountry }: LocationSectionProps) 
   const { archiveLocation } = useLocationActions();
   const { notice, dismiss } = useLocationArchivedNotice();
   const [confirming, setConfirming] = useState<Location | null>(null);
+  const membersWithoutLocation = useLocationArchivePreview(confirming?.id ?? null);
 
   const noticeView = notice ? <LocationArchivedNotice notice={notice} onDismiss={dismiss} /> : null;
 
@@ -67,6 +68,7 @@ export function LocationSection({ countryId, inCountry }: LocationSectionProps) 
       <LocationArchiveDialog
         location={confirming}
         isPending={archiveLocation.isPending}
+        membersWithoutLocation={membersWithoutLocation}
         onCancel={() => setConfirming(null)}
         onConfirm={(location) => {
           setConfirming(null);
