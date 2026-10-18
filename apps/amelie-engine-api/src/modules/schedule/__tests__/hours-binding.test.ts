@@ -123,7 +123,7 @@ describe("a member bound to Airport", () => {
       await call(staff.userId, "DELETE", `/overrides/${DATE}`, downtownId),
     ];
     expect(responses.map((res) => res.status)).toEqual([403, 403, 403, 403]);
-    expect((await responses[1].json()).error.message).toBe("Your Role does not cover this Location");
+    expect((await responses[1].json()).error.message).toContain(downtownId);
     expect(await hoursRows(downtownId)).toEqual([]);
     expect(await overrideRows(downtownId)).toEqual([]);
   });

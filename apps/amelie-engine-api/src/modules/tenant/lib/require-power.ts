@@ -41,7 +41,7 @@ export const requirePower = (power: UnboundPower) => {
 // `locate` returns the Location ids the request names (query,
 // path or body), [] when it names none. The member needs the
 // Power and must cover every named Location, or the answer is
-// 403 before anything runs. A request naming none passes; the
+// 403 before anything runs, naming the uncovered ones. A request naming none passes; the
 // route then resolves the default over c.get("coverage"). A
 // member who covers nothing is refused outright.
 // -----
@@ -60,9 +60,7 @@ export const requireBoundPower = <Valid extends ValidatedInput>(
     }
     const uncovered = requested.filter((id) => !covers(coverage, [id]));
     if (uncovered.length > 0) {
-      throw new ForbiddenError(
-        requested.length === 1 ? TENANT_LOCATION_NOT_COVERED : TENANT_LOCATIONS_NOT_COVERED(uncovered),
-      );
+      throw new ForbiddenError(TENANT_LOCATIONS_NOT_COVERED(uncovered));
     }
     await next();
   });
