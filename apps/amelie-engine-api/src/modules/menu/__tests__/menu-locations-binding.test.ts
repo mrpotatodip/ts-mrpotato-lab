@@ -79,6 +79,7 @@ const stored = async () => {
   const rows = await db.select().from(tenantMenuItemLocations).where(eq(tenantMenuItemLocations.menuItemId, itemId));
   return { all: item.availableAtAllLocations, rows: rows.map((r) => r.locationId).toSorted() };
 };
+const rowsOf = (...ids: string[]) => ids.toSorted();
 const untouched = { all: true, rows: [] };
 
 beforeAll(async () => {
@@ -136,7 +137,7 @@ describe("a member bound to Airport and Harbour", () => {
   describe("choosing where an item is sold", () => {
     it("works for covered Locations", async () => {
       expect((await put(staff.userId, "locations", onlyAt(airportId, harbourId))).status).toBe(200);
-      expect(await stored()).toEqual({ all: false, rows: [airportId, harbourId].toSorted() });
+      expect(await stored()).toEqual({ all: false, rows: [downtownId, airportId, harbourId].toSorted() });
     });
 
     it("refuses an uncovered Location and names it", async () => {
@@ -160,6 +161,65 @@ describe("a member bound to Airport and Harbour", () => {
       expect(res.status).toBe(403);
       expect(await stored()).toEqual(untouched);
     });
+  });
+});
+
+describe("a bound member's write keeps the state at Locations they do not cover", () => {
+  const seed = async (all: boolean, locationIds: string[]) => {
+    await db.update(tenantMenuItems).set({ availableAtAllLocations: all }).where(eq(tenantMenuItems.id, itemId));
+    if (locationIds.length > 0) {
+      await db
+        .insert(tenantMenuItemLocations)
+        .values(locationIds.map((locationId) => ({ tenantId, menuItemId: itemId, locationId, isAvailable: !all })));
+    }
+  };
+
+  beforeAll(async () => {
+    await unbind(staff.partyId);
+    await bind(staff.partyId, airportId);
+    await bind(staff.partyId, harbourId);
+  });
+
+  it("sold out: replaces their own Locations and leaves a sold-out row at Downtown", async () => {
+    await seed(true, [downtownId, airportId]);
+    expect((await put(staff.userId, "sold-out-locations", soldOutAt(harbourId))).status).toBe(200);
+    expect(await stored()).toEqual({ all: true, rows: rowsOf(downtownId, harbourId) });
+  });
+
+  it("sold out: naming none clears only their own Locations", async () => {
+    await seed(true, [downtownId, airportId]);
+    expect((await put(staff.userId, "sold-out-locations", soldOutAt())).status).toBe(200);
+    expect(await stored()).toEqual({ all: true, rows: [downtownId] });
+  });
+
+  it("sold out: an item sold at chosen Locations keeps Downtown unsold", async () => {
+    await seed(false, [airportId]);
+    expect((await put(staff.userId, "sold-out-locations", soldOutAt())).status).toBe(200);
+    expect(await stored()).toEqual({ all: true, rows: [downtownId] });
+  });
+
+  it("chosen Locations: keeps the rows at Downtown", async () => {
+    await seed(false, [downtownId, airportId]);
+    expect((await put(staff.userId, "locations", onlyAt(harbourId))).status).toBe(200);
+    expect(await stored()).toEqual({ all: false, rows: rowsOf(downtownId, harbourId) });
+  });
+
+  it("chosen Locations: an item sold everywhere keeps selling at Downtown", async () => {
+    await seed(true, []);
+    expect((await put(staff.userId, "locations", onlyAt(airportId))).status).toBe(200);
+    expect(await stored()).toEqual({ all: false, rows: rowsOf(downtownId, airportId) });
+  });
+
+  it("chosen Locations: Downtown stays unsold when it was sold out", async () => {
+    await seed(true, [downtownId]);
+    expect((await put(staff.userId, "locations", onlyAt(airportId))).status).toBe(200);
+    expect(await stored()).toEqual({ all: false, rows: [airportId] });
+  });
+
+  it("unbound members and the tenant admin still replace the whole state", async () => {
+    await seed(true, [downtownId, airportId]);
+    expect((await put(admin.userId, "sold-out-locations", soldOutAt(harbourId))).status).toBe(200);
+    expect(await stored()).toEqual({ all: true, rows: [harbourId] });
   });
 });
 

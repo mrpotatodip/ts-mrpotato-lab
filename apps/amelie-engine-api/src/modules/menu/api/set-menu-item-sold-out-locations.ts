@@ -21,7 +21,7 @@ app.put(
   async (c) => {
     const { itemId } = c.req.valid("param");
     const db = db_connect(c.env.HYPERDRIVE_REALTIME.connectionString);
-    const data = await runEffect(setMenuItemLocationsSvc(db, c.get("tenantId"), itemId, c.req.valid("json")));
+    const data = await runEffect(setMenuItemLocationsSvc(db, c.get("tenantId"), itemId, c.req.valid("json"), c.get("coverage")));
     return c.json({ data, error: null });
   },
 );

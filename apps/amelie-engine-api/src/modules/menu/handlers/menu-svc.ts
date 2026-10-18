@@ -1,5 +1,6 @@
 import { Effect } from "effect";
 import { z } from "zod";
+import type { Coverage } from "@repo/contracts/amelie";
 import type { DbConnectType } from "#/lib/db-connection";
 import { Invalid, NotFound, type DbError } from "#/lib/effect-query";
 import {
@@ -177,18 +178,53 @@ const checkActiveLocations = (db: DbConnectType, tenantId: string, locationIds: 
     ),
   );
 
+// -----
+// A bound member's request names only Locations they cover,
+// yet the write replaces the item's whole Location state. So
+// it is merged first: at every Location they do not cover the
+// item keeps selling or not selling exactly as before, and only
+// the covered ones take the request. The rows mean sold-out
+// Locations for an all-Locations item and sold Locations for
+// any other, so "was selling" is read per mode.
+// -----
+const mergeUncoveredLocations = (
+  values: MenuItemLocationsValues,
+  current: Pick<MenuItem, "availableAtAllLocations" | "locationIds">,
+  coverage: Exclude<Coverage, "all">,
+  activeIds: ReadonlyArray<string>,
+): MenuItemLocationsValues => {
+  const rows = new Set(current.locationIds);
+  const wasSelling = (id: string) => (current.availableAtAllLocations ? !rows.has(id) : rows.has(id));
+  const uncovered = [...new Set([...activeIds, ...current.locationIds])].filter((id) => !coverage.includes(id));
+  const kept = uncovered.filter((id) => wasSelling(id) !== values.availableAtAllLocations);
+  return { ...values, locationIds: [...values.locationIds, ...kept] };
+};
+
 export const setMenuItemLocationsSvc = (
   db: DbConnectType,
   tenantId: string,
   itemId: string,
   values: MenuItemLocationsValues,
+  coverage: Coverage = "all",
 ): Effect.Effect<MenuItem, DbError | NotFound | Invalid> =>
   Effect.gen(function* () {
     if (!values.availableAtAllLocations && values.locationIds.length === 0) {
       return yield* new Invalid({ message: MENU_LOCATIONS_REQUIRED });
     }
     yield* checkActiveLocations(db, tenantId, values.locationIds);
-    yield* setMenuItemLocationsEffect(db, tenantId, itemId, values);
+    if (coverage === "all") {
+      yield* setMenuItemLocationsEffect(db, tenantId, itemId, values);
+    } else {
+      const current = yield* findMenuItem(db, tenantId, itemId);
+      const active = yield* listActiveLocationsEffect(db, tenantId);
+      const merged = mergeUncoveredLocations(
+        values,
+        current,
+        coverage,
+        active.map((location) => location.id),
+      );
+      yield* setMenuItemLocationsEffect(db, tenantId, itemId, merged);
+    }
     return yield* findMenuItem(db, tenantId, itemId);
   });
 

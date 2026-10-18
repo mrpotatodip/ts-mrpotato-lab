@@ -7,9 +7,11 @@ import type { MenuItemPricingResult } from "#/modules/chat-bot/schemas";
 import type { SetMenuItemAvailabilityInput } from "./schema";
 
 // -----
-// The item names no Location here; which Location an item's
-// availability belongs to is decided with the menu routes
-// (ticket 06). Until then the Power is checked with none named.
+// Not Location-scoped, on purpose: this flips the item's own
+// isAvailable flag, which is one value for the whole cafe, and
+// setMenuItemAvailabilitySvc takes no Location. The per-Location
+// sold-out rows are written only by the sold-out-locations
+// route. So the Power is checked with none named.
 // -----
 export const setMenuItemAvailability = (
   { itemId, isAvailable }: SetMenuItemAvailabilityInput,

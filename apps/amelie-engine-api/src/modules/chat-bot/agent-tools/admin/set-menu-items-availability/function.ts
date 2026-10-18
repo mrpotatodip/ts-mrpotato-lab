@@ -6,6 +6,9 @@ import type { ChatBotRuntime } from "#/modules/chat-bot/types";
 import type { SetMenuItemsAvailabilityInput, SetMenuItemsAvailabilityResult } from "./schema";
 
 // -----
+// Item-wide like setMenuItemAvailability, so the Power is
+// checked with no Location named (see its comment).
+//
 // An id that is not this Tenant's is reported in
 // notFound; it never stops the rest from changing.
 // -----
