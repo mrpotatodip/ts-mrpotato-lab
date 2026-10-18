@@ -4,6 +4,7 @@ import {
   LOCATION_NAME_MAX,
   LOCATION_PHONE_MAX,
   LocationArchivedSchema,
+  LocationArchivePreviewSchema,
   LocationIdSchema,
   LocationListSchema,
   LocationSchema,
@@ -14,6 +15,7 @@ import { apiResponseSchema } from "#/lib/api-response-schema";
 
 export const LocationListResponseSchema = apiResponseSchema(LocationListSchema);
 export const LocationResponseSchema = apiResponseSchema(LocationSchema);
+export const LocationArchivePreviewResponseSchema = apiResponseSchema(LocationArchivePreviewSchema);
 export const LocationArchivedResponseSchema = apiResponseSchema(LocationArchivedSchema);
 
 export const UpdateLocationInputSchema = UpdateLocationBodySchema.extend({ locationId: LocationIdSchema });

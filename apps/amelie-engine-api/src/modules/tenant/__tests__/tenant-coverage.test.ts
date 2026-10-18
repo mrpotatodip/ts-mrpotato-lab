@@ -131,6 +131,22 @@ describe("Tenant coverage", () => {
     await unbind(staff.partyId);
   });
 
+  it("keeps a Country binding through an archive and covers its Locations again once the Country is restored", async () => {
+    const mx = await insertCountry(db, tenantId, { country: "JP", currency: "JPY" });
+    const cancun = await insertLocation(db, tenantId, { name: "Cancun", slug: "cancun-2", countryId: mx });
+    await bind(staff.partyId, { countryId: mx });
+    expect(await coverageOf(staff.userId)).toEqual([cancun]);
+
+    await db.update(tenantLocations).set({ archivedAt: new Date() }).where(eq(tenantLocations.id, cancun));
+    await db.update(tenantCountries).set({ archivedAt: new Date() }).where(eq(tenantCountries.id, mx));
+    expect(await coverageOf(staff.userId)).toEqual([]);
+
+    await db.update(tenantCountries).set({ archivedAt: null }).where(eq(tenantCountries.id, mx));
+    const reopened = await insertLocation(db, tenantId, { name: "Playa", slug: "playa", countryId: mx });
+    expect(await coverageOf(staff.userId)).toEqual([reopened]);
+    await unbind(staff.partyId);
+  });
+
   it("is on every Tenant the list returns", async () => {
     await bind(staff.partyId, { locationId: airportId });
     const listed = await runEffect(listTenantsSvc(db, staff.userId));

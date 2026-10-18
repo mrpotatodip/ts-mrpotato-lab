@@ -4,7 +4,7 @@
 
 **Blocked by:** 04: Dashboard shows a bound member only their Locations
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [ ] Archiving Airport keeps Priya's binding; she can no longer act at Airport.
 - [ ] A member whose only binding is archived is refused, not widened, and the list shows the warning.

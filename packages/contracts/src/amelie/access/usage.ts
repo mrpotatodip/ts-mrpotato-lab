@@ -21,7 +21,7 @@ export const ACCESS_POWER_USAGE: Readonly<Partial<Record<AccessPower, AccessPowe
   "company:profile:locations:read": { routes: ["GET /locations"], tools: [] },
   "company:profile:locations:create": { routes: ["POST /locations"], tools: [] },
   "company:profile:locations:update": { routes: ["PATCH /locations/:locationId"], tools: [] },
-  "company:profile:locations:archive": { routes: ["POST /locations/:locationId/archive"], tools: [] },
+  "company:profile:locations:archive": { routes: ["GET /locations/:locationId/archive-preview", "POST /locations/:locationId/archive"], tools: [] },
   "company:profile:region:update": { routes: ["PATCH /tenants/:tenantId/region"], tools: [] },
   "company:team:members:read": { routes: ["GET /team", "GET /team/roles"], tools: [] },
   "company:team:members:update": { routes: ["PATCH /team/members/:partyId"], tools: [] },

@@ -1,10 +1,23 @@
 import { and, asc, desc, eq, exists, isNull, ne, notExists } from "drizzle-orm";
 import { Data, Effect } from "effect";
-import { tenantLocations, tenantMenuItemLocations, tenantMenuItems, tenants } from "@repo/db-amelie";
+import {
+  accessMasterRoles,
+  authUser,
+  partyRoles,
+  partyRoleScopes,
+  persons,
+  roles,
+  tenantCountries,
+  tenantLocations,
+  tenantMenuItemLocations,
+  tenantMenuItems,
+  tenants,
+} from "@repo/db-amelie";
 import type { DbConnectType } from "#/lib/db-connection";
 import { Conflict, NotFound, toDbError, type DbError } from "#/lib/effect-query";
 import { PG_UNIQUE_VIOLATION, pgErrorCode, pgErrorConstraint } from "#/lib/pg-error";
-import type { Location, LocationUnsoldItem } from "@repo/contracts/amelie";
+import type { Location, LocationArchivePreview, LocationUnsoldItem } from "@repo/contracts/amelie";
+import { TENANT_ADMIN_ROLE } from "#/modules/tenant/constants";
 import {
   LOCATION_LAST_ACTIVE,
   LOCATION_NOT_FOUND,
@@ -171,6 +184,79 @@ export const archiveLocationEffect = (
         return unsold;
       }),
     catch: classifyArchiveFailure,
+  });
+
+// -----
+// The members an archive would leave with no open
+// Location: bound, not the tenant admin, covering the
+// Location now and nothing else once it is gone. A
+// Country Binding covers its open Locations, and an
+// archived Country covers nothing. Members already
+// covering nothing are not named.
+// -----
+export const archiveLocationPreviewEffect = (
+  db: DbConnectType,
+  tenantId: string,
+  locationId: string,
+): Effect.Effect<LocationArchivePreview, NotFound | DbError> =>
+  Effect.gen(function* () {
+    const open = yield* Effect.tryPromise({
+      try: () =>
+        db
+          .select({ id: tenantLocations.id, countryId: tenantLocations.countryId })
+          .from(tenantLocations)
+          .innerJoin(tenantCountries, eq(tenantCountries.id, tenantLocations.countryId))
+          .where(and(eq(tenantLocations.tenantId, tenantId), isActiveLocation, isNull(tenantCountries.archivedAt))),
+      catch: toDbError,
+    });
+    const target = yield* Effect.tryPromise({
+      try: () =>
+        db
+          .select({ id: tenantLocations.id })
+          .from(tenantLocations)
+          .where(and(eq(tenantLocations.tenantId, tenantId), eq(tenantLocations.id, locationId), isActiveLocation)),
+      catch: toDbError,
+    });
+    if (target.length === 0) return yield* new NotFound({ message: LOCATION_NOT_FOUND });
+    const rows = yield* Effect.tryPromise({
+      try: () =>
+        db
+          .select({
+            partyId: partyRoles.partyId,
+            firstName: persons.firstName,
+            lastName: persons.lastName,
+            email: authUser.email,
+            countryId: partyRoleScopes.countryId,
+            scopedLocationId: partyRoleScopes.locationId,
+          })
+          .from(partyRoleScopes)
+          .innerJoin(partyRoles, eq(partyRoles.id, partyRoleScopes.partyRoleId))
+          .innerJoin(roles, eq(roles.id, partyRoles.roleId))
+          .innerJoin(accessMasterRoles, eq(accessMasterRoles.id, roles.masterRoleId))
+          .innerJoin(persons, eq(persons.partyId, partyRoles.partyId))
+          .innerJoin(authUser, eq(authUser.partyId, partyRoles.partyId))
+          .where(and(eq(partyRoleScopes.tenantId, tenantId), ne(accessMasterRoles.key, TENANT_ADMIN_ROLE)))
+          .orderBy(asc(persons.firstName), asc(persons.lastName), asc(authUser.email)),
+      catch: toDbError,
+    });
+    const members = new Map<string, { name: string; email: string; covered: Set<string> }>();
+    for (const row of rows) {
+      const member = members.get(row.partyId) ?? {
+        name: `${row.firstName} ${row.lastName}`.trim(),
+        email: row.email,
+        covered: new Set<string>(),
+      };
+      for (const location of open) {
+        if (location.id === row.scopedLocationId || location.countryId === row.countryId) member.covered.add(location.id);
+      }
+      members.set(row.partyId, member);
+    }
+    return {
+      id: locationId,
+      membersWithoutLocation: [...members]
+        .filter(([, member]) => member.covered.has(locationId) && member.covered.size === 1)
+        .map(([partyId, member]) => ({ partyId, name: member.name, email: member.email })),
+    };
   });
 
 const locationColumns = {

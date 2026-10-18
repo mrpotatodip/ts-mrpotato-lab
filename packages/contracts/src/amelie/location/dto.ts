@@ -77,6 +77,17 @@ export const LocationArchivedSchema = z.object({
   unsoldMenuItems: z.array(LocationUnsoldItemSchema),
 });
 
+// -----
+// What archiving a Location will do to team members:
+// those whose Bindings reach no other open Location,
+// who will then be refused every limited action.
+// Computed by the server so the dashboard can name them.
+// -----
+export const LocationArchivePreviewSchema = z.object({
+  id: LocationIdSchema,
+  membersWithoutLocation: z.array(z.object({ partyId: z.uuid(), name: z.string(), email: z.string() })),
+});
+
 export const LocationListSchema = z.array(LocationSchema);
 
 export type Location = z.infer<typeof LocationSchema>;
@@ -86,4 +97,5 @@ export type LocationParam = z.infer<typeof LocationParamSchema>;
 export type CreateLocationBody = z.infer<typeof CreateLocationBodySchema>;
 export type UpdateLocationBody = z.infer<typeof UpdateLocationBodySchema>;
 export type LocationUnsoldItem = z.infer<typeof LocationUnsoldItemSchema>;
+export type LocationArchivePreview = z.infer<typeof LocationArchivePreviewSchema>;
 export type LocationArchived = z.infer<typeof LocationArchivedSchema>;
