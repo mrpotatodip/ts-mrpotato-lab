@@ -29,7 +29,7 @@ function AdminRoleView({ roleId }: AdminRolePageProps) {
     <>
       {BACK_LINK}
       <PageHeader title={role.label} description={role.description ?? `Key: ${role.key}`} />
-      <div className="grid items-start gap-8 lg:grid-cols-[2fr_3fr] lg:gap-x-16">
+      <div className="grid items-start gap-8 lg:grid-cols-[1fr_2fr] lg:gap-x-16 [&>*]:min-w-0">
         <div className="flex flex-col gap-8">
           <PageCard title="Details">
             <AdminRoleDetailsForm key={`${role.label}|${role.description ?? ""}`} role={role} />

@@ -338,6 +338,7 @@ Consumers: `dashboard-overview-skeleton.tsx`, `menu-panel-skeleton.tsx`, `faq-pa
 - **Content container** (`.dashboard-content`, verified): `max-width: 80rem`, centered, `flex-direction: column`, padding 1rem / 1.5rem at 768px.
 - **Stat grid** (`.dashboard-grid`, verified): 1 column, 2 columns from 640px, 4 columns from 1280px. Used once (`dashboard-overview.tsx`).
 - **Overview two-column**: `grid items-start gap-8 lg:grid-cols-[2fr_3fr] lg:gap-x-16`.
+- **Superuser admin two-column** (Invite codes, Roles, one Role, and the role skeleton): `grid items-start gap-8 lg:grid-cols-[1fr_2fr] lg:gap-x-16`. The form column takes a third of the width and the list or detail column two thirds, which gives the role power grid room for its eight Action columns. The cafe pages keep `2fr_3fr`.
 - **Auth pages**: centered `main` with `min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-12`; card `max-w-sm`.
 - **Chat**: `mx-auto w-full max-w-2xl` column inside a full-height flex container; scroll area uses `no-scrollbar overscroll-contain p-4`.
 - **Max widths in use**: `max-w-sm` 5, `max-w-2xl` 4, `max-w-md` 3.
