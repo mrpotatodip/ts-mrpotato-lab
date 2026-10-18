@@ -11,6 +11,7 @@ export const TENANT_LOCATION_NOT_COVERED = "Your Role does not cover this Locati
 export const TENANT_COUNTRY_NOT_COVERED = "Your Role does not cover this Country";
 export const TENANT_LOCATIONS_NOT_COVERED = (ids: readonly string[]) =>
   `Your Role does not cover these Locations: ${ids.join(", ")}`;
+export const TENANT_ALL_LOCATIONS_NOT_COVERED = "Your Role does not cover every Location";
 export const TENANT_COUNTRY_TAKEN = "This cafe already sells in that country";
 export const TENANT_COUNTRY_CONSTRAINT = "uq_tenant_countries_tenant_country";
 export const TENANT_REGION_MANY_COUNTRIES =
