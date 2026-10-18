@@ -23,6 +23,8 @@ import { Conflict, Invalid, toDbError, type DbError, type NotFound } from "#/lib
 import { PG_UNIQUE_VIOLATION, pgErrorCode, pgErrorConstraint } from "#/lib/pg-error";
 import {
   ADMIN_POWER_UNKNOWN,
+  ADMIN_ROLE_CANNOT_BIND,
+  adminRoleStillBound,
   ADMIN_ROLE_IN_USE,
   ADMIN_ROLE_KEY_CONSTRAINT,
   ADMIN_ROLE_KEY_TAKEN,
@@ -31,6 +33,7 @@ import {
   ADMIN_ROLE_SYSTEM_POWERS,
 } from "#/modules/admin-role/constants";
 import {
+  countBoundMembersEffect,
   findActorPartyIdEffect,
   findAdminRoleEffect,
   getAdminRoleDetailEffect,
@@ -41,7 +44,7 @@ import {
 
 type Tx = Parameters<Parameters<DbConnectType["transaction"]>[0]>[0];
 type RoleSummary = { key: string; label: string; description: string | null; enabled: boolean };
-type AuditPayload = RoleSummary | (RoleSummary & { powers: string[] }) | { enabled: boolean } | { powers: string[] } | null;
+type AuditPayload = RoleSummary | (RoleSummary & { powers: string[] }) | { enabled: boolean } | { canBeBound: boolean } | { powers: string[] } | null;
 
 const record = (
   tx: Tx,
@@ -111,20 +114,44 @@ export const updateAdminRoleSvc = (
   userId: string,
   roleId: string,
   body: UpdateAdminRoleBody,
-): Effect.Effect<AdminRoleDetail, DbError | NotFound> =>
+): Effect.Effect<AdminRoleDetail, DbError | NotFound | Conflict> =>
   Effect.gen(function* () {
     const role = yield* findAdminRoleEffect(db, roleId);
+    const canBeBound = body.canBeBound ?? role.canBeBound;
+    if (canBeBound !== role.canBeBound) {
+      if (canBeBound && (role.isSystem || role.scope !== "tenant")) {
+        return yield* new Conflict({ message: ADMIN_ROLE_CANNOT_BIND });
+      }
+      if (!canBeBound) {
+        const bound = yield* countBoundMembersEffect(db, roleId);
+        if (bound > 0) return yield* new Conflict({ message: adminRoleStillBound(bound) });
+      }
+    }
     const actor = yield* findActorPartyIdEffect(db, userId);
     const next = {
       label: body.label ?? role.label,
       description: body.description === undefined ? role.description : body.description,
     };
-    if (next.label !== role.label || next.description !== role.description) {
+    const textChanged = next.label !== role.label || next.description !== role.description;
+    const flagChanged = canBeBound !== role.canBeBound;
+    if (textChanged || flagChanged) {
       yield* Effect.tryPromise({
         try: () =>
           db.transaction(async (tx) => {
-            await tx.update(accessMasterRoles).set(next).where(eq(accessMasterRoles.id, roleId));
-            await record(tx, actor, "role.updated", roleId, summary(role), summary({ ...role, ...next }));
+            await tx.update(accessMasterRoles).set({ ...next, canBeBound }).where(eq(accessMasterRoles.id, roleId));
+            if (textChanged) {
+              await record(tx, actor, "role.updated", roleId, summary(role), summary({ ...role, ...next }));
+            }
+            if (flagChanged) {
+              await record(
+                tx,
+                actor,
+                "role.can_be_bound_set",
+                roleId,
+                { canBeBound: role.canBeBound },
+                { canBeBound },
+              );
+            }
           }),
         catch: toDbError,
       });

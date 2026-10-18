@@ -27,6 +27,7 @@ const role = (overrides: Partial<AdminRoleDetail> = {}): AdminRoleDetail => ({
   scope: "tenant",
   enabled: true,
   isSystem: false,
+  canBeBound: false,
   powerCount: 1,
   holderCount: 2,
   powers: ["company:menu:items:read"],

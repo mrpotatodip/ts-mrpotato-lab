@@ -4,7 +4,7 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [ ] The Role page shows the setting and saves it for a non-system Tenant Role.
 - [ ] Turning it off with bindings present returns 409 and the page shows "Cannot turn this off: N members still have bindings. Clear them first."

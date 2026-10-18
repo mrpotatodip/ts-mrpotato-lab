@@ -33,6 +33,16 @@ export function adminRoleDeleteBlocker(role: Pick<AdminRole, "isSystem" | "holde
   return null;
 }
 
+// -----
+// Why the binding setting is fixed off, or null when a
+// superuser can change it.
+// -----
+export function adminRoleBindingLocked(role: Pick<AdminRole, "scope" | "isSystem">): string | null {
+  if (role.scope === "platform") return "A platform role is always cafe-wide.";
+  if (role.isSystem) return "A system role is always cafe-wide.";
+  return null;
+}
+
 export function adminRoleCanToggle(role: Pick<AdminRole, "scope" | "isSystem" | "enabled">): boolean {
   return role.scope === "tenant" && (!role.enabled || adminRoleDisableBlocker(role) === null);
 }

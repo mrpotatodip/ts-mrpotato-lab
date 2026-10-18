@@ -4,6 +4,7 @@ import { Link } from "@tanstack/react-router";
 import { PageCard, PageHeader } from "#/modules/shared";
 import { useAdminRoleActions, useSuspenseAdminRole } from "../hooks";
 import { AdminRoleAuditList } from "./admin-role-audit-list";
+import { AdminRoleBindingCard } from "./admin-role-binding-card";
 import { AdminRoleDeleteCard } from "./admin-role-delete-card";
 import { AdminRoleDetailsForm } from "./admin-role-details-form";
 import { AdminRolePowerChecklist } from "./admin-role-power-checklist";
@@ -23,7 +24,7 @@ const BACK_LINK = (
 
 function AdminRoleView({ roleId }: AdminRolePageProps) {
   const { data: role } = useSuspenseAdminRole(roleId);
-  const { setPowers } = useAdminRoleActions();
+  const { setPowers, update } = useAdminRoleActions();
 
   return (
     <>
@@ -36,6 +37,16 @@ function AdminRoleView({ roleId }: AdminRolePageProps) {
           </PageCard>
           <PageCard title="Status" description="Whether cafes can give this role to their team.">
             <AdminRoleStatusCard role={role} />
+          </PageCard>
+          <PageCard title="Team binding" description="Whether a cafe can limit this role's members to part of the cafe.">
+            <AdminRoleBindingCard
+              role={role}
+              saving={{
+                isPending: update.isPending,
+                errorMessage: update.error?.message ?? null,
+                save: (canBeBound) => update.mutate({ roleId: role.id, body: { canBeBound } }),
+              }}
+            />
           </PageCard>
           <PageCard title="Delete">
             <AdminRoleDeleteCard role={role} />

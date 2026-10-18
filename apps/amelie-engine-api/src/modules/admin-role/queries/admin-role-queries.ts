@@ -32,6 +32,7 @@ const roleColumns = {
   scope: accessMasterRoles.scope,
   enabled: accessMasterRoles.enabled,
   isSystem: accessMasterRoles.isSystem,
+  canBeBound: accessMasterRoles.canBeBound,
   powerCount: sql<number>`(
     select count(*)::int from ${accessRolePowers}
     where ${accessRolePowers.masterRoleId} = ${accessMasterRoles}."id"
@@ -130,3 +131,12 @@ export const findActorPartyIdEffect = (
     try: () => db.select({ partyId: authUser.partyId }).from(authUser).where(eq(authUser.id, userId)).limit(1),
     catch: toDbError,
   }).pipe(Effect.map((rows) => rows[0]?.partyId ?? null));
+
+// -----
+// How many members of a Role still hold
+// bindings. Bindings arrive with the
+// party_role_scopes table; until then no member
+// can hold one, so the count is zero.
+// -----
+export const countBoundMembersEffect = (_db: DbConnectType, _roleId: string): Effect.Effect<number, DbError> =>
+  Effect.succeed(0);

@@ -288,6 +288,13 @@
       "when": 1792300000000,
       "tag": "0040_menu_item_locations_power",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1792300100000,
+      "tag": "0041_role_can_be_bound",
+      "breakpoints": true
     }
   ]
 }
