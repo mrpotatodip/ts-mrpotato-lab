@@ -22,10 +22,25 @@ export const TeamRoleBodySchema = z.object({
   role: TeamRoleKeySchema,
 });
 
+// One Binding: a Country (all its Locations, including later ones) or one Location.
+export const TeamBindingSchema = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("country"), id: z.uuid() }),
+  z.object({ kind: z.literal("location"), id: z.uuid() }),
+]);
+
+export const TeamBindingsSchema = z.array(TeamBindingSchema).max(200);
+
+// `bindings` left out keeps the member's Bindings (a Role that cannot be bound still clears them).
+// An empty list is Whole cafe.
+export const UpdateTeamMemberBodySchema = TeamRoleBodySchema.extend({
+  bindings: TeamBindingsSchema.optional(),
+});
+
 export const TeamRoleSchema = z.object({
   key: z.string(),
   label: z.string(),
   description: z.string().nullable(),
+  canBeBound: z.boolean(),
 });
 
 export const TeamRolesSchema = z.array(TeamRoleSchema);
@@ -46,6 +61,8 @@ export const TeamMemberSchema = z.object({
   email: z.string(),
   role: z.string(),
   roleLabel: z.string(),
+  canBeBound: z.boolean(),
+  bindings: TeamBindingsSchema,
 });
 
 export const TeamInviteSchema = z.object({
@@ -86,6 +103,8 @@ export type TeamMemberParam = z.infer<typeof TeamMemberParamSchema>;
 export type TeamInviteTokenParam = z.infer<typeof TeamInviteTokenParamSchema>;
 export type TeamRole = z.infer<typeof TeamRoleSchema>;
 export type TeamRoles = z.infer<typeof TeamRolesSchema>;
+export type TeamBinding = z.infer<typeof TeamBindingSchema>;
+export type UpdateTeamMemberBody = z.infer<typeof UpdateTeamMemberBodySchema>;
 export type TeamRoleBody = z.infer<typeof TeamRoleBodySchema>;
 export type CreateTeamInviteBody = z.infer<typeof CreateTeamInviteBodySchema>;
 export type AcceptTeamInviteBody = z.infer<typeof AcceptTeamInviteBodySchema>;

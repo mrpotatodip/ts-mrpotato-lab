@@ -8,7 +8,10 @@ import {
   accessMasterRoles,
   accessRolePowers,
   addSuperuser,
+  partyRoles,
+  partyRoleScopes,
   roles,
+  tenantCountries,
   syncAccessMasterPowers,
 } from "@repo/db-amelie";
 import {
@@ -450,6 +453,27 @@ describe("binding a role's members", () => {
     await expect(
       db.update(accessMasterRoles).set({ canBeBound: true }).where(eq(accessMasterRoles.key, "superuser")),
     ).rejects.toThrow(/Failed query/);
+  });
+
+  it("refuses turning it off while a member of the role has bindings, counting them, and allows it once cleared", async () => {
+    const storeStaff = await roleByKey("store_staff");
+    const [member] = await db
+      .select({ id: partyRoles.id })
+      .from(partyRoles)
+      .innerJoin(roles, eq(roles.id, partyRoles.roleId))
+      .where(eq(roles.masterRoleId, storeStaff.id));
+    const [country] = await db.select().from(tenantCountries).where(eq(tenantCountries.tenantId, sorellaId));
+    await db.insert(partyRoleScopes).values({ tenantId: sorellaId, partyRoleId: member.id, countryId: country.id });
+
+    const refused = await call(bossUserId, "PATCH", `/roles/${storeStaff.id}`, { canBeBound: false });
+    expect(refused.status).toBe(409);
+    expect((await json(refused)).error?.message).toBe(adminRoleStillBound(1));
+    expect(await flagOf("store_staff")).toBe(true);
+
+    await db.delete(partyRoleScopes).where(eq(partyRoleScopes.partyRoleId, member.id));
+    const allowed = await call(bossUserId, "PATCH", `/roles/${storeStaff.id}`, { canBeBound: false });
+    expect(allowed.status).toBe(200);
+    await call(bossUserId, "PATCH", `/roles/${storeStaff.id}`, { canBeBound: true });
   });
 
   it("says how many members still have bindings when turning it off is refused", () => {

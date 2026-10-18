@@ -1,5 +1,6 @@
 export * from "./party";
 export * from "./tenant";
+export * from "./party-role-scopes";
 export * from "./access-audit-log";
 export * from "./access-master-powers";
 export * from "./access-master-roles";

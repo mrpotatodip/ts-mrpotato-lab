@@ -7,6 +7,7 @@ import {
   accessRolePowers,
   authUser,
   partyRoles,
+  partyRoleScopes,
   roles,
 } from "@repo/db-amelie";
 import {
@@ -133,10 +134,17 @@ export const findActorPartyIdEffect = (
   }).pipe(Effect.map((rows) => rows[0]?.partyId ?? null));
 
 // -----
-// How many members of a Role still hold
-// bindings. Bindings arrive with the
-// party_role_scopes table; until then no member
-// can hold one, so the count is zero.
+// How many members of a Role still hold bindings
+// (a member counts once however many rows they have).
 // -----
-export const countBoundMembersEffect = (_db: DbConnectType, _roleId: string): Effect.Effect<number, DbError> =>
-  Effect.succeed(0);
+export const countBoundMembersEffect = (db: DbConnectType, roleId: string): Effect.Effect<number, DbError> =>
+  Effect.tryPromise({
+    try: () =>
+      db
+        .select({ n: sql<number>`count(distinct ${partyRoleScopes.partyRoleId})::int` })
+        .from(partyRoleScopes)
+        .innerJoin(partyRoles, eq(partyRoles.id, partyRoleScopes.partyRoleId))
+        .innerJoin(roles, eq(roles.id, partyRoles.roleId))
+        .where(eq(roles.masterRoleId, roleId)),
+    catch: toDbError,
+  }).pipe(Effect.map((rows) => rows[0]?.n ?? 0));

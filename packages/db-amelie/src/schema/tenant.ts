@@ -114,6 +114,7 @@ export const partyRoles = pgTable(
       foreignColumns: [roles.id, roles.tenantId],
     }).onDelete("restrict"),
     uqTenantParty: uniqueIndex("uq_party_roles_tenant_party").on(t.tenantId, t.partyId),
+    uqIdTenant: uniqueIndex("uq_party_roles_id_tenant").on(t.id, t.tenantId),
     uqPlatform: uniqueIndex("uq_party_roles_platform")
       .on(t.partyId)
       .where(sql`${t.roleScope} = 'platform'`),

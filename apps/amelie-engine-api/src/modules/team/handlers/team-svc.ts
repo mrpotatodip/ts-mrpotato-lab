@@ -2,10 +2,12 @@ import { hashPassword } from "better-auth/crypto";
 import { and, eq, isNull } from "drizzle-orm";
 import { Effect } from "effect";
 import {
+  accessAuditLog,
   authAccount,
   authUser,
   parties,
   partyRoles,
+  partyRoleScopes,
   persons,
   teamInvites,
 } from "@repo/db-amelie";
@@ -15,11 +17,13 @@ import {
   type AcceptedTeamInvite,
   type CreateTeamInviteBody,
   type CreatedTeamInvite,
+  type TeamBinding,
   type TeamDeleted,
   type TeamInvite,
   type TeamInvitePreview,
   type TeamList,
   type TeamRoles,
+  type UpdateTeamMemberBody,
   TENANT_ADMIN_ROLE_KEY,
 } from "@repo/contracts/amelie";
 import type { DbConnectType } from "#/lib/db-connection";
@@ -27,6 +31,7 @@ import { Conflict, Forbidden, Invalid, NotFound, toDbError, type DbError } from 
 import { PG_UNIQUE_VIOLATION, pgErrorCode, pgErrorConstraint } from "#/lib/pg-error";
 import {
   TEAM_ACCOUNT_REQUIRED,
+  TEAM_BINDINGS_ACTION,
   TEAM_EMAIL_ON_TENANT,
   TEAM_INVITE_CONSTRAINT,
   TEAM_LAST_ADMIN,
@@ -34,9 +39,15 @@ import {
   TEAM_NEW_ACCOUNT_REQUIRED,
   TEAM_NOT_FOUND,
   TEAM_ROLE_ABOVE_YOURS,
+  TEAM_ROLE_CANNOT_BIND,
   TEAM_WRONG_ACCOUNT,
 } from "#/modules/team/constants";
-import { generateTeamInviteToken, hashTeamInviteToken } from "#/modules/team/lib";
+import {
+  foldBindings,
+  generateTeamInviteToken,
+  hashTeamInviteToken,
+  sameBindings,
+} from "#/modules/team/lib";
 import {
   countTenantAdminsEffect,
   emailOnTenantEffect,
@@ -47,8 +58,10 @@ import {
   findUserByEmailEffect,
   getTeamInviteByIdEffect,
   listAssignableRolesEffect,
+  listMemberBindingsEffect,
   listTeamEffect,
   masterRolePowersEffect,
+  resolveBindingTargetsEffect,
   toPreview,
 } from "#/modules/team/queries";
 
@@ -192,25 +205,76 @@ export const revokeTeamInviteSvc = (
     return { id: inviteId };
   });
 
+type Tx = Parameters<Parameters<DbConnectType["transaction"]>[0]>[0];
+
+// -----
+// Every change to a member's Bindings is written to
+// the append-only audit log with who did it and the
+// set before and after. subject_id is the Person; the
+// Tenant is in the payload because a Person can sit in
+// several.
+// -----
+const recordBindings = (
+  tx: Tx,
+  actorPartyId: string,
+  tenantId: string,
+  partyId: string,
+  before: TeamBinding[],
+  after: TeamBinding[],
+) =>
+  tx.insert(accessAuditLog).values({
+    actorPartyId,
+    action: TEAM_BINDINGS_ACTION,
+    subjectId: partyId,
+    before: { tenantId, bindings: before },
+    after: { tenantId, bindings: after },
+  });
+
 export const updateTeamMemberSvc = (
   db: DbConnectType,
   tenantId: string,
   partyId: string,
-  role: string,
+  userId: string,
+  body: UpdateTeamMemberBody,
   callerPowers: readonly string[],
-): Effect.Effect<TeamList, DbError | NotFound | Conflict | Forbidden> =>
+): Effect.Effect<TeamList, DbError | NotFound | Conflict | Forbidden | Invalid> =>
   Effect.gen(function* () {
+    const { role, bindings } = body;
     const current = yield* findMemberRoleEffect(db, tenantId, partyId);
     yield* refuseAboveCaller(db, current.masterRoleId, callerPowers, TEAM_MEMBER_ABOVE_YOURS);
     const adminCount = yield* countTenantAdminsEffect(db, tenantId);
     yield* refuseLastAdmin(current.roleKey, role, adminCount);
     const nextRole = yield* findAssignableRoleEffect(db, tenantId, role, callerPowers);
+    if (!nextRole.canBeBound && bindings && bindings.length > 0) {
+      return yield* new Invalid({ message: TEAM_ROLE_CANNOT_BIND });
+    }
+    const requested = nextRole.canBeBound ? bindings : [];
+    const folded = requested
+      ? foldBindings(requested, yield* resolveBindingTargetsEffect(db, tenantId, requested))
+      : null;
+    const before = yield* listMemberBindingsEffect(db, tenantId, current.partyRoleId);
+    const actor = yield* findPartyIdByUserIdEffect(db, userId);
     yield* Effect.tryPromise({
       try: () =>
-        db
-          .update(partyRoles)
-          .set({ roleId: nextRole.id, roleScope: nextRole.scope, updatedAt: new Date() })
-          .where(and(eq(partyRoles.tenantId, tenantId), eq(partyRoles.partyId, partyId))),
+        db.transaction(async (tx) => {
+          await tx
+            .update(partyRoles)
+            .set({ roleId: nextRole.id, roleScope: nextRole.scope, updatedAt: new Date() })
+            .where(and(eq(partyRoles.tenantId, tenantId), eq(partyRoles.partyId, partyId)));
+          if (!folded || sameBindings(before, folded)) return;
+          await tx.delete(partyRoleScopes).where(eq(partyRoleScopes.partyRoleId, current.partyRoleId));
+          if (folded.length > 0) {
+            await tx.insert(partyRoleScopes).values(
+              folded.map((binding) => ({
+                tenantId,
+                partyRoleId: current.partyRoleId,
+                countryId: binding.kind === "country" ? binding.id : null,
+                locationId: binding.kind === "location" ? binding.id : null,
+              })),
+            );
+          }
+          await recordBindings(tx, actor, tenantId, partyId, before, folded);
+        }),
       catch: toDbError,
     });
     return yield* listTeamEffect(db, tenantId);
@@ -220,6 +284,7 @@ export const removeTeamMemberSvc = (
   db: DbConnectType,
   tenantId: string,
   partyId: string,
+  userId: string,
   callerPowers: readonly string[],
 ): Effect.Effect<TeamDeleted, DbError | NotFound | Conflict | Forbidden> =>
   Effect.gen(function* () {
@@ -227,9 +292,14 @@ export const removeTeamMemberSvc = (
     yield* refuseAboveCaller(db, current.masterRoleId, callerPowers, TEAM_MEMBER_ABOVE_YOURS);
     const adminCount = yield* countTenantAdminsEffect(db, tenantId);
     yield* refuseLastAdmin(current.roleKey, null, adminCount);
+    const before = yield* listMemberBindingsEffect(db, tenantId, current.partyRoleId);
+    const actor = yield* findPartyIdByUserIdEffect(db, userId);
     yield* Effect.tryPromise({
       try: () =>
-        db.delete(partyRoles).where(and(eq(partyRoles.tenantId, tenantId), eq(partyRoles.partyId, partyId))),
+        db.transaction(async (tx) => {
+          await tx.delete(partyRoles).where(and(eq(partyRoles.tenantId, tenantId), eq(partyRoles.partyId, partyId)));
+          if (before.length > 0) await recordBindings(tx, actor, tenantId, partyId, before, []);
+        }),
       catch: toDbError,
     });
     return { id: partyId };

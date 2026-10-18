@@ -4,10 +4,10 @@
 
 **Blocked by:** 02: Let a superuser mark a Role as bindable
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] A bound-capable member can be saved with a Country, with Locations, or with a mix; the database keeps every binding inside the member's own Tenant and allows exactly one of Country or Location per row.
-- [ ] A member with no bindings stays cafe-wide; no existing member changes.
-- [ ] A Role that cannot be bound hides the picker, says Locations are cleared on save, and clears them.
-- [ ] Choosing "Whole cafe" after being bound is recorded in the audit log with the actor and the before and after set.
-- [ ] The prototype code and `?variant=` hook are gone.
+- [x] A bound-capable member can be saved with a Country, with Locations, or with a mix; the database keeps every binding inside the member's own Tenant and allows exactly one of Country or Location per row.
+- [x] A member with no bindings stays cafe-wide; no existing member changes.
+- [x] A Role that cannot be bound hides the picker, says Locations are cleared on save, and clears them.
+- [x] Choosing "Whole cafe" after being bound is recorded in the audit log with the actor and the before and after set.
+- [x] The prototype code and `?variant=` hook are gone.

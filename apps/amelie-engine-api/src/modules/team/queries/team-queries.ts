@@ -1,4 +1,4 @@
-import { and, asc, eq, gt, isNull, sql } from "drizzle-orm";
+import { and, asc, eq, gt, inArray, isNull, sql } from "drizzle-orm";
 import { Effect } from "effect";
 import {
   type AccessScope,
@@ -6,10 +6,13 @@ import {
   accessRolePowers,
   authUser,
   partyRoles,
+  partyRoleScopes,
   persons,
   accessMasterRoles,
   roles,
   teamInvites,
+  tenantCountries,
+  tenantLocations,
   tenants,
 } from "@repo/db-amelie";
 import {
@@ -18,6 +21,7 @@ import {
   TeamListSchema,
   TeamMemberSchema,
   TENANT_ADMIN_ROLE_KEY,
+  type TeamBinding,
   type TeamInvite,
   type TeamInvitePreview,
   type TeamList,
@@ -25,10 +29,14 @@ import {
   type TeamRoles,
 } from "@repo/contracts/amelie";
 import type { DbConnectType } from "#/lib/db-connection";
-import { NotFound, toDbError, type DbError } from "#/lib/effect-query";
-import { TEAM_MEMBER_NOT_FOUND, TEAM_NOT_FOUND } from "#/modules/team/constants";
+import { Invalid, NotFound, toDbError, type DbError } from "#/lib/effect-query";
+import { TEAM_BINDING_NOT_IN_TENANT, TEAM_MEMBER_NOT_FOUND, TEAM_NOT_FOUND } from "#/modules/team/constants";
+import { sortBindings } from "#/modules/team/lib";
 
 const parseOwnRow = <A>(parse: () => A): Effect.Effect<A> => Effect.try(parse).pipe(Effect.orDie);
+
+const toBinding = (row: { countryId: string | null; locationId: string | null }): TeamBinding =>
+  row.countryId ? { kind: "country", id: row.countryId } : { kind: "location", id: row.locationId ?? "" };
 
 const toInvite = (row: {
   id: string;
@@ -54,6 +62,8 @@ export const listTeamEffect = (db: DbConnectType, tenantId: string): Effect.Effe
         db
           .select({
             partyId: persons.partyId,
+            partyRoleId: partyRoles.id,
+            canBeBound: accessMasterRoles.canBeBound,
             firstName: persons.firstName,
             lastName: persons.lastName,
             email: authUser.email,
@@ -89,13 +99,29 @@ export const listTeamEffect = (db: DbConnectType, tenantId: string): Effect.Effe
           .orderBy(asc(teamInvites.createdAt)),
       catch: toDbError,
     });
-        const members: TeamMember[] = memberRows.map((row) =>
+    const scopeRows = yield* Effect.tryPromise({
+      try: () =>
+        db
+          .select({
+            partyRoleId: partyRoleScopes.partyRoleId,
+            countryId: partyRoleScopes.countryId,
+            locationId: partyRoleScopes.locationId,
+          })
+          .from(partyRoleScopes)
+          .where(eq(partyRoleScopes.tenantId, tenantId)),
+      catch: toDbError,
+    });
+    const bindingsOf = (partyRoleId: string): TeamBinding[] =>
+      sortBindings(scopeRows.filter((row) => row.partyRoleId === partyRoleId).map(toBinding));
+    const members: TeamMember[] = memberRows.map((row) =>
       TeamMemberSchema.parse({
         partyId: row.partyId,
         name: `${row.firstName} ${row.lastName}`.trim(),
         email: row.email,
         role: row.role,
         roleLabel: row.roleLabel,
+        canBeBound: row.canBeBound,
+        bindings: bindingsOf(row.partyRoleId),
       }),
     );
     return yield* parseOwnRow(() =>
@@ -124,12 +150,21 @@ export const findRoleInTenantEffect = (
   db: DbConnectType,
   tenantId: string,
   roleKey: string,
-): Effect.Effect<{ id: string; key: string; scope: AccessScope; masterRoleId: string }, DbError | NotFound> =>
+): Effect.Effect<
+  { id: string; key: string; scope: AccessScope; masterRoleId: string; canBeBound: boolean },
+  DbError | NotFound
+> =>
   Effect.gen(function* () {
     const rows = yield* Effect.tryPromise({
       try: () =>
         db
-          .select({ id: roles.id, key: accessMasterRoles.key, scope: roles.scope, masterRoleId: roles.masterRoleId })
+          .select({
+            id: roles.id,
+            key: accessMasterRoles.key,
+            scope: roles.scope,
+            masterRoleId: roles.masterRoleId,
+            canBeBound: accessMasterRoles.canBeBound,
+          })
           .from(roles)
           .innerJoin(accessMasterRoles, eq(accessMasterRoles.id, roles.masterRoleId))
           .where(
@@ -184,6 +219,7 @@ export const listAssignableRolesEffect = (
             key: accessMasterRoles.key,
             label: accessMasterRoles.label,
             description: accessMasterRoles.description,
+            canBeBound: accessMasterRoles.canBeBound,
           })
           .from(roles)
           .innerJoin(accessMasterRoles, eq(accessMasterRoles.id, roles.masterRoleId))
@@ -204,7 +240,12 @@ export const listAssignableRolesEffect = (
     return withPowers
       .filter(({ powers }) => powers.every((power) => held.has(power)))
       .toSorted((a, b) => a.powers.length - b.powers.length)
-      .map(({ candidate }) => ({ key: candidate.key, label: candidate.label, description: candidate.description }));
+      .map(({ candidate }) => ({
+        key: candidate.key,
+        label: candidate.label,
+        description: candidate.description,
+        canBeBound: candidate.canBeBound,
+      }));
   });
 
 export const countTenantAdminsEffect = (
@@ -229,12 +270,12 @@ export const findMemberRoleEffect = (
   db: DbConnectType,
   tenantId: string,
   partyId: string,
-): Effect.Effect<{ roleKey: string; masterRoleId: string }, DbError | NotFound> =>
+): Effect.Effect<{ partyRoleId: string; roleKey: string; masterRoleId: string }, DbError | NotFound> =>
   Effect.gen(function* () {
     const rows = yield* Effect.tryPromise({
       try: () =>
         db
-          .select({ roleKey: accessMasterRoles.key, masterRoleId: roles.masterRoleId })
+          .select({ partyRoleId: partyRoles.id, roleKey: accessMasterRoles.key, masterRoleId: roles.masterRoleId })
           .from(partyRoles)
           .innerJoin(roles, eq(roles.id, partyRoles.roleId))
           .innerJoin(accessMasterRoles, eq(accessMasterRoles.id, roles.masterRoleId))
@@ -361,4 +402,61 @@ export const toPreview = (
     role: row.roleKey,
     roleLabel: row.roleLabel,
     hasAccount,
+  });
+
+// -----
+// A member's Bindings as stored.
+// -----
+export const listMemberBindingsEffect = (
+  db: DbConnectType,
+  tenantId: string,
+  partyRoleId: string,
+): Effect.Effect<TeamBinding[], DbError> =>
+  Effect.tryPromise({
+    try: () =>
+      db
+        .select({ countryId: partyRoleScopes.countryId, locationId: partyRoleScopes.locationId })
+        .from(partyRoleScopes)
+        .where(and(eq(partyRoleScopes.tenantId, tenantId), eq(partyRoleScopes.partyRoleId, partyRoleId))),
+    catch: toDbError,
+  }).pipe(Effect.map((rows) => sortBindings(rows.map(toBinding))));
+
+// -----
+// Checks every Country and Location belongs to this
+// Tenant (archived ones included: a kept Binding may
+// name one) and returns each Location's Country, so
+// the caller can fold.
+// -----
+export const resolveBindingTargetsEffect = (
+  db: DbConnectType,
+  tenantId: string,
+  bindings: readonly TeamBinding[],
+): Effect.Effect<Map<string, string>, DbError | Invalid> =>
+  Effect.gen(function* () {
+    const countryIds = [...new Set(bindings.filter((b) => b.kind === "country").map((b) => b.id))];
+    const locationIds = [...new Set(bindings.filter((b) => b.kind === "location").map((b) => b.id))];
+    const countries = countryIds.length
+      ? yield* Effect.tryPromise({
+          try: () =>
+            db
+              .select({ id: tenantCountries.id })
+              .from(tenantCountries)
+              .where(and(eq(tenantCountries.tenantId, tenantId), inArray(tenantCountries.id, countryIds))),
+          catch: toDbError,
+        })
+      : [];
+    const locations = locationIds.length
+      ? yield* Effect.tryPromise({
+          try: () =>
+            db
+              .select({ id: tenantLocations.id, countryId: tenantLocations.countryId })
+              .from(tenantLocations)
+              .where(and(eq(tenantLocations.tenantId, tenantId), inArray(tenantLocations.id, locationIds))),
+          catch: toDbError,
+        })
+      : [];
+    if (countries.length !== countryIds.length || locations.length !== locationIds.length) {
+      return yield* new Invalid({ message: TEAM_BINDING_NOT_IN_TENANT });
+    }
+    return new Map(locations.map((row) => [row.id, row.countryId]));
   });

@@ -1,4 +1,7 @@
 export const TEAM_NOT_FOUND = "Team invite not found";
+export const TEAM_BINDING_NOT_IN_TENANT = "A Country or Location you picked is not part of this cafe";
+export const TEAM_ROLE_CANNOT_BIND = "This Role cannot be limited to Countries or Locations";
+export const TEAM_BINDINGS_ACTION = "team.member_bindings_set";
 export const TEAM_MEMBER_NOT_FOUND = "Team member not found";
 export const TEAM_EMAIL_ON_TENANT = "That email is already on this cafe";
 export const TEAM_LAST_ADMIN = "This cafe needs at least one tenant_admin";

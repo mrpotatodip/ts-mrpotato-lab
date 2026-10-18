@@ -18,7 +18,7 @@ app.delete(
   async (c) => {
     const { partyId } = c.req.valid("param");
     const db = db_connect(c.env.HYPERDRIVE_REALTIME.connectionString);
-    const data = await runEffect(removeTeamMemberSvc(db, c.get("tenantId"), partyId, c.get("powers") ?? []));
+    const data = await runEffect(removeTeamMemberSvc(db, c.get("tenantId"), partyId, c.get("userId"), c.get("powers") ?? []));
     return c.json({ data, error: null });
   },
 );
