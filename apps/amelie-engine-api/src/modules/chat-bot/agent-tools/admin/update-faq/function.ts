@@ -1,6 +1,6 @@
 import { Effect } from "effect";
 import { updateFaqSvc } from "#/modules/faq";
-import { resolveFaqScope, runAsChatBotEditor } from "#/modules/chat-bot/lib";
+import { resolveFaqScope, runAsCoveredChatBotEditor } from "#/modules/chat-bot/lib";
 import type { ChatBotRuntime } from "#/modules/chat-bot/types";
 import type { FaqResult, FaqScopeNeededResult } from "#/modules/chat-bot/schemas";
 import type { UpdateFaqInput } from "./schema";
@@ -15,18 +15,22 @@ export const updateFaq = (
   { faqId, question, answer, scope }: UpdateFaqInput,
   runtime: ChatBotRuntime,
 ): Promise<FaqResult | FaqScopeNeededResult> =>
-  runAsChatBotEditor(
-    runtime,
+  runAsCoveredChatBotEditor(runtime, "company:faqs:faqs:update", (coverage) =>
     Effect.gen(function* () {
       const tenantId = runtime.owner.tenantId;
       const resolved = scope?.trim() ? yield* resolveFaqScope(runtime.db, tenantId, scope) : undefined;
       if (resolved && "needsScope" in resolved) return resolved;
       const chosen = resolved ?? {};
-      return yield* updateFaqSvc(runtime.db, tenantId, faqId, {
-        ...(question !== null && { question }),
-        ...(answer !== null && { answer }),
-        ...chosen,
-      });
+      return yield* updateFaqSvc(
+        runtime.db,
+        tenantId,
+        faqId,
+        {
+          ...(question !== null && { question }),
+          ...(answer !== null && { answer }),
+          ...chosen,
+        },
+        coverage,
+      );
     }),
-    "company:faqs:faqs:update",
   );

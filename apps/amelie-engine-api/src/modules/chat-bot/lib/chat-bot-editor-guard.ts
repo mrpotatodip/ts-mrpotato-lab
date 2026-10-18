@@ -82,6 +82,20 @@ export const runAsChatBotEditor = <A>(
 ): Promise<A> => runEffect(requireChatBotPower(runtime, power).pipe(Effect.andThen(change)));
 
 // -----
+// For a bound Power whose Locations the change finds only
+// after loading them (a FAQ's scope, a Country's open
+// Locations): checks the Power, then hands the coverage to
+// the change, whose service refuses what it does not cover.
+// A member who covers nothing is refused outright, as in
+// requireBoundPower.
+// -----
+export const runAsCoveredChatBotEditor = <A>(
+  runtime: ChatBotRuntime,
+  power: BoundPower,
+  change: (coverage: Coverage) => Effect.Effect<A, AppFailure>,
+): Promise<A> => runEffect(requireBoundChatBotPower(runtime, power, []).pipe(Effect.flatMap(change)));
+
+// -----
 // The bound tools' flow, one Tenant lookup: check the
 // Power and load the coverage, resolve the Location the
 // model named over it, refuse an uncovered one, then run
