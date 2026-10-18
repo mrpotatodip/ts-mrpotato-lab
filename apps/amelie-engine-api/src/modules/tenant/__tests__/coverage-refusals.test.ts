@@ -44,52 +44,52 @@ describe("uncoveredLocations", () => {
   });
 });
 
-describe("requireBoundPower with no Location named", () => {
-  const status = async (coverage: Coverage) => {
-    const app = new Hono<AppEnv>();
-    app.onError((err, c) => {
-      if (err instanceof AppError) {
-        // SAFETY: AppError subclasses only use 4xx/5xx codes.
-        return c.json({ data: null, error: { message: err.message } }, err.statusCode as 403);
-      }
-      throw err;
-    });
-    app.use("*", async (c, next) => {
-      c.set("powers", ["store:menu:availability:update"]);
-      c.set("coverage", coverage);
-      await next();
-    });
-    app.get("/", requireBoundPower("store:menu:availability:update", () => []), (c) => c.json({ ok: true }));
-    const res = await app.request("/");
-    return { status: res.status, message: (await res.json()).error?.message };
-  };
+const statusFor = async (coverage: Coverage) => {
+  const app = new Hono<AppEnv>();
+  app.onError((err, c) => {
+    if (err instanceof AppError) {
+      // SAFETY: AppError subclasses only use 4xx/5xx codes.
+      return c.json({ data: null, error: { message: err.message } }, err.statusCode as 403);
+    }
+    throw err;
+  });
+  app.use("*", async (c, next) => {
+    c.set("powers", ["store:menu:availability:update"]);
+    c.set("coverage", coverage);
+    await next();
+  });
+  app.get("/", requireBoundPower("store:menu:availability:update", () => []), (c) => c.json({ ok: true }));
+  const res = await app.request("/");
+  return { status: res.status, message: (await res.json()).error?.message };
+};
 
+describe("requireBoundPower with no Location named", () => {
   it("passes for whole-cafe and for a member who covers something", async () => {
-    expect((await status("all")).status).toBe(200);
-    expect((await status([A])).status).toBe(200);
+    expect((await statusFor("all")).status).toBe(200);
+    expect((await statusFor([A])).status).toBe(200);
   });
 
   it("refuses a member who covers nothing", async () => {
-    expect(await status([])).toEqual({ status: 403, message: TENANT_LOCATION_NOT_COVERED });
+    expect(await statusFor([])).toEqual({ status: 403, message: TENANT_LOCATION_NOT_COVERED });
   });
 });
 
-describe("requireCovered with no Location named", () => {
-  const run = (coverage: Coverage, ids: string[]) => Effect.runPromise(Effect.either(requireCovered(coverage, ids)));
+const runCovered = (coverage: Coverage, ids: string[]) => Effect.runPromise(Effect.either(requireCovered(coverage, ids)));
 
+describe("requireCovered with no Location named", () => {
   it("passes only for whole-cafe: a Country with no open Location is a scope nobody can be bound to", async () => {
-    expect((await run("all", []))._tag).toBe("Right");
-    const covering = await run([A], []);
+    expect((await runCovered("all", []))._tag).toBe("Right");
+    const covering = await runCovered([A], []);
     expect(covering._tag).toBe("Left");
     expect(covering._tag === "Left" && covering.left.message).toBe(TENANT_LOCATION_NOT_COVERED);
-    const nothing = await run([], []);
+    const nothing = await runCovered([], []);
     expect(nothing._tag === "Left" && nothing.left.message).toBe(TENANT_LOCATION_NOT_COVERED);
   });
 
   it("names the Locations a member misses", async () => {
-    const missed = await run([A], [A, B]);
+    const missed = await runCovered([A], [A, B]);
     expect(missed._tag === "Left" && missed.left.message).toBe(TENANT_LOCATIONS_NOT_COVERED([B]));
-    expect((await run([A, B], [A, B]))._tag).toBe("Right");
+    expect((await runCovered([A, B], [A, B]))._tag).toBe("Right");
   });
 });
 
