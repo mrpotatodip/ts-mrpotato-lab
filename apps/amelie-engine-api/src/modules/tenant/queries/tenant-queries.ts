@@ -112,6 +112,36 @@ const coveredLocationIdsEffect = (
   });
 
 // -----
+// The open Countries a member is bound to by a Country
+// binding (a Location binding names no Country). Asked
+// only when a Location is created, never per request.
+// -----
+export const boundCountryIdsEffect = (
+  db: DbConnectType,
+  userId: string,
+  tenantId: string,
+): Effect.Effect<string[], DbError> =>
+  Effect.tryPromise({
+    try: async () => {
+      const rows = await db
+        .selectDistinct({ id: tenantCountries.id })
+        .from(partyRoleScopes)
+        .innerJoin(partyRoles, eq(partyRoles.id, partyRoleScopes.partyRoleId))
+        .innerJoin(authUser, eq(authUser.partyId, partyRoles.partyId))
+        .innerJoin(tenantCountries, eq(tenantCountries.id, partyRoleScopes.countryId))
+        .where(
+          and(
+            eq(authUser.id, userId),
+            eq(partyRoleScopes.tenantId, tenantId),
+            isNull(tenantCountries.archivedAt),
+          ),
+        );
+      return rows.map((row) => row.id);
+    },
+    catch: toDbError,
+  });
+
+// -----
 // The tenant admin is whole-cafe whatever rows exist;
 // a member without rows is too. Only a bound member
 // costs the extra query.

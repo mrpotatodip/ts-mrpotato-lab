@@ -8,6 +8,7 @@ export const TENANT_ID_REQUIRED = "tenantId query parameter must be a Tenant id"
 export const TENANT_ADMIN_ROLE = "tenant_admin";
 export const TENANT_POWER_DENIED = "This Role cannot do that";
 export const TENANT_LOCATION_NOT_COVERED = "Your Role does not cover this Location";
+export const TENANT_COUNTRY_NOT_COVERED = "Your Role does not cover this Country";
 export const TENANT_LOCATIONS_NOT_COVERED = (ids: readonly string[]) =>
   `Your Role does not cover these Locations: ${ids.join(", ")}`;
 export const TENANT_COUNTRY_TAKEN = "This cafe already sells in that country";

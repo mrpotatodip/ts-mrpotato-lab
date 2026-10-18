@@ -4,7 +4,7 @@
 
 **Blocked by:** 05: Enforce a binding on business hours (the tracer for the guard)
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [ ] Update and archive of an uncovered Location return 403.
 - [ ] A Country-bound member can create a Location in that Country and not in another.

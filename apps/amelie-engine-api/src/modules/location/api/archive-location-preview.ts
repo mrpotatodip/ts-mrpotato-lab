@@ -4,7 +4,8 @@ import { zValidator } from "#/lib/zod-validator";
 import type { AppEnv } from "#/types/variables";
 import { db_connect } from "#/lib/db-connection";
 import { runEffect } from "#/lib/effect-query";
-import { requirePower } from "#/modules/tenant";
+import { requireBoundPower } from "#/modules/tenant";
+import { locateLocationParam } from "#/modules/location/lib";
 import { archiveLocationPreviewSvc } from "#/modules/location/handlers";
 import { archiveLocationPreviewDoc } from "#/modules/location/openapi";
 
@@ -13,8 +14,8 @@ const app = new Hono<AppEnv>();
 app.get(
   "/:locationId/archive-preview",
   archiveLocationPreviewDoc,
-  requirePower("company:profile:locations:archive"),
   zValidator("param", LocationParamSchema),
+  requireBoundPower("company:profile:locations:archive", locateLocationParam),
   async (c) => {
     const { locationId } = c.req.valid("param");
     const db = db_connect(c.env.HYPERDRIVE_REALTIME.connectionString);

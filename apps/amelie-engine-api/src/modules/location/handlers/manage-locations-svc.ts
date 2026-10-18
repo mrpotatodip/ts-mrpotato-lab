@@ -1,8 +1,10 @@
 import { Effect } from "effect";
 import type { CreateLocationBody, Location, LocationArchived, UpdateLocationBody } from "@repo/contracts/amelie";
 import type { DbConnectType } from "#/lib/db-connection";
-import { Conflict, Invalid, NotFound, type DbError } from "#/lib/effect-query";
+import { Conflict, Forbidden, Invalid, NotFound, type DbError } from "#/lib/effect-query";
 import { chooseCountryIdSvc } from "#/modules/country/handlers";
+import type { CountryScope } from "#/modules/tenant/handlers";
+import { TENANT_COUNTRY_NOT_COVERED } from "#/modules/tenant/constants";
 import { archiveLocationSvc } from "./archive-location-svc";
 import { slugify, withSlugSuffix } from "#/lib/slugify";
 import {
@@ -37,15 +39,23 @@ const freeSlug = (name: string, taken: Set<string>): string => {
 // one of the Tenant, else the only one. A Location
 // without a timezone gets the last one created in
 // its Country, else the Tenant's.
+// A member bound to Countries opens Locations only in
+// those: with none named their only bound Country is
+// the default, and any other Country is Forbidden.
 // -----
 export const createLocationSvc = (
   db: DbConnectType,
   tenantId: string,
   body: CreateLocationBody,
-): Effect.Effect<Location, Conflict | NotFound | Invalid | DbError> =>
+  countryScope: CountryScope = "all",
+): Effect.Effect<Location, Conflict | NotFound | Invalid | Forbidden | DbError> =>
   Effect.gen(function* () {
     const existing = yield* listLocationsEffect(db, tenantId);
-    const countryId = yield* chooseCountryIdSvc(db, tenantId, body.countryId);
+    const named = body.countryId ?? (countryScope !== "all" && countryScope.length === 1 ? countryScope[0] : undefined);
+    const countryId = yield* chooseCountryIdSvc(db, tenantId, named);
+    if (countryScope !== "all" && !countryScope.includes(countryId)) {
+      return yield* new Forbidden({ message: TENANT_COUNTRY_NOT_COVERED });
+    }
     const timezone =
       body.timezone ??
       (yield* lastLocationTimezoneInCountryEffect(db, tenantId, countryId)) ??

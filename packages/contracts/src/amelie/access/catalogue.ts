@@ -5,7 +5,8 @@ export type AccessNode = {
   label: string;
   actions?: readonly AccessActionValue[];
   // On a leaf: its Powers are limited by a team member's bindings.
-  bound?: true;
+  // `true` binds every Action; a list binds only those Actions.
+  bound?: true | readonly AccessActionValue[];
   children?: readonly AccessNode[];
 };
 
@@ -27,7 +28,12 @@ export const ACCESS_CATALOGUE = [
         children: [
           { key: "business_profile", label: "Business profile", actions: ["read", "update"] },
           { key: "countries", label: "Country", actions: ["read", "create", "update", "archive"] },
-          { key: "locations", label: "Location", actions: ["read", "create", "update", "archive"] },
+          {
+            key: "locations",
+            label: "Location",
+            actions: ["read", "create", "update", "archive"],
+            bound: ["create", "update", "archive"],
+          },
           { key: "region", label: "Region", actions: ["read", "update"] },
         ],
       },
@@ -146,6 +152,7 @@ type BoundNodePowers<Node, Prefix extends string> = Node extends { readonly key:
         | (Node extends { readonly bound: true; readonly actions: readonly (infer Action extends string)[] }
             ? `${Path}:${Action}`
             : never)
+        | (Node extends { readonly bound: readonly (infer Action extends string)[] } ? `${Path}:${Action}` : never)
         | (Node extends { readonly children: readonly (infer Child)[] } ? BoundNodePowers<Child, `${Path}:`> : never)
     : never
   : never;
@@ -160,7 +167,8 @@ export type UnboundPower = Exclude<AccessPower, BoundPower>;
 
 const collectBoundPowers = (node: AccessNode, prefix: string): string[] => {
   const path = prefix === "" ? node.key : `${prefix}:${node.key}`;
-  const own = node.bound ? (node.actions ?? []).map((action) => `${path}:${action}`) : [];
+  const boundActions = node.bound === true ? (node.actions ?? []) : (node.bound ?? []);
+  const own = boundActions.map((action) => `${path}:${action}`);
   return [...own, ...(node.children ?? []).flatMap((child) => collectBoundPowers(child, path))];
 };
 
