@@ -1,4 +1,5 @@
 import { Effect } from "effect";
+import type { Coverage } from "@repo/contracts/amelie";
 import type { DbConnectType } from "#/lib/db-connection";
 import { Invalid, NotFound, type DbError, type NeedsLocation } from "#/lib/effect-query";
 import { resolveLocationSvc } from "#/modules/location";
@@ -30,9 +31,10 @@ export const setHoursOverrideSvc = (
   tenantId: string,
   override: HoursOverride,
   locationId?: string,
+  coverage: Coverage = "all",
 ): Effect.Effect<SpecialDate, DbError | NotFound | Invalid | NeedsLocation> =>
   Effect.gen(function* () {
-    const location = yield* resolveLocationSvc(db, tenantId, locationId);
+    const location = yield* resolveLocationSvc(db, tenantId, locationId, coverage);
     if (override.date < tenantClock(location.timezone).date) {
       return yield* new Invalid({ message: SCHEDULE_OVERRIDE_PAST });
     }
@@ -45,9 +47,10 @@ export const removeHoursOverrideSvc = (
   tenantId: string,
   date: string,
   locationId?: string,
+  coverage: Coverage = "all",
 ): Effect.Effect<{ date: string }, DbError | NotFound | NeedsLocation> =>
   Effect.gen(function* () {
-    const location = yield* resolveLocationSvc(db, tenantId, locationId);
+    const location = yield* resolveLocationSvc(db, tenantId, locationId, coverage);
     const removed = yield* deleteHoursOverrideEffect(db, tenantId, location.id, date);
     if (!removed) return yield* new NotFound({ message: SCHEDULE_OVERRIDE_NOT_FOUND });
     return { date };
@@ -58,8 +61,9 @@ export const setBusinessHoursSvc = (
   tenantId: string,
   hours: BusinessHours,
   locationId?: string,
+  coverage: Coverage = "all",
 ): Effect.Effect<WeeklyHours, DbError | NotFound | NeedsLocation> =>
-  resolveLocationSvc(db, tenantId, locationId).pipe(
+  resolveLocationSvc(db, tenantId, locationId, coverage).pipe(
     Effect.flatMap((location) => upsertBusinessHoursEffect(db, tenantId, location.id, hours)),
     Effect.map((saved) => buildWeeklyHours([saved])[saved.dayOfWeek]),
   );

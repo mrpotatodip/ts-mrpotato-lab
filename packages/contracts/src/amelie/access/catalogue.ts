@@ -4,6 +4,8 @@ export type AccessNode = {
   key: string;
   label: string;
   actions?: readonly AccessActionValue[];
+  // On a leaf: its Powers are limited by a team member's bindings.
+  bound?: true;
   children?: readonly AccessNode[];
 };
 
@@ -83,14 +85,14 @@ export const ACCESS_CATALOGUE = [
         key: "hours",
         label: "Hours",
         children: [
-          { key: "weekly", label: "Business hours", actions: ["read", "update"] },
-          { key: "overrides", label: "Hours override", actions: ["read", "create", "update", "delete"] },
+          { key: "weekly", label: "Business hours", actions: ["read", "update"], bound: true },
+          { key: "overrides", label: "Hours override", actions: ["read", "create", "update", "delete"], bound: true },
         ],
       },
       {
         key: "menu",
         label: "Store menu",
-        children: [{ key: "availability", label: "Location availability", actions: ["read", "update"] }],
+        children: [{ key: "availability", label: "Location availability", actions: ["read", "update"], bound: true }],
       },
     ],
   },
@@ -138,7 +140,31 @@ type NodePowers<Node, Prefix extends string> = Node extends { readonly key: infe
 // -----
 export type AccessPower = NodePowers<AccessCatalogue[number], "">;
 
-const collectPowers = (node: AccessNode, prefix: string): string[] => {
+type BoundNodePowers<Node, Prefix extends string> = Node extends { readonly key: infer Key extends string }
+  ? `${Prefix}${Key}` extends infer Path extends string
+    ?
+        | (Node extends { readonly bound: true; readonly actions: readonly (infer Action extends string)[] }
+            ? `${Path}:${Action}`
+            : never)
+        | (Node extends { readonly children: readonly (infer Child)[] } ? BoundNodePowers<Child, `${Path}:`> : never)
+    : never
+  : never;
+
+// -----
+// The Powers a binding limits: the leaves marked `bound: true`.
+// requireBoundPower accepts only these, requirePower only the rest,
+// so the wrong guard is a compile error.
+// -----
+export type BoundPower = BoundNodePowers<AccessCatalogue[number], "">;
+export type UnboundPower = Exclude<AccessPower, BoundPower>;
+
+const collectBoundPowers = (node: AccessNode, prefix: string): string[] => {
+  const path = prefix === "" ? node.key : `${prefix}:${node.key}`;
+  const own = node.bound ? (node.actions ?? []).map((action) => `${path}:${action}`) : [];
+  return [...own, ...(node.children ?? []).flatMap((child) => collectBoundPowers(child, path))];
+};
+
+const collectPowers =(node: AccessNode, prefix: string): string[] => {
   const path = prefix === "" ? node.key : `${prefix}:${node.key}`;
   const own = (node.actions ?? []).map((action) => `${path}:${action}`);
   const nested = (node.children ?? []).flatMap((child) => collectPowers(child, path));
@@ -148,7 +174,14 @@ const collectPowers = (node: AccessNode, prefix: string): string[] => {
 // SAFETY: collectPowers joins keys and Actions with the same colons NodePowers uses, so each string it builds is an AccessPower.
 export const ACCESS_POWERS = ACCESS_CATALOGUE.flatMap((node) => collectPowers(node, "")) as AccessPower[];
 
-const ACCESS_POWER_SET: ReadonlySet<string> = new Set(ACCESS_POWERS);
+// SAFETY: collectBoundPowers walks the same tree and joins keys exactly as BoundNodePowers does.
+export const BOUND_POWERS = ACCESS_CATALOGUE.flatMap((node) => collectBoundPowers(node, "")) as BoundPower[];
+
+const BOUND_POWER_SET: ReadonlySet<string> = new Set(BOUND_POWERS);
+
+export const isBoundPower = (power: AccessPower): power is BoundPower => BOUND_POWER_SET.has(power);
+
+const ACCESS_POWER_SET:ReadonlySet<string> = new Set(ACCESS_POWERS);
 
 export const isAccessPower = (value: string): value is AccessPower => ACCESS_POWER_SET.has(value);
 

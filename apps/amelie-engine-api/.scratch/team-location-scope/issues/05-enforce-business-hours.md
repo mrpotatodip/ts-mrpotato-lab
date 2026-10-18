@@ -4,7 +4,7 @@
 
 **Blocked by:** 03: Bind a team member to Countries or Locations
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [ ] Every `store` Power carries the marker; using `requirePower` on one, or the new guard on an unmarked one, fails to compile.
 - [ ] A member bound to Airport can edit Airport hours and gets 403 for Downtown, for reads and writes.

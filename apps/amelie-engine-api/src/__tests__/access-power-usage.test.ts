@@ -1,10 +1,10 @@
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { ACCESS_POWERS, ACCESS_POWER_USAGE, type AccessPowerUsage } from "@repo/contracts/amelie";
+import { ACCESS_POWERS, ACCESS_POWER_USAGE, isAccessPower, isBoundPower, type AccessPowerUsage } from "@repo/contracts/amelie";
 import privateRoutes from "#/private";
 import { TENANT_SERVICE_POWER_ROUTES } from "#/modules/tenant/constants";
-import { guardedPower } from "#/modules/tenant";
+import { guardedPower, powerGuardKind } from "#/modules/tenant";
 
 const SRC = fileURLToPath(new URL("..", import.meta.url));
 const USAGE_FILE = fileURLToPath(
@@ -23,6 +23,30 @@ const guardedRoutes = (): Map<string, string[]> => {
     if (!known.includes(entry)) byPower.set(power, [...known, entry]);
   }
   return byPower;
+};
+
+// -----
+// A route's guard must match its Power: requireBoundPower for
+// a bound Power, requirePower for the rest. The compiler
+// already refuses the wrong one; this reads the built routes.
+// -----
+const guardMismatches = (): string[] =>
+  privateRoutes.routes.flatMap((route) => {
+    const power = guardedPower(route.handler);
+    if (power === undefined) return [];
+    const expected = isBoundPower(power) ? "bound" : "plain";
+    const actual = powerGuardKind(route.handler);
+    return actual === expected ? [] : [`${route.method} ${route.path} guards ${power} with a ${actual} guard`];
+  });
+
+const guardKinds = (): Map<string, "plain" | "bound"> => {
+  const kinds = new Map<string, "plain" | "bound">();
+  for (const route of privateRoutes.routes) {
+    const power = guardedPower(route.handler);
+    const kind = powerGuardKind(route.handler);
+    if (power !== undefined && kind !== undefined) kinds.set(power, kind);
+  }
+  return kinds;
 };
 
 const TOOLS_DIR = `${SRC}modules/chat-bot/agent-tools/admin`;
@@ -53,10 +77,15 @@ const buildUsage = (): Record<string, AccessPowerUsage> => {
     routes.set(power, [...(routes.get(power) ?? []), route]);
   }
   const tools = guardedTools();
+  const kinds = guardKinds();
   return Object.fromEntries(
     ACCESS_POWERS.filter((power) => routes.has(power) || tools.has(power)).map((power) => [
       power,
-      { routes: (routes.get(power) ?? []).toSorted(), tools: (tools.get(power) ?? []).toSorted() },
+      {
+        guard: kinds.get(power) ?? (routes.has(power) ? "plain" : null),
+        routes: (routes.get(power) ?? []).toSorted(),
+        tools: (tools.get(power) ?? []).toSorted(),
+      },
     ]),
   );
 };
@@ -65,18 +94,21 @@ const list = (items: readonly string[]): string => `[${items.map((item) => JSON.
 
 const renderUsage = (usage: Record<string, AccessPowerUsage>): string => {
   const entries = Object.entries(usage)
-    .map(([power, entry]) => `  ${JSON.stringify(power)}: { routes: ${list(entry.routes)}, tools: ${list(entry.tools)} },`)
+    .map(([power, entry]) => `  ${JSON.stringify(power)}: { guard: ${JSON.stringify(entry.guard)}, routes: ${list(entry.routes)}, tools: ${list(entry.tools)} },`)
     .join("\n");
   return `import type { AccessPower } from "./catalogue";
 
 export type AccessPowerUsage = {
+  guard: "plain" | "bound" | null;
   routes: readonly string[];
   tools: readonly string[];
 };
 
 // -----
 // Where each Power is checked: the API routes and the
-// Assistant tools that refuse without it. A Power absent
+// Assistant tools that refuse without it, and the route guard:
+// "bound" (requireBoundPower, limited by a team member's
+// bindings), "plain" (requirePower) or null (tools only). A Power absent
 // here is not checked anywhere yet. Generated: run the
 // engine tests with UPDATE_POWER_USAGE=1 to rewrite it.
 // -----
@@ -92,6 +124,19 @@ describe("ACCESS_POWER_USAGE", () => {
     if (process.env.UPDATE_POWER_USAGE === "1") writeFileSync(USAGE_FILE, renderUsage(usage));
 
     expect(ACCESS_POWER_USAGE).toEqual(usage);
+  });
+
+  it("guards each route with the guard its Power calls for", () => {
+    expect(guardMismatches()).toEqual([]);
+  });
+
+  it("records a route guard that matches each Power", () => {
+    const wrong = Object.entries(ACCESS_POWER_USAGE).filter(
+      ([power, entry]) =>
+        isAccessPower(power) && entry.routes.length > 0 && (entry.guard === "bound") !== isBoundPower(power),
+    );
+
+    expect(wrong).toEqual([]);
   });
 
   it("only names Powers the catalogue has", () => {

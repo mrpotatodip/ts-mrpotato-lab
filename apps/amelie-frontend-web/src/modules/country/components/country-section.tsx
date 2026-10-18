@@ -3,7 +3,7 @@ import type { Country } from "@repo/contracts/amelie";
 
 import { Button } from "#/components/ui/button";
 import { PageCard, PowerMark } from "#/modules/shared";
-import { useLocations } from "#/modules/location";
+import { useAllLocations } from "#/modules/location";
 import { useActiveTenantRole } from "#/modules/tenant";
 import { useActiveCountries, useCountries, useCountryActions } from "../hooks";
 import type { CountryCurrencyChange } from "../types";
@@ -24,7 +24,9 @@ import { CountryRow } from "./country-row";
 export function CountrySection() {
   const { countries: active } = useActiveCountries();
   const { data: all } = useCountries();
-  const { data: locations } = useLocations();
+  // The unfiltered list: Country management is open to a bound member, and
+  // a Country with a Location they do not cover still cannot be archived.
+  const { data: locations } = useAllLocations();
   const { can } = useActiveTenantRole();
   const canCreate = can("company:profile:countries:create");
   const canChangeCurrency = can("company:profile:countries:update");
