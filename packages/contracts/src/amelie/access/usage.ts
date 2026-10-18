@@ -38,6 +38,7 @@ export const ACCESS_POWER_USAGE: Readonly<Partial<Record<AccessPower, AccessPowe
   "company:menu:items:update": { routes: ["PUT /menu/items/:itemId"], tools: [] },
   "company:menu:items:delete": { routes: ["DELETE /menu/items/:itemId"], tools: [] },
   "company:menu:items:reorder": { routes: ["PUT /menu/categories/:categoryId/items/order"], tools: [] },
+  "company:menu:locations:update": { routes: ["PUT /menu/items/:itemId/locations"], tools: [] },
   "company:menu:country_prices:update": { routes: ["PUT /menu/items/:itemId/countries/:countryId"], tools: ["updateMenuItemPrice"] },
   "company:menu:images:create": { routes: ["POST /menu/items/:itemId/images"], tools: [] },
   "company:menu:images:update": { routes: ["PUT /menu/items/:itemId/images/:imageId/cover"], tools: [] },
@@ -65,7 +66,7 @@ export const ACCESS_POWER_USAGE: Readonly<Partial<Record<AccessPower, AccessPowe
   "store:hours:weekly:update": { routes: ["PUT /schedule/hours/:dayOfWeek"], tools: ["setBusinessHours"] },
   "store:hours:overrides:update": { routes: ["PUT /schedule/overrides/:date"], tools: ["setHoursOverride"] },
   "store:hours:overrides:delete": { routes: ["DELETE /schedule/overrides/:date"], tools: ["removeHoursOverride"] },
-  "store:menu:availability:update": { routes: ["PUT /menu/items/:itemId/locations"], tools: ["setMenuItemAvailability", "setMenuItemsAvailability"] },
+  "store:menu:availability:update": { routes: ["PUT /menu/items/:itemId/sold-out-locations"], tools: ["setMenuItemAvailability", "setMenuItemsAvailability"] },
   "integration:widget:origins:update": { routes: ["PUT /tenants/:tenantId/allowed-origins"], tools: [] },
   "integration:widget:look:update": { routes: ["PUT /tenants/:tenantId/customer-chat"], tools: [] },
 };

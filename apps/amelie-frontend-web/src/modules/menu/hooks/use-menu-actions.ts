@@ -16,6 +16,7 @@ import {
   setMenuItemCountryPrice,
   setMenuItemImageCover,
   setMenuItemLocations,
+  setMenuItemSoldOutLocations,
   updateMenuCategory,
   updateMenuItem,
 } from "../api";
@@ -87,7 +88,7 @@ export function useMenuActions() {
     optimisticEdit({
       queryClient,
       queryKey: menuKeys.all,
-      mutationFn: setMenuItemLocations,
+      mutationFn: setMenuItemSoldOutLocations,
       applyEdit: (menu: MenuEditor, { data }) => withItemLocations(menu, data.itemId, data.body),
       settle: reload,
       meta: { successMessage: "Locations saved" },

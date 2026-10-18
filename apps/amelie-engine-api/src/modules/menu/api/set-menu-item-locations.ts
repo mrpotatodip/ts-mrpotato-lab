@@ -13,7 +13,7 @@ const app = new Hono<AppEnv>();
 app.put(
   "/items/:itemId/locations",
   setMenuItemLocationsDoc,
-  requirePower("store:menu:availability:update"),
+  requirePower("company:menu:locations:update"),
   zValidator("param", MenuItemParamSchema),
   zValidator("json", MenuItemLocationsBodySchema),
   async (c) => {

@@ -1,6 +1,6 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { Country, MenuItem } from "@repo/contracts/amelie";
+import type { Country, Location, MenuItem } from "@repo/contracts/amelie";
 
 import { PowerMarksProvider } from "#/modules/shared";
 import type { MenuAccess } from "../../types";
@@ -23,11 +23,29 @@ vi.mock("../../hooks", () => ({
   }),
 }));
 
+const places = vi.hoisted<{ open: Location[] }>(() => ({ open: [] }));
+
 vi.mock("#/modules/location", () => ({
-  useActiveLocations: () => ({ locations: [], isPending: false, error: null }),
+  useActiveLocations: () => ({ locations: places.open, isPending: false, error: null }),
 }));
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  places.open = [];
+});
+
+const downtown: Location = {
+  id: "loc",
+  countryId: "ca",
+  name: "Downtown",
+  slug: "downtown",
+  address: null,
+  phone: null,
+  timezone: "America/Toronto",
+  archivedAt: null,
+};
+
+const airport: Location = { ...downtown, id: "airport", name: "Airport", slug: "airport" };
 
 const latte: MenuItem = {
   id: "11111111-1111-4111-8111-111111111111",
@@ -55,6 +73,7 @@ const ALL_ACCESS: MenuAccess = {
   canDeleteItem: true,
   canReorderItems: true,
   canSetCountryPrice: true,
+  canSetLocations: true,
   canSetAvailability: true,
   canCreateImage: true,
   canUpdateImage: true,
@@ -72,6 +91,7 @@ const NO_ACCESS: MenuAccess = {
   canDeleteItem: false,
   canReorderItems: false,
   canSetCountryPrice: false,
+  canSetLocations: false,
   canSetAvailability: false,
   canCreateImage: false,
   canUpdateImage: false,
@@ -151,5 +171,21 @@ describe("MenuItemRow", () => {
     expect(screen.getByRole("button", { name: "Photos" })).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Edit item" })).toBeNull();
     expect(screen.queryByRole("checkbox", { name: "Sold in Canada (CAD)" })).toBeNull();
+  });
+
+  it("puts the location picker under the Master menu Power, not the store one", () => {
+    places.open = [downtown, airport];
+    renderRow("catalog", { ...NO_ACCESS, canSetLocations: true });
+
+    expect(screen.getByRole("button", { name: "Needs Master menu › Menu item location · Update" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Needs Store menu › Location availability · Update" })).toBeNull();
+  });
+
+  it("keeps sold-out at a location on the store Power", () => {
+    places.open = [downtown, airport];
+    renderRow("floor", { ...NO_ACCESS, canSetAvailability: true });
+
+    expect(screen.getByRole("button", { name: "Needs Store menu › Location availability · Update" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Needs Master menu › Menu item location · Update" })).toBeNull();
   });
 });

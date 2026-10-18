@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 import { ACCESS_POWERS, hasAccessPower, isAccessPower } from "@repo/contracts/amelie";
 
 describe("AccessPower at runtime", () => {
-  it("holds all 71 catalogue Powers", () => {
-    expect(ACCESS_POWERS).toHaveLength(71);
-    expect(new Set(ACCESS_POWERS).size).toBe(71);
+  it("holds all 72 catalogue Powers", () => {
+    expect(ACCESS_POWERS).toHaveLength(72);
+    expect(new Set(ACCESS_POWERS).size).toBe(72);
   });
 
   it("recognises a real Power and refuses a misspelt one", () => {

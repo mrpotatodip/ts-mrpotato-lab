@@ -115,6 +115,7 @@ describe("GET /openapi.json", () => {
       "PUT /menu/items/{itemId}/images/order",
       "PUT /menu/items/{itemId}/images/{imageId}/cover",
       "PUT /menu/items/{itemId}/locations",
+      "PUT /menu/items/{itemId}/sold-out-locations",
       "PUT /schedule/hours/{dayOfWeek}",
       "PUT /schedule/overrides/{date}",
       "PUT /tenants/{tenantId}/allowed-origins",

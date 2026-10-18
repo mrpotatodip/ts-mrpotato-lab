@@ -43,6 +43,7 @@ export const ACCESS_CATALOGUE = [
         children: [
           { key: "categories", label: "Menu category", actions: ["read", "create", "update", "delete", "reorder"] },
           { key: "items", label: "Menu item", actions: ["read", "create", "update", "delete", "reorder"] },
+          { key: "locations", label: "Menu item location", actions: ["update"] },
           { key: "country_prices", label: "Country price", actions: ["read", "update"] },
           { key: "images", label: "Menu item image", actions: ["read", "create", "update", "delete", "reorder"] },
           { key: "imports", label: "Import", actions: ["read", "create", "publish"] },

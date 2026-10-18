@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import type { AppEnv } from "#/types/variables";
-import { getMenuAPI, addMenuCategoryAPI, reorderMenuCategoriesAPI, updateMenuCategoryAPI, deleteMenuCategoryAPI, reorderMenuItemsAPI, addMenuItemAPI, updateMenuItemAPI, deleteMenuItemAPI, setMenuItemLocationsAPI, setMenuItemCountryPriceAPI, addMenuItemImagesAPI, reorderMenuItemImagesAPI, deleteMenuItemImageAPI, setMenuItemImageCoverAPI } from "./api";
+import { getMenuAPI, addMenuCategoryAPI, reorderMenuCategoriesAPI, updateMenuCategoryAPI, deleteMenuCategoryAPI, reorderMenuItemsAPI, addMenuItemAPI, updateMenuItemAPI, deleteMenuItemAPI, setMenuItemLocationsAPI, setMenuItemSoldOutLocationsAPI, setMenuItemCountryPriceAPI, addMenuItemImagesAPI, reorderMenuItemImagesAPI, deleteMenuItemImageAPI, setMenuItemImageCoverAPI } from "./api";
 
 // -----
 // A Tenant's menu: any member reads, a tenant_admin
@@ -18,6 +18,7 @@ app.route("/", reorderMenuItemsAPI);
 app.route("/", addMenuItemAPI);
 app.route("/", updateMenuItemAPI);
 app.route("/", setMenuItemLocationsAPI);
+app.route("/", setMenuItemSoldOutLocationsAPI);
 app.route("/", setMenuItemCountryPriceAPI);
 app.route("/", addMenuItemImagesAPI);
 app.route("/", reorderMenuItemImagesAPI);

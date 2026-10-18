@@ -96,7 +96,7 @@ export function MenuItemRow({
   const canSetCountryPrice = isCatalog && access.canSetCountryPrice;
   const hasCatalogControls =
     isCatalog &&
-    (access.canSetAvailability || access.canReorderItems || access.canUpdateItem || canManageImages || access.canDeleteItem);
+    (access.canSetLocations || access.canReorderItems || access.canUpdateItem || canManageImages || access.canDeleteItem);
 
   if (isChoosingLocations) {
     return (
@@ -173,9 +173,9 @@ export function MenuItemRow({
         ) : null}
         {hasCatalogControls ? (
           <div className="flex shrink-0 items-center gap-1">
-            {access.canSetAvailability && (showsLocationsControl || locationsPending) ? (
+            {access.canSetLocations && (showsLocationsControl || locationsPending) ? (
               <>
-                <PowerMark power="store:menu:availability:update" />
+                <PowerMark power="company:menu:locations:update" />
                 <Button
                   variant="ghost"
                   size="icon-sm"
