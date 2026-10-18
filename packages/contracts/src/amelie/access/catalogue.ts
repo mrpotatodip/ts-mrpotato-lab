@@ -26,7 +26,7 @@ export const ACCESS_CATALOGUE = [
         key: "profile",
         label: "Profile",
         children: [
-          { key: "business_profile", label: "Business profile", actions: ["read", "update"] },
+          { key: "business_profile", label: "Business profile", actions: ["read", "update"], bound: ["update"] },
           { key: "countries", label: "Country", actions: ["read", "create", "update", "archive"] },
           {
             key: "locations",
@@ -62,7 +62,12 @@ export const ACCESS_CATALOGUE = [
         key: "faqs",
         label: "FAQs",
         children: [
-          { key: "faqs", label: "FAQ", actions: ["read", "create", "update", "delete"] },
+          {
+            key: "faqs",
+            label: "FAQ",
+            actions: ["read", "create", "update", "delete"],
+            bound: ["create", "update", "delete"],
+          },
           { key: "categories", label: "FAQ category", actions: ["read", "create", "update", "delete"] },
         ],
       },

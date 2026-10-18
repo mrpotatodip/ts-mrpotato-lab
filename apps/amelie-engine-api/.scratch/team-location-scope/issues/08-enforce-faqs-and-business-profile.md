@@ -4,7 +4,7 @@
 
 **Blocked by:** 05: Enforce a binding on business hours (the tracer for the guard)
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [ ] A bound member can add, edit and delete a FAQ for a covered Location and gets 403 for an uncovered one.
 - [ ] A cafe-wide FAQ and the cafe-wide profile fields stay editable.

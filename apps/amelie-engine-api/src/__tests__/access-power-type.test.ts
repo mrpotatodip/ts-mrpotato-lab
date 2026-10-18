@@ -13,9 +13,21 @@ describe("AccessPower at runtime", () => {
     expect(isAccessPower("company:team:members")).toBe(false);
   });
 
-  it("marks every store Power as bound, and nothing else yet", () => {
-    expect(BOUND_POWERS.toSorted()).toEqual(ACCESS_POWERS.filter((power) => power.startsWith("store:")).toSorted());
+  it("marks exactly the Powers a binding limits", () => {
+    const companyBound = [
+      "company:profile:locations:create",
+      "company:profile:locations:update",
+      "company:profile:locations:archive",
+      "company:profile:business_profile:update",
+      "company:menu:locations:update",
+      "company:faqs:faqs:create",
+      "company:faqs:faqs:update",
+      "company:faqs:faqs:delete",
+    ];
+    const stores = ACCESS_POWERS.filter((power) => power.startsWith("store:"));
+    expect(BOUND_POWERS.toSorted()).toEqual([...stores, ...companyBound].toSorted());
     expect(isBoundPower("store:hours:weekly:update")).toBe(true);
+    expect(isBoundPower("company:profile:locations:read")).toBe(false);
     expect(isBoundPower("company:team:members:update")).toBe(false);
   });
 
