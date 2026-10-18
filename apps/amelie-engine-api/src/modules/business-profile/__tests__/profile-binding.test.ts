@@ -94,7 +94,7 @@ describe("a member bound to Airport", () => {
   it("is refused a phone or address change naming Downtown, and nothing is written", async () => {
     const res = await update(bound.userId, { phone: "555-0199" }, downtownId);
     expect(res.status).toBe(403);
-    expect((await res.json()).error.message).toBe("Your Role does not cover this Location");
+    expect((await res.json()).error.message).toBe(`Your Role does not cover these Locations: ${downtownId}`);
     expect((await locationRow(downtownId)).phone).toBeNull();
   });
 

@@ -21,7 +21,7 @@ export const requireCovered = (
   if (locationIds.length > 0 && uncovered.length === 0) return Effect.void;
   return Effect.fail(
     new Forbidden({
-      message: uncovered.length > 1 ? TENANT_LOCATIONS_NOT_COVERED(uncovered) : TENANT_LOCATION_NOT_COVERED,
+      message: uncovered.length > 0 ? TENANT_LOCATIONS_NOT_COVERED(uncovered) : TENANT_LOCATION_NOT_COVERED,
     }),
   );
 };

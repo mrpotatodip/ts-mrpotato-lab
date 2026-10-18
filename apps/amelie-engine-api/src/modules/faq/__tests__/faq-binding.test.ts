@@ -82,7 +82,7 @@ const seed = async (scope: { locationId?: string; countryId?: string }) => {
   return created.id;
 };
 const row = async (id: string) => (await db.select().from(tenantFaqs).where(eq(tenantFaqs.id, id)))[0];
-const MESSAGE = "Your Role does not cover this Location";
+const MESSAGE = "Your Role does not cover these Locations";
 
 beforeAll(async () => {
   const created = await createTestPglite();
@@ -124,7 +124,8 @@ describe("a member bound to Toronto", () => {
       await call(toronto.userId, "DELETE", `/${id}`),
     ];
     expect(responses.map((res) => res.status)).toEqual([403, 403, 403]);
-    expect((await responses[1].json()).error.message).toBe(MESSAGE);
+    expect((await responses[1].json()).error.message).toBe(`${MESSAGE}: ${downtownId}`);
+    expect((await responses[2].json()).error.message).toBe(`${MESSAGE}: ${downtownId}`);
     expect((await row(id)).question).toBe("Seeded?");
     expect(await db.select().from(tenantFaqs).where(eq(tenantFaqs.question, "Nope"))).toEqual([]);
   });
