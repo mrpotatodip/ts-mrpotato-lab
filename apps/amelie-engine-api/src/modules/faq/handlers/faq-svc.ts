@@ -1,8 +1,10 @@
 import { Effect } from "effect";
 import type { DbConnectType } from "#/lib/db-connection";
 import { listOpenCountryRefsEffect } from "#/modules/country/queries";
-import { listActiveLocationsEffect } from "#/modules/location/queries";
-import { Conflict, Invalid, NotFound, type DbError } from "#/lib/effect-query";
+import type { Coverage } from "@repo/contracts/amelie";
+import { listActiveLocationsEffect, listActiveLocationsInCountryEffect } from "#/modules/location/queries";
+import { requireCovered } from "#/modules/tenant/lib/require-covered";
+import { Conflict, Forbidden, Invalid, NotFound, type DbError } from "#/lib/effect-query";
 import {
   deleteFaqCategoryEffect,
   deleteFaqEffect,
@@ -74,8 +76,33 @@ const checkScope = (db: DbConnectType, tenantId: string, scope: { locationId: st
   });
 
 // -----
+// A bound member needs the FAQ's scope covered: its Location,
+// or every open Location of its Country. A cafe-wide FAQ has
+// no Location and is open to any holder of the Power.
+// -----
+const requireScopeCovered = (
+  db: DbConnectType,
+  tenantId: string,
+  coverage: Coverage,
+  scope: { locationId: string | null; countryId: string | null },
+): Effect.Effect<void, DbError | Forbidden> => {
+  if (coverage === "all") return Effect.void;
+  if (scope.locationId !== null) return requireCovered(coverage, [scope.locationId]);
+  if (scope.countryId === null) return Effect.void;
+  return listActiveLocationsInCountryEffect(db, tenantId, scope.countryId).pipe(
+    Effect.flatMap((locations) =>
+      requireCovered(
+        coverage,
+        locations.map((location) => location.id),
+      ),
+    ),
+  );
+};
+
+// -----
 // The category, Country and Location must be this
 // Tenant's, checked here so the model hears a clear reason.
+// A bound member's coverage is checked first.
 // -----
 export const addFaqSvc = (
   db: DbConnectType,
@@ -87,10 +114,12 @@ export const addFaqSvc = (
     question: string;
     answer: string;
   },
-): Effect.Effect<Faq, DbError | NotFound | Invalid> =>
+  coverage: Coverage = "all",
+): Effect.Effect<Faq, DbError | NotFound | Invalid | Forbidden> =>
   Effect.gen(function* () {
     const locationId = faq.locationId ?? null;
     const countryId = faq.countryId ?? null;
+    yield* requireScopeCovered(db, tenantId, coverage, { locationId, countryId });
     yield* checkScope(db, tenantId, { locationId, countryId });
     if (faq.categoryId !== null) {
       const categories = yield* listFaqCategoriesEffect(db, tenantId);
@@ -107,6 +136,8 @@ export const addFaqSvc = (
 // Tenant's too; null puts it back in General.
 // A scope left out of the change stays as it was,
 // so the result is checked, not just the change.
+// A bound member needs both the FAQ's current scope
+// and the one it moves to covered.
 // -----
 export const updateFaqSvc = (
   db: DbConnectType,
@@ -119,14 +150,19 @@ export const updateFaqSvc = (
     locationId?: string | null;
     countryId?: string | null;
   },
-): Effect.Effect<Faq, DbError | NotFound | Invalid> =>
+  coverage: Coverage = "all",
+): Effect.Effect<Faq, DbError | NotFound | Invalid | Forbidden> =>
   Effect.gen(function* () {
-    if (change.locationId !== undefined || change.countryId !== undefined) {
+    const scopeChanges = change.locationId !== undefined || change.countryId !== undefined;
+    if (scopeChanges || coverage !== "all") {
       const current = yield* findFaq(db, tenantId, faqId);
-      yield* checkScope(db, tenantId, {
+      const next = {
         locationId: change.locationId === undefined ? current.locationId : change.locationId,
         countryId: change.countryId === undefined ? current.countryId : change.countryId,
-      });
+      };
+      yield* requireScopeCovered(db, tenantId, coverage, current);
+      yield* requireScopeCovered(db, tenantId, coverage, next);
+      if (scopeChanges) yield* checkScope(db, tenantId, next);
     }
     if (change.categoryId) {
       const categories = yield* listFaqCategoriesEffect(db, tenantId);
@@ -142,7 +178,15 @@ export const deleteFaqSvc = (
   db: DbConnectType,
   tenantId: string,
   faqId: string,
-): Effect.Effect<{ id: string }, DbError | NotFound> => deleteFaqEffect(db, tenantId, faqId);
+  coverage: Coverage = "all",
+): Effect.Effect<{ id: string }, DbError | NotFound | Forbidden> =>
+  Effect.gen(function* () {
+    if (coverage !== "all") {
+      const current = yield* findFaq(db, tenantId, faqId);
+      yield* requireScopeCovered(db, tenantId, coverage, current);
+    }
+    return yield* deleteFaqEffect(db, tenantId, faqId);
+  });
 
 // -----
 // Names are unique per Tenant, ignoring case,

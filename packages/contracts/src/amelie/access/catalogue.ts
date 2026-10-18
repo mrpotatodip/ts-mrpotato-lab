@@ -5,7 +5,8 @@ export type AccessNode = {
   label: string;
   actions?: readonly AccessActionValue[];
   // On a leaf: its Powers are limited by a team member's bindings.
-  bound?: true;
+  // true limits every Action; a list limits only those Actions.
+  bound?: true | readonly AccessActionValue[];
   children?: readonly AccessNode[];
 };
 
@@ -25,7 +26,7 @@ export const ACCESS_CATALOGUE = [
         key: "profile",
         label: "Profile",
         children: [
-          { key: "business_profile", label: "Business profile", actions: ["read", "update"] },
+          { key: "business_profile", label: "Business profile", actions: ["read", "update"], bound: ["update"] },
           { key: "countries", label: "Country", actions: ["read", "create", "update", "archive"] },
           { key: "locations", label: "Location", actions: ["read", "create", "update", "archive"] },
           { key: "region", label: "Region", actions: ["read", "update"] },
@@ -56,7 +57,12 @@ export const ACCESS_CATALOGUE = [
         key: "faqs",
         label: "FAQs",
         children: [
-          { key: "faqs", label: "FAQ", actions: ["read", "create", "update", "delete"] },
+          {
+            key: "faqs",
+            label: "FAQ",
+            actions: ["read", "create", "update", "delete"],
+            bound: ["create", "update", "delete"],
+          },
           { key: "categories", label: "FAQ category", actions: ["read", "create", "update", "delete"] },
         ],
       },
@@ -146,6 +152,7 @@ type BoundNodePowers<Node, Prefix extends string> = Node extends { readonly key:
         | (Node extends { readonly bound: true; readonly actions: readonly (infer Action extends string)[] }
             ? `${Path}:${Action}`
             : never)
+        | (Node extends { readonly bound: readonly (infer Action extends string)[] } ? `${Path}:${Action}` : never)
         | (Node extends { readonly children: readonly (infer Child)[] } ? BoundNodePowers<Child, `${Path}:`> : never)
     : never
   : never;
@@ -160,7 +167,8 @@ export type UnboundPower = Exclude<AccessPower, BoundPower>;
 
 const collectBoundPowers = (node: AccessNode, prefix: string): string[] => {
   const path = prefix === "" ? node.key : `${prefix}:${node.key}`;
-  const own = node.bound ? (node.actions ?? []).map((action) => `${path}:${action}`) : [];
+  const bound = node.bound === true ? (node.actions ?? []) : (node.bound ?? []);
+  const own = bound.map((action) => `${path}:${action}`);
   return [...own, ...(node.children ?? []).flatMap((child) => collectBoundPowers(child, path))];
 };
 

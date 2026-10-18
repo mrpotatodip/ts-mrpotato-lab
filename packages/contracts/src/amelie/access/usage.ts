@@ -16,7 +16,7 @@ export type AccessPowerUsage = {
 // -----
 export const ACCESS_POWER_USAGE: Readonly<Partial<Record<AccessPower, AccessPowerUsage>>> = {
   "company:profile:business_profile:read": { guard: "plain", routes: ["GET /business-profile"], tools: [] },
-  "company:profile:business_profile:update": { guard: "plain", routes: ["PUT /business-profile"], tools: ["updateBusinessProfile"] },
+  "company:profile:business_profile:update": { guard: "bound", routes: ["PUT /business-profile"], tools: ["updateBusinessProfile"] },
   "company:profile:countries:read": { guard: "plain", routes: ["GET /countries"], tools: [] },
   "company:profile:countries:create": { guard: "plain", routes: ["POST /countries"], tools: [] },
   "company:profile:countries:update": { guard: "plain", routes: ["PATCH /countries/:countryId"], tools: [] },
@@ -52,9 +52,9 @@ export const ACCESS_POWER_USAGE: Readonly<Partial<Record<AccessPower, AccessPowe
   "company:menu:imports:publish": { guard: "plain", routes: ["POST /imports/:importId/publish"], tools: [] },
   "company:menu:import_drafts:update": { guard: "plain", routes: ["PATCH /imports/:importId/drafts/:draftId", "POST /imports/:importId/approve-all"], tools: [] },
   "company:faqs:faqs:read": { guard: "plain", routes: ["GET /faqs"], tools: [] },
-  "company:faqs:faqs:create": { guard: "plain", routes: ["POST /faqs"], tools: ["addFaq"] },
-  "company:faqs:faqs:update": { guard: "plain", routes: ["PUT /faqs/:faqId"], tools: ["updateFaq"] },
-  "company:faqs:faqs:delete": { guard: "plain", routes: ["DELETE /faqs/:faqId"], tools: [] },
+  "company:faqs:faqs:create": { guard: "bound", routes: ["POST /faqs"], tools: ["addFaq"] },
+  "company:faqs:faqs:update": { guard: "bound", routes: ["PUT /faqs/:faqId"], tools: ["updateFaq"] },
+  "company:faqs:faqs:delete": { guard: "bound", routes: ["DELETE /faqs/:faqId"], tools: [] },
   "company:faqs:categories:create": { guard: "plain", routes: ["POST /faqs/categories"], tools: [] },
   "company:faqs:categories:update": { guard: "plain", routes: ["PUT /faqs/categories/:categoryId"], tools: [] },
   "company:faqs:categories:delete": { guard: "plain", routes: ["DELETE /faqs/categories/:categoryId"], tools: [] },

@@ -1,4 +1,5 @@
 import { Effect } from "effect";
+import type { Coverage } from "@repo/contracts/amelie";
 import type { DbConnectType } from "#/lib/db-connection";
 import type { DbError, NeedsLocation, NotFound } from "#/lib/effect-query";
 import { listOpenCountryRefsEffect, readCountryIdEffect } from "#/modules/country";
@@ -58,9 +59,10 @@ export const getBusinessProfileSvc = (
   db: DbConnectType,
   tenantId: string,
   locationId?: string,
+  coverage: Coverage = "all",
 ): Effect.Effect<BusinessProfile, DbError | NotFound | NeedsLocation> =>
   Effect.gen(function* () {
-    const location = yield* resolveLocationSvc(db, tenantId, locationId);
+    const location = yield* resolveLocationSvc(db, tenantId, locationId, coverage);
     const countryId = yield* readCountryIdEffect(db, tenantId, location.id);
     const profile = yield* tenantProfileForCountrySvc(db, tenantId, countryId);
     return { ...profile, address: location.address, phone: location.phone };
@@ -77,6 +79,7 @@ export const updateBusinessProfileSvc = (
   tenantId: string,
   change: BusinessProfileChange,
   locationId?: string,
+  coverage: Coverage = "all",
 ): Effect.Effect<BusinessProfile, DbError | NotFound | NeedsLocation> =>
   Effect.gen(function* () {
     const { address, phone, ...tenantChange } = change;
@@ -85,13 +88,13 @@ export const updateBusinessProfileSvc = (
       ...(phone !== undefined && { phone }),
     };
     if (Object.keys(contact).length > 0) {
-      const location = yield* resolveLocationSvc(db, tenantId, locationId);
+      const location = yield* resolveLocationSvc(db, tenantId, locationId, coverage);
       yield* updateLocationContactEffect(db, tenantId, location.id, contact);
     }
     if (Object.keys(tenantChange).length > 0) {
       yield* upsertBusinessProfileEffect(db, tenantId, tenantChange);
     }
-    const saved = yield* getBusinessProfileSvc(db, tenantId, locationId).pipe(
+    const saved = yield* getBusinessProfileSvc(db, tenantId, locationId, coverage).pipe(
       Effect.catchTag("NeedsLocation", () =>
         getTenantProfileSvc(db, tenantId).pipe(Effect.map((profile) => ({ ...profile, address: null, phone: null }))),
       ),
