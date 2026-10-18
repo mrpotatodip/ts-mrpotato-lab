@@ -107,7 +107,7 @@ describe("a member bound to Airport only", () => {
       await call(staff.userId, "POST", `/${downtownId}/archive`),
     ];
     expect(responses.map((res) => res.status)).toEqual([403, 403, 403]);
-    expect((await responses[0].json()).error.message).toBe("Your Role does not cover this Location");
+    expect((await responses[0].json()).error.message).toBe(`Your Role does not cover these Locations: ${downtownId}`);
     const row = await locationNamed("Sorella");
     expect(row?.archivedAt).toBeNull();
   });
