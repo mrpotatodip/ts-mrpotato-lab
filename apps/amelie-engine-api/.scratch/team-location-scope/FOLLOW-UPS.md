@@ -1,0 +1,3 @@
+# Follow-ups found while implementing
+
+- **Sold-out write clears uncovered Locations (from ticket 06).** `PUT /menu/items/:itemId/sold-out-locations` replaces the item's whole sold-out Location state. A bound member who names only their covered Locations therefore also clears sold-out rows at Locations they do not cover, by omission. The guard checks only the named ids. Fix before merge: for a bound member, merge the request into the existing state (keep rows at uncovered Locations) and test it; the same question applies to menu item Locations if its write also replaces the whole set. Do this in the review-fix batch.
