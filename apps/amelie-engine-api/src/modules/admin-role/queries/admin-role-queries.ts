@@ -1,4 +1,4 @@
-import { asc, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, isNull, sql } from "drizzle-orm";
 import { Effect } from "effect";
 import {
   accessAuditLog,
@@ -9,6 +9,8 @@ import {
   partyRoles,
   partyRoleScopes,
   roles,
+  teamInviteScopes,
+  teamInvites,
 } from "@repo/db-amelie";
 import {
   AdminAuditEntrySchema,
@@ -133,18 +135,29 @@ export const findActorPartyIdEffect = (
     catch: toDbError,
   }).pipe(Effect.map((rows) => rows[0]?.partyId ?? null));
 
-// -----
-// How many members of a Role still hold bindings
-// (a member counts once however many rows they have).
-// -----
 export const countBoundMembersEffect = (db: DbConnectType, roleId: string): Effect.Effect<number, DbError> =>
   Effect.tryPromise({
-    try: () =>
-      db
+    try: async () => {
+      const [members] = await db
         .select({ n: sql<number>`count(distinct ${partyRoleScopes.partyRoleId})::int` })
         .from(partyRoleScopes)
         .innerJoin(partyRoles, eq(partyRoles.id, partyRoleScopes.partyRoleId))
         .innerJoin(roles, eq(roles.id, partyRoles.roleId))
-        .where(eq(roles.masterRoleId, roleId)),
+        .where(eq(roles.masterRoleId, roleId));
+      const [invites] = await db
+        .select({ n: sql<number>`count(distinct ${teamInviteScopes.inviteId})::int` })
+        .from(teamInviteScopes)
+        .innerJoin(teamInvites, eq(teamInvites.id, teamInviteScopes.inviteId))
+        .innerJoin(roles, eq(roles.id, teamInvites.roleId))
+        .where(
+          and(
+            eq(roles.masterRoleId, roleId),
+            isNull(teamInvites.revokedAt),
+            isNull(teamInvites.acceptedAt),
+            gt(teamInvites.expiresAt, new Date()),
+          ),
+        );
+      return (members?.n ?? 0) + (invites?.n ?? 0);
+    },
     catch: toDbError,
-  }).pipe(Effect.map((rows) => rows[0]?.n ?? 0));
+  });

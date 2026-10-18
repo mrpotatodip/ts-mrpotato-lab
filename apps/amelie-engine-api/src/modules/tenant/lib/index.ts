@@ -1,4 +1,3 @@
-export * from "./coverage";
 export * from "./require-tenant-member";
 export * from "./require-power";
 export * from "./require-covered";

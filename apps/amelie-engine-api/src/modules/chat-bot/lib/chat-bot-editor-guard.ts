@@ -1,25 +1,24 @@
 import { Effect } from "effect";
 import {
-  covers,
   hasAccessPower,
+  uncoveredLocations,
   type AccessPower,
   type BoundPower,
   type Coverage,
   type UnboundPower,
 } from "@repo/contracts/amelie";
 import { Forbidden, runEffect, type AppFailure, type DbError, type NotFound } from "#/lib/effect-query";
-import { getTenantSvc } from "#/modules/tenant";
-import { TENANT_LOCATION_NOT_COVERED, TENANT_LOCATIONS_NOT_COVERED } from "#/modules/tenant/constants";
+import {
+  getTenantSvc,
+  TENANT_ITEM_WIDE_NOT_COVERED,
+  TENANT_LOCATION_NOT_COVERED,
+  TENANT_LOCATIONS_NOT_COVERED,
+} from "#/modules/tenant";
 import { CHAT_BOT_EDITOR_ONLY } from "#/modules/chat-bot/constants";
-import { resolveToolLocation, toIgnoredLocationResult } from "#/modules/chat-bot/lib/chat-bot-location-needed";
+import { resolveToolLocation, toIgnoredLocationResult } from "#/modules/chat-bot/lib";
 import type { LocationNeededResult } from "#/modules/chat-bot/schemas";
 import type { ChatBotRuntime } from "#/modules/chat-bot/types";
 
-// -----
-// The member's coverage, from the one Tenant lookup the
-// routes use. Anyone but a signed-in member who holds the
-// Power is refused.
-// -----
 const loadEditorCoverage = (
   { db, owner }: ChatBotRuntime,
   power: AccessPower,
@@ -33,37 +32,20 @@ const loadEditorCoverage = (
     return tenant.coverage;
   });
 
-// -----
-// For Powers no binding limits. A bound Power does not
-// compile here: use requireBoundChatBotPower.
-// -----
 export const requireChatBotPower = (
   runtime: ChatBotRuntime,
   power: UnboundPower,
 ): Effect.Effect<void, DbError | NotFound | Forbidden> => Effect.asVoid(loadEditorCoverage(runtime, power));
 
-// -----
-// The member must cover every Location the tool names; a
-// member who covers nothing is refused outright.
-// -----
 const refuseUncovered = (coverage: Coverage, locationIds: readonly string[]): Effect.Effect<void, Forbidden> => {
-  if (Array.isArray(coverage) && coverage.length === 0) {
-    return Effect.fail(new Forbidden({ message: TENANT_LOCATION_NOT_COVERED }));
-  }
-  const uncovered = locationIds.filter((id) => !covers(coverage, [id]));
-  if (uncovered.length === 0) return Effect.void;
+  const gap = uncoveredLocations(coverage, locationIds);
+  if (!gap) return Effect.void;
+  const single = gap.coversNothing || locationIds.length === 1;
   return Effect.fail(
-    new Forbidden({
-      message: locationIds.length === 1 ? TENANT_LOCATION_NOT_COVERED : TENANT_LOCATIONS_NOT_COVERED(uncovered),
-    }),
+    new Forbidden({ message: single ? TENANT_LOCATION_NOT_COVERED : TENANT_LOCATIONS_NOT_COVERED(gap.uncovered) }),
   );
 };
 
-// -----
-// For Powers a binding limits, the assistant's twin of
-// requireBoundPower. Yields the coverage so the tool
-// resolves an omitted Location over it.
-// -----
 export const requireBoundChatBotPower = (
   runtime: ChatBotRuntime,
   power: BoundPower,
@@ -75,34 +57,27 @@ export const requireBoundChatBotPower = (
     return coverage;
   });
 
+export const requireItemWideChatBotPower = (
+  runtime: ChatBotRuntime,
+  power: BoundPower,
+): Effect.Effect<void, DbError | NotFound | Forbidden> =>
+  Effect.gen(function* () {
+    const coverage = yield* loadEditorCoverage(runtime, power);
+    if (coverage !== "all") return yield* new Forbidden({ message: TENANT_ITEM_WIDE_NOT_COVERED });
+  });
+
 export const runAsChatBotEditor = <A>(
   runtime: ChatBotRuntime,
   change: Effect.Effect<A, AppFailure>,
   power: UnboundPower,
 ): Promise<A> => runEffect(requireChatBotPower(runtime, power).pipe(Effect.andThen(change)));
 
-// -----
-// For a bound Power whose Locations the change finds only
-// after loading them (a FAQ's scope, a Country's open
-// Locations): checks the Power, then hands the coverage to
-// the change, whose service refuses what it does not cover.
-// A member who covers nothing is refused outright, as in
-// requireBoundPower.
-// -----
 export const runAsCoveredChatBotEditor = <A>(
   runtime: ChatBotRuntime,
   power: BoundPower,
   change: (coverage: Coverage) => Effect.Effect<A, AppFailure>,
 ): Promise<A> => runEffect(requireBoundChatBotPower(runtime, power, []).pipe(Effect.flatMap(change)));
 
-// -----
-// The bound tools' flow, one Tenant lookup: check the
-// Power and load the coverage, resolve the Location the
-// model named over it, refuse an uncovered one, then run
-// the change with the coverage so an omitted Location
-// defaults among the covered ones. A name that matched
-// nothing answers with the covered options instead.
-// -----
 export const runAsBoundChatBotEditor = async <A>(
   runtime: ChatBotRuntime,
   power: BoundPower,

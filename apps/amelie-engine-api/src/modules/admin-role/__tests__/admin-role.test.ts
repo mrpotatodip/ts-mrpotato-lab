@@ -13,6 +13,8 @@ import {
   roles,
   tenantCountries,
   syncAccessMasterPowers,
+  teamInvites,
+  teamInviteScopes,
 } from "@repo/db-amelie";
 import {
   ACCESS_POWERS,
@@ -473,6 +475,48 @@ describe("binding a role's members", () => {
     await db.delete(partyRoleScopes).where(eq(partyRoleScopes.partyRoleId, member.id));
     const allowed = await call(bossUserId, "PATCH", `/roles/${storeStaff.id}`, { canBeBound: false });
     expect(allowed.status).toBe(200);
+    await call(bossUserId, "PATCH", `/roles/${storeStaff.id}`, { canBeBound: true });
+  });
+
+  it("counts pending invites with bindings too, and ignores revoked, accepted and expired ones", async () => {
+    const storeStaff = await roleByKey("store_staff");
+    const [holder] = await db
+      .select({ id: partyRoles.id, partyId: partyRoles.partyId, roleId: partyRoles.roleId })
+      .from(partyRoles)
+      .innerJoin(roles, eq(roles.id, partyRoles.roleId))
+      .where(eq(roles.masterRoleId, storeStaff.id));
+    const [country] = await db.select().from(tenantCountries).where(eq(tenantCountries.tenantId, sorellaId));
+    const future = new Date(Date.now() + 86_400_000);
+    const invite = async (email: string, change: Partial<typeof teamInvites.$inferInsert> = {}) => {
+      const [created] = await db
+        .insert(teamInvites)
+        .values({
+          tenantId: sorellaId,
+          email,
+          roleId: holder.roleId,
+          tokenHash: `hash-${email}`,
+          invitedBy: holder.partyId,
+          expiresAt: future,
+          ...change,
+        })
+        .returning();
+      await db.insert(teamInviteScopes).values({ tenantId: sorellaId, inviteId: created.id, countryId: country.id });
+      return created;
+    };
+    await invite("revoked@x.test", { revokedAt: new Date() });
+    await invite("accepted@x.test", { acceptedAt: new Date() });
+    await invite("expired@x.test", { expiresAt: new Date(Date.now() - 1000) });
+    expect((await call(bossUserId, "PATCH", `/roles/${storeStaff.id}`, { canBeBound: false })).status).toBe(200);
+    await call(bossUserId, "PATCH", `/roles/${storeStaff.id}`, { canBeBound: true });
+
+    const pending = await invite("pending@x.test");
+    const refused = await call(bossUserId, "PATCH", `/roles/${storeStaff.id}`, { canBeBound: false });
+    expect(refused.status).toBe(409);
+    expect((await json(refused)).error?.message).toBe(adminRoleStillBound(1));
+    expect(await flagOf("store_staff")).toBe(true);
+
+    await db.update(teamInvites).set({ revokedAt: new Date() }).where(eq(teamInvites.id, pending.id));
+    expect((await call(bossUserId, "PATCH", `/roles/${storeStaff.id}`, { canBeBound: false })).status).toBe(200);
     await call(bossUserId, "PATCH", `/roles/${storeStaff.id}`, { canBeBound: true });
   });
 

@@ -112,8 +112,10 @@ describe("a member bound to Airport only", () => {
     expect(row?.archivedAt).toBeNull();
   });
 
-  it("still lists every Location", async () => {
-    expect((await call(staff.userId, "GET", "")).status).toBe(200);
+  it("lists only the Locations the Role covers", async () => {
+    const res = await call(staff.userId, "GET", "");
+    expect(res.status).toBe(200);
+    expect((await res.json()).data.map((row: { id: string }) => row.id)).toEqual([airportId]);
   });
 
   it("cannot create a Location", async () => {
@@ -163,6 +165,30 @@ describe("a member whose only Country binding is archived", () => {
   });
 });
 
+describe("a member bound to a Country that has no open Location yet", () => {
+  it("opens the first Location in that Country, and nowhere else", async () => {
+    await unbind(staff.partyId);
+    const brId = await insertCountry(db, tenantId, { country: "BR", currency: "BRL" });
+    await bind(staff.partyId, { countryId: brId });
+    expect((await call(staff.userId, "POST", "", { name: "Boston 2", countryId: usId })).status).toBe(403);
+    expect(await locationNamed("Boston 2")).toBeUndefined();
+    expect((await call(staff.userId, "POST", "", { name: "Recife" })).status).toBe(201);
+    expect((await locationNamed("Recife"))?.countryId).toBe(brId);
+  });
+});
+
+describe("a member whose only Location binding is archived", () => {
+  it("cannot create a Location", async () => {
+    await unbind(staff.partyId);
+    const goneId = await insertLocation(db, tenantId, { name: "Gone", slug: "gone" });
+    await bind(staff.partyId, { locationId: goneId });
+    await db.update(tenantLocations).set({ archivedAt: new Date() }).where(eq(tenantLocations.id, goneId));
+    const res = await call(staff.userId, "POST", "", { name: "Nope 2", countryId: usId });
+    expect(res.status).toBe(403);
+    expect(await locationNamed("Nope 2")).toBeUndefined();
+  });
+});
+
 describe("a member with a Country binding and a Location binding elsewhere", () => {
   it("creates only in the bound Country", async () => {
     await unbind(staff.partyId);
@@ -174,6 +200,16 @@ describe("a member with a Country binding and a Location binding elsewhere", () 
 });
 
 describe("unbound members and the tenant admin", () => {
+  it("list every Location", async () => {
+    await unbind(staff.partyId);
+    const staffRows = (await (await call(staff.userId, "GET", "")).json()).data;
+    const adminRows = (await (await call(admin.userId, "GET", "")).json()).data;
+    expect(staffRows.map((row: { id: string }) => row.id).toSorted()).toEqual(
+      adminRows.map((row: { id: string }) => row.id).toSorted(),
+    );
+    expect(staffRows.length).toBeGreaterThan(3);
+  });
+
   it("manage Locations anywhere, as before", async () => {
     await unbind(staff.partyId);
     expect((await call(staff.userId, "POST", "", { name: "Staff US", countryId: usId })).status).toBe(201);

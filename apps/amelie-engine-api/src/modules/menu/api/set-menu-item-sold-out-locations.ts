@@ -4,7 +4,8 @@ import { zValidator } from "#/lib/zod-validator";
 import type { AppEnv } from "#/types/variables";
 import { db_connect } from "#/lib/db-connection";
 import { runEffect } from "#/lib/effect-query";
-import { requireBoundPower, type ValidatedContext } from "#/modules/tenant";
+import type { ValidatedContext } from "#/lib/validated-context-types";
+import { requireBoundPower } from "#/modules/tenant";
 import { setMenuItemLocationsSvc } from "#/modules/menu/handlers";
 import { setMenuItemSoldOutLocationsDoc } from "#/modules/menu/openapi";
 

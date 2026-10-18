@@ -3,7 +3,7 @@ import type { DbConnectType } from "#/lib/db-connection";
 import { listOpenCountryRefsEffect } from "#/modules/country/queries";
 import type { Coverage } from "@repo/contracts/amelie";
 import { listActiveLocationsEffect, listActiveLocationsInCountryEffect } from "#/modules/location/queries";
-import { requireCovered } from "#/modules/tenant/lib/require-covered";
+import { requireCovered } from "#/modules/tenant";
 import { Conflict, Forbidden, Invalid, NotFound, type DbError } from "#/lib/effect-query";
 import {
   deleteFaqCategoryEffect,

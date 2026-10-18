@@ -12,3 +12,5 @@ export type PublicTenantListing = { name: string; slug: string };
 export type TenantClock = { date: string; time: string };
 
 export type TenantClockReading = { timezone: string; clock: TenantClock };
+
+export type PowerGuardKind = "plain" | "bound";

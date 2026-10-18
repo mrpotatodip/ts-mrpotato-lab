@@ -8,7 +8,8 @@ import { partyRoles, partyRoleScopes, tenantCountries, tenantLocations } from "@
 import type { DbConnectType } from "#/lib/db-connection";
 import { runEffect } from "#/lib/effect-query";
 import type { AppEnv } from "#/types/variables";
-import { covers, requireTenantMember } from "#/modules/tenant";
+import { covers } from "@repo/contracts/amelie";
+import { requireTenantMember } from "#/modules/tenant";
 import { getTenantSvc, listTenantsSvc } from "#/modules/tenant/handlers";
 import {
   createTestPglite,

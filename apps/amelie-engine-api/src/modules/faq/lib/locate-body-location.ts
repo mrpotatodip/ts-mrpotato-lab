@@ -1,4 +1,4 @@
-import type { ValidatedContext } from "#/modules/tenant";
+import type { ValidatedContext } from "#/lib/validated-context-types";
 
 // -----
 // For requireBoundPower on a FAQ write: the Location the body

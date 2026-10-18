@@ -17,7 +17,7 @@ import type { DbConnectType } from "#/lib/db-connection";
 import { Conflict, NotFound, toDbError, type DbError } from "#/lib/effect-query";
 import { PG_UNIQUE_VIOLATION, pgErrorCode, pgErrorConstraint } from "#/lib/pg-error";
 import type { Location, LocationArchivePreview, LocationUnsoldItem } from "@repo/contracts/amelie";
-import { TENANT_ADMIN_ROLE } from "#/modules/tenant/constants";
+import { TENANT_ADMIN_ROLE } from "#/modules/tenant";
 import {
   LOCATION_LAST_ACTIVE,
   LOCATION_NOT_FOUND,

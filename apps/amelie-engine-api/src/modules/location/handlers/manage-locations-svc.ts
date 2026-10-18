@@ -1,10 +1,16 @@
 import { Effect } from "effect";
-import type { CreateLocationBody, Location, LocationArchived, UpdateLocationBody } from "@repo/contracts/amelie";
+import {
+  covers,
+  type Coverage,
+  type CreateLocationBody,
+  type Location,
+  type LocationArchived,
+  type UpdateLocationBody,
+} from "@repo/contracts/amelie";
 import type { DbConnectType } from "#/lib/db-connection";
 import { Conflict, Forbidden, Invalid, NotFound, type DbError } from "#/lib/effect-query";
 import { chooseCountryIdSvc } from "#/modules/country/handlers";
-import type { CountryScope } from "#/modules/tenant/handlers";
-import { TENANT_COUNTRY_NOT_COVERED } from "#/modules/tenant/constants";
+import { TENANT_COUNTRY_NOT_COVERED, type CountryScope } from "#/modules/tenant";
 import { archiveLocationSvc } from "./archive-location-svc";
 import { slugify, withSlugSuffix } from "#/lib/slugify";
 import {
@@ -20,8 +26,14 @@ import {
   updateLocationEffect,
 } from "#/modules/location/queries";
 
-export const listLocationsSvc = (db: DbConnectType, tenantId: string): Effect.Effect<Location[], DbError> =>
-  listLocationsEffect(db, tenantId);
+export const listLocationsSvc = (
+  db: DbConnectType,
+  tenantId: string,
+  coverage: Coverage = "all",
+): Effect.Effect<Location[], DbError> =>
+  listLocationsEffect(db, tenantId).pipe(
+    Effect.map((locations) => locations.filter((location) => covers(coverage, [location.id]))),
+  );
 
 const freeSlug = (name: string, taken: Set<string>): string => {
   const base = slugify(name, LOCATION_SLUG_MAX_LENGTH, LOCATION_SLUG_FALLBACK);
@@ -50,6 +62,9 @@ export const createLocationSvc = (
   countryScope: CountryScope = "all",
 ): Effect.Effect<Location, Conflict | NotFound | Invalid | Forbidden | DbError> =>
   Effect.gen(function* () {
+    if (countryScope !== "all" && countryScope.length === 0) {
+      return yield* new Forbidden({ message: TENANT_COUNTRY_NOT_COVERED });
+    }
     const existing = yield* listLocationsEffect(db, tenantId);
     const named = body.countryId ?? (countryScope !== "all" && countryScope.length === 1 ? countryScope[0] : undefined);
     const countryId = yield* chooseCountryIdSvc(db, tenantId, named);
