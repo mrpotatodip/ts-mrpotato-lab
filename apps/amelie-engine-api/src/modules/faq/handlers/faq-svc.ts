@@ -75,11 +75,6 @@ const checkScope = (db: DbConnectType, tenantId: string, scope: { locationId: st
     if (scope.countryId !== null) yield* checkOpenCountry(db, tenantId, scope.countryId);
   });
 
-// -----
-// A bound member needs the FAQ's scope covered: its Location,
-// or every open Location of its Country. A cafe-wide FAQ has
-// no Location and is open to any holder of the Power.
-// -----
 const requireScopeCovered = (
   db: DbConnectType,
   tenantId: string,
@@ -102,7 +97,6 @@ const requireScopeCovered = (
 // -----
 // The category, Country and Location must be this
 // Tenant's, checked here so the model hears a clear reason.
-// A bound member's coverage is checked first.
 // -----
 export const addFaqSvc = (
   db: DbConnectType,
@@ -136,8 +130,6 @@ export const addFaqSvc = (
 // Tenant's too; null puts it back in General.
 // A scope left out of the change stays as it was,
 // so the result is checked, not just the change.
-// A bound member needs both the FAQ's current scope
-// and the one it moves to covered.
 // -----
 export const updateFaqSvc = (
   db: DbConnectType,

@@ -4,8 +4,6 @@ export type AccessNode = {
   key: string;
   label: string;
   actions?: readonly AccessActionValue[];
-  // On a leaf: its Powers are limited by a team member's bindings.
-  // `true` binds every Action; a list binds only those Actions.
   bound?: true | readonly AccessActionValue[];
   children?: readonly AccessNode[];
 };
@@ -162,11 +160,6 @@ type BoundNodePowers<Node, Prefix extends string> = Node extends { readonly key:
     : never
   : never;
 
-// -----
-// The Powers a binding limits: the leaves marked `bound: true`.
-// requireBoundPower accepts only these, requirePower only the rest,
-// so the wrong guard is a compile error.
-// -----
 export type BoundPower = BoundNodePowers<AccessCatalogue[number], "">;
 export type UnboundPower = Exclude<AccessPower, BoundPower>;
 

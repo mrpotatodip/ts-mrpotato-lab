@@ -17,12 +17,6 @@ const toChange = (input: Omit<UpdateBusinessProfileInput, "locationId">): Busine
   ...(input.address !== null && { address: input.address }),
 });
 
-// -----
-// Phone and address belong to a Location, so the one the
-// model names (or the default among the covered ones) is
-// checked like the route's ?locationId. The cafe-wide
-// fields need no Location and stay open.
-// -----
 export const updateBusinessProfile = (
   { locationId, ...input }: UpdateBusinessProfileInput,
   runtime: ChatBotRuntime,

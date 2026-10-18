@@ -22,7 +22,6 @@ export const TeamRoleBodySchema = z.object({
   role: TeamRoleKeySchema,
 });
 
-// One Binding: a Country (all its Locations, including later ones) or one Location.
 export const TeamBindingSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("country"), id: z.uuid() }),
   z.object({ kind: z.literal("location"), id: z.uuid() }),
@@ -30,8 +29,6 @@ export const TeamBindingSchema = z.discriminatedUnion("kind", [
 
 export const TeamBindingsSchema = z.array(TeamBindingSchema).max(200);
 
-// `bindings` left out keeps the member's Bindings (a Role that cannot be bound still clears them).
-// An empty list is Whole cafe.
 export const UpdateTeamMemberBodySchema = TeamRoleBodySchema.extend({
   bindings: TeamBindingsSchema.optional(),
 });
@@ -47,7 +44,6 @@ export const TeamRolesSchema = z.array(TeamRoleSchema);
 
 export const CreateTeamInviteBodySchema = TeamRoleBodySchema.extend({
   email: z.email().max(SIGN_UP_EMAIL_MAX).trim().toLowerCase(),
-  // Left out or empty is Whole cafe. A Role that cannot be bound takes none.
   bindings: TeamBindingsSchema.optional(),
 });
 

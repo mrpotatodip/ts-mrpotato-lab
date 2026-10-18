@@ -12,10 +12,6 @@ export type AccessScope = (typeof ACCESS_SCOPE_VALUES)[number];
 // The platform catalogue of Role types. Each
 // Tenant's Role rows name one of these, and its
 // Powers are the rows in access_role_powers for
-// that Master Role. can_be_bound says whether
-// its members can be limited to Countries or
-// Locations; never on for a system or platform
-// Role. key never changes. A Master
 // Role is assignable only while enabled. System
 // roles cannot be deleted, disabled or lose
 // Powers.

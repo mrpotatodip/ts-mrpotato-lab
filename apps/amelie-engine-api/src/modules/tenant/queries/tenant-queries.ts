@@ -72,12 +72,6 @@ const memberTenants = (db: DbConnectType) =>
     .innerJoin(authUser, eq(authUser.partyId, partyRoles.partyId))
     .innerJoin(tenantCountries, eq(tenantCountries.id, regionCountryId));
 
-// -----
-// The open Locations a bound member covers: a Location
-// binding names it, a Country binding names its Country
-// (read now, so Locations opened later are in). Archived
-// Locations and archived Countries cover nothing.
-// -----
 const coveredLocationIdsEffect = (
   db: DbConnectType,
   partyRoleId: string,
@@ -111,11 +105,6 @@ const coveredLocationIdsEffect = (
     catch: toDbError,
   });
 
-// -----
-// The open Countries a member is bound to by a Country
-// binding (a Location binding names no Country). Asked
-// only when a Location is created, never per request.
-// -----
 export const boundCountryIdsEffect = (
   db: DbConnectType,
   userId: string,
@@ -141,11 +130,6 @@ export const boundCountryIdsEffect = (
     catch: toDbError,
   });
 
-// -----
-// The tenant admin is whole-cafe whatever rows exist;
-// a member without rows is too. Only a bound member
-// costs the extra query.
-// -----
 const coverageOfEffect = (
   db: DbConnectType,
   row: { partyRoleId: string; bound: boolean; role: string },

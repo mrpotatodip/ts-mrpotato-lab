@@ -4,7 +4,8 @@ import { Checkbox } from "#/components/ui/checkbox";
 import { Label } from "#/components/ui/label";
 import { cn } from "#/lib/utils";
 import { countryName } from "#/modules/shared";
-import { isBound, toggleBinding, type TeamAccess } from "../utils";
+import type { TeamAccess } from "../types";
+import { isBound, toggleBinding } from "../utils";
 
 type TeamBindingPickerProps = {
   value: TeamAccess;
@@ -18,13 +19,6 @@ const CHOICES = [
   { mode: "bound", title: "Only some", hint: "Pick Countries or Locations below." },
 ] as const;
 
-// -----
-// Where a Role applies: two cards and, for "Only some",
-// a checklist. No default: nothing is chosen until the
-// admin picks a card. A Country row covers its Locations,
-// including ones opened later, so ticking it ticks and
-// locks them.
-// -----
 export function TeamBindingPicker({ value, onChange, countries, locations }: TeamBindingPickerProps) {
   const bindings = value?.mode === "bound" ? value.bindings : [];
   const openCountries = countries.filter((country) => country.archivedAt === null);

@@ -24,8 +24,6 @@ import { CountryRow } from "./country-row";
 export function CountrySection() {
   const { countries: active } = useActiveCountries();
   const { data: all } = useCountries();
-  // The unfiltered list: Country management is open to a bound member, and
-  // a Country with a Location they do not cover still cannot be archived.
   const { data: locations } = useAllLocations();
   const { can } = useActiveTenantRole();
   const canCreate = can("company:profile:countries:create");

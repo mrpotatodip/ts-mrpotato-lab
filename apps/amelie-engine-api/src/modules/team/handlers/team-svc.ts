@@ -236,13 +236,6 @@ export const revokeTeamInviteSvc = (
 
 type Tx = Parameters<Parameters<DbConnectType["transaction"]>[0]>[0];
 
-// -----
-// Every change to a member's Bindings is written to
-// the append-only audit log with who did it and the
-// set before and after. subject_id is the Person; the
-// Tenant is in the payload because a Person can sit in
-// several.
-// -----
 const recordBindings = (
   tx: Tx,
   actorPartyId: string,
@@ -334,13 +327,6 @@ export const removeTeamMemberSvc = (
     return { id: partyId };
   });
 
-// -----
-// Accepting an invite makes the Party role, copies the
-// invite's Bindings to the member and marks the invite
-// accepted, all in the caller's transaction. The audit
-// entry names whoever sent the invite, because they
-// chose the Bindings.
-// -----
 const joinTenant = async (
   tx: Tx,
   invite: { id: string; tenantId: string; invitedBy: string },

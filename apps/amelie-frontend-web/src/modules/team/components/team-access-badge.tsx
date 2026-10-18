@@ -4,12 +4,6 @@ import type { Country, Location, TeamMember } from "@repo/contracts/amelie";
 import { Badge } from "#/components/ui/badge";
 import { describeBindings, hasNoActiveLocations } from "../utils";
 
-// -----
-// Where a member reaches, as one text badge: Whole cafe
-// or the names. A Role that is never limited says so.
-// A member whose Bindings are all archived is warned,
-// because every limited action is refused for them.
-// -----
 export function TeamAccessBadge({
   member,
   countries,

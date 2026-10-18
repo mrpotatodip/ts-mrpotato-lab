@@ -8,10 +8,6 @@ import { requireBoundPower } from "#/modules/tenant";
 import { deleteFaqSvc } from "#/modules/faq/handlers";
 import { deleteFaqDoc } from "#/modules/faq/openapi";
 
-// -----
-// The FAQ is named by id, so the route names no Location;
-// deleteFaqSvc checks the stored scope against coverage.
-// -----
 const app = new Hono<AppEnv>();
 
 app.delete(

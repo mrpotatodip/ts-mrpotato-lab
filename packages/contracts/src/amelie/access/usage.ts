@@ -8,9 +8,6 @@ export type AccessPowerUsage = {
 
 // -----
 // Where each Power is checked: the API routes and the
-// Assistant tools that refuse without it, and the route guard:
-// "bound" (requireBoundPower, limited by a team member's
-// bindings), "plain" (requirePower) or null (tools only). A Power absent
 // here is not checked anywhere yet. Generated: run the
 // engine tests with UPDATE_POWER_USAGE=1 to rewrite it.
 // -----

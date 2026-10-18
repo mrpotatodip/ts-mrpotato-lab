@@ -16,11 +16,6 @@ import {
   insertTenant,
 } from "#/__tests__/amelie-test-db";
 
-// -----
-// The assistant's FAQ and business profile tools follow the routes:
-// a FAQ's Location (or every open Location of its Country) must be
-// covered; phone and address follow the Location, the rest stays open.
-// -----
 let db: DbConnectType;
 let tenantId: string;
 let downtownId: string;

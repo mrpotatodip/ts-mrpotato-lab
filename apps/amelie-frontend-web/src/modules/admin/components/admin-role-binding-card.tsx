@@ -13,11 +13,6 @@ type AdminRoleBindingCardProps = {
 
 const LABEL = "Members can be limited to a Country or Location";
 
-// -----
-// Whether a cafe can limit this role's members to some of
-// its Countries or Locations. Saves on click. Turning it
-// off is refused while any member still has bindings.
-// -----
 export function AdminRoleBindingCard({ role, saving }: AdminRoleBindingCardProps) {
   const locked = adminRoleBindingLocked(role);
 

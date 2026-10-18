@@ -186,14 +186,6 @@ export const archiveLocationEffect = (
     catch: classifyArchiveFailure,
   });
 
-// -----
-// The members an archive would leave with no open
-// Location: bound, not the tenant admin, covering the
-// Location now and nothing else once it is gone. A
-// Country Binding covers its open Locations, and an
-// archived Country covers nothing. Members already
-// covering nothing are not named.
-// -----
 export const archiveLocationPreviewEffect = (
   db: DbConnectType,
   tenantId: string,

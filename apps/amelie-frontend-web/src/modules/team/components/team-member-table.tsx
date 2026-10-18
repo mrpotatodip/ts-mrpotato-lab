@@ -24,8 +24,6 @@ type TeamMemberTableProps = {
 };
 
 // -----
-// One row per person: their Role, where it applies
-// (Whole cafe or the names), then edit and remove on
 // the right, same as FAQ rows.
 // -----
 export function TeamMemberTable({ members, roles, countries, locations }: TeamMemberTableProps) {

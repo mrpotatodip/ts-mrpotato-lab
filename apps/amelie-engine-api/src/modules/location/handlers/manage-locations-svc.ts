@@ -51,9 +51,6 @@ const freeSlug = (name: string, taken: Set<string>): string => {
 // one of the Tenant, else the only one. A Location
 // without a timezone gets the last one created in
 // its Country, else the Tenant's.
-// A member bound to Countries opens Locations only in
-// those: with none named their only bound Country is
-// the default, and any other Country is Forbidden.
 // -----
 export const createLocationSvc = (
   db: DbConnectType,

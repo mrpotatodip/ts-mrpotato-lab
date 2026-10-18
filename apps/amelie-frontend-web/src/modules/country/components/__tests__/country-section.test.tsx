@@ -20,8 +20,6 @@ const place = (id: string, countryId: string): Location => ({
 const toronto = place("33333333-3333-4333-8333-333333333333", ca.id);
 const ottawa = place("44444444-4444-4444-8444-444444444444", ca.id);
 
-// A member bound to Toronto only: the covered list holds one of the
-// two open Canadian Locations, the unfiltered list both.
 vi.mock("#/modules/location", () => ({
   useLocations: () => ({ data: [toronto] }),
   useAllLocations: () => ({ data: [toronto, ottawa] }),

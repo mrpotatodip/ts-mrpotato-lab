@@ -22,9 +22,6 @@ export const locationsQueries = {
       staleTime: 1000 * 30,
     }),
   // -----
-  // Who an archive would leave with no open Location. Always
-  // fresh: Bindings change without this screen knowing.
-  // -----
   archivePreview: (locationId: string) =>
     queryOptions({
       queryKey: locationsKeys.archivePreview(locationId),
@@ -32,7 +29,6 @@ export const locationsQueries = {
       staleTime: 0,
       gcTime: 0,
     }),
-  // -----
   // Never fetched: it only holds what an archive
   // left behind, until it is dismissed.
   // -----
@@ -45,11 +41,6 @@ export const locationsQueries = {
     }),
 };
 
-// -----
-// The Locations the signed-in member's Role covers. The
-// unfiltered list stays in the cache for the screens that
-// need to see a Location they cannot use.
-// -----
 export function useLocations() {
   const { coverage } = useActiveTenantRole();
   return useQuery({ ...locationsQueries.list(), select: (all) => coveredLocations(all, coverage) });
@@ -64,10 +55,6 @@ export function useAllLocations() {
   return useSuspenseQuery(locationsQueries.list());
 }
 
-// -----
-// Only asked while a Location waits for the archive
-// confirmation; undefined until the answer arrives.
-// -----
 export function useLocationArchivePreview(locationId: string | null) {
   const { data } = useQuery({
     ...locationsQueries.archivePreview(locationId ?? ""),

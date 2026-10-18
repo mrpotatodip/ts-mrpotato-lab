@@ -14,10 +14,6 @@ export const UpdateBusinessProfileInputSchema = z
     // -----
     email: z.string().trim().max(120).regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/).nullable(),
     address: field(200),
-    // -----
-    // Which Location the phone and address are for. Left out,
-    // the Thread's (or the only one the member covers) is used.
-    // -----
     locationId: ToolLocationRefSchema,
   })
   .refine(({ locationId: _location, ...fields }) => Object.values(fields).some((value) => value !== null), {

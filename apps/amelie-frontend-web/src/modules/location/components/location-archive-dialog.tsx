@@ -20,9 +20,6 @@ type LocationArchiveDialogProps = {
 
 // -----
 // Asks before archiving; open while a Location is
-// waiting for the answer. Names the members the archive
-// leaves with no open Location: it never blocks, but
-// they will be refused every limited action.
 // -----
 export function LocationArchiveDialog({ location, isPending, membersWithoutLocation, onConfirm, onCancel }: LocationArchiveDialogProps) {
   return (

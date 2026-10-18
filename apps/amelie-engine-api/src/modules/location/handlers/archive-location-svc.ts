@@ -16,11 +16,6 @@ export const archiveLocationSvc = (
 ): Effect.Effect<LocationUnsoldItem[], NotFound | Conflict | DbError> =>
   archiveLocationEffect(db, tenantId, locationId, new Date());
 
-// -----
-// Archiving is never blocked by a Binding, so the
-// confirmation names the members it would leave with
-// no open Location.
-// -----
 export const archiveLocationPreviewSvc = (
   db: DbConnectType,
   tenantId: string,

@@ -17,10 +17,6 @@ import {
 } from "#/__tests__/amelie-test-db";
 import type { DbConnectType } from "#/lib/db-connection";
 
-// -----
-// Phone and address belong to a Location, so naming one in the query
-// needs it covered. The cafe-wide fields need no Location and stay open.
-// -----
 let db: DbConnectType;
 let connectionString: string;
 let tenantId: string;

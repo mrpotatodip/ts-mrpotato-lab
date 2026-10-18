@@ -26,8 +26,6 @@ export const locationChoiceToEffect = (
 // none named fails with the options to pick from.
 // Use when the answer belongs to one Location
 // (hours, address, phone) and the caller can ask.
-// With a bound member's coverage, "only one" and
-// the options are over the Locations they cover.
 // -----
 export const resolveLocationSvc = (
   db: DbConnectType,

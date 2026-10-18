@@ -5,9 +5,6 @@ import type { ActiveLocation, LocationChoice } from "#/modules/location/types";
 // A named Location must be one of the active
 // ones. With none named, a lone Location is
 // used and several mean the caller must ask.
-// A bound member's coverage narrows the active
-// ones first, so the default and the options
-// are theirs alone; an empty list offers nothing.
 // -----
 export const chooseLocation = (
   active: ActiveLocation[],

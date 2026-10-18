@@ -8,10 +8,6 @@ import { locateQueryLocation, requireBoundPower } from "#/modules/tenant";
 import { updateBusinessProfileSvc } from "#/modules/business-profile/handlers";
 import { updateBusinessProfileDoc } from "#/modules/business-profile/openapi";
 
-// -----
-// Bound only through the ?locationId it names (phone and
-// address); the cafe-wide fields need no Location.
-// -----
 const app = new Hono<AppEnv>();
 
 app.put(

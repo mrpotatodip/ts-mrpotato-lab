@@ -5,15 +5,6 @@ import { tenantLocations } from "./location";
 import { teamInvites } from "./team-invites";
 import { tenants } from "./tenant";
 
-// -----
-// The Bindings chosen for a pending invite, copied to
-// party_role_scopes when it is accepted. Same shape as
-// party_role_scopes: exactly one of country_id and
-// location_id, composite foreign keys on tenant_id so a
-// row stays inside the invite's Tenant. No rows means
-// Whole cafe. Rows go with the invite when it is
-// revoked or replaced.
-// -----
 export const teamInviteScopes = pgTable(
   "team_invite_scopes",
   {

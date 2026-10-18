@@ -18,11 +18,6 @@ import {
 } from "#/__tests__/amelie-test-db";
 import type { DbConnectType } from "#/lib/db-connection";
 
-// -----
-// A café with US (Downtown) and CA (Toronto, Montreal), run through
-// Hono with real bound members. Writes on a FAQ scoped to a Location
-// or Country need the scope covered; cafe-wide FAQs and reads are open.
-// -----
 let db: DbConnectType;
 let connectionString: string;
 let tenantId: string;

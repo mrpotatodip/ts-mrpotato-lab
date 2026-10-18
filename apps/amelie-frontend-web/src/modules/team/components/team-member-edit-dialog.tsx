@@ -11,7 +11,8 @@ import {
   DialogTitle,
 } from "#/components/ui/dialog";
 import { useTeamActions } from "../hooks";
-import { accessFromBindings, bindingsFromAccess, type TeamAccess } from "../utils";
+import type { TeamAccess } from "../types";
+import { accessFromBindings, bindingsFromAccess } from "../utils";
 import { TeamBindingPicker } from "./team-binding-picker";
 import { TeamRoleSelect } from "./team-role-select";
 
@@ -23,13 +24,6 @@ type TeamMemberEditDialogProps = {
   onClose: () => void;
 };
 
-// -----
-// Role and where it applies. The dialog body is
-// remounted per member (see `key`), so its state starts
-// from the saved member. Moving to a Role that can be
-// bound asks again with no default; a Role that cannot
-// be bound hides the picker and clears Locations on save.
-// -----
 export function TeamMemberEditDialog({ member, roles, countries, locations, onClose }: TeamMemberEditDialogProps) {
   return (
     <Dialog open={member !== null} onOpenChange={(open) => !open && onClose()}>

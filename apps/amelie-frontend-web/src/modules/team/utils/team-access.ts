@@ -1,30 +1,16 @@
 import type { Country, Location, TeamBinding } from "@repo/contracts/amelie";
 import { countryName } from "#/modules/shared";
-
-// -----
-// What the member form is asking. null means the
-// admin has not chosen yet: there is no default, and
-// Save stays off until there is a choice.
-// -----
-export type TeamAccess = { mode: "whole" } | { mode: "bound"; bindings: TeamBinding[] } | null;
+import type { TeamAccess } from "../types";
 
 export const accessFromBindings = (bindings: TeamBinding[]): TeamAccess =>
   bindings.length === 0 ? { mode: "whole" } : { mode: "bound", bindings };
 
-// -----
-// The list to save: Whole cafe is empty, and "Only some"
-// with nothing ticked is not a choice yet.
-// -----
 export const bindingsFromAccess = (access: TeamAccess): TeamBinding[] | null => {
   if (access === null) return null;
   if (access.mode === "whole") return [];
   return access.bindings.length === 0 ? null : access.bindings;
 };
 
-// -----
-// Invite stays off for a Role that can be bound until
-// the admin has chosen where it applies.
-// -----
 export const inviteChoiceReady = (canBeBound: boolean, access: TeamAccess): boolean =>
   !canBeBound || bindingsFromAccess(access) !== null;
 
@@ -41,10 +27,6 @@ export const describeBindings = (bindings: TeamBinding[], countries: Country[], 
     ? "Whole cafe"
     : bindings.map((binding) => labelOf(binding, countries, locations)).join(", ");
 
-// -----
-// A member whose Bindings reach no open Location is
-// refused on every limited action, never widened.
-// -----
 export const hasNoActiveLocations = (
   bindings: TeamBinding[],
   countries: Country[],
@@ -66,11 +48,6 @@ export const hasNoActiveLocations = (
 export const isBound = (bindings: TeamBinding[], kind: TeamBinding["kind"], id: string): boolean =>
   bindings.some((binding) => binding.kind === kind && binding.id === id);
 
-// -----
-// Ticks or unticks one Country or Location. Ticking a
-// Country folds away the Location bindings inside it,
-// since the Country already covers them.
-// -----
 export const toggleBinding = (
   bindings: TeamBinding[],
   binding: TeamBinding,

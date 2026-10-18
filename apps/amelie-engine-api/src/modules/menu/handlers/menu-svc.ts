@@ -178,15 +178,6 @@ const checkActiveLocations = (db: DbConnectType, tenantId: string, locationIds: 
     ),
   );
 
-// -----
-// A bound member's request names only Locations they cover,
-// yet the write replaces the item's whole Location state. So
-// it is merged first: at every Location they do not cover the
-// item keeps selling or not selling exactly as before, and only
-// the covered ones take the request. The rows mean sold-out
-// Locations for an all-Locations item and sold Locations for
-// any other, so "was selling" is read per mode.
-// -----
 const mergeUncoveredLocations = (
   values: MenuItemLocationsValues,
   current: Pick<MenuItem, "availableAtAllLocations" | "locationIds">,

@@ -423,9 +423,6 @@ export const toPreview = (
     hasAccount,
   });
 
-// -----
-// A member's Bindings as stored.
-// -----
 export const listMemberBindingsEffect = (
   db: DbConnectType,
   tenantId: string,
@@ -440,12 +437,6 @@ export const listMemberBindingsEffect = (
     catch: toDbError,
   }).pipe(Effect.map((rows) => sortBindings(rows.map(toBinding))));
 
-// -----
-// Checks every Country and Location belongs to this
-// Tenant (archived ones included: a kept Binding may
-// name one) and returns each Location's Country, so
-// the caller can fold.
-// -----
 export const resolveBindingTargetsEffect = (
   db: DbConnectType,
   tenantId: string,
@@ -480,9 +471,6 @@ export const resolveBindingTargetsEffect = (
     return new Map(locations.map((row) => [row.id, row.countryId]));
   });
 
-// -----
-// The Bindings chosen for a pending invite.
-// -----
 export const listInviteBindingsEffect = (
   db: DbConnectType,
   tenantId: string,

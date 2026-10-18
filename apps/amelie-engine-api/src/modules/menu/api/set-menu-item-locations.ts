@@ -13,10 +13,6 @@ import { setMenuItemLocationsDoc } from "#/modules/menu/openapi";
 
 const app = new Hono<AppEnv>();
 
-// -----
-// availableAtAllLocations true names every Location, so only
-// a member whose coverage is "all" may send it.
-// -----
 const requireEveryLocationWhenAll = createMiddleware<AppEnv, string, { out: { json: MenuItemLocationsBody } }>(
   async (c, next) => {
     if (c.req.valid("json").availableAtAllLocations && c.get("coverage") !== "all") {

@@ -1,12 +1,5 @@
 import type { TeamBinding } from "@repo/contracts/amelie";
 
-// -----
-// A Country Binding covers every Location in it, so
-// a Location Binding inside a bound Country adds
-// nothing. This drops those, drops repeats, and
-// returns a stable order: Countries first, then
-// Locations, by id.
-// -----
 export const foldBindings = (
   bindings: readonly TeamBinding[],
   countryOfLocation: ReadonlyMap<string, string>,

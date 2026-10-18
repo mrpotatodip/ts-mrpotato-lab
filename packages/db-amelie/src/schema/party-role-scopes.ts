@@ -4,16 +4,6 @@ import { tenantCountries } from "./country";
 import { tenantLocations } from "./location";
 import { partyRoles, tenants } from "./tenant";
 
-// -----
-// One Binding: a team member (a Party role) limited
-// to one Country, which covers every Location in it
-// including ones opened later, or to one Location.
-// A member with no rows is whole-cafe. Exactly one
-// of country_id and location_id is set. Composite
-// foreign keys on tenant_id keep a row inside the
-// member's own Tenant. A Country row and a Location
-// row inside it may coexist; the form folds them.
-// -----
 export const partyRoleScopes = pgTable(
   "party_role_scopes",
   {

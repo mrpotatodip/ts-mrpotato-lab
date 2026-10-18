@@ -4,7 +4,8 @@ import type { Country, Location, TeamRole } from "@repo/contracts/amelie";
 import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
 import { useTeamActions } from "../hooks";
-import { bindingsFromAccess, inviteChoiceReady, toTeamJoinUrl, type TeamAccess } from "../utils";
+import type { TeamAccess } from "../types";
+import { bindingsFromAccess, inviteChoiceReady, toTeamJoinUrl } from "../utils";
 import { TeamBindingPicker } from "./team-binding-picker";
 import { TeamJoinLinkDialog } from "./team-join-link-dialog";
 import { TeamRoleSelect } from "./team-role-select";
@@ -12,9 +13,6 @@ import { TeamRoleSelect } from "./team-role-select";
 // -----
 // Email and role. The join link is shown once
 // in a dialog, like an invite code. The role
-// starts on the one with the fewest Powers. A Role
-// that can be bound asks where it applies, with no
-// default, and Invite waits for the answer.
 // -----
 type TeamInviteFormProps = { roles: TeamRole[]; countries: Country[]; locations: Location[] };
 
