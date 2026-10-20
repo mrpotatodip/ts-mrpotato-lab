@@ -1,6 +1,6 @@
 import { and, asc, desc, eq, gt, gte, inArray, isNotNull, sql, type SQL } from "drizzle-orm";
-import { isActiveLocation } from "#/modules/location/queries";
-import { isOpenCountry } from "#/modules/country/queries";
+import { isActiveLocation } from "#/modules/location";
+import { isOpenCountry } from "#/modules/country";
 import { Effect } from "effect";
 import {
   chatBotMessages,

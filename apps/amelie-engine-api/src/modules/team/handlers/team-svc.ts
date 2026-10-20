@@ -28,7 +28,7 @@ import {
   type UpdateTeamMemberBody,
   TENANT_ADMIN_ROLE_KEY,
 } from "@repo/contracts/amelie";
-import type { DbConnectType } from "#/lib/db-connection";
+import type { DbConnectType, DbTransaction } from "#/lib/db-connection";
 import { Conflict, Forbidden, Invalid, NotFound, toDbError, type DbError } from "#/lib/effect-query";
 import { PG_UNIQUE_VIOLATION, pgErrorCode, pgErrorConstraint } from "#/lib/pg-error";
 import {
@@ -41,6 +41,7 @@ import {
   TEAM_NEW_ACCOUNT_REQUIRED,
   TEAM_NOT_FOUND,
   TEAM_ROLE_ABOVE_YOURS,
+  TEAM_BINDINGS_CHOICE_REQUIRED,
   TEAM_ROLE_CANNOT_BIND,
   TEAM_WRONG_ACCOUNT,
 } from "#/modules/team/constants";
@@ -80,12 +81,6 @@ const refuseLastAdmin = (current: string, next: string | null, adminCount: numbe
   return Effect.fail(new Conflict({ message: TEAM_LAST_ADMIN }));
 };
 
-// -----
-// A caller may only hand out, or manage, a Role
-// whose Powers they hold in full, so a Role with
-// team Powers can never be used to climb above
-// itself.
-// -----
 const refuseAboveCaller = (
   db: DbConnectType,
   masterRoleId: string,
@@ -134,6 +129,9 @@ export const createTeamInviteSvc = (
     const inviteRole = yield* findAssignableRoleEffect(db, tenantId, body.role, callerPowers);
     if (!inviteRole.canBeBound && body.bindings && body.bindings.length > 0) {
       return yield* new Invalid({ message: TEAM_ROLE_CANNOT_BIND });
+    }
+    if (inviteRole.canBeBound && body.bindings === undefined) {
+      return yield* new Invalid({ message: TEAM_BINDINGS_CHOICE_REQUIRED });
     }
     const requested = inviteRole.canBeBound ? (body.bindings ?? []) : [];
     const folded = foldBindings(requested, yield* resolveBindingTargetsEffect(db, tenantId, requested));
@@ -234,10 +232,8 @@ export const revokeTeamInviteSvc = (
     return { id: inviteId };
   });
 
-type Tx = Parameters<Parameters<DbConnectType["transaction"]>[0]>[0];
-
 const recordBindings = (
-  tx: Tx,
+  tx: DbTransaction,
   actorPartyId: string,
   tenantId: string,
   partyId: string,
@@ -269,6 +265,9 @@ export const updateTeamMemberSvc = (
     const nextRole = yield* findAssignableRoleEffect(db, tenantId, role, callerPowers);
     if (!nextRole.canBeBound && bindings && bindings.length > 0) {
       return yield* new Invalid({ message: TEAM_ROLE_CANNOT_BIND });
+    }
+    if (nextRole.canBeBound && bindings === undefined && nextRole.key !== current.roleKey) {
+      return yield* new Invalid({ message: TEAM_BINDINGS_CHOICE_REQUIRED });
     }
     const requested = nextRole.canBeBound ? bindings : [];
     const folded = requested
@@ -328,7 +327,7 @@ export const removeTeamMemberSvc = (
   });
 
 const joinTenant = async (
-  tx: Tx,
+  tx: DbTransaction,
   invite: { id: string; tenantId: string; invitedBy: string },
   partyId: string,
   role: { id: string; scope: AccessScope },

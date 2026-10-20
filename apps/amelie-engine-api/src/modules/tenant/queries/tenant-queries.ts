@@ -16,7 +16,7 @@ import { TenantSchema, type Coverage, type Tenant, type TenantRegion } from "@re
 import type { DbConnectType } from "#/lib/db-connection";
 import { Conflict, NotFound, toDbError, type DbError } from "#/lib/effect-query";
 import { PG_UNIQUE_VIOLATION, pgErrorCode, pgErrorConstraint } from "#/lib/pg-error";
-import { openCountryIds } from "#/modules/country/queries";
+import { openCountryIds } from "#/modules/country";
 import {
   TENANT_ADMIN_ROLE,
   TENANT_COUNTRY_CONSTRAINT,

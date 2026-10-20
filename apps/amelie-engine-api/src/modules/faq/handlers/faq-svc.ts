@@ -1,8 +1,8 @@
 import { Effect } from "effect";
 import type { DbConnectType } from "#/lib/db-connection";
-import { listOpenCountryRefsEffect } from "#/modules/country/queries";
+import { listOpenCountryRefsEffect } from "#/modules/country";
 import type { Coverage } from "@repo/contracts/amelie";
-import { listActiveLocationsEffect, listActiveLocationsInCountryEffect } from "#/modules/location/queries";
+import { listActiveLocationsEffect, listActiveLocationsInCountryEffect } from "#/modules/location";
 import { requireCovered } from "#/modules/tenant";
 import { Conflict, Forbidden, Invalid, NotFound, type DbError } from "#/lib/effect-query";
 import {

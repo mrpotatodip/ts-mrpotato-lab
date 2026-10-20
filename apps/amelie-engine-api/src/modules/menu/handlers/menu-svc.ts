@@ -21,11 +21,11 @@ import {
   updateMenuItemFullEffect,
 } from "#/modules/menu/queries";
 import { findMenuItems } from "#/modules/menu/lib";
-import type { MenuItemVariant, SetMenuItemCountryPriceBody } from "@repo/contracts/amelie";
-import { chooseCountryIdSvc } from "#/modules/country/handlers";
+import type { SetMenuItemCountryPriceBody } from "@repo/contracts/amelie";
+import { chooseCountryIdSvc } from "#/modules/country";
 import { COUNTRY_NOT_FOUND } from "#/modules/country/constants";
-import { listOpenCountryRefsEffect } from "#/modules/country/queries";
-import { listActiveLocationsEffect } from "#/modules/location/queries";
+import { listOpenCountryRefsEffect } from "#/modules/country";
+import { listActiveLocationsEffect } from "#/modules/location";
 import {
   MENU_CATEGORY_NOT_FOUND,
   MENU_COUNTRY_PRICE_REQUIRED,
@@ -46,6 +46,7 @@ import type {
   MenuItemLocationsValues,
   MenuItemMatch,
   MenuItemPricing,
+  MenuItemInput,
   MenuItemValues,
 } from "#/modules/menu/types";
 
@@ -280,13 +281,6 @@ export const reorderMenuItemsSvc = (
 // With Variants, the item's price is the lowest
 // Variant price, as the schema says.
 // -----
-type MenuItemInput = Omit<MenuItemValues, "priced" | "countryId"> & {
-  price: string | null;
-  variants: MenuItemVariant[] | null;
-  dietaryTags: string[];
-  countryId?: string;
-};
-
 const toItemValues = (
   { dietaryTags: _tags, price, variants, ...item }: MenuItemInput,
   countryId: string,

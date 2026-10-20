@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { Effect } from "effect";
 import { eq } from "drizzle-orm";
-import { partyRoles, partyRoleScopes, tenantMenuCategories, tenantMenuItems } from "@repo/db-amelie";
+import { partyRoles, partyRoleScopes, tenantLocations, tenantMenuCategories, tenantMenuItems } from "@repo/db-amelie";
 import type { DbConnectType } from "#/lib/db-connection";
 import { setMenuItemAvailabilityTool, setMenuItemsAvailabilityTool } from "#/modules/chat-bot/agent-tools";
 import type { ChatBotOwner, ChatBotToolSpec } from "#/modules/chat-bot/types";
@@ -21,6 +21,7 @@ let latteId: string;
 let admin: ChatBotOwner;
 let unbound: ChatBotOwner;
 let bound: ChatBotOwner;
+let coversAll: ChatBotOwner;
 
 const run = (tool: ChatBotToolSpec, input: Parameters<ChatBotToolSpec["execute"]>[0], who: ChatBotOwner) =>
   Effect.runPromise(tool.execute(input, { db, owner: who }));
@@ -50,6 +51,8 @@ beforeAll(async () => {
   admin = await member("admin@a.test", "tenant_admin");
   unbound = await member("unbound@a.test", "store_admin");
   bound = await member("bound@a.test", "store_admin", [airportId]);
+  const open = await db.select({ id: tenantLocations.id }).from(tenantLocations).where(eq(tenantLocations.tenantId, tenantId));
+  coversAll = await member("all@a.test", "store_admin", open.map((location) => location.id));
 });
 
 describe("availability tools flip one cafe-wide flag", () => {
@@ -63,6 +66,13 @@ describe("availability tools flip one cafe-wide flag", () => {
   it("say so in plain words", () => {
     expect(TENANT_ITEM_WIDE_NOT_COVERED).toBe(
       "This change affects every Location, and your Role does not cover every Location",
+    );
+  });
+
+  it("work for a bound member whose Bindings reach every open Location", async () => {
+    expect(await run(setMenuItemAvailabilityTool, { itemId: latteId, isAvailable: true }, coversAll)).toHaveProperty(
+      "isAvailable",
+      true,
     );
   });
 

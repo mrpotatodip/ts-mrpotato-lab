@@ -319,8 +319,13 @@ describe("Inviting with Bindings", () => {
     expect(AuditSet.parse(entry.after).bindings).toHaveLength(2);
   });
 
-  it("makes a Whole cafe invite when no Bindings are sent, with no audit entry", async () => {
-    const created = await invite({ email: "wide@example.com", role: "store_staff" });
+  it("refuses an invite to a Role that can be bound when no Bindings choice is sent", async () => {
+    const res = await postInvite({ email: "silent@example.com", role: "store_staff" });
+    expect(res.status).toBe(400);
+  });
+
+  it("makes a Whole cafe invite when an empty Bindings list is sent, with no audit entry", async () => {
+    const created = await invite({ email: "wide@example.com", role: "store_staff", bindings: [] });
     await accept(created.token);
     const [login] = await db.select().from(authUser).where(eq(authUser.email, "wide@example.com"));
     expect(await bindingsOf(login.partyId)).toEqual([]);
@@ -407,7 +412,7 @@ describe("Inviting with Bindings", () => {
   });
 
   it("keeps a invite's scope rows inside its own Tenant", async () => {
-    const created = await invite({ email: "tenant@example.com", role: "store_staff" });
+    const created = await invite({ email: "tenant@example.com", role: "store_staff", bindings: [] });
     const other = await insertTenant(db, "Fourth", "fourth");
     const foreignCountry = await insertCountry(db, other, { country: "BR", currency: "BRL" });
     await expect(

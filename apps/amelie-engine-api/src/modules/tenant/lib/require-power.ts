@@ -1,5 +1,5 @@
+import type { Context } from "hono";
 import { createMiddleware } from "hono/factory";
-import type { RouterRoute } from "hono/types";
 import {
   hasAccessPower,
   uncoveredLocations,
@@ -11,31 +11,33 @@ import { ForbiddenError } from "#/lib/errors";
 import type { ValidatedContext, ValidatedInput } from "#/lib/validated-context-types";
 import type { AppEnv } from "#/types/variables";
 import { TENANT_LOCATION_NOT_COVERED, TENANT_LOCATIONS_NOT_COVERED, TENANT_POWER_DENIED } from "#/modules/tenant/constants";
-import type { PowerGuardKind } from "#/modules/tenant/types";
-
-type RouteHandler = RouterRoute["handler"];
+import type { PowerGuardKind, RouteHandler } from "#/modules/tenant/types";
 
 const GUARDED_POWERS = new WeakMap<RouteHandler, { power: BoundPower | UnboundPower; kind: PowerGuardKind }>();
 
-export const requirePower = (power: UnboundPower) => {
+const holdPower = (c: Context<AppEnv>, power: BoundPower | UnboundPower): void => {
+  if (!hasAccessPower(c.get("powers") ?? [], power)) {
+    throw new ForbiddenError(TENANT_POWER_DENIED);
+  }
+};
+
+const powerOnlyGuard = (power: BoundPower | UnboundPower, kind: PowerGuardKind) => {
   const guard = createMiddleware<AppEnv>(async (c, next) => {
-    if (!hasAccessPower(c.get("powers") ?? [], power)) {
-      throw new ForbiddenError(TENANT_POWER_DENIED);
-    }
+    holdPower(c, power);
     await next();
   });
-  GUARDED_POWERS.set(guard, { power, kind: "plain" });
+  GUARDED_POWERS.set(guard, { power, kind });
   return guard;
 };
+
+export const requirePower = (power: UnboundPower) => powerOnlyGuard(power, "plain");
 
 export const requireBoundPower = <Valid extends ValidatedInput>(
   power: BoundPower,
   locate: (c: ValidatedContext<Valid>) => readonly string[],
 ) => {
   const guard = createMiddleware<AppEnv, string, { out: Valid }>(async (c, next) => {
-    if (!hasAccessPower(c.get("powers") ?? [], power)) {
-      throw new ForbiddenError(TENANT_POWER_DENIED);
-    }
+    holdPower(c, power);
     const gap = uncoveredLocations(c.get("coverage"), locate(c));
     if (gap?.coversNothing) throw new ForbiddenError(TENANT_LOCATION_NOT_COVERED);
     if (gap) throw new ForbiddenError(TENANT_LOCATIONS_NOT_COVERED(gap.uncovered));
@@ -45,16 +47,7 @@ export const requireBoundPower = <Valid extends ValidatedInput>(
   return guard;
 };
 
-export const requireCountryBoundPower = (power: BoundPower) => {
-  const guard = createMiddleware<AppEnv>(async (c, next) => {
-    if (!hasAccessPower(c.get("powers") ?? [], power)) {
-      throw new ForbiddenError(TENANT_POWER_DENIED);
-    }
-    await next();
-  });
-  GUARDED_POWERS.set(guard, { power, kind: "bound" });
-  return guard;
-};
+export const requireCountryBoundPower = (power: BoundPower) => powerOnlyGuard(power, "bound");
 
 export const locateQueryLocation = (c: ValidatedContext<{ query: LocationQuery }>): string[] => {
   const { locationId } = c.req.valid("query");

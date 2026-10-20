@@ -18,7 +18,7 @@ import {
   menuItemSoldInCountry,
 } from "./menu-availability";
 import { setCountrySoldFlag, upsertCountryPrice } from "./menu-country-price-queries";
-import { firstOpenCountryId, openCountryIdsEffect, readCountryIdEffect } from "#/modules/country/queries";
+import { firstOpenCountryId, openCountryIdsEffect, readCountryIdEffect } from "#/modules/country";
 import { MENU_CATEGORY_NOT_FOUND, MENU_ITEM_NOT_FOUND } from "#/modules/menu/constants";
 import { menuItemImagePublicPath } from "#/modules/menu/lib";
 import { listMenuItemImagesByItemEffect } from "./menu-image-queries";

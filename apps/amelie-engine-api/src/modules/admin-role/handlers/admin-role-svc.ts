@@ -18,7 +18,8 @@ import type {
   CreateAdminRoleBody,
   UpdateAdminRoleBody,
 } from "@repo/contracts/amelie";
-import type { DbConnectType } from "#/lib/db-connection";
+import type { RoleSummary, AuditPayload } from "#/modules/admin-role/types";
+import type { DbConnectType, DbTransaction } from "#/lib/db-connection";
 import { Conflict, Invalid, toDbError, type DbError, type NotFound } from "#/lib/effect-query";
 import { PG_UNIQUE_VIOLATION, pgErrorCode, pgErrorConstraint } from "#/lib/pg-error";
 import {
@@ -42,12 +43,9 @@ import {
   listAdminRolesEffect,
 } from "#/modules/admin-role/queries";
 
-type Tx = Parameters<Parameters<DbConnectType["transaction"]>[0]>[0];
-type RoleSummary = { key: string; label: string; description: string | null; enabled: boolean };
-type AuditPayload = RoleSummary | (RoleSummary & { powers: string[] }) | { enabled: boolean } | { canBeBound: boolean } | { powers: string[] } | null;
 
 const record = (
-  tx: Tx,
+  tx: DbTransaction,
   actorPartyId: string | null,
   action: string,
   subjectId: string,

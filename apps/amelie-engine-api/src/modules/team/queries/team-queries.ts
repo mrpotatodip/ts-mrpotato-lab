@@ -200,9 +200,6 @@ export const findRoleInTenantEffect = (
     return row;
   });
 
-// -----
-// The Powers a Master Role grants.
-// -----
 export const masterRolePowersEffect = (
   db: DbConnectType,
   masterRoleId: string,
@@ -217,11 +214,6 @@ export const masterRolePowersEffect = (
     catch: toDbError,
   }).pipe(Effect.map((rows) => rows.map((row) => row.power)));
 
-// -----
-// Every Role this Tenant can assign: enabled
-// tenant Master Roles whose Powers the caller
-// holds in full, fewest Powers first.
-// -----
 export const listAssignableRolesEffect = (
   db: DbConnectType,
   tenantId: string,

@@ -265,3 +265,24 @@ export type PublicChatTurnRequest = {
   ip: string;
   limiters: PublicChatLimiters;
 };
+
+export type ChatBotPlaceInput = {
+  threadId?: string;
+  location?: string;
+  country?: string;
+};
+
+export type ChatBotPlace = {
+  locationId: string | null;
+  countryId: string | null;
+};
+
+export type TopicFaq = {
+  id: string;
+  question: string;
+  answer: string;
+  countryId: string | null;
+  locationId: string | null;
+};
+
+export type FaqTopicResult<T> = { faqs: T[]; note: string | null };

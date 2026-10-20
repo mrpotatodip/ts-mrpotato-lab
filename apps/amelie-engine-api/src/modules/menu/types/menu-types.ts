@@ -66,3 +66,10 @@ export type MenuImageStorage = {
   get: (key: string) => Promise<ArrayBuffer | null>;
   delete: (key: string) => Promise<void>;
 };
+
+export type MenuItemInput = Omit<MenuItemValues, "priced" | "countryId"> & {
+  price: string | null;
+  variants: MenuItemVariant[] | null;
+  dietaryTags: string[];
+  countryId?: string;
+};

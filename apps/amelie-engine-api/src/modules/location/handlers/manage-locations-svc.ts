@@ -9,7 +9,7 @@ import {
 } from "@repo/contracts/amelie";
 import type { DbConnectType } from "#/lib/db-connection";
 import { Conflict, Forbidden, Invalid, NotFound, type DbError } from "#/lib/effect-query";
-import { chooseCountryIdSvc } from "#/modules/country/handlers";
+import { chooseCountryIdSvc } from "#/modules/country";
 import { TENANT_COUNTRY_NOT_COVERED, type CountryScope } from "#/modules/tenant";
 import { archiveLocationSvc } from "./archive-location-svc";
 import { slugify, withSlugSuffix } from "#/lib/slugify";
@@ -24,7 +24,7 @@ import {
   lastLocationTimezoneInCountryEffect,
   listLocationsEffect,
   updateLocationEffect,
-} from "#/modules/location/queries";
+} from "#/modules/location";
 
 export const listLocationsSvc = (
   db: DbConnectType,

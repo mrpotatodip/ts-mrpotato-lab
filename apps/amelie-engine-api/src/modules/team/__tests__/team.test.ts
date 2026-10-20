@@ -91,17 +91,17 @@ describe("Team routes by Role", () => {
   });
 
   it("lets a tenant_admin invite, change the pending Role, and revoke", async () => {
-    const created = await call("tenant_admin", "POST", "/invites", { email: "leo@example.com", role: "store_staff" });
+    const created = await call("tenant_admin", "POST", "/invites", { email: "leo@example.com", role: "store_staff", bindings: [] });
     expect(created.status).toBe(201);
     const { data } = await created.json();
     expect(data.token).toMatch(/^[0-9a-f]{64}$/);
-    expect(data.invite).toMatchObject({ email: "leo@example.com", role: "store_staff" });
+    expect(data.invite).toMatchObject({ email: "leo@example.com", role: "store_staff", bindings: [] });
 
     const changed = await call("tenant_admin", "PATCH", `/invites/${data.invite.id}`, { role: "store_admin" });
     expect(changed.status).toBe(200);
     expect(await changed.json()).toMatchObject({ data: { role: "store_admin" }, error: null });
 
-    const again = await call("tenant_admin", "POST", "/invites", { email: "leo@example.com", role: "store_staff" });
+    const again = await call("tenant_admin", "POST", "/invites", { email: "leo@example.com", role: "store_staff", bindings: [] });
     expect(again.status).toBe(201);
     const replaced = await again.json();
     expect(replaced.data.invite.id).not.toBe(data.invite.id);
@@ -111,7 +111,7 @@ describe("Team routes by Role", () => {
   });
 
   it("refuses an email already on the Tenant", async () => {
-    const res = await call("tenant_admin", "POST", "/invites", { email: "store_staff@example.com", role: "store_staff" });
+    const res = await call("tenant_admin", "POST", "/invites", { email: "store_staff@example.com", role: "store_staff", bindings: [] });
     expect(res.status).toBe(409);
   });
 
@@ -121,7 +121,7 @@ describe("Team routes by Role", () => {
   });
 
   it("lets a tenant_admin change and remove another team member", async () => {
-    const changed = await call("tenant_admin", "PATCH", `/members/${staffPartyId}`, { role: "store_admin" });
+    const changed = await call("tenant_admin", "PATCH", `/members/${staffPartyId}`, { role: "store_admin", bindings: [] });
     expect(changed.status).toBe(200);
     expect((await changed.json()).data.members.find((row: { partyId: string }) => row.partyId === staffPartyId).role).toBe(
       "store_admin",
@@ -138,7 +138,7 @@ describe("Team routes by Role", () => {
       .from(accessMasterPowers)
       .where(eq(accessMasterPowers.power, "company:team:invites:create"));
     await db.insert(accessRolePowers).values({ masterRoleId: storeAdminMaster.id, masterPowerId: invitePower.id, scope: "tenant" });
-    const res = await call("store_admin", "POST", "/invites", { email: "flag@example.com", role: "store_staff" });
+    const res = await call("store_admin", "POST", "/invites", { email: "flag@example.com", role: "store_staff", bindings: [] });
     await db
       .delete(accessRolePowers)
       .where(
@@ -154,7 +154,7 @@ describe("Team routes by Role", () => {
 describe("Team invite accept", () => {
   it("lets a new Person join with name and password", async () => {
     const created = await runEffect(
-      createTeamInviteSvc(db, tenantId, users.tenant_admin, ACCESS_ROLE_GRANTS.tenant_admin, { email: "new@example.com", role: "store_staff" }),
+      createTeamInviteSvc(db, tenantId, users.tenant_admin, ACCESS_ROLE_GRANTS.tenant_admin, { email: "new@example.com", role: "store_staff", bindings: [] }),
     );
     const preview = await runEffect(getTeamInvitePreviewSvc(db, created.token));
     expect(preview).toMatchObject({ cafeName: "Sorella", email: "new@example.com", role: "store_staff", hasAccount: false });
@@ -174,7 +174,7 @@ describe("Team invite accept", () => {
   it("lets an existing login accept while signed in as that email", async () => {
     const other = await insertPersonWithLogin(db, "other@example.com");
     const created = await runEffect(
-      createTeamInviteSvc(db, tenantId, users.tenant_admin, ACCESS_ROLE_GRANTS.tenant_admin, { email: "other@example.com", role: "store_admin" }),
+      createTeamInviteSvc(db, tenantId, users.tenant_admin, ACCESS_ROLE_GRANTS.tenant_admin, { email: "other@example.com", role: "store_admin", bindings: [] }),
     );
     await expect(runEffect(acceptTeamInviteSvc(db, created.token, null, {}))).rejects.toMatchObject({
       statusCode: 403,
@@ -188,7 +188,7 @@ describe("Team invite accept", () => {
 
   it("hides an expired token", async () => {
     const created = await runEffect(
-      createTeamInviteSvc(db, tenantId, users.tenant_admin, ACCESS_ROLE_GRANTS.tenant_admin, { email: "late@example.com", role: "store_staff" }),
+      createTeamInviteSvc(db, tenantId, users.tenant_admin, ACCESS_ROLE_GRANTS.tenant_admin, { email: "late@example.com", role: "store_staff", bindings: [] }),
     );
     const later = new Date(Date.now() + 8 * 24 * 60 * 60 * 1000);
     await expect(runEffect(getTeamInvitePreviewSvc(db, created.token, later))).rejects.toMatchObject({
@@ -232,7 +232,7 @@ describe("Assigning Roles", () => {
 
   it("refuses an invite for a Role above the caller's own Powers", async () => {
     const undo = await grantInviteCreate("store_admin");
-    const res = await call("store_admin", "POST", "/invites", { email: "climb@example.com", role: "tenant_admin" });
+    const res = await call("store_admin", "POST", "/invites", { email: "climb@example.com", role: "tenant_admin", bindings: [] });
     await undo();
 
     expect(res.status).toBe(403);
@@ -245,7 +245,7 @@ describe("Assigning Roles", () => {
       .from(accessMasterPowers)
       .where(eq(accessMasterPowers.power, "company:team:members:update"));
     await db.insert(accessRolePowers).values({ masterRoleId: master.id, masterPowerId: power.id, scope: "tenant" });
-    const res = await call("store_admin", "PATCH", `/members/${adminPartyId}`, { role: "store_staff" });
+    const res = await call("store_admin", "PATCH", `/members/${adminPartyId}`, { role: "store_staff", bindings: [] });
     await db
       .delete(accessRolePowers)
       .where(and(eq(accessRolePowers.masterRoleId, master.id), eq(accessRolePowers.masterPowerId, power.id)));
@@ -255,7 +255,7 @@ describe("Assigning Roles", () => {
 
   it("treats a disabled Master Role as not found", async () => {
     await db.update(accessMasterRoles).set({ enabled: false }).where(eq(accessMasterRoles.key, "store_staff"));
-    const res = await call("tenant_admin", "POST", "/invites", { email: "off@example.com", role: "store_staff" });
+    const res = await call("tenant_admin", "POST", "/invites", { email: "off@example.com", role: "store_staff", bindings: [] });
     const list = await call("tenant_admin", "GET", "/roles");
     await db.update(accessMasterRoles).set({ enabled: true }).where(eq(accessMasterRoles.key, "store_staff"));
 

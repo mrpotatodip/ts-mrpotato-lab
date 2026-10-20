@@ -4,10 +4,6 @@ import { accessMasterRoles, authUser, partyRoles, roles, SUPERUSER_ROLE_KEY } fr
 import type { DbConnectType } from "#/lib/db-connection";
 import { toDbError, type DbError } from "#/lib/effect-query";
 
-// -----
-// A login is a superuser only through its
-// Person's superuser party_roles row.
-// -----
 export const isSuperuserEffect = (
   db: DbConnectType,
   userId: string,

@@ -1,10 +1,9 @@
+import type { CountryScope } from "#/modules/tenant/types";
 import { Effect } from "effect";
 import type { Coverage } from "@repo/contracts/amelie";
 import type { DbConnectType } from "#/lib/db-connection";
 import type { DbError } from "#/lib/effect-query";
 import { boundCountryIdsEffect } from "#/modules/tenant/queries";
-
-export type CountryScope = "all" | string[];
 
 export const getCountryScopeSvc = (
   db: DbConnectType,

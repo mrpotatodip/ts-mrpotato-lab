@@ -1,5 +1,7 @@
 export const TEAM_NOT_FOUND = "Team invite not found";
 export const TEAM_BINDING_NOT_IN_TENANT = "A Country or Location you picked is not part of this cafe";
+export const TEAM_BINDINGS_CHOICE_REQUIRED =
+  "Choose whole-cafe or pick Countries and Locations for this Role: send bindings, an empty list means the whole cafe";
 export const TEAM_ROLE_CANNOT_BIND = "This Role cannot be limited to Countries or Locations";
 export const TEAM_BINDINGS_ACTION = "team.member_bindings_set";
 export const TEAM_MEMBER_NOT_FOUND = "Team member not found";

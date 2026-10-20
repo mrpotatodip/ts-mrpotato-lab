@@ -3,18 +3,8 @@ import type { DbConnectType } from "#/lib/db-connection";
 import { Invalid, type DbError, type NotFound } from "#/lib/effect-query";
 import { readCountryIdEffect, resolveCountryRefSvc } from "#/modules/country";
 import { resolveLocationRefSvc } from "#/modules/location";
+import type { ChatBotPlace, ChatBotPlaceInput } from "#/modules/chat-bot/types";
 import { CHAT_BOT_COUNTRY_LOCATION_MISMATCH } from "#/modules/chat-bot/constants";
-
-export type ChatBotPlaceInput = {
-  threadId?: string;
-  location?: string;
-  country?: string;
-};
-
-export type ChatBotPlace = {
-  locationId: string | null;
-  countryId: string | null;
-};
 
 export const resolveChatBotPlaceSvc = (
   db: DbConnectType,

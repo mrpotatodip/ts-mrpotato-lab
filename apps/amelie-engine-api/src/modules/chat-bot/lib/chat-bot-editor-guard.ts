@@ -14,6 +14,7 @@ import {
   TENANT_LOCATION_NOT_COVERED,
   TENANT_LOCATIONS_NOT_COVERED,
 } from "#/modules/tenant";
+import { listActiveLocationRefsEffect } from "#/modules/location";
 import { CHAT_BOT_EDITOR_ONLY } from "#/modules/chat-bot/constants";
 import { resolveToolLocation, toIgnoredLocationResult } from "#/modules/chat-bot/lib";
 import type { LocationNeededResult } from "#/modules/chat-bot/schemas";
@@ -63,7 +64,11 @@ export const requireItemWideChatBotPower = (
 ): Effect.Effect<void, DbError | NotFound | Forbidden> =>
   Effect.gen(function* () {
     const coverage = yield* loadEditorCoverage(runtime, power);
-    if (coverage !== "all") return yield* new Forbidden({ message: TENANT_ITEM_WIDE_NOT_COVERED });
+    if (coverage === "all") return;
+    const open = yield* listActiveLocationRefsEffect(runtime.db, runtime.owner.tenantId);
+    if (uncoveredLocations(coverage, open.map((location) => location.id))) {
+      return yield* new Forbidden({ message: TENANT_ITEM_WIDE_NOT_COVERED });
+    }
   });
 
 export const runAsChatBotEditor = <A>(
