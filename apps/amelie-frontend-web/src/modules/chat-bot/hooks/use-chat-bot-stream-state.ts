@@ -2,7 +2,7 @@ import { useSyncExternalStore } from "react";
 import {
   initialAGUILoadingStackedState,
   type AGUILoadingStackedState,
-} from "#/components/agui-loading";
+} from "@repo/chat-bot-react-loader/agui-loading";
 
 import { chatBotStreamStateStore } from "../stores";
 

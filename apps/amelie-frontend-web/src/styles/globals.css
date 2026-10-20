@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "sonner/dist/styles.css";
+@import "@repo/chat-bot-react-loader/loader.css";
 
 @custom-variant dark (&:is(.dark *));
 

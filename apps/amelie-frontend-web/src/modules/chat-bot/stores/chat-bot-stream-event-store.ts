@@ -3,7 +3,7 @@ import {
   aguiLoadingStackedReducer,
   initialAGUILoadingStackedState,
   type AGUILoadingStackedState,
-} from "#/components/agui-loading";
+} from "@repo/chat-bot-react-loader/agui-loading";
 
 import { CHAT_BOT_STRUCTURED_OUTPUT_START, CHAT_BOT_TURN_STARTED } from "../constants";
 import { toChatBotStackedEvent } from "../utils";

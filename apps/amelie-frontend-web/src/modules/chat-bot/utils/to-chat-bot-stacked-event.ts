@@ -2,7 +2,7 @@ import { EventType, type StreamChunk } from "@tanstack/ai";
 import type {
   AGUILoadingStackedEvent,
   AGUILoadingSubagentTag,
-} from "#/components/agui-loading";
+} from "@repo/chat-bot-react-loader/agui-loading";
 
 // -----
 // Keep a subagent's run tag so its rows
