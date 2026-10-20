@@ -27,10 +27,10 @@ export function useTeamActions() {
     onSuccess: reload,
     meta: { successMessage: "Invite revoked" },
   });
-  const changeRole = useMutation({
+  const saveMember = useMutation({
     mutationFn: updateTeamMember,
     onSuccess: reload,
-    meta: { successMessage: "Role saved" },
+    meta: { successMessage: "Member saved" },
   });
   const remove = useMutation({
     mutationFn: removeTeamMember,
@@ -38,5 +38,5 @@ export function useTeamActions() {
     meta: { successMessage: "Removed from the cafe" },
   });
 
-  return { invite, changeInviteRole, revoke, changeRole, remove };
+  return { invite, changeInviteRole, revoke, saveMember, remove };
 }

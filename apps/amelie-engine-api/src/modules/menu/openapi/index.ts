@@ -8,6 +8,7 @@ export { addMenuItemDoc } from "./add-menu-item";
 export { updateMenuItemDoc } from "./update-menu-item";
 export { deleteMenuItemDoc } from "./delete-menu-item";
 export { setMenuItemLocationsDoc } from "./set-menu-item-locations";
+export { setMenuItemSoldOutLocationsDoc } from "./set-menu-item-sold-out-locations";
 export { setMenuItemCountryPriceDoc } from "./set-menu-item-country-price";
 export { getMenuItemImageDoc } from "./get-menu-item-image";
 export { addMenuItemImagesDoc } from "./add-menu-item-images";

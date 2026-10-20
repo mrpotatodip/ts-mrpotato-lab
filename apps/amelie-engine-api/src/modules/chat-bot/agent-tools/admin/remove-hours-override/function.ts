@@ -1,5 +1,5 @@
 import { removeHoursOverrideSvc } from "#/modules/schedule";
-import { answerNeedsLocation, resolveToolLocation, runAsChatBotEditor, toIgnoredLocationResult } from "#/modules/chat-bot/lib";
+import { answerNeedsLocation, runAsBoundChatBotEditor } from "#/modules/chat-bot/lib";
 import type { LocationNeededResult } from "#/modules/chat-bot/schemas";
 import type { ChatBotRuntime } from "#/modules/chat-bot/types";
 import type { RemoveHoursOverrideInput, RemoveHoursOverrideResult } from "./schema";
@@ -7,14 +7,9 @@ import type { RemoveHoursOverrideInput, RemoveHoursOverrideResult } from "./sche
 export const removeHoursOverride = async (
   { date, locationId }: RemoveHoursOverrideInput,
   runtime: ChatBotRuntime,
-): Promise<RemoveHoursOverrideResult | LocationNeededResult> => {
-  const { locationId: chosenLocationId, ignored } = await resolveToolLocation(locationId, runtime);
-  if (ignored) return toIgnoredLocationResult(ignored);
-  return runAsChatBotEditor(
-    runtime,
+): Promise<RemoveHoursOverrideResult | LocationNeededResult> =>
+  runAsBoundChatBotEditor(runtime, "store:hours:overrides:delete", locationId, (target) =>
     answerNeedsLocation(
-      removeHoursOverrideSvc(runtime.db, runtime.owner.tenantId, date, chosenLocationId),
+      removeHoursOverrideSvc(runtime.db, runtime.owner.tenantId, date, target.locationId, target.coverage),
     ),
-    "store:hours:overrides:delete",
   );
-};

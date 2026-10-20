@@ -8,6 +8,7 @@ export type MenuAccess = {
   canDeleteItem: boolean;
   canReorderItems: boolean;
   canSetCountryPrice: boolean;
+  canSetLocations: boolean;
   canSetAvailability: boolean;
   canCreateImage: boolean;
   canUpdateImage: boolean;

@@ -54,6 +54,7 @@ export const AdminAuditSummarySchema = z.object({
   enabled: z.boolean(),
 });
 
+export const AdminAuditBindableSchema = z.object({ canBeBound: z.boolean() });
 export const AdminAuditPowersSchema = z.object({ powers: z.array(z.string()) });
 
 export type AdminRoleFormValues = z.infer<typeof AdminRoleFormValuesSchema>;

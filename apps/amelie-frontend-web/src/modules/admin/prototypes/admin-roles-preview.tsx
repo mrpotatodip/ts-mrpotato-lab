@@ -9,13 +9,13 @@ import { locationsQueries } from "#/modules/location";
 import { tenantsQueries } from "#/modules/tenant";
 import { PageHeader } from "#/modules/shared";
 
-const base = { description: null, scope: "tenant", enabled: true, isSystem: false } as const;
+const base = { description: null, scope: "tenant", enabled: true, isSystem: false, canBeBound: false } as const;
 const ROLES: AdminRoleDetail[] = [
-  { ...base, id: "00000000-0000-4000-8000-000000000001", key: "tenant_admin", label: "Tenant admin", isSystem: true, powers: [...ACCESS_ROLE_GRANTS.tenant_admin], powerCount: ACCESS_ROLE_GRANTS.tenant_admin.length, holderCount: 1 },
-  { ...base, id: "00000000-0000-4000-8000-000000000002", key: "store_admin", label: "Store admin", powers: [...ACCESS_ROLE_GRANTS.store_admin], powerCount: ACCESS_ROLE_GRANTS.store_admin.length, holderCount: 3 },
-  { ...base, id: "00000000-0000-4000-8000-000000000003", key: "store_staff", label: "Store staff", powers: [...ACCESS_ROLE_GRANTS.store_staff], powerCount: ACCESS_ROLE_GRANTS.store_staff.length, holderCount: 12 },
+  { ...base, id: "00000000-0000-4000-8000-000000000001", key: "tenant_admin", label: "Tenant admin", isSystem: true, canBeBound: false, powers: [...ACCESS_ROLE_GRANTS.tenant_admin], powerCount: ACCESS_ROLE_GRANTS.tenant_admin.length, holderCount: 1 },
+  { ...base, id: "00000000-0000-4000-8000-000000000002", key: "store_admin", label: "Store admin", canBeBound: true, powers: [...ACCESS_ROLE_GRANTS.store_admin], powerCount: ACCESS_ROLE_GRANTS.store_admin.length, holderCount: 3 },
+  { ...base, id: "00000000-0000-4000-8000-000000000003", key: "store_staff", label: "Store staff", canBeBound: true, powers: [...ACCESS_ROLE_GRANTS.store_staff], powerCount: ACCESS_ROLE_GRANTS.store_staff.length, holderCount: 12 },
   { ...base, id: "00000000-0000-4000-8000-000000000004", key: "shift_lead", label: "Shift lead", description: "Runs a shift and marks items sold out.", enabled: false, powers: ["company:menu:items:read", "store:menu:availability:read", "store:menu:availability:update"], powerCount: 3, holderCount: 0 },
-  { ...base, id: "00000000-0000-4000-8000-000000000005", key: "superuser", label: "Superuser", scope: "platform", isSystem: true, powers: [...ACCESS_ROLE_GRANTS.superuser], powerCount: 3, holderCount: 1 },
+  { ...base, id: "00000000-0000-4000-8000-000000000005", key: "superuser", label: "Superuser", scope: "platform", isSystem: true, canBeBound: false, powers: [...ACCESS_ROLE_GRANTS.superuser], powerCount: 3, holderCount: 1 },
 ];
 
 const AUDIT: AdminAuditEntry[] = [

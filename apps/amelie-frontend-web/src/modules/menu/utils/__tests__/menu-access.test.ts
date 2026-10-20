@@ -12,6 +12,7 @@ const NONE: MenuAccess = {
   canDeleteItem: false,
   canReorderItems: false,
   canSetCountryPrice: false,
+  canSetLocations: false,
   canSetAvailability: false,
   canCreateImage: false,
   canUpdateImage: false,
@@ -39,6 +40,12 @@ describe("menu access", () => {
 
     expect(canEditMenuCatalog(access)).toBe(true);
     expect(canEditMenuItemRow(access)).toBe(false);
+  });
+
+  it("counts a locations-only role as an item-row editor, and sold-out alone as neither", () => {
+    expect(canEditMenuItemRow({ ...NONE, canSetLocations: true })).toBe(true);
+    expect(canEditMenuItemRow({ ...NONE, canSetAvailability: true })).toBe(false);
+    expect(canEditMenuCatalog({ ...NONE, canSetAvailability: true })).toBe(false);
   });
 
   it("counts a country-price-only role as a catalog editor", () => {

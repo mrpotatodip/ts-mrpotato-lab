@@ -8,6 +8,7 @@ export * from "./add-menu-item";
 export * from "./update-menu-item";
 export * from "./delete-menu-item";
 export * from "./set-menu-item-locations";
+export * from "./set-menu-item-sold-out-locations";
 export * from "./set-menu-item-country-price";
 export * from "./add-menu-item-images";
 export * from "./delete-menu-item-image";

@@ -22,16 +22,29 @@ export const TeamRoleBodySchema = z.object({
   role: TeamRoleKeySchema,
 });
 
+export const TeamBindingSchema = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("country"), id: z.uuid() }),
+  z.object({ kind: z.literal("location"), id: z.uuid() }),
+]);
+
+export const TeamBindingsSchema = z.array(TeamBindingSchema).max(200);
+
+export const UpdateTeamMemberBodySchema = TeamRoleBodySchema.extend({
+  bindings: TeamBindingsSchema.optional(),
+});
+
 export const TeamRoleSchema = z.object({
   key: z.string(),
   label: z.string(),
   description: z.string().nullable(),
+  canBeBound: z.boolean(),
 });
 
 export const TeamRolesSchema = z.array(TeamRoleSchema);
 
 export const CreateTeamInviteBodySchema = TeamRoleBodySchema.extend({
   email: z.email().max(SIGN_UP_EMAIL_MAX).trim().toLowerCase(),
+  bindings: TeamBindingsSchema.optional(),
 });
 
 export const AcceptTeamInviteBodySchema = z.object({
@@ -46,6 +59,8 @@ export const TeamMemberSchema = z.object({
   email: z.string(),
   role: z.string(),
   roleLabel: z.string(),
+  canBeBound: z.boolean(),
+  bindings: TeamBindingsSchema,
 });
 
 export const TeamInviteSchema = z.object({
@@ -53,6 +68,7 @@ export const TeamInviteSchema = z.object({
   email: z.string(),
   role: z.string(),
   roleLabel: z.string(),
+  bindings: TeamBindingsSchema,
   expiresAt: z.iso.datetime(),
   createdAt: z.iso.datetime(),
 });
@@ -86,6 +102,8 @@ export type TeamMemberParam = z.infer<typeof TeamMemberParamSchema>;
 export type TeamInviteTokenParam = z.infer<typeof TeamInviteTokenParamSchema>;
 export type TeamRole = z.infer<typeof TeamRoleSchema>;
 export type TeamRoles = z.infer<typeof TeamRolesSchema>;
+export type TeamBinding = z.infer<typeof TeamBindingSchema>;
+export type UpdateTeamMemberBody = z.infer<typeof UpdateTeamMemberBodySchema>;
 export type TeamRoleBody = z.infer<typeof TeamRoleBodySchema>;
 export type CreateTeamInviteBody = z.infer<typeof CreateTeamInviteBodySchema>;
 export type AcceptTeamInviteBody = z.infer<typeof AcceptTeamInviteBodySchema>;

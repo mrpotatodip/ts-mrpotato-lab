@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ToolLocationRefSchema } from "#/modules/chat-bot/schemas";
 
 const field = (max: number) => z.string().trim().min(1).max(max).nullable();
 
@@ -13,8 +14,9 @@ export const UpdateBusinessProfileInputSchema = z
     // -----
     email: z.string().trim().max(120).regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/).nullable(),
     address: field(200),
+    locationId: ToolLocationRefSchema,
   })
-  .refine((input) => Object.values(input).some((value) => value !== null), {
+  .refine(({ locationId: _location, ...fields }) => Object.values(fields).some((value) => value !== null), {
     message: "pass at least one field to change",
   });
 

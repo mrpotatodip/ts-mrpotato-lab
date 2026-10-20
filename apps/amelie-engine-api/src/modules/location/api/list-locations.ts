@@ -11,7 +11,7 @@ const app = new Hono<AppEnv>();
 app.get("/", listLocationsDoc,
   requirePower("company:profile:locations:read"), async (c) => {
   const db = db_connect(c.env.HYPERDRIVE_REALTIME.connectionString);
-  const data = await runEffect(listLocationsSvc(db, c.get("tenantId")));
+  const data = await runEffect(listLocationsSvc(db, c.get("tenantId"), c.get("coverage")));
   return c.json({ data, error: null });
 });
 

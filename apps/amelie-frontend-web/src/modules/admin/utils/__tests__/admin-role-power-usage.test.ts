@@ -3,8 +3,8 @@ import { ACCESS_POWER_USAGE, isAccessPower } from "@repo/contracts/amelie";
 import { adminPowerUsageLines } from "../admin-role-power-usage";
 
 const usage = {
-  "company:menu:items:read": { routes: ["GET /menu"], tools: [] },
-  "company:menu:items:update": { routes: ["PUT /menu/items/:itemId"], tools: ["updateMenuItem"] },
+  "company:menu:items:read": { guard: "plain" as const, routes: ["GET /menu"], tools: [] },
+  "company:menu:items:update": { guard: "plain" as const, routes: ["PUT /menu/items/:itemId"], tools: ["updateMenuItem"] },
 };
 
 describe("adminPowerUsageLines", () => {

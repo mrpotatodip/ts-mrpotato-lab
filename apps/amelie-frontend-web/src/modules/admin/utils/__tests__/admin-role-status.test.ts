@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  adminRoleBindingLocked,
   adminRoleDeleteBlocker,
   adminRoleDisableBlocker,
   adminRoleStatusLabel,
@@ -33,5 +34,11 @@ describe("admin role status", () => {
     expect(formatAdminPowerCount(1)).toBe("1 power");
     expect(formatAdminPowerCount(0)).toBe("0 powers");
     expect(formatAdminPowerCount(68)).toBe("68 powers");
+  });
+
+  it("fixes the binding setting off for a system or platform role", () => {
+    expect(adminRoleBindingLocked({ scope: "tenant", isSystem: true })).toBe("A system role is always cafe-wide.");
+    expect(adminRoleBindingLocked({ scope: "platform", isSystem: true })).toBe("A platform role is always cafe-wide.");
+    expect(adminRoleBindingLocked({ scope: "tenant", isSystem: false })).toBeNull();
   });
 });

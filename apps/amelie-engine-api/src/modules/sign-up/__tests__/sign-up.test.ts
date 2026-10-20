@@ -140,6 +140,7 @@ describe("sign-up", () => {
       role: "tenant_admin",
       roleLabel: "Tenant admin",
       powers: [...ACCESS_ROLE_GRANTS.tenant_admin].toSorted(),
+      coverage: "all",
     });
     const [partyRole] = await db.select().from(partyRoles);
     const [user] = await db.select().from(authUser).where(eq(authUser.id, result.userId));

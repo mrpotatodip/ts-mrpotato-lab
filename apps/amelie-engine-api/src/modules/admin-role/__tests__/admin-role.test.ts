@@ -8,8 +8,13 @@ import {
   accessMasterRoles,
   accessRolePowers,
   addSuperuser,
+  partyRoles,
+  partyRoleScopes,
   roles,
+  tenantCountries,
   syncAccessMasterPowers,
+  teamInvites,
+  teamInviteScopes,
 } from "@repo/db-amelie";
 import {
   ACCESS_POWERS,
@@ -21,6 +26,7 @@ import {
 import { AppError } from "#/lib/errors";
 import type { AppEnv } from "#/types/variables";
 import type { DbConnectType } from "#/lib/db-connection";
+import { adminRoleStillBound } from "#/modules/admin-role/constants";
 import { createRequireSuperuser } from "#/modules/admin";
 import adminRoleRestAPI from "#/modules/admin-role";
 import {
@@ -86,7 +92,7 @@ const createRole = async (key: string) => {
 beforeAll(async () => {
   const created = await createTestPglite();
   db = created.db;
-  const server = new PGLiteSocketServer({ db: created.pg, port: 0, maxConnections: 50 });
+  const server = new PGLiteSocketServer({ db: created.pg, port: 0, maxConnections: 200 });
   await server.start();
   connectionString = `postgresql://postgres@${server.getServerConn()}/postgres`;
   sorellaId = await insertTenant(db, "Sorella", "sorella");
@@ -385,5 +391,137 @@ describe("the Power catalogue", () => {
       .from(accessMasterPowers)
       .where(eq(accessMasterPowers.power, "company:ghost:things:read"));
     expect(ghost).toBeDefined();
+  });
+});
+
+describe("binding a role's members", () => {
+  const flagOf = async (key: string) => (await roleByKey(key))?.canBeBound;
+
+  it("starts on for Store admin and Store staff, off for Tenant admin and Superuser", async () => {
+    expect(await flagOf("store_admin")).toBe(true);
+    expect(await flagOf("store_staff")).toBe(true);
+    expect(await flagOf("tenant_admin")).toBe(false);
+    expect(await flagOf("superuser")).toBe(false);
+    const { data } = await json(await call(bossUserId, "GET", "/roles"));
+    expect(data.find((role: { key: string }) => role.key === "store_staff").canBeBound).toBe(true);
+  });
+
+  it("starts a new role off", async () => {
+    const created = await createRole("bind_default");
+    const { data } = await json(await call(bossUserId, "GET", `/roles/${created.id}`));
+    expect(data.canBeBound).toBe(false);
+  });
+
+  it("turns on and off, with the old and new value in the audit log", async () => {
+    const created = await createRole("bind_toggle");
+
+    const on = await call(bossUserId, "PATCH", `/roles/${created.id}`, { canBeBound: true });
+    expect(on.status).toBe(200);
+    expect((await json(on)).data.canBeBound).toBe(true);
+    const off = await call(bossUserId, "PATCH", `/roles/${created.id}`, { canBeBound: false });
+    expect((await json(off)).data.canBeBound).toBe(false);
+
+    const log = await json(await call(bossUserId, "GET", `/role-audit-log?roleId=${created.id}`));
+    const entries = log.data.filter((entry: { action: string }) => entry.action === "role.can_be_bound_set");
+    expect(entries.map((entry: { before: unknown; after: unknown }) => [entry.before, entry.after])).toEqual([
+      [{ canBeBound: true }, { canBeBound: false }],
+      [{ canBeBound: false }, { canBeBound: true }],
+    ]);
+    expect(entries[0].actorEmail).toBe("boss@amelie.test");
+  });
+
+  it("writes no audit entry when the value does not change", async () => {
+    const created = await createRole("bind_same");
+    await call(bossUserId, "PATCH", `/roles/${created.id}`, { canBeBound: false });
+    const log = await json(await call(bossUserId, "GET", `/role-audit-log?roleId=${created.id}`));
+    expect(log.data.map((entry: { action: string }) => entry.action)).toEqual(["role.created"]);
+  });
+
+  it("refuses to turn it on for a system role or a platform role", async () => {
+    const tenantAdmin = await roleByKey("tenant_admin");
+    const superuser = await roleByKey("superuser");
+    const system = await call(bossUserId, "PATCH", `/roles/${tenantAdmin.id}`, { canBeBound: true });
+    const platform = await call(bossUserId, "PATCH", `/roles/${superuser.id}`, { canBeBound: true });
+    expect(system.status).toBe(409);
+    expect(platform.status).toBeGreaterThanOrEqual(400);
+    expect(await flagOf("tenant_admin")).toBe(false);
+    expect(await flagOf("superuser")).toBe(false);
+  });
+
+  it("is ruled out in the database for a system role or a platform role", async () => {
+    await expect(
+      db.update(accessMasterRoles).set({ canBeBound: true }).where(eq(accessMasterRoles.key, "tenant_admin")),
+    ).rejects.toThrow(/Failed query/);
+    await expect(
+      db.update(accessMasterRoles).set({ canBeBound: true }).where(eq(accessMasterRoles.key, "superuser")),
+    ).rejects.toThrow(/Failed query/);
+  });
+
+  it("refuses turning it off while a member of the role has bindings, counting them, and allows it once cleared", async () => {
+    const storeStaff = await roleByKey("store_staff");
+    const [member] = await db
+      .select({ id: partyRoles.id })
+      .from(partyRoles)
+      .innerJoin(roles, eq(roles.id, partyRoles.roleId))
+      .where(eq(roles.masterRoleId, storeStaff.id));
+    const [country] = await db.select().from(tenantCountries).where(eq(tenantCountries.tenantId, sorellaId));
+    await db.insert(partyRoleScopes).values({ tenantId: sorellaId, partyRoleId: member.id, countryId: country.id });
+
+    const refused = await call(bossUserId, "PATCH", `/roles/${storeStaff.id}`, { canBeBound: false });
+    expect(refused.status).toBe(409);
+    expect((await json(refused)).error?.message).toBe(adminRoleStillBound(1));
+    expect(await flagOf("store_staff")).toBe(true);
+
+    await db.delete(partyRoleScopes).where(eq(partyRoleScopes.partyRoleId, member.id));
+    const allowed = await call(bossUserId, "PATCH", `/roles/${storeStaff.id}`, { canBeBound: false });
+    expect(allowed.status).toBe(200);
+    await call(bossUserId, "PATCH", `/roles/${storeStaff.id}`, { canBeBound: true });
+  });
+
+  it("counts pending invites with bindings too, and ignores revoked, accepted and expired ones", async () => {
+    const storeStaff = await roleByKey("store_staff");
+    const [holder] = await db
+      .select({ id: partyRoles.id, partyId: partyRoles.partyId, roleId: partyRoles.roleId })
+      .from(partyRoles)
+      .innerJoin(roles, eq(roles.id, partyRoles.roleId))
+      .where(eq(roles.masterRoleId, storeStaff.id));
+    const [country] = await db.select().from(tenantCountries).where(eq(tenantCountries.tenantId, sorellaId));
+    const future = new Date(Date.now() + 86_400_000);
+    const invite = async (email: string, change: Partial<typeof teamInvites.$inferInsert> = {}) => {
+      const [created] = await db
+        .insert(teamInvites)
+        .values({
+          tenantId: sorellaId,
+          email,
+          roleId: holder.roleId,
+          tokenHash: `hash-${email}`,
+          invitedBy: holder.partyId,
+          expiresAt: future,
+          ...change,
+        })
+        .returning();
+      await db.insert(teamInviteScopes).values({ tenantId: sorellaId, inviteId: created.id, countryId: country.id });
+      return created;
+    };
+    await invite("revoked@x.test", { revokedAt: new Date() });
+    await invite("accepted@x.test", { acceptedAt: new Date() });
+    await invite("expired@x.test", { expiresAt: new Date(Date.now() - 1000) });
+    expect((await call(bossUserId, "PATCH", `/roles/${storeStaff.id}`, { canBeBound: false })).status).toBe(200);
+    await call(bossUserId, "PATCH", `/roles/${storeStaff.id}`, { canBeBound: true });
+
+    const pending = await invite("pending@x.test");
+    const refused = await call(bossUserId, "PATCH", `/roles/${storeStaff.id}`, { canBeBound: false });
+    expect(refused.status).toBe(409);
+    expect((await json(refused)).error?.message).toBe(adminRoleStillBound(1));
+    expect(await flagOf("store_staff")).toBe(true);
+
+    await db.update(teamInvites).set({ revokedAt: new Date() }).where(eq(teamInvites.id, pending.id));
+    expect((await call(bossUserId, "PATCH", `/roles/${storeStaff.id}`, { canBeBound: false })).status).toBe(200);
+    await call(bossUserId, "PATCH", `/roles/${storeStaff.id}`, { canBeBound: true });
+  });
+
+  it("says how many members still have bindings when turning it off is refused", () => {
+    expect(adminRoleStillBound(3)).toBe("Cannot turn this off: 3 members still have bindings. Clear them first.");
+    expect(adminRoleStillBound(1)).toBe("Cannot turn this off: 1 member still has bindings. Clear them first.");
   });
 });

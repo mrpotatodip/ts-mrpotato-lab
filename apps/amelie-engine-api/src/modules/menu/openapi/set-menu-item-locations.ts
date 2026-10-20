@@ -24,9 +24,9 @@ export const setMenuItemLocationsDoc = describeRoute({
   requestBody: { required: true, content: { "application/json": { schema: resolver(MenuItemLocationsBodySchema) } } },
   description: routeText({
     context:
-      "A tenant_admin or store_admin marks an item sold out at some Locations, or sold only at chosen Locations. With availableAtAllLocations true, locationIds are the Locations where it is sold out. With it false, locationIds are the only Locations that sell it, and a Location opened later does not.",
+      "A Person whose Role has `company:menu:locations:update` chooses where a menu item is sold from the Master menu: sold only at chosen Locations, or at every Location except some. With availableAtAllLocations true, locationIds are the Locations where it is sold out. With it false, locationIds are the only Locations that sell it, and a Location opened later does not.",
     steps: [
-      "The server checks that the signed-in Person is a tenant_admin or store_admin of this Tenant. A store_staff member gets 403.",
+      "The server checks that the signed-in Person's Role has `company:menu:locations:update` in this Tenant. Without it the answer is 403.",
       "The server looks for the item and the Locations in this Tenant. If it finds none, or a Location is archived or belongs to another Tenant, the answer is 404.",
       "The server replaces the item's flag and Location list together and returns the item.",
     ],

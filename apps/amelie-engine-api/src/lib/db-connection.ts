@@ -21,3 +21,5 @@ export const db_connect = (connectionString: string) => {
 // pass an in-process PGlite database.
 // -----
 export type DbConnectType = PgDatabase<PgQueryResultHKT, Record<string, never>>;
+
+export type DbTransaction = Parameters<Parameters<DbConnectType["transaction"]>[0]>[0];

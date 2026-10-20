@@ -1,15 +1,15 @@
 import { updateBusinessProfileSvc } from "#/modules/business-profile";
 import type { BusinessProfileChange } from "#/modules/business-profile";
-import { runAsChatBotEditor } from "#/modules/chat-bot/lib";
+import { answerNeedsLocation, runAsBoundChatBotEditor } from "#/modules/chat-bot/lib";
 import type { ChatBotRuntime } from "#/modules/chat-bot/types";
-import type { BusinessProfileResult } from "#/modules/chat-bot/schemas";
+import type { BusinessProfileResult, LocationNeededResult } from "#/modules/chat-bot/schemas";
 import type { UpdateBusinessProfileInput } from "./schema";
 
 // -----
 // null means "keep it", so only the fields
 // the model passed are written.
 // -----
-const toChange = (input: UpdateBusinessProfileInput): BusinessProfileChange => ({
+const toChange = (input: Omit<UpdateBusinessProfileInput, "locationId">): BusinessProfileChange => ({
   ...(input.description !== null && { description: input.description }),
   ...(input.websiteUrl !== null && { websiteUrl: input.websiteUrl }),
   ...(input.phone !== null && { phone: input.phone }),
@@ -18,7 +18,11 @@ const toChange = (input: UpdateBusinessProfileInput): BusinessProfileChange => (
 });
 
 export const updateBusinessProfile = (
-  input: UpdateBusinessProfileInput,
+  { locationId, ...input }: UpdateBusinessProfileInput,
   runtime: ChatBotRuntime,
-): Promise<BusinessProfileResult> =>
-  runAsChatBotEditor(runtime, updateBusinessProfileSvc(runtime.db, runtime.owner.tenantId, toChange(input)), "company:profile:business_profile:update");
+): Promise<BusinessProfileResult | LocationNeededResult> =>
+  runAsBoundChatBotEditor(runtime, "company:profile:business_profile:update", locationId, (target) =>
+    answerNeedsLocation(
+      updateBusinessProfileSvc(runtime.db, runtime.owner.tenantId, toChange(input), target.locationId, target.coverage),
+    ),
+  );

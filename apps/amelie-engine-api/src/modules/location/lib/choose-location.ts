@@ -1,3 +1,4 @@
+import type { Coverage } from "@repo/contracts/amelie";
 import type { ActiveLocation, LocationChoice } from "#/modules/location/types";
 
 // -----
@@ -5,11 +6,16 @@ import type { ActiveLocation, LocationChoice } from "#/modules/location/types";
 // ones. With none named, a lone Location is
 // used and several mean the caller must ask.
 // -----
-export const chooseLocation = (active: ActiveLocation[], requestedId?: string): LocationChoice => {
+export const chooseLocation = (
+  active: ActiveLocation[],
+  requestedId?: string,
+  coverage: Coverage = "all",
+): LocationChoice => {
+  const reachable = coverage === "all" ? active : active.filter((location) => coverage.includes(location.id));
   if (requestedId !== undefined) {
-    const found = active.find((location) => location.id === requestedId);
+    const found = reachable.find((location) => location.id === requestedId);
     return found ? { kind: "chosen", location: found } : { kind: "unknown" };
   }
-  if (active.length === 1) return { kind: "chosen", location: active[0] };
-  return { kind: "needs-location", options: active.map(({ id, name }) => ({ id, name })) };
+  if (reachable.length === 1) return { kind: "chosen", location: reachable[0] };
+  return { kind: "needs-location", options: reachable.map(({ id, name }) => ({ id, name })) };
 };

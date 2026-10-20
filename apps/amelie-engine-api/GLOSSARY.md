@@ -24,7 +24,7 @@ Domain glossary for Amelie, an AI customer assistant that answers a small busine
 
 - **Power** — one exact colon path through the dashboard tree, ending in an Action (`company:menu:items:read`). Depth is not capped. A grant that is not a catalogue leaf is invalid. A parent path does not grant children, and `update` does not grant `read`. The Assistant's cafe-changing tools use the target path (e.g. `company:menu:items:update`), not `company:assistant:threads:create`. _Avoid_: permission, wildcard, capability.
 
-- **Party role** — a Person holding one Role, in one Tenant (a `party_roles` row; a superuser row has no Tenant). A Person has at most one Party role per Tenant, and may hold Party roles in several Tenants (e.g. someone who runs two cafés). In prose, "team member" means a Person with a Party role in the Tenant. _Avoid_: Tenant Member, membership, seat.
+- **Party role** — a Person holding one Role, in one Tenant (a `party_roles` row; a superuser row has no Tenant). A Person has at most one Party role per Tenant, and may hold Party roles in several Tenants (e.g. someone who runs two cafés). In prose, "team member" means a Person with a Party role in the Tenant. The team belongs to the Tenant, not to a Location; a team member can still be narrowed to part of the cafe by a **Binding**. _Avoid_: Tenant Member, membership, seat.
 
 - **Team invite** — a pending offer for one email to hold one Role in one Tenant. The Person accepts it through a join link. It is not a platform invite code and does not start a cafe. _Avoid_: invitation, seat invite, member invite.
 
@@ -36,7 +36,17 @@ Domain glossary for Amelie, an AI customer assistant that answers a small busine
 
 - **Business** — informal word for what a Tenant represents to people (a café, restaurant, or local shop). Fine in UI copy and conversation; in data and code say **Tenant** or **Organization**.
 
-- **Location** — one physical place a Tenant operates from (e.g. Downtown, Airport). Every Tenant has at least one, and each belongs to one Country, chosen when it is added and never changed (see ADR-0002). A new Location's timezone starts from the last Location created in its Country, else the Tenant's, and stays editable. Contact details (address, phone), timezone and opening hours belong to a Location; the menu, FAQs, team and Roles belong to the Tenant. Archived, never deleted. A request about hours or contact details names a Location, or uses the Tenant's only one; with several and none named, the answer is "needs location" plus the options. _Avoid_: branch, store, outlet, site. See ADR-0001.
+- **Location** — one physical place a Tenant operates from (e.g. Downtown, Airport). Every Tenant has at least one, and each belongs to one Country, chosen when it is added and never changed (see ADR-0002). A new Location's timezone starts from the last Location created in its Country, else the Tenant's, and stays editable. Contact details (address, phone), timezone and opening hours belong to a Location; the menu, FAQs, team and Roles belong to the Tenant, though a team member's reach can be narrowed to some Locations (see **Binding** and **Covered Location**). Archived, never deleted. A request about hours or contact details names a Location, or uses the Tenant's only one; with several and none named, the answer is "needs location" plus the options. _Avoid_: branch, store, outlet, site. See ADR-0001.
+
+## Scoped team members
+
+- **Binding** — one Country or one Location that a team member is limited to. A member holds a list of Bindings and may mix Countries and Locations (all of Canada, and only the Airport in the US). A Country Binding covers every Location in that Country, including ones opened later; a Location Binding covers that Location alone. Only some Roles can carry Bindings, and the team page shows them on every member. _Avoid_: assignment, grant, branch access, permission.
+
+- **Covered Location** — an open Location a team member's Bindings reach, through a Location Binding or through its Country. Archived Locations are never covered. A member whose Bindings reach no open Location covers nothing; they are not treated as whole-cafe. _Avoid_: assigned Location, allowed Location.
+
+- **Bound Power** — a Power that a Binding limits, so the member holds it only at their Covered Locations. The Power catalogue marks each one; a Power not marked is open to a bound member as their Role grants it (team, master menu, Country prices). _Avoid_: scoped Power, location Power.
+
+- **Whole-cafe member** — a team member with no Bindings, who reaches every Location, as every member did before Bindings existed. It is a deliberate choice on a Role that can carry Bindings, never a default left by omission. A member whose Role cannot carry Bindings is always whole-cafe. _Avoid_: unrestricted member, global member, unbound member.
 
 ## Business knowledge
 

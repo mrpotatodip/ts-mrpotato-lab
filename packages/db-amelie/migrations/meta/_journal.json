@@ -281,6 +281,34 @@
       "when": 1792290000000,
       "tag": "0039_access_audit_log",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1792300000000,
+      "tag": "0040_menu_item_locations_power",
+      "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1792300100000,
+      "tag": "0041_role_can_be_bound",
+      "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1792300200000,
+      "tag": "0042_party_role_scopes",
+      "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1792300300000,
+      "tag": "0043_team_invite_scopes",
+      "breakpoints": true
     }
   ]
 }

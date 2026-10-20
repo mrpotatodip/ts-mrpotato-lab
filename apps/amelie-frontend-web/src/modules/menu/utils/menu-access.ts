@@ -2,7 +2,7 @@ import type { MenuAccess } from "../types";
 
 export function canEditMenuItemRow(access: MenuAccess): boolean {
   return (
-    access.canSetAvailability ||
+    access.canSetLocations ||
     access.canReorderItems ||
     access.canUpdateItem ||
     access.canDeleteItem ||

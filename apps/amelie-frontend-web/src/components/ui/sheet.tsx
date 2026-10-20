@@ -30,16 +30,20 @@ function SheetOverlay({
 }
 
 const sheetVariants = cva(
-  "fixed z-50 gap-4 bg-background p-6 shadow-lg outline-none transition-transform ease-in-out duration-300",
+  // Slides on a drawer curve, snaps shut faster than it opens, and
+  // fades with reduced motion. `data-instant` skips the motion for
+  // keyboard-triggered toggles. The extra 1rem in the offsets clears
+  // floating sheets that sit inset from the edge.
+  "fixed z-50 gap-4 bg-background p-6 shadow-lg outline-none transition-[translate,opacity] duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] data-starting-style:opacity-0 data-ending-style:opacity-0 data-ending-style:duration-150 data-ending-style:ease-out data-instant:duration-0 data-instant:data-ending-style:duration-0 motion-reduce:data-starting-style:translate-none motion-reduce:data-ending-style:translate-none",
   {
     variants: {
       side: {
-        top: "inset-x-0 top-0 border-b data-starting-style:-translate-y-full data-ending-style:-translate-y-full",
+        top: "inset-x-0 top-0 border-b data-starting-style:-translate-y-[calc(100%+1rem)] data-ending-style:-translate-y-[calc(100%+1rem)]",
         bottom:
-          "inset-x-0 bottom-0 border-t data-starting-style:translate-y-full data-ending-style:translate-y-full",
-        left: "inset-y-0 left-0 h-full w-3/4 border-r sm:max-w-sm data-starting-style:-translate-x-full data-ending-style:-translate-x-full",
+          "inset-x-0 bottom-0 border-t data-starting-style:translate-y-[calc(100%+1rem)] data-ending-style:translate-y-[calc(100%+1rem)]",
+        left: "inset-y-0 left-0 h-full w-3/4 border-r sm:max-w-sm data-starting-style:-translate-x-[calc(100%+1rem)] data-ending-style:-translate-x-[calc(100%+1rem)]",
         right:
-          "inset-y-0 right-0 h-full w-3/4 border-l sm:max-w-sm data-starting-style:translate-x-full data-ending-style:translate-x-full",
+          "inset-y-0 right-0 h-full w-3/4 border-l sm:max-w-sm data-starting-style:translate-x-[calc(100%+1rem)] data-ending-style:translate-x-[calc(100%+1rem)]",
       },
     },
     defaultVariants: {

@@ -8,6 +8,7 @@ export { default as addMenuItemAPI } from "./add-menu-item";
 export { default as updateMenuItemAPI } from "./update-menu-item";
 export { default as deleteMenuItemAPI } from "./delete-menu-item";
 export { default as setMenuItemLocationsAPI } from "./set-menu-item-locations";
+export { default as setMenuItemSoldOutLocationsAPI } from "./set-menu-item-sold-out-locations";
 export { default as setMenuItemCountryPriceAPI } from "./set-menu-item-country-price";
 export { default as getMenuItemImageAPI } from "./get-menu-item-image";
 export { default as addMenuItemImagesAPI } from "./add-menu-item-images";

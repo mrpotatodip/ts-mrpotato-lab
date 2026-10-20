@@ -15,3 +15,5 @@ export type AdminRolePowerSave = {
   errorMessage: string | null;
   save: (powers: string[], onSaved: () => void) => void;
 };
+
+export type AdminPowerArea = { name: string; rows: { section: AdminPowerSection; label: string }[] };

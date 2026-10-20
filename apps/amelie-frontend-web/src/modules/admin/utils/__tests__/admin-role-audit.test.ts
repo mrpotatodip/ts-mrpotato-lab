@@ -57,4 +57,13 @@ describe("describeAdminAuditEntry", () => {
     expect(describeAdminAuditEntry(entry("role.created", null, 5)).title).toBe("Created");
     expect(describeAdminAuditEntry(entry("role.something_new", null, null)).title).toBe("role.something_new");
   });
+
+  it("says which way the binding setting went", () => {
+    expect(
+      describeAdminAuditEntry(entry("role.can_be_bound_set", { canBeBound: false }, { canBeBound: true })),
+    ).toEqual({ title: "Members can now be limited to a Country or Location", details: [] });
+    expect(
+      describeAdminAuditEntry(entry("role.can_be_bound_set", { canBeBound: true }, { canBeBound: false })),
+    ).toEqual({ title: "Members can no longer be limited to a Country or Location", details: [] });
+  });
 });

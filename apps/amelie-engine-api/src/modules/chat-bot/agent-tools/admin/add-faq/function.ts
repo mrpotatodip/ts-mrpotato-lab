@@ -1,6 +1,6 @@
 import { Effect } from "effect";
 import { addFaqSvc } from "#/modules/faq";
-import { resolveFaqScope, runAsChatBotEditor } from "#/modules/chat-bot/lib";
+import { resolveFaqScope, runAsCoveredChatBotEditor } from "#/modules/chat-bot/lib";
 import type { FaqResult, FaqScopeNeededResult } from "#/modules/chat-bot/schemas";
 import type { ChatBotRuntime } from "#/modules/chat-bot/types";
 import type { AddFaqInput } from "./schema";
@@ -14,13 +14,11 @@ export const addFaq = (
   { scope, ...faq }: AddFaqInput,
   runtime: ChatBotRuntime,
 ): Promise<FaqResult | FaqScopeNeededResult> =>
-  runAsChatBotEditor(
-    runtime,
+  runAsCoveredChatBotEditor(runtime, "company:faqs:faqs:create", (coverage) =>
     Effect.gen(function* () {
       const tenantId = runtime.owner.tenantId;
       const chosen = yield* resolveFaqScope(runtime.db, tenantId, scope);
       if ("needsScope" in chosen) return chosen;
-      return yield* addFaqSvc(runtime.db, tenantId, { ...faq, ...chosen });
+      return yield* addFaqSvc(runtime.db, tenantId, { ...faq, ...chosen }, coverage);
     }),
-    "company:faqs:faqs:create",
   );

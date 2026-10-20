@@ -4,7 +4,7 @@ import { AdminSuspenseRolesMain } from "./admin-suspense-roles-main";
 
 export function AdminRolesLanding() {
   return (
-    <div className="grid items-start gap-8 lg:grid-cols-[2fr_3fr] lg:gap-x-16 [&>*]:min-w-0">
+    <div className="grid items-start gap-8 lg:grid-cols-[1fr_2fr] lg:gap-x-16 [&>*]:min-w-0">
       <PageCard title="New role" description="Add a user type. It stays hidden until you enable it.">
         <AdminRoleCreateForm />
       </PageCard>

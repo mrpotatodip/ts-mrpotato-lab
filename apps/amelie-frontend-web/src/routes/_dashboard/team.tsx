@@ -5,9 +5,5 @@ import { TeamSuspensePanelMain } from "#/modules/team";
 
 export const Route = createFileRoute("/_dashboard/team")({
   loader: ({ context }) => prefetchTeamPage(context.queryClient),
-  component: RouteComponent,
+  component: TeamSuspensePanelMain,
 });
-
-function RouteComponent() {
-  return <TeamSuspensePanelMain />;
-}

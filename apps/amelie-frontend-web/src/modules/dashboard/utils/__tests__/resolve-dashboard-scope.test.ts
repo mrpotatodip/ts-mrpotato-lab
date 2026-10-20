@@ -115,4 +115,45 @@ describe("resolveDashboardScope", () => {
     expect(scope.locationId).toBeUndefined();
     expect(scope.profileLocationId).toBe("downtown");
   });
+
+  describe("for a member bound to some Locations", () => {
+    it("lists only the covered Locations and Countries that hold one", () => {
+      const scope = resolveDashboardScope([us, ca], [downtown, airport, toronto], none, [airport.id]);
+
+      expect(scope.countries).toEqual([us]);
+      expect(scope.openLocations).toEqual([airport]);
+      expect(scope.location).toEqual(airport);
+      expect(scope.showCountryPicker).toBe(false);
+      expect(scope.showLocationPicker).toBe(false);
+      expect(scope.notCovered).toBeUndefined();
+    });
+
+    it("keeps the pickers for a member covering several", () => {
+      const scope = resolveDashboardScope([us, ca], [downtown, airport, toronto], none, [airport.id, toronto.id]);
+
+      expect(scope.showCountryPicker).toBe(true);
+      expect(scope.openLocations).toEqual([airport, toronto]);
+    });
+
+    it("names the open Location a stored pick points at when it is not covered", () => {
+      const scope = resolveDashboardScope([us, ca], [downtown, airport], { countryId: US_ID, locationId: "downtown" }, [airport.id]);
+
+      expect(scope.notCovered).toEqual(downtown);
+      expect(scope.location).toEqual(airport);
+    });
+
+    it("has no notCovered for a stored pick that is archived or unknown", () => {
+      const scope = resolveDashboardScope([us], [archivedUs, airport], { countryId: US_ID, locationId: "old-us" }, [airport.id]);
+
+      expect(scope.notCovered).toBeUndefined();
+    });
+
+    it("lists nothing when the member covers nothing", () => {
+      const scope = resolveDashboardScope([us], [downtown], none, []);
+
+      expect(scope.openLocations).toEqual([]);
+      expect(scope.countries).toEqual([]);
+      expect(scope.country).toBeUndefined();
+    });
+  });
 });

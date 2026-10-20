@@ -1,8 +1,10 @@
-import { and, asc, eq, sql } from "drizzle-orm";
+import { and, asc, eq, isNull, or, sql } from "drizzle-orm";
 import { Effect } from "effect";
 import {
   authUser,
   partyRoles,
+  partyRoleScopes,
+  tenantLocations,
   accessMasterPowers,
   accessMasterRoles,
   accessRolePowers,
@@ -10,12 +12,13 @@ import {
   tenantCountries,
   tenants,
 } from "@repo/db-amelie";
-import { TenantSchema, type Tenant, type TenantRegion } from "@repo/contracts/amelie";
+import { TenantSchema, type Coverage, type Tenant, type TenantRegion } from "@repo/contracts/amelie";
 import type { DbConnectType } from "#/lib/db-connection";
 import { Conflict, NotFound, toDbError, type DbError } from "#/lib/effect-query";
 import { PG_UNIQUE_VIOLATION, pgErrorCode, pgErrorConstraint } from "#/lib/pg-error";
-import { openCountryIds } from "#/modules/country/queries";
+import { openCountryIds } from "#/modules/country";
 import {
+  TENANT_ADMIN_ROLE,
   TENANT_COUNTRY_CONSTRAINT,
   TENANT_COUNTRY_TAKEN,
   TENANT_NOT_FOUND,
@@ -36,6 +39,8 @@ const tenantColumns = {
   allowedOrigins: tenants.allowedOrigins,
   customerChatLabel: tenants.customerChatLabel,
   customerChatAccent: tenants.customerChatAccent,
+  partyRoleId: partyRoles.id,
+  bound: sql<boolean>`exists (select 1 from ${partyRoleScopes} where ${partyRoleScopes.partyRoleId} = ${partyRoles.id})`.as("bound"),
   role: accessMasterRoles.key,
   roleLabel: accessMasterRoles.label,
   powers: sql<string[]>`coalesce((
@@ -67,6 +72,81 @@ const memberTenants = (db: DbConnectType) =>
     .innerJoin(authUser, eq(authUser.partyId, partyRoles.partyId))
     .innerJoin(tenantCountries, eq(tenantCountries.id, regionCountryId));
 
+const coveredLocationIdsEffect = (
+  db: DbConnectType,
+  partyRoleId: string,
+): Effect.Effect<string[], DbError> =>
+  Effect.tryPromise({
+    try: async () => {
+      const rows = await db
+        .selectDistinct({ id: tenantLocations.id, createdAt: tenantLocations.createdAt })
+        .from(partyRoleScopes)
+        .innerJoin(
+          tenantLocations,
+          and(
+            eq(tenantLocations.tenantId, partyRoleScopes.tenantId),
+            or(
+              eq(tenantLocations.id, partyRoleScopes.locationId),
+              eq(tenantLocations.countryId, partyRoleScopes.countryId),
+            ),
+          ),
+        )
+        .leftJoin(tenantCountries, eq(tenantCountries.id, partyRoleScopes.countryId))
+        .where(
+          and(
+            eq(partyRoleScopes.partyRoleId, partyRoleId),
+            isNull(tenantLocations.archivedAt),
+            or(sql`${partyRoleScopes.locationId} is not null`, isNull(tenantCountries.archivedAt)),
+          ),
+        )
+        .orderBy(asc(tenantLocations.createdAt), asc(tenantLocations.id));
+      return rows.map((row) => row.id);
+    },
+    catch: toDbError,
+  });
+
+export const boundCountryIdsEffect = (
+  db: DbConnectType,
+  userId: string,
+  tenantId: string,
+): Effect.Effect<string[], DbError> =>
+  Effect.tryPromise({
+    try: async () => {
+      const rows = await db
+        .selectDistinct({ id: tenantCountries.id })
+        .from(partyRoleScopes)
+        .innerJoin(partyRoles, eq(partyRoles.id, partyRoleScopes.partyRoleId))
+        .innerJoin(authUser, eq(authUser.partyId, partyRoles.partyId))
+        .innerJoin(tenantCountries, eq(tenantCountries.id, partyRoleScopes.countryId))
+        .where(
+          and(
+            eq(authUser.id, userId),
+            eq(partyRoleScopes.tenantId, tenantId),
+            isNull(tenantCountries.archivedAt),
+          ),
+        );
+      return rows.map((row) => row.id);
+    },
+    catch: toDbError,
+  });
+
+const coverageOfEffect = (
+  db: DbConnectType,
+  row: { partyRoleId: string; bound: boolean; role: string },
+): Effect.Effect<Coverage, DbError> =>
+  row.role === TENANT_ADMIN_ROLE || !row.bound
+    ? Effect.succeed("all")
+    : coveredLocationIdsEffect(db, row.partyRoleId);
+
+const toTenantEffect = (
+  db: DbConnectType,
+  row: Parameters<typeof coverageOfEffect>[1],
+): Effect.Effect<Tenant, DbError> =>
+  Effect.gen(function* () {
+    const coverage = yield* coverageOfEffect(db, row);
+    return yield* parseOwnRow(() => TenantSchema.parse({ ...row, coverage }));
+  });
+
 export const listTenantsForUserEffect = (
   db: DbConnectType,
   userId: string,
@@ -76,7 +156,10 @@ export const listTenantsForUserEffect = (
       try: () => memberTenants(db).where(eq(authUser.id, userId)).orderBy(asc(tenants.name)),
       catch: toDbError,
     });
-    return yield* parseOwnRow(() => TenantSchema.array().parse(rows));
+    return yield* Effect.all(
+      rows.map((row) => toTenantEffect(db, row)),
+      { concurrency: 1 },
+    );
   });
 
 // -----
@@ -98,7 +181,7 @@ export const getTenantForUserEffect = (
     });
     const [row] = rows;
     if (!row) return yield* new NotFound({ message: TENANT_NOT_FOUND });
-    return yield* parseOwnRow(() => TenantSchema.parse(row));
+    return yield* toTenantEffect(db, row);
   });
 
 // -----

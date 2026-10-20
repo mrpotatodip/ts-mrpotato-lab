@@ -14,7 +14,7 @@ export function AdminLanding() {
   const [created, setCreated] = useState<CreatedInviteCode | null>(null);
 
   return (
-    <div className="grid items-start gap-8 lg:grid-cols-[2fr_3fr] lg:gap-x-16">
+    <div className="grid items-start gap-8 lg:grid-cols-[1fr_2fr] lg:gap-x-16">
       <PageCard title="Generate a code" description="A new code to hand to someone. It is shown once.">
         <AdminInviteCodeForm onCreated={setCreated} />
       </PageCard>

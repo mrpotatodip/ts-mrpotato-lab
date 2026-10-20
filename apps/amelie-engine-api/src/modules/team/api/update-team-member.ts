@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { TeamMemberParamSchema, TeamRoleBodySchema } from "@repo/contracts/amelie";
+import { TeamMemberParamSchema, UpdateTeamMemberBodySchema } from "@repo/contracts/amelie";
 import { zValidator } from "#/lib/zod-validator";
 import type { AppEnv } from "#/types/variables";
 import { db_connect } from "#/lib/db-connection";
@@ -15,11 +15,13 @@ app.patch(
   updateTeamMemberDoc,
   requirePower("company:team:members:update"),
   zValidator("param", TeamMemberParamSchema),
-  zValidator("json", TeamRoleBodySchema),
+  zValidator("json", UpdateTeamMemberBodySchema),
   async (c) => {
     const { partyId } = c.req.valid("param");
     const db = db_connect(c.env.HYPERDRIVE_REALTIME.connectionString);
-    const data = await runEffect(updateTeamMemberSvc(db, c.get("tenantId"), partyId, c.req.valid("json").role, c.get("powers") ?? []));
+    const data = await runEffect(
+      updateTeamMemberSvc(db, c.get("tenantId"), partyId, c.get("userId"), c.req.valid("json"), c.get("powers") ?? []),
+    );
     return c.json({ data, error: null });
   },
 );

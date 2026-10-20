@@ -27,8 +27,9 @@ export const UpdateAdminRoleBodySchema = z
   .object({
     label: AdminRoleLabelSchema.optional(),
     description: AdminRoleDescriptionSchema.optional(),
+    canBeBound: z.boolean().optional(),
   })
-  .refine((body) => body.label !== undefined || body.description !== undefined);
+  .refine((body) => body.label !== undefined || body.description !== undefined || body.canBeBound !== undefined);
 
 export const SetAdminRoleEnabledBodySchema = z.object({
   enabled: z.boolean(),
@@ -51,6 +52,7 @@ export const AdminRoleSchema = z.object({
   scope: z.enum(["tenant", "platform"]),
   enabled: z.boolean(),
   isSystem: z.boolean(),
+  canBeBound: z.boolean(),
   powerCount: z.number().int(),
   holderCount: z.number().int(),
 });

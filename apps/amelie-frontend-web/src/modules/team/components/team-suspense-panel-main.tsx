@@ -1,6 +1,8 @@
 import { Suspense } from "react";
 
 import { PageCard, PageHeader, PowerMark } from "#/modules/shared";
+import { useSuspenseCountries } from "#/modules/country";
+import { useSuspenseLocations } from "#/modules/location";
 import { useActiveTenantRole } from "#/modules/tenant";
 import { useSuspenseTeam, useSuspenseTeamRoles } from "../hooks";
 import { TeamInviteForm } from "./team-invite-form";
@@ -28,6 +30,8 @@ export function TeamSuspensePanelMain() {
 function TeamPanelView() {
   const { data } = useSuspenseTeam();
   const { data: roles } = useSuspenseTeamRoles();
+  const { data: countries } = useSuspenseCountries();
+  const { data: locations } = useSuspenseLocations();
   const { can } = useActiveTenantRole();
 
   return (
@@ -41,15 +45,15 @@ function TeamPanelView() {
               description="Send a join link. Amelie does not email it."
               action={<PowerMark power="company:team:invites:create" />}
             >
-              <TeamInviteForm roles={roles} />
+              <TeamInviteForm roles={roles} countries={countries} locations={locations} />
             </PageCard>
           ) : null}
           <PageCard title="Pending invites" contentClassName="p-0">
-            <TeamInviteTable invites={data.invites} roles={roles} />
+            <TeamInviteTable invites={data.invites} roles={roles} countries={countries} locations={locations} />
           </PageCard>
         </div>
         <PageCard title="Team members" contentClassName="p-0">
-          <TeamMemberTable members={data.members} roles={roles} />
+          <TeamMemberTable members={data.members} roles={roles} countries={countries} locations={locations} />
         </PageCard>
       </div>
     </>

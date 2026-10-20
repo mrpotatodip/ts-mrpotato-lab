@@ -1,6 +1,6 @@
 import type { AdminAuditEntry } from "@repo/contracts/amelie";
 import type { AdminAuditDescription } from "../types";
-import { AdminAuditPowersSchema, AdminAuditSummarySchema } from "../schemas";
+import { AdminAuditBindableSchema, AdminAuditPowersSchema, AdminAuditSummarySchema } from "../schemas";
 
 const quoted = (label: string) => `"${label}"`;
 
@@ -52,6 +52,13 @@ export function describeAdminAuditEntry(entry: AdminAuditEntry): AdminAuditDescr
       return { title: "Disabled: no new assignments", details: [] };
     case "role.powers_set":
       return powersDescription(entry);
+    case "role.can_be_bound_set":
+      return {
+        title: AdminAuditBindableSchema.safeParse(entry.after).data?.canBeBound
+          ? "Members can now be limited to a Country or Location"
+          : "Members can no longer be limited to a Country or Location",
+        details: [],
+      };
     case "role.deleted":
       return labelled("Deleted", entry.before);
     default:

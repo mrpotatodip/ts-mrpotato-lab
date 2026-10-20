@@ -1,6 +1,6 @@
 import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
-import { isActiveLocation } from "#/modules/location/queries";
-import { upsertCountryPrice } from "#/modules/menu/queries";
+import { isActiveLocation } from "#/modules/location";
+import { upsertCountryPrice } from "#/modules/menu";
 import { Effect } from "effect";
 import {
   dietaryTags,

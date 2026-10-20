@@ -1,9 +1,11 @@
+import type { Coverage } from "@repo/contracts/amelie";
 import type { ImportQueueMessage } from "#/modules/menu-import/types";
 
 export type HonoVariables = {
   userId: string;
   tenantId: string;
   powers: string[];
+  coverage: Coverage;
 };
 
 export type Bindings = {

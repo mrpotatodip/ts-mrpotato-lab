@@ -28,6 +28,7 @@ export const listLocationsDoc = describeRoute({
     steps: [
       "The server checks that the signed-in Person has a role in this Tenant.",
       "The server reads every Location of this Tenant, oldest first. Archived ones carry an archivedAt date.",
+      "A team member bound to Countries or Locations sees only the Locations their Role covers.",
     ],
     example: [
       bash(`curl "${EXAMPLE_BASE_URL}/locations?tenantId=${EXAMPLE_TENANT_ID}" -H "Authorization: Bearer $TOKEN"`),

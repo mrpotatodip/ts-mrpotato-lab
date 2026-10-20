@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { TeamMember, TeamRole } from "@repo/contracts/amelie";
+import type { Country, Location, TeamMember, TeamRole } from "@repo/contracts/amelie";
 
 import { Button } from "#/components/ui/button";
 import {
@@ -13,23 +13,26 @@ import {
 import { PowerMark } from "#/modules/shared";
 import { useActiveTenantRole } from "#/modules/tenant";
 import { useTeamActions } from "../hooks";
-import { TeamRoleSelect } from "./team-role-select";
+import { TeamAccessBadge } from "./team-access-badge";
+import { TeamMemberEditDialog } from "./team-member-edit-dialog";
 
 type TeamMemberTableProps = {
   members: TeamMember[];
   roles: TeamRole[];
+  countries: Country[];
+  locations: Location[];
 };
 
 // -----
-// One row per person. Role and remove sit on
 // the right, same as FAQ rows.
 // -----
-export function TeamMemberTable({ members, roles }: TeamMemberTableProps) {
-  const { changeRole, remove } = useTeamActions();
+export function TeamMemberTable({ members, roles, countries, locations }: TeamMemberTableProps) {
+  const { remove } = useTeamActions();
   const { can } = useActiveTenantRole();
   const canChangeRole = can("company:team:members:update");
   const canRemove = can("company:team:members:delete");
   const [pending, setPending] = useState<TeamMember | null>(null);
+  const [editing, setEditing] = useState<TeamMember | null>(null);
 
   if (members.length === 0) {
     return <p className="stat-label p-6">No team members yet.</p>;
@@ -43,26 +46,30 @@ export function TeamMemberTable({ members, roles }: TeamMemberTableProps) {
             key={member.partyId}
             className="hover:bg-accent/40 flex flex-wrap items-center justify-between gap-3 px-6 py-5 transition-colors"
           >
-            <div className="min-w-0">
-              <p className="text-sm font-medium">{member.name}</p>
-              <p className="stat-label break-all">{member.email}</p>
+            <div className="flex min-w-0 flex-col gap-2">
+              <div>
+                <p className="text-sm font-medium">
+                  {member.name} <span className="stat-label font-normal">{member.roleLabel}</span>
+                </p>
+                <p className="stat-label break-all">{member.email}</p>
+              </div>
+              <TeamAccessBadge member={member} countries={countries} locations={locations} />
             </div>
             <div className="flex shrink-0 items-center gap-2">
               {canChangeRole ? (
                 <>
                   <PowerMark power="company:team:members:update" />
-                  <TeamRoleSelect
-                    aria-label={`Role for ${member.name}`}
-                    roles={roles}
-                    value={member.role}
-                    valueLabel={member.roleLabel}
-                    disabled={changeRole.isPending || !roles.some((role) => role.key === member.role)}
-                    onChange={(role) => changeRole.mutate({ data: { partyId: member.partyId, role } })}
-                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    aria-label={`Edit access for ${member.name}`}
+                    onClick={() => setEditing(member)}
+                  >
+                    Edit access
+                  </Button>
                 </>
-              ) : (
-                <p className="text-sm">{member.roleLabel}</p>
-              )}
+              ) : null}
               {canRemove ? (
                 <>
                   <PowerMark power="company:team:members:delete" />
@@ -75,6 +82,13 @@ export function TeamMemberTable({ members, roles }: TeamMemberTableProps) {
           </li>
         ))}
       </ul>
+      <TeamMemberEditDialog
+        member={editing}
+        roles={roles}
+        countries={countries}
+        locations={locations}
+        onClose={() => setEditing(null)}
+      />
       <Dialog open={pending !== null} onOpenChange={(open) => !open && setPending(null)}>
         <DialogContent>
           <DialogHeader>

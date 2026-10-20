@@ -4,6 +4,7 @@ export type AccessNode = {
   key: string;
   label: string;
   actions?: readonly AccessActionValue[];
+  bound?: true | readonly AccessActionValue[];
   children?: readonly AccessNode[];
 };
 
@@ -23,9 +24,14 @@ export const ACCESS_CATALOGUE = [
         key: "profile",
         label: "Profile",
         children: [
-          { key: "business_profile", label: "Business profile", actions: ["read", "update"] },
+          { key: "business_profile", label: "Business profile", actions: ["read", "update"], bound: ["update"] },
           { key: "countries", label: "Country", actions: ["read", "create", "update", "archive"] },
-          { key: "locations", label: "Location", actions: ["read", "create", "update", "archive"] },
+          {
+            key: "locations",
+            label: "Location",
+            actions: ["read", "create", "update", "archive"],
+            bound: ["create", "update", "archive"],
+          },
           { key: "region", label: "Region", actions: ["read", "update"] },
         ],
       },
@@ -43,6 +49,7 @@ export const ACCESS_CATALOGUE = [
         children: [
           { key: "categories", label: "Menu category", actions: ["read", "create", "update", "delete", "reorder"] },
           { key: "items", label: "Menu item", actions: ["read", "create", "update", "delete", "reorder"] },
+          { key: "locations", label: "Menu item location", actions: ["update"], bound: true },
           { key: "country_prices", label: "Country price", actions: ["read", "update"] },
           { key: "images", label: "Menu item image", actions: ["read", "create", "update", "delete", "reorder"] },
           { key: "imports", label: "Import", actions: ["read", "create", "publish"] },
@@ -53,7 +60,12 @@ export const ACCESS_CATALOGUE = [
         key: "faqs",
         label: "FAQs",
         children: [
-          { key: "faqs", label: "FAQ", actions: ["read", "create", "update", "delete"] },
+          {
+            key: "faqs",
+            label: "FAQ",
+            actions: ["read", "create", "update", "delete"],
+            bound: ["create", "update", "delete"],
+          },
           { key: "categories", label: "FAQ category", actions: ["read", "create", "update", "delete"] },
         ],
       },
@@ -82,14 +94,14 @@ export const ACCESS_CATALOGUE = [
         key: "hours",
         label: "Hours",
         children: [
-          { key: "weekly", label: "Business hours", actions: ["read", "update"] },
-          { key: "overrides", label: "Hours override", actions: ["read", "create", "update", "delete"] },
+          { key: "weekly", label: "Business hours", actions: ["read", "update"], bound: true },
+          { key: "overrides", label: "Hours override", actions: ["read", "create", "update", "delete"], bound: true },
         ],
       },
       {
         key: "menu",
         label: "Store menu",
-        children: [{ key: "availability", label: "Location availability", actions: ["read", "update"] }],
+        children: [{ key: "availability", label: "Location availability", actions: ["read", "update"], bound: true }],
       },
     ],
   },
@@ -137,7 +149,28 @@ type NodePowers<Node, Prefix extends string> = Node extends { readonly key: infe
 // -----
 export type AccessPower = NodePowers<AccessCatalogue[number], "">;
 
-const collectPowers = (node: AccessNode, prefix: string): string[] => {
+type BoundNodePowers<Node, Prefix extends string> = Node extends { readonly key: infer Key extends string }
+  ? `${Prefix}${Key}` extends infer Path extends string
+    ?
+        | (Node extends { readonly bound: true; readonly actions: readonly (infer Action extends string)[] }
+            ? `${Path}:${Action}`
+            : never)
+        | (Node extends { readonly bound: readonly (infer Action extends string)[] } ? `${Path}:${Action}` : never)
+        | (Node extends { readonly children: readonly (infer Child)[] } ? BoundNodePowers<Child, `${Path}:`> : never)
+    : never
+  : never;
+
+export type BoundPower = BoundNodePowers<AccessCatalogue[number], "">;
+export type UnboundPower = Exclude<AccessPower, BoundPower>;
+
+const collectBoundPowers = (node: AccessNode, prefix: string): string[] => {
+  const path = prefix === "" ? node.key : `${prefix}:${node.key}`;
+  const boundActions = node.bound === true ? (node.actions ?? []) : (node.bound ?? []);
+  const own = boundActions.map((action) => `${path}:${action}`);
+  return [...own, ...(node.children ?? []).flatMap((child) => collectBoundPowers(child, path))];
+};
+
+const collectPowers =(node: AccessNode, prefix: string): string[] => {
   const path = prefix === "" ? node.key : `${prefix}:${node.key}`;
   const own = (node.actions ?? []).map((action) => `${path}:${action}`);
   const nested = (node.children ?? []).flatMap((child) => collectPowers(child, path));
@@ -147,7 +180,14 @@ const collectPowers = (node: AccessNode, prefix: string): string[] => {
 // SAFETY: collectPowers joins keys and Actions with the same colons NodePowers uses, so each string it builds is an AccessPower.
 export const ACCESS_POWERS = ACCESS_CATALOGUE.flatMap((node) => collectPowers(node, "")) as AccessPower[];
 
-const ACCESS_POWER_SET: ReadonlySet<string> = new Set(ACCESS_POWERS);
+// SAFETY: collectBoundPowers walks the same tree and joins keys exactly as BoundNodePowers does.
+export const BOUND_POWERS = ACCESS_CATALOGUE.flatMap((node) => collectBoundPowers(node, "")) as BoundPower[];
+
+const BOUND_POWER_SET: ReadonlySet<string> = new Set(BOUND_POWERS);
+
+export const isBoundPower = (power: AccessPower): power is BoundPower => BOUND_POWER_SET.has(power);
+
+const ACCESS_POWER_SET:ReadonlySet<string> = new Set(ACCESS_POWERS);
 
 export const isAccessPower = (value: string): value is AccessPower => ACCESS_POWER_SET.has(value);
 

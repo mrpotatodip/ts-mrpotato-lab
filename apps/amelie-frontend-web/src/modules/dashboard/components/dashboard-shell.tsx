@@ -7,6 +7,7 @@ import { useAdminAccess } from "#/modules/admin";
 import { ChatBotSheet, useChatBotCacheSync } from "#/modules/chat-bot";
 import { PowerMarksProvider, usePowerMarksPreference } from "#/modules/shared";
 import { DashboardHeader } from "./dashboard-header";
+import { DashboardLocationGate } from "./dashboard-location-gate";
 import { DashboardSidebar } from "./dashboard-sidebar";
 
 type DashboardShellProps = {
@@ -37,7 +38,9 @@ export function DashboardShell({ userName, userEmail, children }: DashboardShell
           <DashboardSidebar userName={userName} userEmail={userEmail} />
           <SidebarInset>
             <DashboardHeader />
-            <main className="dashboard-content">{children}</main>
+            <main className="dashboard-content">
+              <DashboardLocationGate>{children}</DashboardLocationGate>
+            </main>
           </SidebarInset>
           {onAssistantPage ? null : <ChatBotSheet />}
         </SidebarProvider>

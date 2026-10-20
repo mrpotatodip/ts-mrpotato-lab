@@ -4,7 +4,8 @@ import { zValidator } from "#/lib/zod-validator";
 import type { AppEnv } from "#/types/variables";
 import { db_connect } from "#/lib/db-connection";
 import { runEffect } from "#/lib/effect-query";
-import { requirePower } from "#/modules/tenant";
+import { requireBoundPower } from "#/modules/tenant";
+import { locateLocationParam } from "#/modules/location/lib";
 import { updateLocationSvc } from "#/modules/location/handlers";
 import { updateLocationDoc } from "#/modules/location/openapi";
 
@@ -13,8 +14,8 @@ const app = new Hono<AppEnv>();
 app.patch(
   "/:locationId",
   updateLocationDoc,
-  requirePower("company:profile:locations:update"),
   zValidator("param", LocationParamSchema),
+  requireBoundPower("company:profile:locations:update", locateLocationParam),
   zValidator("json", UpdateLocationBodySchema),
   async (c) => {
     const { locationId } = c.req.valid("param");

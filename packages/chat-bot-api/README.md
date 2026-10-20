@@ -124,8 +124,7 @@ drizzle-orm                          (only if you use the Postgres stream log or
 | `@repo/chat-bot-api/drizzle/tables` | Only the four Drizzle tables, for your migrations. |
 | `@repo/chat-bot-api/testing` | The store contract (needs `vitest`). |
 
-Then write the five pieces from "A host in a page". `apps/chat-bot-example-notes` is a complete second host with its own domain (a notes assistant), and a test that bundles it and fails if any Amelie code or database driver comes along.
-
+Then write the five pieces from "A host in a page".
 These packages are workspace packages that ship TypeScript source, so they work as-is for another app in this repo and for any bundler (Workers, Vite). Using them from another repository means publishing them with a build step; nothing here does that yet.
 
 ## Layout

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { ALLOWED_ORIGINS_MAX, CUSTOMER_CHAT_LABEL_DEFAULT, CUSTOMER_CHAT_LABEL_MAX } from "../constants";
 import { COUNTRY_VALUES, CURRENCY_VALUES } from "../enums";
+import { CoverageSchema } from "./coverage";
 
 // -----
 // Requests: what the dashboard sends
@@ -111,6 +112,7 @@ export const TenantSchema = z.object({
   role: z.string(),
   roleLabel: z.string(),
   powers: z.array(z.string()),
+  coverage: CoverageSchema,
 });
 
 export type TenantParam = z.infer<typeof TenantParamSchema>;

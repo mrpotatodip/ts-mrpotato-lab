@@ -1,23 +1,60 @@
+import type { Context } from "hono";
 import { createMiddleware } from "hono/factory";
-import type { RouterRoute } from "hono/types";
-import { hasAccessPower, type AccessPower } from "@repo/contracts/amelie";
+import {
+  hasAccessPower,
+  uncoveredLocations,
+  type BoundPower,
+  type LocationQuery,
+  type UnboundPower,
+} from "@repo/contracts/amelie";
 import { ForbiddenError } from "#/lib/errors";
+import type { ValidatedContext, ValidatedInput } from "#/lib/validated-context-types";
 import type { AppEnv } from "#/types/variables";
-import { TENANT_POWER_DENIED } from "#/modules/tenant/constants";
+import { TENANT_LOCATION_NOT_COVERED, TENANT_LOCATIONS_NOT_COVERED, TENANT_POWER_DENIED } from "#/modules/tenant/constants";
+import type { PowerGuardKind, RouteHandler } from "#/modules/tenant/types";
 
-type RouteHandler = RouterRoute["handler"];
+const GUARDED_POWERS = new WeakMap<RouteHandler, { power: BoundPower | UnboundPower; kind: PowerGuardKind }>();
 
-const GUARDED_POWERS = new WeakMap<RouteHandler, AccessPower>();
+const holdPower = (c: Context<AppEnv>, power: BoundPower | UnboundPower): void => {
+  if (!hasAccessPower(c.get("powers") ?? [], power)) {
+    throw new ForbiddenError(TENANT_POWER_DENIED);
+  }
+};
 
-export const requirePower = (power: AccessPower) => {
+const powerOnlyGuard = (power: BoundPower | UnboundPower, kind: PowerGuardKind) => {
   const guard = createMiddleware<AppEnv>(async (c, next) => {
-    if (!hasAccessPower(c.get("powers") ?? [], power)) {
-      throw new ForbiddenError(TENANT_POWER_DENIED);
-    }
+    holdPower(c, power);
     await next();
   });
-  GUARDED_POWERS.set(guard, power);
+  GUARDED_POWERS.set(guard, { power, kind });
   return guard;
 };
 
-export const guardedPower = (handler: RouteHandler): AccessPower | undefined => GUARDED_POWERS.get(handler);
+export const requirePower = (power: UnboundPower) => powerOnlyGuard(power, "plain");
+
+export const requireBoundPower = <Valid extends ValidatedInput>(
+  power: BoundPower,
+  locate: (c: ValidatedContext<Valid>) => readonly string[],
+) => {
+  const guard = createMiddleware<AppEnv, string, { out: Valid }>(async (c, next) => {
+    holdPower(c, power);
+    const gap = uncoveredLocations(c.get("coverage"), locate(c));
+    if (gap?.coversNothing) throw new ForbiddenError(TENANT_LOCATION_NOT_COVERED);
+    if (gap) throw new ForbiddenError(TENANT_LOCATIONS_NOT_COVERED(gap.uncovered));
+    await next();
+  });
+  GUARDED_POWERS.set(guard, { power, kind: "bound" });
+  return guard;
+};
+
+export const requireCountryBoundPower = (power: BoundPower) => powerOnlyGuard(power, "bound");
+
+export const locateQueryLocation = (c: ValidatedContext<{ query: LocationQuery }>): string[] => {
+  const { locationId } = c.req.valid("query");
+  return locationId === undefined ? [] : [locationId];
+};
+
+export const guardedPower = (handler: RouteHandler): BoundPower | UnboundPower | undefined =>
+  GUARDED_POWERS.get(handler)?.power;
+
+export const powerGuardKind = (handler: RouteHandler): PowerGuardKind | undefined => GUARDED_POWERS.get(handler)?.kind;

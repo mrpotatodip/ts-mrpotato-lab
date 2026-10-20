@@ -182,7 +182,7 @@ export const insertAccountEffect = (
     // Our own row, just written: a parse failure
     // is a bug, not something a caller can fix.
     // -----
-    const tenant = yield* Effect.try(() => TenantSchema.parse({ ...created.tenant, country: account.country, currency: account.currency, role: created.role.key, roleLabel: created.role.label, powers: created.powers })).pipe(
+    const tenant = yield* Effect.try(() => TenantSchema.parse({ ...created.tenant, country: account.country, currency: account.currency, role: created.role.key, roleLabel: created.role.label, powers: created.powers, coverage: "all" })).pipe(
       Effect.orDie,
     );
     return { userId: created.userId, tenant };

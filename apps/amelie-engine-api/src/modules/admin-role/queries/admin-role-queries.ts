@@ -1,4 +1,4 @@
-import { asc, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, isNull, sql } from "drizzle-orm";
 import { Effect } from "effect";
 import {
   accessAuditLog,
@@ -7,7 +7,10 @@ import {
   accessRolePowers,
   authUser,
   partyRoles,
+  partyRoleScopes,
   roles,
+  teamInviteScopes,
+  teamInvites,
 } from "@repo/db-amelie";
 import {
   AdminAuditEntrySchema,
@@ -32,6 +35,7 @@ const roleColumns = {
   scope: accessMasterRoles.scope,
   enabled: accessMasterRoles.enabled,
   isSystem: accessMasterRoles.isSystem,
+  canBeBound: accessMasterRoles.canBeBound,
   powerCount: sql<number>`(
     select count(*)::int from ${accessRolePowers}
     where ${accessRolePowers.masterRoleId} = ${accessMasterRoles}."id"
@@ -130,3 +134,30 @@ export const findActorPartyIdEffect = (
     try: () => db.select({ partyId: authUser.partyId }).from(authUser).where(eq(authUser.id, userId)).limit(1),
     catch: toDbError,
   }).pipe(Effect.map((rows) => rows[0]?.partyId ?? null));
+
+export const countBoundMembersEffect = (db: DbConnectType, roleId: string): Effect.Effect<number, DbError> =>
+  Effect.tryPromise({
+    try: async () => {
+      const [members] = await db
+        .select({ n: sql<number>`count(distinct ${partyRoleScopes.partyRoleId})::int` })
+        .from(partyRoleScopes)
+        .innerJoin(partyRoles, eq(partyRoles.id, partyRoleScopes.partyRoleId))
+        .innerJoin(roles, eq(roles.id, partyRoles.roleId))
+        .where(eq(roles.masterRoleId, roleId));
+      const [invites] = await db
+        .select({ n: sql<number>`count(distinct ${teamInviteScopes.inviteId})::int` })
+        .from(teamInviteScopes)
+        .innerJoin(teamInvites, eq(teamInvites.id, teamInviteScopes.inviteId))
+        .innerJoin(roles, eq(roles.id, teamInvites.roleId))
+        .where(
+          and(
+            eq(roles.masterRoleId, roleId),
+            isNull(teamInvites.revokedAt),
+            isNull(teamInvites.acceptedAt),
+            gt(teamInvites.expiresAt, new Date()),
+          ),
+        );
+      return (members?.n ?? 0) + (invites?.n ?? 0);
+    },
+    catch: toDbError,
+  });

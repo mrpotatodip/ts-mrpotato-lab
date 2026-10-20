@@ -1,4 +1,5 @@
 import { Effect } from "effect";
+import { covers, type Coverage } from "@repo/contracts/amelie";
 import { NeedsLocation, runEffect } from "#/lib/effect-query";
 import {
   listActiveLocationRefsEffect,
@@ -61,28 +62,31 @@ export const answerNeedsLocation = <A, E>(
 export const resolveToolLocation = async (
   requested: string | null | undefined,
   runtime: ChatBotRuntime,
-  options: { viaCountry?: boolean } = {},
+  options: { viaCountry?: boolean; coverage?: Coverage } = {},
 ): Promise<ToolLocation> => {
+  const coverage = options.coverage ?? "all";
   const ref = requested?.trim();
   if (ref) {
     const active = await runEffect(listActiveLocationRefsEffect(runtime.db, runtime.owner.tenantId));
     const found = matchLocationRef(active, ref);
     if (found) return { locationId: found.id, ignored: null, countryLocations: null };
-    const choices = active.map(({ id, name }) => ({ id, name }));
+    const choices = active.filter(({ id }) => covers(coverage, [id])).map(({ id, name }) => ({ id, name }));
     const names = choices.map((choice) => choice.name).join(", ");
     return {
-      ...(await threadLocation(runtime, options)),
+      ...(await threadLocation(runtime, options, coverage)),
       ignored: { note: CHAT_BOT_LOCATION_REF_IGNORED(ref, names), options: choices },
     };
   }
-  return { ...(await threadLocation(runtime, options)), ignored: null };
+  return { ...(await threadLocation(runtime, options, coverage)), ignored: null };
 };
 
 const threadLocation = async (
   runtime: ChatBotRuntime,
   { viaCountry }: { viaCountry?: boolean },
+  coverage: Coverage,
 ): Promise<Pick<ToolLocation, "locationId" | "countryLocations">> => {
-  const locationId = await threadLocationId(runtime);
+  const stored = await threadLocationId(runtime);
+  const locationId = stored !== undefined && covers(coverage, [stored]) ? stored : undefined;
   if (locationId !== undefined || !viaCountry || runtime.threadId === undefined) {
     return { locationId, countryLocations: null };
   }

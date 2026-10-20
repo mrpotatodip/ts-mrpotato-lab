@@ -4,6 +4,7 @@ import { Link } from "@tanstack/react-router";
 import { PageCard, PageHeader } from "#/modules/shared";
 import { useAdminRoleActions, useSuspenseAdminRole } from "../hooks";
 import { AdminRoleAuditList } from "./admin-role-audit-list";
+import { AdminRoleBindingCard } from "./admin-role-binding-card";
 import { AdminRoleDeleteCard } from "./admin-role-delete-card";
 import { AdminRoleDetailsForm } from "./admin-role-details-form";
 import { AdminRolePowerChecklist } from "./admin-role-power-checklist";
@@ -23,19 +24,29 @@ const BACK_LINK = (
 
 function AdminRoleView({ roleId }: AdminRolePageProps) {
   const { data: role } = useSuspenseAdminRole(roleId);
-  const { setPowers } = useAdminRoleActions();
+  const { setPowers, update } = useAdminRoleActions();
 
   return (
     <>
       {BACK_LINK}
       <PageHeader title={role.label} description={role.description ?? `Key: ${role.key}`} />
-      <div className="grid items-start gap-8 lg:grid-cols-[2fr_3fr] lg:gap-x-16">
+      <div className="grid items-start gap-8 lg:grid-cols-[1fr_2fr] lg:gap-x-16 [&>*]:min-w-0">
         <div className="flex flex-col gap-8">
           <PageCard title="Details">
             <AdminRoleDetailsForm key={`${role.label}|${role.description ?? ""}`} role={role} />
           </PageCard>
           <PageCard title="Status" description="Whether cafes can give this role to their team.">
             <AdminRoleStatusCard role={role} />
+          </PageCard>
+          <PageCard title="Team binding" description="Whether a cafe can limit this role's members to part of the cafe.">
+            <AdminRoleBindingCard
+              role={role}
+              saving={{
+                isPending: update.isPending,
+                errorMessage: update.error?.message ?? null,
+                save: (canBeBound) => update.mutate({ roleId: role.id, body: { canBeBound } }),
+              }}
+            />
           </PageCard>
           <PageCard title="Delete">
             <AdminRoleDeleteCard role={role} />

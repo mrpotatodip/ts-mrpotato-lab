@@ -1,8 +1,16 @@
 import { Effect } from "effect";
-import type { CreateLocationBody, Location, LocationArchived, UpdateLocationBody } from "@repo/contracts/amelie";
+import {
+  covers,
+  type Coverage,
+  type CreateLocationBody,
+  type Location,
+  type LocationArchived,
+  type UpdateLocationBody,
+} from "@repo/contracts/amelie";
 import type { DbConnectType } from "#/lib/db-connection";
-import { Conflict, Invalid, NotFound, type DbError } from "#/lib/effect-query";
-import { chooseCountryIdSvc } from "#/modules/country/handlers";
+import { Conflict, Forbidden, Invalid, NotFound, type DbError } from "#/lib/effect-query";
+import { chooseCountryIdSvc } from "#/modules/country";
+import { TENANT_COUNTRY_NOT_COVERED, type CountryScope } from "#/modules/tenant";
 import { archiveLocationSvc } from "./archive-location-svc";
 import { slugify, withSlugSuffix } from "#/lib/slugify";
 import {
@@ -16,10 +24,16 @@ import {
   lastLocationTimezoneInCountryEffect,
   listLocationsEffect,
   updateLocationEffect,
-} from "#/modules/location/queries";
+} from "#/modules/location";
 
-export const listLocationsSvc = (db: DbConnectType, tenantId: string): Effect.Effect<Location[], DbError> =>
-  listLocationsEffect(db, tenantId);
+export const listLocationsSvc = (
+  db: DbConnectType,
+  tenantId: string,
+  coverage: Coverage = "all",
+): Effect.Effect<Location[], DbError> =>
+  listLocationsEffect(db, tenantId).pipe(
+    Effect.map((locations) => locations.filter((location) => covers(coverage, [location.id]))),
+  );
 
 const freeSlug = (name: string, taken: Set<string>): string => {
   const base = slugify(name, LOCATION_SLUG_MAX_LENGTH, LOCATION_SLUG_FALLBACK);
@@ -42,10 +56,18 @@ export const createLocationSvc = (
   db: DbConnectType,
   tenantId: string,
   body: CreateLocationBody,
-): Effect.Effect<Location, Conflict | NotFound | Invalid | DbError> =>
+  countryScope: CountryScope = "all",
+): Effect.Effect<Location, Conflict | NotFound | Invalid | Forbidden | DbError> =>
   Effect.gen(function* () {
+    if (countryScope !== "all" && countryScope.length === 0) {
+      return yield* new Forbidden({ message: TENANT_COUNTRY_NOT_COVERED });
+    }
     const existing = yield* listLocationsEffect(db, tenantId);
-    const countryId = yield* chooseCountryIdSvc(db, tenantId, body.countryId);
+    const named = body.countryId ?? (countryScope !== "all" && countryScope.length === 1 ? countryScope[0] : undefined);
+    const countryId = yield* chooseCountryIdSvc(db, tenantId, named);
+    if (countryScope !== "all" && !countryScope.includes(countryId)) {
+      return yield* new Forbidden({ message: TENANT_COUNTRY_NOT_COVERED });
+    }
     const timezone =
       body.timezone ??
       (yield* lastLocationTimezoneInCountryEffect(db, tenantId, countryId)) ??

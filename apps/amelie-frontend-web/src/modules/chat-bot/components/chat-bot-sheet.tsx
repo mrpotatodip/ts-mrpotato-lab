@@ -23,6 +23,7 @@ import { ChatBotComposerView } from "./chat-bot-composer";
 export function ChatBotSheet() {
   const [open, setOpen] = useState(false);
   const [minimized, setMinimized] = useState(false);
+  const [instant, setInstant] = useState(false);
   const { side, moveToOppositeSide, wiggleClassName, onWiggleEnd } = useSheetSide();
   const launcherRef = useRef<HTMLButtonElement>(null);
   const queryClient = useQueryClient();
@@ -52,8 +53,30 @@ export function ChatBotSheet() {
     reveal();
   }, [open, minimized, reveal]);
 
+  // Keyboard toggles skip the slide; clicks keep it.
+  const toggleByKey = useCallback(() => {
+    setInstant(true);
+    toggle();
+  }, [toggle]);
+
+  const closeByKey = useCallback(() => {
+    setInstant(true);
+    close();
+  }, [close]);
+
+  const revealByClick = useCallback(() => {
+    setInstant(false);
+    reveal();
+  }, [reveal]);
+
+  const minimizeByClick = useCallback(() => {
+    setInstant(false);
+    minimize();
+  }, [minimize]);
+
   const handleOpenChange = useCallback(
-    (next: boolean) => {
+    (next: boolean, details: { reason: string }) => {
+      setInstant(details.reason === "escape-key");
       if (next) {
         reveal();
         return;
@@ -81,7 +104,7 @@ export function ChatBotSheet() {
   useHotkeys([
     {
       hotkey: CHAT_BOT_TOGGLE_HOTKEY,
-      callback: toggle,
+      callback: toggleByKey,
       options: {
         requireReset: true,
         meta: { name: "Show or hide assistant", group: "Assistant" },
@@ -89,7 +112,7 @@ export function ChatBotSheet() {
     },
     {
       hotkey: CHAT_BOT_CLOSE_HOTKEY,
-      callback: close,
+      callback: closeByKey,
       options: {
         enabled: panelVisible,
         requireReset: true,
@@ -100,29 +123,30 @@ export function ChatBotSheet() {
 
   return (
     <>
-      {showLauncher ? (
-        <Button
-          ref={launcherRef}
-          size="icon"
-          variant={minimized ? "outline" : "default"}
-          aria-label={toggleHotkeyLabel ? `${launcherLabel} ${toggleHotkeyLabel}` : launcherLabel}
-          className={cn(
-            "assistant-bot-excited relative fixed bottom-6 z-40 overflow-visible shadow-lg [&_svg]:size-5",
-            minimized
-              ? cn(
-                  "size-12 rounded-full border bg-card text-foreground hover:bg-accent",
-                  side === "left" ? "left-6" : "right-6",
-                )
-              : "right-6 size-12 rounded-full",
-          )}
-          onClick={reveal}
-        >
-          <Bot />
-          {minimized ? (
-            <span className="bg-status-info absolute top-2 right-2 size-2 rounded-full" aria-hidden />
-          ) : null}
-        </Button>
-      ) : null}
+      <Button
+        ref={launcherRef}
+        size="icon"
+        variant={minimized ? "outline" : "default"}
+        aria-label={toggleHotkeyLabel ? `${launcherLabel} ${toggleHotkeyLabel}` : launcherLabel}
+        inert={!showLauncher}
+        className={cn(
+          "assistant-bot-excited relative fixed bottom-6 z-40 overflow-visible shadow-lg transition-[opacity,scale] duration-150 ease-out [&_svg]:size-5",
+          !showLauncher && "pointer-events-none scale-95 opacity-0",
+          instant && "duration-0",
+          minimized
+            ? cn(
+                "size-12 rounded-full border bg-card text-foreground hover:bg-accent",
+                side === "left" ? "left-6" : "right-6",
+              )
+            : "right-6 size-12 rounded-full",
+        )}
+        onClick={revealByClick}
+      >
+        <Bot />
+        {minimized ? (
+          <span className="bg-status-info absolute top-2 right-2 size-2 rounded-full" aria-hidden />
+        ) : null}
+      </Button>
       <Sheet open={open} onOpenChange={handleOpenChange} modal={false} disablePointerDismissal>
         <SheetContent
           side={side}
@@ -131,8 +155,14 @@ export function ChatBotSheet() {
             "inset-y-4 flex h-auto w-[calc(100%-2rem)] flex-col rounded-3xl border bg-card shadow-xs sm:max-w-lg [&>[data-slot=sheet-close]]:hidden",
             side === "left" ? "left-4" : "right-4",
             wiggleClassName,
-            minimized && "hidden",
+            minimized &&
+              cn(
+                "pointer-events-none opacity-0 motion-reduce:translate-none",
+                side === "left" ? "-translate-x-[calc(100%+1rem)]" : "translate-x-[calc(100%+1rem)]",
+              ),
           )}
+          data-instant={instant ? "" : undefined}
+          inert={minimized}
           onAnimationEnd={onWiggleEnd}
         >
           <div className="absolute top-3.5 right-4 flex items-center">
@@ -155,7 +185,7 @@ export function ChatBotSheet() {
               size="icon-sm"
               aria-label={toggleHotkeyLabel ? `Minimize assistant ${toggleHotkeyLabel}` : "Minimize assistant"}
               className="opacity-70 hover:opacity-100"
-              onClick={minimize}
+              onClick={minimizeByClick}
             >
               <Minus />
             </Button>

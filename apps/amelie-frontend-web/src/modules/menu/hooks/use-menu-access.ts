@@ -18,6 +18,7 @@ export function useMenuAccess(): MenuAccess {
     canDeleteItem: can("company:menu:items:delete"),
     canReorderItems: can("company:menu:items:reorder"),
     canSetCountryPrice: can("company:menu:country_prices:update"),
+    canSetLocations: can("company:menu:locations:update"),
     canSetAvailability: can("store:menu:availability:update"),
     canCreateImage: can("company:menu:images:create"),
     canUpdateImage: can("company:menu:images:update"),

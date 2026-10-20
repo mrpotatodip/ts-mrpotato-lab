@@ -1,4 +1,5 @@
 import { Effect } from "effect";
+import type { Coverage } from "@repo/contracts/amelie";
 import type { DbConnectType } from "#/lib/db-connection";
 import type { DbError, NeedsLocation, NotFound } from "#/lib/effect-query";
 import { resolveLocationSvc } from "#/modules/location";
@@ -24,9 +25,10 @@ export const getTenantScheduleSvc = (
   db: DbConnectType,
   tenantId: string,
   locationId?: string,
+  coverage: Coverage = "all",
 ): Effect.Effect<TenantSchedule, DbError | NotFound | NeedsLocation> =>
   Effect.gen(function* () {
-    const location = yield* resolveLocationSvc(db, tenantId, locationId);
+    const location = yield* resolveLocationSvc(db, tenantId, locationId, coverage);
     const { timezone } = location;
     const clock = tenantClock(timezone);
     const [hours, overrides] = yield* Effect.all(

@@ -1,5 +1,6 @@
 import { Effect } from "effect";
 import { z } from "zod";
+import type { Coverage } from "@repo/contracts/amelie";
 import type { DbConnectType } from "#/lib/db-connection";
 import { Invalid, NotFound, type DbError } from "#/lib/effect-query";
 import {
@@ -20,11 +21,11 @@ import {
   updateMenuItemFullEffect,
 } from "#/modules/menu/queries";
 import { findMenuItems } from "#/modules/menu/lib";
-import type { MenuItemVariant, SetMenuItemCountryPriceBody } from "@repo/contracts/amelie";
-import { chooseCountryIdSvc } from "#/modules/country/handlers";
+import type { SetMenuItemCountryPriceBody } from "@repo/contracts/amelie";
+import { chooseCountryIdSvc } from "#/modules/country";
 import { COUNTRY_NOT_FOUND } from "#/modules/country/constants";
-import { listOpenCountryRefsEffect } from "#/modules/country/queries";
-import { listActiveLocationsEffect } from "#/modules/location/queries";
+import { listOpenCountryRefsEffect } from "#/modules/country";
+import { listActiveLocationsEffect } from "#/modules/location";
 import {
   MENU_CATEGORY_NOT_FOUND,
   MENU_COUNTRY_PRICE_REQUIRED,
@@ -45,6 +46,7 @@ import type {
   MenuItemLocationsValues,
   MenuItemMatch,
   MenuItemPricing,
+  MenuItemInput,
   MenuItemValues,
 } from "#/modules/menu/types";
 
@@ -177,18 +179,44 @@ const checkActiveLocations = (db: DbConnectType, tenantId: string, locationIds: 
     ),
   );
 
+const mergeUncoveredLocations = (
+  values: MenuItemLocationsValues,
+  current: Pick<MenuItem, "availableAtAllLocations" | "locationIds">,
+  coverage: Exclude<Coverage, "all">,
+  activeIds: ReadonlyArray<string>,
+): MenuItemLocationsValues => {
+  const rows = new Set(current.locationIds);
+  const wasSelling = (id: string) => (current.availableAtAllLocations ? !rows.has(id) : rows.has(id));
+  const uncovered = [...new Set([...activeIds, ...current.locationIds])].filter((id) => !coverage.includes(id));
+  const kept = uncovered.filter((id) => wasSelling(id) !== values.availableAtAllLocations);
+  return { ...values, locationIds: [...values.locationIds, ...kept] };
+};
+
 export const setMenuItemLocationsSvc = (
   db: DbConnectType,
   tenantId: string,
   itemId: string,
   values: MenuItemLocationsValues,
+  coverage: Coverage = "all",
 ): Effect.Effect<MenuItem, DbError | NotFound | Invalid> =>
   Effect.gen(function* () {
     if (!values.availableAtAllLocations && values.locationIds.length === 0) {
       return yield* new Invalid({ message: MENU_LOCATIONS_REQUIRED });
     }
     yield* checkActiveLocations(db, tenantId, values.locationIds);
-    yield* setMenuItemLocationsEffect(db, tenantId, itemId, values);
+    if (coverage === "all") {
+      yield* setMenuItemLocationsEffect(db, tenantId, itemId, values);
+    } else {
+      const current = yield* findMenuItem(db, tenantId, itemId);
+      const active = yield* listActiveLocationsEffect(db, tenantId);
+      const merged = mergeUncoveredLocations(
+        values,
+        current,
+        coverage,
+        active.map((location) => location.id),
+      );
+      yield* setMenuItemLocationsEffect(db, tenantId, itemId, merged);
+    }
     return yield* findMenuItem(db, tenantId, itemId);
   });
 
@@ -253,13 +281,6 @@ export const reorderMenuItemsSvc = (
 // With Variants, the item's price is the lowest
 // Variant price, as the schema says.
 // -----
-type MenuItemInput = Omit<MenuItemValues, "priced" | "countryId"> & {
-  price: string | null;
-  variants: MenuItemVariant[] | null;
-  dietaryTags: string[];
-  countryId?: string;
-};
-
 const toItemValues = (
   { dietaryTags: _tags, price, variants, ...item }: MenuItemInput,
   countryId: string,

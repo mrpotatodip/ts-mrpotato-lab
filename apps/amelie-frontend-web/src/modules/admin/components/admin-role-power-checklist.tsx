@@ -1,8 +1,6 @@
 import { useState } from "react";
 import type { AdminRoleDetail } from "@repo/contracts/amelie";
 import { Button } from "#/components/ui/button";
-import { Checkbox } from "#/components/ui/checkbox";
-import { Label } from "#/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -16,84 +14,15 @@ import {
   allAdminPowers,
   applyAdminPowerEdits,
   formatAdminHolderCount,
-  isAdminPowerChecked,
   toAdminPowerGroups,
-  withAdminPowerEdit,
-  withAdminPowersEdit,
 } from "../utils";
-import type { AdminPowerEdits, AdminPowerGroup, AdminRolePowerSave } from "../types";
-import { AdminPowerUsage } from "./admin-power-usage";
+import type { AdminPowerEdits, AdminRolePowerSave } from "../types";
+import { AdminRolePowerGroup } from "./admin-role-power-group";
 
 type AdminRolePowerChecklistProps = {
   role: AdminRoleDetail;
   saving: AdminRolePowerSave;
 };
-
-type PowerGroupProps = {
-  group: AdminPowerGroup;
-  saved: readonly string[];
-  edits: AdminPowerEdits;
-  locked: ReadonlySet<string>;
-  disabled: boolean;
-  onChange: (edits: AdminPowerEdits) => void;
-};
-
-function actionLabel(action: string): string {
-  return action.charAt(0).toUpperCase() + action.slice(1);
-}
-
-function PowerGroup({ group, saved, edits, locked, disabled, onChange }: PowerGroupProps) {
-  const powers = allAdminPowers([group]);
-  const changeable = powers.filter((power) => !locked.has(power));
-  const checkedCount = changeable.filter((power) => isAdminPowerChecked(saved, edits, power)).length;
-  const allChecked = changeable.length > 0 && checkedCount === changeable.length;
-  const someChecked = checkedCount > 0;
-
-  return (
-    <section className="flex flex-col gap-3">
-      <div className="flex items-center justify-between gap-3">
-        <h3 className="text-base font-semibold">{group.label}</h3>
-        <Label htmlFor={`admin-role-all-${group.key}`} className="flex items-center gap-2 text-sm font-normal">
-          <Checkbox
-            id={`admin-role-all-${group.key}`}
-            checked={allChecked}
-            indeterminate={someChecked && !allChecked}
-            disabled={disabled || changeable.length === 0}
-            aria-label={`Select all ${group.label}`}
-            onCheckedChange={(checked) => onChange(withAdminPowersEdit(saved, edits, changeable, checked))}
-          />
-          Select all
-        </Label>
-      </div>
-      <ul className="divide-y rounded-2xl border">
-        {group.sections.map((section) => (
-          <li key={section.path} className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 px-4 py-3">
-            <span className="flex items-center gap-1.5 text-sm">
-              {section.label}
-              <AdminPowerUsage label={section.label} options={section.options} />
-            </span>
-            <div className="flex flex-wrap gap-x-4 gap-y-1">
-              {section.options.map((option) => {
-                const isLocked = locked.has(option.power);
-                return (
-                  <label key={option.power} className="flex items-center gap-2 text-sm">
-                    <Checkbox
-                      checked={isAdminPowerChecked(saved, edits, option.power)}
-                      disabled={disabled || isLocked}
-                      aria-label={`${section.label}: ${option.action}`}
-                      onCheckedChange={(checked) => onChange(withAdminPowerEdit(saved, edits, option.power, checked))}
-                    />
-                    {actionLabel(option.action)}
-                  </label>
-                );
-              })}
-            </div>
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
-}
 
 // -----
 // Tick the Powers the role grants. Edits sit beside the
@@ -118,7 +47,7 @@ export function AdminRolePowerChecklist({ role, saving }: AdminRolePowerChecklis
         {role.isSystem ? " This is a system role: powers can be added, never taken away." : ""}
       </p>
       {groups.map((group) => (
-        <PowerGroup
+        <AdminRolePowerGroup
           key={group.key}
           group={group}
           saved={role.powers}
