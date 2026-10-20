@@ -7,9 +7,13 @@
   "types": "src/index.ts",
   "exports": {
     ".": "./src/index.ts",
+    "./sounds": "./src/sounds/index.ts",
+    "./agui-loading": "./src/agui-loading/index.ts",
+    "./agui-loading/react": "./src/agui-loading/adapters/react/index.ts",
     "./loader.css": "./src/loader.css"
   },
   "scripts": {
+    "demo": "vite --config vite.config.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
@@ -35,6 +39,7 @@
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "typescript": "^5.4.5",
+    "vite": "^8.0.0",
     "vitest": "^4.1.7",
     "zod": "^4.4.3"
   }

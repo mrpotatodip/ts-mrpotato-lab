@@ -1,0 +1,169 @@
+/* -----
+   Tokens copied from apps/amelie-frontend-web/DESIGN.md (sections 2, 3, 5),
+   so the demo looks like the dashboard. Light by default, dark follows the OS.
+   ----- */
+:root {
+  --background: oklch(0.985 0.002 75);
+  --foreground: oklch(0.22 0.01 60);
+  --card: oklch(1 0 0);
+  --primary: oklch(0.38 0.05 50);
+  --primary-foreground: oklch(0.985 0.002 75);
+  --muted: oklch(0.955 0.006 75);
+  --muted-foreground: oklch(0.54 0.012 60);
+  --accent: oklch(0.945 0.012 75);
+  --border: oklch(0.915 0.006 75);
+  --ring: oklch(0.62 0.06 50);
+  --radius: 0.75rem;
+  --shadow-card: 0 1px 2px 0 oklch(0.2 0.01 60 / 0.04);
+
+  --success-ink: oklch(0.52 0.12 155);
+  --success-fill: oklch(0.95 0.04 155);
+  --info-ink: oklch(0.52 0.12 245);
+  --info-fill: oklch(0.95 0.03 245);
+  --danger-ink: oklch(0.55 0.17 27);
+  --danger-fill: oklch(0.95 0.03 20);
+  --neutral-ink: oklch(0.5 0.01 60);
+  --neutral-fill: oklch(0.95 0.005 75);
+
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: oklch(0.17 0.004 60);
+    --foreground: oklch(0.95 0.005 75);
+    --card: oklch(0.21 0.005 60);
+    --primary: oklch(0.78 0.08 65);
+    --primary-foreground: oklch(0.2 0.01 60);
+    --muted: oklch(0.27 0.006 60);
+    --muted-foreground: oklch(0.7 0.01 70);
+    --accent: oklch(0.29 0.008 60);
+    --border: oklch(0.29 0.006 60);
+    --ring: oklch(0.6 0.06 60);
+    --shadow-card: none;
+
+    --success-ink: oklch(0.78 0.13 155);
+    --success-fill: oklch(0.3 0.05 155);
+    --info-ink: oklch(0.76 0.11 245);
+    --info-fill: oklch(0.3 0.045 245);
+    --danger-ink: oklch(0.72 0.16 27);
+    --danger-fill: oklch(0.3 0.055 27);
+    --neutral-ink: oklch(0.75 0.01 70);
+    --neutral-fill: oklch(0.28 0.005 60);
+  }
+}
+
+* { box-sizing: border-box; border-color: var(--border); }
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font: 14px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.page { max-width: 64rem; margin: 0 auto; padding: 2rem 1rem 4rem; }
+@media (min-width: 768px) { .page { padding: 3rem 1.5rem 5rem; } }
+
+.header { margin-bottom: 2rem; }
+.header h1 { margin: 0; font-size: 1.875rem; line-height: 2.25rem; font-weight: 600; letter-spacing: -0.025em; }
+.header p { margin: 0.5rem 0 0; color: var(--muted-foreground); font-size: 1rem; }
+.header code {
+  font: 0.8125rem ui-monospace, SFMono-Regular, Menlo, monospace;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  background: var(--muted);
+}
+
+.layout { display: grid; gap: 1.5rem; align-items: start; }
+@media (min-width: 900px) { .layout { grid-template-columns: 22rem 1fr; } }
+.stack { display: grid; gap: 1.5rem; }
+@media (min-width: 900px) { .sticky { position: sticky; top: 1.5rem; } }
+
+.card {
+  border: 1px solid var(--border);
+  border-radius: 1.5rem;
+  background: var(--card);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1.25rem 1.5rem;
+  background: color-mix(in oklab, var(--muted) 60%, transparent);
+  border-bottom: 1px solid var(--border);
+}
+.card-title { margin: 0; font-size: 1.125rem; line-height: 1; font-weight: 600; letter-spacing: -0.025em; }
+
+.scenarios { margin: 0; padding: 0; list-style: none; }
+.scenarios li + li { border-top: 1px solid var(--border); }
+.scenario {
+  display: block;
+  width: 100%;
+  padding: 1rem 1.5rem;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+.scenario:hover:not(:disabled) { background: color-mix(in oklab, var(--accent) 40%, transparent); }
+.scenario:focus-visible { outline: 2px solid var(--ring); outline-offset: -2px; }
+.scenario[aria-current="true"] { background: var(--accent); }
+.scenario:disabled { cursor: default; }
+.scenario-name { display: block; font-weight: 500; }
+.scenario-desc { display: block; margin-top: 0.125rem; color: var(--muted-foreground); }
+
+.options { display: grid; gap: 0.875rem; padding: 1.25rem 1.5rem; }
+.option { display: flex; align-items: center; gap: 0.625rem; font-weight: 500; cursor: pointer; }
+.option input[type="checkbox"] { width: 1rem; height: 1rem; margin: 0; accent-color: var(--primary); }
+.option-hint { display: block; color: var(--muted-foreground); font-weight: 400; font-size: 0.75rem; line-height: 1.25rem; }
+.option-number { justify-content: space-between; }
+.option-number input {
+  width: 4.5rem;
+  height: 2.25rem;
+  padding: 0 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 0.625rem;
+  background: var(--background);
+  color: inherit;
+  font: inherit;
+}
+.option-number input:focus-visible { outline: 2px solid var(--ring); outline-offset: 1px; }
+.options hr { width: 100%; margin: 0; border: 0; border-top: 1px solid var(--border); }
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  line-height: 1.25rem;
+  font-weight: 500;
+  background: var(--neutral-fill);
+  color: var(--neutral-ink);
+}
+.badge::before { content: ""; width: 0.375rem; height: 0.375rem; border-radius: 9999px; background: currentColor; }
+.badge[data-tone="info"] { background: var(--info-fill); color: var(--info-ink); }
+.badge[data-tone="success"] { background: var(--success-fill); color: var(--success-ink); }
+.badge[data-tone="danger"] { background: var(--danger-fill); color: var(--danger-ink); }
+
+/* The loader's own variables, pointed at the dashboard tokens. */
+.preview-body {
+  --cb-muted: var(--muted-foreground);
+  --cb-border: var(--muted-foreground);
+  min-height: 26rem;
+  padding: 1.5rem 0.5rem;
+  font-size: 14px;
+}
+.preview-body .cbl-progress { font-size: 14px; }
+.preview-body .cbl-list { --cbl-gap: 0.5rem; }
+.preview-body .cbl-row[data-status="done"] { color: var(--foreground); }
+.preview-body .cbl-row[data-status="failed"] { color: var(--danger-ink); }
+.empty { margin: 0; padding: 9rem 1.5rem 0; text-align: center; color: var(--muted-foreground); }
