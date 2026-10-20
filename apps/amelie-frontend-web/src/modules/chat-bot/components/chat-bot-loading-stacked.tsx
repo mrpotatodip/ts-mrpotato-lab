@@ -6,8 +6,9 @@ import {
   AGUILoadingStackedStepIcon,
   AGUILoadingStackedStepText,
   AGUILoadingStackedSteps,
-} from "#/components/agui-loading/adapters/react";
-import type { AGUILoadingStackedByEvent } from "#/components/agui-loading";
+} from "@repo/chat-bot-react-loader/agui-loading/react";
+import type { AGUILoadingStackedByEvent } from "@repo/chat-bot-react-loader/agui-loading";
+import { useStepSounds } from "@repo/chat-bot-react-loader/sounds";
 import {
   CHAT_BOT_ANSWER_BUSY_TEXTS,
   CHAT_BOT_ANSWER_DONE_TEXT,
@@ -43,11 +44,20 @@ const DONE_BY_EVENT: AGUILoadingStackedByEvent<string> = {
 };
 
 // -----
+// Sounds for the steps: false is silent, true plays the
+// built-ins (ripple as a step starts, petal as it ends), or
+// pick levels, e.g. { end: { tools: petalSound } }.
+// -----
+const CHAT_BOT_LOADER_SOUNDS = false;
+
+// -----
 // One row per step of the turn; kept after it
-// ends, cleared when the next turn is sent.
+// ends, cleared when the next turn is sent. A subagent's
+// rows hang under its own row with tree lines.
 // -----
 export function ChatBotLoadingStacked() {
   const state = useChatBotStreamState();
+  useStepSounds(state, CHAT_BOT_LOADER_SOUNDS);
 
   return (
     <AGUILoadingStacked
@@ -57,7 +67,7 @@ export function ChatBotLoadingStacked() {
       className="shrink-0 px-4 text-sm text-muted-foreground"
     >
       <AGUILoadingStackedEarlier />
-      <AGUILoadingStackedSteps rowClassName="flex items-center gap-2">
+      <AGUILoadingStackedSteps rowClassName="flex items-center gap-2" tree>
         <AGUILoadingStackedStepIcon />
         <AGUILoadingStackedStepText
           busyByEvent={BUSY_BY_EVENT}

@@ -1,10 +1,15 @@
 import { ChatBot, ChatBotRoom, type ChatBotProps, type ChatBotRoomProps } from "@repo/chat-bot-react";
 import { createContext, useContext } from "react";
-import { ChatBotProgress } from "./chat-bot-progress";
+import { ChatBotProgress, type ChatBotProgressProps } from "./chat-bot-progress";
 import type { ChatBotProgressLabels } from "./labels";
 import { useChatBotProgress } from "./use-chat-bot-progress";
 
-type ProgressConfig = { labels?: ChatBotProgressLabels; maxVisible?: number };
+type ProgressConfig = {
+  labels?: ChatBotProgressLabels;
+  maxVisible?: number;
+  sounds?: ChatBotProgressProps["sounds"];
+  tree?: ChatBotProgressProps["tree"];
+};
 
 const ProgressConfigContext = createContext<ProgressConfig>({});
 
@@ -14,7 +19,7 @@ const ProgressConfigContext = createContext<ProgressConfig>({});
 // <ChatBotWithProgress>, or uses the defaults.
 // -----
 export function ChatBotRoomWithProgress(props: ChatBotRoomProps) {
-  const { labels, maxVisible } = useContext(ProgressConfigContext);
+  const { labels, maxVisible, sounds, tree } = useContext(ProgressConfigContext);
   const progress = useChatBotProgress();
   return (
     <ChatBotRoom
@@ -27,7 +32,7 @@ export function ChatBotRoomWithProgress(props: ChatBotRoomProps) {
         progress.onTurnStart();
         props.onTurnStart?.();
       }}
-      progress={<ChatBotProgress state={progress.state} labels={labels} maxVisible={maxVisible} />}
+      progress={<ChatBotProgress state={progress.state} labels={labels} maxVisible={maxVisible} sounds={sounds} tree={tree} />}
     />
   );
 }
@@ -38,9 +43,9 @@ export type ChatBotWithProgressProps = ChatBotProps & ProgressConfig;
 // <ChatBot /> with the step-by-step progress display:
 //   <ChatBotWithProgress endpoint="/api/chat" labels={{ tools: { lookupOrder: { busy: "Looking up your order", done: "Found your order" } } }} />
 // -----
-export function ChatBotWithProgress({ labels, maxVisible, ...props }: ChatBotWithProgressProps) {
+export function ChatBotWithProgress({ labels, maxVisible, sounds, tree, ...props }: ChatBotWithProgressProps) {
   return (
-    <ProgressConfigContext.Provider value={{ labels, maxVisible }}>
+    <ProgressConfigContext.Provider value={{ labels, maxVisible, sounds, tree }}>
       <ChatBot {...props} room={ChatBotRoomWithProgress} />
     </ProgressConfigContext.Provider>
   );

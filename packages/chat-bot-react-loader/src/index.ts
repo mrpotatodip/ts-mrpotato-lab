@@ -7,3 +7,4 @@ export {
 export { useChatBotProgress } from "./use-chat-bot-progress";
 export { DEFAULT_PROGRESS_LABELS, type ChatBotProgressLabels, type ChatBotStepLabel } from "./labels";
 export * from "./agui-loading";
+export type { ProgressSound, ProgressSoundLevel, ProgressSounds, ProgressSoundsConfig } from "./use-step-sounds";

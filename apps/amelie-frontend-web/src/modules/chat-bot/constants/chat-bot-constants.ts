@@ -1,5 +1,5 @@
 import { EventType } from "@tanstack/ai";
-import type { AGUILoadingStackedEvent } from "#/components/agui-loading";
+import type { AGUILoadingStackedEvent } from "@repo/chat-bot-react-loader/agui-loading";
 import { PUBLIC_CHAT_MESSAGE_MAX_LENGTH } from "@repo/contracts/amelie";
 import type { ChatBotStepLabel, ChatBotSurface } from "../types";
 

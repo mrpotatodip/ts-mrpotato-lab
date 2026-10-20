@@ -22,6 +22,7 @@
     "@blobatar/react": "^2.2.0",
     "@number-flow/react": "^0.6.2",
     "@repo/chat-bot": "workspace:*",
+    "@repo/chat-bot-react-loader": "workspace:*",
     "@repo/contracts": "workspace:*",
     "@tailwindcss/vite": "^4.1.18",
     "@tanstack/ai": "^0.63.0",

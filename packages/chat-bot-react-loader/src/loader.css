@@ -2,7 +2,7 @@
    Import once, next to chat-bot.css:  import "@repo/chat-bot-react-loader/loader.css"
    Colours follow the chat's --cb-* variables, so it matches without setup.
    ----- */
-.cbl-list { display: flex; flex-direction: column; gap: 0.375rem; margin: 0; padding: 0; list-style: none; }
+.cbl-list { --cbl-gap: 0.375rem; display: flex; flex-direction: column; gap: var(--cbl-gap); margin: 0; padding: 0; list-style: none; }
 .cbl-row { display: flex; align-items: center; gap: 0.5rem; }
 .cbl-tag { display: inline-flex; align-items: center; gap: 0.25rem; }
 .cbl-slot { display: inline-flex; flex: none; }
@@ -16,6 +16,31 @@
   border-top-color: transparent;
   border-radius: 9999px;
   animation: cbl-spin 1s linear infinite;
+}
+/* Tree lines: one column per level, each 1rem wide and as tall as the row. */
+.cbl-tree { display: inline-flex; align-self: stretch; flex: none; }
+.cbl-tree > span { position: relative; width: 1rem; }
+.cbl-tree-pipe::before,
+.cbl-tree-tee::before,
+.cbl-tree-elbow::before {
+  content: "";
+  position: absolute;
+  left: 0.375rem;
+  top: calc(var(--cbl-gap) / -2);
+  bottom: calc(var(--cbl-gap) / -2);
+  border-left: 1px solid var(--cb-border, currentColor);
+  opacity: 0.45;
+}
+.cbl-tree-elbow::before { bottom: 50%; }
+.cbl-tree-tee::after,
+.cbl-tree-elbow::after {
+  content: "";
+  position: absolute;
+  left: 0.375rem;
+  top: 50%;
+  width: 0.5rem;
+  border-top: 1px solid var(--cb-border, currentColor);
+  opacity: 0.45;
 }
 .cbl-paused * { animation-play-state: paused; }
 .cbl-caption { display: inline-flex; align-items: baseline; white-space: nowrap; }
