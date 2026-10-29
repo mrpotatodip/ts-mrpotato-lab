@@ -85,7 +85,7 @@ Each issue has a status:
 
 - **Symptom:** A fix does not seem to work after a new release.
 - **Cause:** npx keeps downloaded versions in a cache.
-- **What to do:** Run with an exact version, for example `npx @mrpotatolab/skills-config@0.2.2 init`.
+- **What to do:** Run with an exact version, for example `npx @mrpotatolab/skills-config@0.2.3 init`.
 
 ### A local `npm link` hides the published package
 

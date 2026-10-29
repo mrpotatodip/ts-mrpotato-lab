@@ -1,0 +1,17 @@
+---
+description: Git branch names must include a real monorepo project
+alwaysApply: true
+---
+
+# Branch names
+
+Before `git checkout -b` or `git switch -c`, pick a name that `pnpm lint:branch` accepts. Husky runs the same check on commit.
+
+Pattern: `<project>/<type>/<kebab-description>`
+
+- `project` is an `apps/` or `packages/` folder name, or `root` for repo-wide work
+- `type` is one of: feat, fix, chore, docs, refactor, test, ci, hotfix, research, prototype
+
+Examples: `amelie-engine-api/feat/team-bindings`, `skills-config/chore/sort-init`, `root/docs/branch-names`
+
+`main` is only for integrating already-reviewed work. Leave the pre-commit hook enabled so the lint runs.

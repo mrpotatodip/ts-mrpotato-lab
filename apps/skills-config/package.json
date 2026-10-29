@@ -1,6 +1,6 @@
 {
   "name": "@mrpotatolab/skills-config",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Link agent skills from one central hub into your projects, with your own names.",
   "type": "module",
   "bin": {

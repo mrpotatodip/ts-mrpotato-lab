@@ -105,6 +105,12 @@ Orchestrators should prefer multiple specialized agents over one large implement
 
 ---
 
+### Rule 5: Branch Names
+
+Work lands on `<project>/<type>/<kebab-description>`. `project` is an `apps/` or `packages/` folder, or `root`. Confirm with `pnpm lint:branch` (or `BRANCH=<name> pnpm lint:branch`) before creating the branch. Husky runs that check on commit.
+
+---
+
 ## Backend Workflow
 
 When backend-orchestrator receives a task:

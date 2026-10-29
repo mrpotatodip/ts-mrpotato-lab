@@ -52,6 +52,7 @@ if (cmd === "init") {
     config.rules.push({ source, prefix: `${owner}-` });
     console.log(`added rule: ${source} -> ${owner}-`);
   }
+  config.skills.sort((a, b) => a.source.localeCompare(b.source) || a.name.localeCompare(b.name));
   fs.writeFileSync(configPath, JSON.stringify(config, null, 2) + "\n");
   console.log(`wrote ${configPath} (${config.skills.length} skills, ${config.rules.length} rules)`);
 } else if (cmd === "restore") {

@@ -3,9 +3,12 @@
   "private": true,
   "scripts": {
     "dev": "pnpm --recursive --parallel dev",
-    "build": "pnpm --recursive build"
+    "build": "pnpm --recursive build",
+    "lint:branch": "node scripts/lint-branch-name.mjs",
+    "prepare": "husky"
   },
   "devDependencies": {
+    "husky": "^9.1.7",
     "react-doctor": "^0.9.12",
     "typescript": "^5.4.5"
   },

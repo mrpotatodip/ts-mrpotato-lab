@@ -89,6 +89,7 @@ Zod v4 schemas and TypeScript types shared between `amelie-engine-api` and `amel
 
 - Review-time rules for Hono route code, the React app, `@repo/contracts` and chat-bot agents, agent tools and the agent router (`{module}/agents/`, `{module}/agent-tools/`, `{module}/agent-router/`) live in `CODING_STANDARDS.md` (root)
 
+- Git branches: `<project>/<type>/<kebab-description>` where `project` is an `apps/` or `packages/` folder, or `root`. Check with `pnpm lint:branch`. Husky runs this on commit.
 - `#/*` path alias maps to `./src/*` in the amelie apps
 - All Hono apps run on Cloudflare Workers; use `@cloudflare/workers-types` for `ExecutionContext`, `MessageBatch`, etc.
 - `drizzle-orm` is pinned to `0.45.2` via root pnpm overrides
