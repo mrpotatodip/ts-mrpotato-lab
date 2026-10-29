@@ -12,6 +12,7 @@ import { CHAT_BOT_CLOSE_HOTKEY, CHAT_BOT_TOGGLE_HOTKEY } from "../constants";
 import { useHydrated, useSheetSide } from "#/modules/shared";
 import { startChatBotNewChat } from "../stores";
 import { ChatBotComposerView } from "./chat-bot-composer";
+import { ChatBotSoundToggle } from "./chat-bot-sound-toggle";
 
 // -----
 // A floating button that opens the assistant in a
@@ -166,6 +167,7 @@ export function ChatBotSheet() {
           onAnimationEnd={onWiggleEnd}
         >
           <div className="absolute top-3.5 right-4 flex items-center">
+            <ChatBotSoundToggle />
             <Button
               type="button"
               variant="ghost"

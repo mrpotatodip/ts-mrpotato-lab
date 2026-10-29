@@ -136,6 +136,21 @@ body {
 }
 .option-number input:focus-visible { outline: 2px solid var(--ring); outline-offset: 1px; }
 .options hr { width: 100%; margin: 0; border: 0; border-top: 1px solid var(--border); }
+.tune-copy { margin: 0; color: var(--muted-foreground); font-weight: 400; }
+.tune {
+  width: 100%;
+  padding: 0.75rem 0.875rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--background);
+  color: inherit;
+  font: inherit;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+}
+.tune:hover { background: var(--accent); }
+.tune:focus-visible { outline: 2px solid var(--ring); outline-offset: 1px; }
 
 .badge {
   display: inline-flex;

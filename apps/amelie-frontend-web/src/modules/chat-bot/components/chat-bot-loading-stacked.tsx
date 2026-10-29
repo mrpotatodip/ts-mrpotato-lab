@@ -17,6 +17,7 @@ import {
   CHAT_BOT_RUN_BUSY_TEXTS,
   CHAT_BOT_RUN_DONE_TEXT,
 } from "../constants";
+import { useChatBotSoundPreference } from "../hooks/use-chat-bot-sound-preference";
 import { useChatBotStreamState } from "../hooks/use-chat-bot-stream-state";
 import { isChatBotAnswerStep } from "../stores";
 import { toChatBotStepLabel } from "../utils";
@@ -47,8 +48,9 @@ const DONE_BY_EVENT: AGUILoadingStackedByEvent<string> = {
 // Sounds for the steps: false is silent, true plays the
 // built-ins (ripple as a step starts, petal as it ends), or
 // pick levels, e.g. { end: { tools: petalSound } }.
+// The mute toggle turns them off for this browser.
 // -----
-const CHAT_BOT_LOADER_SOUNDS = false;
+const CHAT_BOT_LOADER_SOUNDS = true;
 
 // -----
 // One row per step of the turn; kept after it
@@ -57,7 +59,8 @@ const CHAT_BOT_LOADER_SOUNDS = false;
 // -----
 export function ChatBotLoadingStacked() {
   const state = useChatBotStreamState();
-  useStepSounds(state, CHAT_BOT_LOADER_SOUNDS);
+  const { muted } = useChatBotSoundPreference();
+  useStepSounds(state, muted ? false : CHAT_BOT_LOADER_SOUNDS);
 
   return (
     <AGUILoadingStacked

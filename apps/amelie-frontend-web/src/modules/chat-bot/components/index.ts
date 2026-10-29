@@ -1,6 +1,7 @@
 export * from "./chat-bot-composer";
 export * from "./chat-bot-room";
 export * from "./chat-bot-sheet";
+export * from "./chat-bot-sound-toggle";
 export * from "./chat-bot-suspense-room-main";
 export * from "./chat-bot-room-skeleton";
 export * from "./chat-bot-chat-frame";

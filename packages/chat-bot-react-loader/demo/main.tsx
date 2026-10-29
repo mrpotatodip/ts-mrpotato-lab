@@ -4,6 +4,8 @@ import { ChatBotProgress, useChatBotProgress, type ChatBotProgressLabels } from 
 import "../src/loader.css";
 import "./demo.css";
 import { SCENARIOS, asChunk, type Scenario } from "./scenarios";
+import { playTaDum } from "./ta-dum";
+import { playShortTune } from "./tune";
 
 const LABELS: ChatBotProgressLabels = {
   tools: {
@@ -45,13 +47,22 @@ function Demo() {
   const [playing, setPlaying] = useState<string | null>(null);
   const [current, setCurrent] = useState<string | null>(null);
   const timers = useRef<number[]>([]);
+  const tuneTimers = useRef<number[]>([]);
+  const taDumTimers = useRef<number[]>([]);
 
   const stop = () => {
     timers.current.forEach(clearTimeout);
     timers.current = [];
     setPlaying(null);
   };
-  useEffect(() => stop, []);
+  useEffect(
+    () => () => {
+      stop();
+      tuneTimers.current.forEach(clearTimeout);
+      taDumTimers.current.forEach(clearTimeout);
+    },
+    [],
+  );
 
   const play = (scenario: Scenario) => {
     stop();
@@ -64,6 +75,16 @@ function Demo() {
       timers.current.push(window.setTimeout(() => onChunk(asChunk(step)), at));
     }
     timers.current.push(window.setTimeout(() => setPlaying(null), at));
+  };
+
+  const playTune = () => {
+    tuneTimers.current.forEach(clearTimeout);
+    tuneTimers.current = playShortTune();
+  };
+
+  const playIntro = () => {
+    taDumTimers.current.forEach(clearTimeout);
+    taDumTimers.current = playTaDum();
   };
 
   return (
@@ -111,6 +132,30 @@ function Demo() {
                 </span>
                 <input type="number" min={1} max={20} value={maxVisible} onChange={(e) => setMaxVisible(Number(e.target.value) || 1)} />
               </label>
+            </div>
+          </section>
+
+          <section className="card">
+            <div className="card-header">
+              <h2 className="card-title">Short tune</h2>
+            </div>
+            <div className="options">
+              <p className="tune-copy">Its own phrase, not the loader's Ripple and Petal. Pluck, Tine, Chime, then Uplift from React Bits Sound Lab.</p>
+              <button type="button" className="tune" onClick={playTune}>
+                Play a short tune
+              </button>
+            </div>
+          </section>
+
+          <section className="card">
+            <div className="card-header">
+              <h2 className="card-title">Ta-dum</h2>
+            </div>
+            <div className="options">
+              <p className="tune-copy">Two wood knocks, a low anvil, then a reverse-guitar blossom on D. Built in the Sound Lab engine, not the Netflix file.</p>
+              <button type="button" className="tune" onClick={playIntro}>
+                Play ta-dum
+              </button>
             </div>
           </section>
         </div>
