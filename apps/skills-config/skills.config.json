@@ -1,0 +1,41 @@
+{
+  "rules": [
+    {
+      "source": "mattpocock/skills",
+      "prefix": "mattpocock-"
+    },
+    {
+      "source": "wheresryan22/anatomy",
+      "prefix": "ryan-"
+    },
+    {
+      "source": "ibelick/ui-skills",
+      "prefix": "ibelick-"
+    }
+  ],
+  "overrides": {
+    "grilling": "grill"
+  },
+  "targets": [
+    ".claude/skills",
+    ".agents/skills"
+  ],
+  "include": [
+    "ask-matt",
+    "chief-of-staff"
+  ],
+  "skills": [
+    {
+      "source": "mattpocock/skills",
+      "name": "ask-matt"
+    },
+    {
+      "source": "mattpocock/skills",
+      "name": "chief-of-staff"
+    },
+    {
+      "source": "mattpocock/skills",
+      "name": "pr"
+    }
+  ]
+}

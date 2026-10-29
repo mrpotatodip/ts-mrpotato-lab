@@ -4,6 +4,7 @@ export * from "./use-chat-bot-contexts";
 export * from "./use-chat-bot-pending-reply";
 export * from "./use-chat-bot-route-thread-id";
 export * from "./use-chat-bot-smooth-text-animation";
+export * from "./use-chat-bot-sound-preference";
 export * from "./use-chat-bot-stick-to-bottom";
 export * from "./use-chat-bot-stream-state";
 export * from "./use-chat-bot-thread-actions";

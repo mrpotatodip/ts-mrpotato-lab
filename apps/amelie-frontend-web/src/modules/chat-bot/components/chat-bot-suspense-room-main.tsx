@@ -7,6 +7,7 @@ import { chatBotNewChatStore, peekCreatedThreadId, startChatBotNewChat } from ".
 import { toThreadTitle } from "../utils";
 import { ChatBotComposer } from "./chat-bot-composer";
 import { ChatBotRoomSkeleton } from "./chat-bot-room-skeleton";
+import { ChatBotSoundToggle } from "./chat-bot-sound-toggle";
 import { ChatBotThreadOverflow } from "./chat-bot-thread-overflow";
 
 // -----
@@ -58,7 +59,12 @@ function ChatBotRoomView({ threadId }: ChatBotRoomViewProps) {
   return (
     <AppBreadcrumb
       className="shrink-0"
-      trailing={<ChatBotThreadOverflow threadId={threadId} title={thread.title} />}
+      trailing={
+        <div className="flex items-center gap-1">
+          <ChatBotSoundToggle />
+          <ChatBotThreadOverflow threadId={threadId} title={thread.title} />
+        </div>
+      }
     >
       <AppBreadcrumbLink to="/chat-bot">Assistant</AppBreadcrumbLink>
       <AppBreadcrumbSeparator />
