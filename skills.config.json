@@ -1,0 +1,227 @@
+{
+  "skills": [
+    {
+      "source": "emilkowalski/skills",
+      "name": "animate"
+    },
+    {
+      "source": "emilkowalski/skills",
+      "name": "animate-expo"
+    },
+    {
+      "source": "emilkowalski/skills",
+      "name": "animation-performance"
+    },
+    {
+      "source": "emilkowalski/skills",
+      "name": "animation-vocabulary"
+    },
+    {
+      "source": "emilkowalski/skills",
+      "name": "apple-design"
+    },
+    {
+      "source": "emilkowalski/skills",
+      "name": "ask-sonner"
+    },
+    {
+      "source": "emilkowalski/skills",
+      "name": "break-ui"
+    },
+    {
+      "source": "emilkowalski/skills",
+      "name": "emil-design-eng"
+    },
+    {
+      "source": "emilkowalski/skills",
+      "name": "find-animation-opportunities"
+    },
+    {
+      "source": "emilkowalski/skills",
+      "name": "improve-animations"
+    },
+    {
+      "source": "emilkowalski/skills",
+      "name": "mobile-native"
+    },
+    {
+      "source": "emilkowalski/skills",
+      "name": "pick-ui-library"
+    },
+    {
+      "source": "emilkowalski/skills",
+      "name": "prototype"
+    },
+    {
+      "source": "emilkowalski/skills",
+      "name": "review-animations"
+    },
+    {
+      "source": "emilkowalski/skills",
+      "name": "write-swift"
+    },
+    {
+      "source": "mattpocock/skills",
+      "name": "ask-matt"
+    },
+    {
+      "source": "mattpocock/skills",
+      "name": "chief-of-staff"
+    },
+    {
+      "source": "mattpocock/skills",
+      "name": "claude-handoff"
+    },
+    {
+      "source": "mattpocock/skills",
+      "name": "code-review"
+    },
+    {
+      "source": "mattpocock/skills",
+      "name": "codebase-design"
+    },
+    {
+      "source": "mattpocock/skills",
+      "name": "diagnosing-bugs"
+    },
+    {
+      "source": "mattpocock/skills",
+      "name": "domain-modeling"
+    },
+    {
+      "source": "mattpocock/skills",
+      "name": "git-guardrails-claude-code"
+    },
+    {
+      "source": "mattpocock/skills",
+      "name": "grill-me"
+    },
+    {
+      "source": "mattpocock/skills",
+      "name": "grill-with-docs"
+    },
+    {
+      "source": "mattpocock/skills",
+      "name": "grilling"
+    },
+    {
+      "source": "mattpocock/skills",
+      "name": "handoff"
+    },
+    {
+      "source": "mattpocock/skills",
+      "name": "implement"
+    },
+    {
+      "source": "mattpocock/skills",
+      "name": "implement-spec"
+    },
+    {
+      "source": "mattpocock/skills",
+      "name": "improve-codebase-architecture"
+    },
+    {
+      "source": "mattpocock/skills",
+      "name": "loop-me"
+    },
+    {
+      "source": "mattpocock/skills",
+      "name": "migrate-to-shoehorn"
+    },
+    {
+      "source": "mattpocock/skills",
+      "name": "pr"
+    },
+    {
+      "source": "mattpocock/skills",
+      "name": "research"
+    },
+    {
+      "source": "mattpocock/skills",
+      "name": "retro"
+    },
+    {
+      "source": "mattpocock/skills",
+      "name": "scaffold-exercises"
+    },
+    {
+      "source": "mattpocock/skills",
+      "name": "setup-matt-pocock-skills"
+    },
+    {
+      "source": "mattpocock/skills",
+      "name": "setup-pre-commit"
+    },
+    {
+      "source": "mattpocock/skills",
+      "name": "setup-ts-deep-modules"
+    },
+    {
+      "source": "mattpocock/skills",
+      "name": "tdd"
+    },
+    {
+      "source": "mattpocock/skills",
+      "name": "teach"
+    },
+    {
+      "source": "mattpocock/skills",
+      "name": "to-questionnaire"
+    },
+    {
+      "source": "mattpocock/skills",
+      "name": "to-spec"
+    },
+    {
+      "source": "mattpocock/skills",
+      "name": "to-tickets"
+    },
+    {
+      "source": "mattpocock/skills",
+      "name": "triage"
+    },
+    {
+      "source": "mattpocock/skills",
+      "name": "wait-what"
+    },
+    {
+      "source": "mattpocock/skills",
+      "name": "wayfinder"
+    },
+    {
+      "source": "mattpocock/skills",
+      "name": "wizard"
+    },
+    {
+      "source": "mattpocock/skills",
+      "name": "writing-beats"
+    },
+    {
+      "source": "mattpocock/skills",
+      "name": "writing-for-agents"
+    },
+    {
+      "source": "mattpocock/skills",
+      "name": "writing-fragments"
+    },
+    {
+      "source": "mattpocock/skills",
+      "name": "writing-shape"
+    }
+  ],
+  "rules": [
+    {
+      "source": "emilkowalski/skills",
+      "prefix": "emilkowalski-"
+    },
+    {
+      "source": "mattpocock/skills",
+      "prefix": "mattpocock-"
+    }
+  ],
+  "overrides": {},
+  "targets": [
+    ".claude/skills",
+    ".agents/skills"
+  ]
+}
