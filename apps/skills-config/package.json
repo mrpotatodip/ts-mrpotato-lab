@@ -1,0 +1,18 @@
+{
+  "name": "@mrpotatolab/skills-config",
+  "version": "0.2.2",
+  "description": "Link agent skills from one central hub into your projects, with your own names.",
+  "type": "module",
+  "bin": {
+    "skills-config": "./link-skills.mjs"
+  },
+  "files": [
+    "link-skills.mjs",
+    "README.md",
+    "LOGS.md",
+    "BENEFITS.md"
+  ],
+  "engines": {
+    "node": ">=21"
+  }
+}
