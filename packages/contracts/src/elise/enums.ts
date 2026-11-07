@@ -47,3 +47,11 @@ export type ScanStateValue = (typeof SCAN_STATE_VALUES)[number];
 export type FindingStatusValue = (typeof FINDING_STATUS_VALUES)[number];
 export type FindingSeverityValue = (typeof FINDING_SEVERITY_VALUES)[number];
 export type FindingTriageStatusValue = (typeof FINDING_TRIAGE_STATUS_VALUES)[number];
+
+// -----
+// Where a running scan is: cloning the repo, the agent
+// auditing it, or saving its files.
+// -----
+export const SCAN_STEP_VALUES = ["cloning", "auditing", "saving"] as const;
+
+export type ScanStepValue = (typeof SCAN_STEP_VALUES)[number];

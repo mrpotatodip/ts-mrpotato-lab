@@ -50,6 +50,15 @@ _Avoid_: Bot, AI
 A folder of written instructions the agent follows. We have `lite` and `full`.
 _Avoid_: Prompt, plugin
 
+**Step**:
+Where a running Scan is: `cloning`, `auditing` or `saving`. It is null when the Scan has not started or has ended.
+
+**Usage**:
+What a Scan spent: tokens, a cost estimate, turns and duration. The Agent reports it when it ends; a Scan that fails after the Agent started keeps it.
+
+**Scan file**:
+A file a Scan saved. Its bytes are in R2; its row in `scan_files` (Neon) holds the name, size and R2 key.
+
 **Report**:
 The `REPORT.md` file the agent writes for people to read.
 _Avoid_: Output, result

@@ -12,7 +12,7 @@ app.post("/", createScanDoc, zValidator("header", AccountHeaderSchema), zValidat
   const { "x-account-id": accountId } = c.req.valid("header");
   const body = c.req.valid("json");
   const spend = await c.get("deps").monthSpend(c.env, accountId);
-  const data = await runEffect(createScanSvc(c.env, accountId, body, spend));
+  const data = await runEffect(createScanSvc(c.env, c.get("deps").scanRepo(c.env), accountId, body, spend));
   return c.json({ data, error: null }, 201);
 });
 

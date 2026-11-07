@@ -12,8 +12,8 @@ const app = new Hono<AppEnv>();
 app.get("/:scanId/files/:file", readScanFileDoc, zValidator("header", AccountHeaderSchema), zValidator("param", ScanFileParamSchema), async (c) => {
   const { "x-account-id": accountId } = c.req.valid("header");
   const { scanId, file } = c.req.valid("param");
-  const object = await runEffect(readScanFileSvc(c.env.REPORTS, accountId, scanId, file));
-  return new Response(object.body, { headers: scanFileHeaders(file) });
+  const { body, contentType } = await runEffect(readScanFileSvc(c.env.REPORTS, c.get("deps").scanRepo(c.env), accountId, scanId, file));
+  return new Response(body.body, { headers: scanFileHeaders(file, contentType) });
 });
 
 export default app;

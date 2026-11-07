@@ -1,19 +1,20 @@
 import { Effect } from "effect";
-import { Invalid, RateLimited, toExternalError, type ExternalError } from "#/lib/effect-query";
+import { Invalid, RateLimited, toExternalError, type DbError, type ExternalError } from "#/lib/effect-query";
 import { ScanOptionsSchema, type ScanParams } from "#/schemas";
-import { listScanStatusesEffect, newScanId, writeScanStatusEffect } from "#/modules/scan-store";
-import { budgetUsdOf, reservedUsdOf, type MonthSpend } from "#/modules/usage";
-import { SCANS_PAGE_SIZE } from "#/modules/scans/constants";
+import { newScanId } from "#/modules/scan-store";
+import type { ScanRepo } from "#/modules/scan-ledger";
+import { SCANS_ACTIVE_WINDOW_MS } from "#/modules/scans/constants";
 import type { CreateScanBody, ScanQueued } from "#/modules/scans/schemas";
 import type { CreateScanEnv } from "#/modules/scans/types";
-import { isActiveScan } from "#/modules/scans/utils";
+import { budgetUsdOf, reservedUsdOf, type MonthSpend } from "#/modules/usage";
 
 export const createScanSvc = (
   env: CreateScanEnv,
+  repo: ScanRepo,
   accountId: string,
   input: CreateScanBody,
   spend: MonthSpend,
-): Effect.Effect<ScanQueued, Invalid | RateLimited | ExternalError> =>
+): Effect.Effect<ScanQueued, Invalid | RateLimited | DbError | ExternalError> =>
   Effect.gen(function* () {
     const ceiling = Number(env.MAX_BUDGET_USD);
     const maxBudgetUsd = input.max_budget_usd ?? ceiling;
@@ -31,8 +32,7 @@ export const createScanSvc = (
     ).pipe(Effect.orDie);
 
     const limit = Number(env.MAX_ACTIVE_SCANS);
-    const recent = yield* listScanStatusesEffect(env.REPORTS, accountId, SCANS_PAGE_SIZE);
-    const activeScans = recent.scans.filter((scan) => isActiveScan(scan, Date.now()));
+    const activeScans = yield* repo.activeSince(accountId, Date.now() - SCANS_ACTIVE_WINDOW_MS);
     const active = activeScans.length;
     if (active >= limit) {
       return yield* new RateLimited({
@@ -51,7 +51,11 @@ export const createScanSvc = (
     }
 
     const params: ScanParams = { scanId: newScanId(), accountId, repo: input.repo, options, createdAt: new Date().toISOString() };
-    yield* writeScanStatusEffect(env.REPORTS, params, "queued");
-    yield* Effect.tryPromise({ try: () => env.SCAN_WORKFLOW.create({ id: params.scanId, params }), catch: toExternalError });
+    yield* repo.create(params);
+    yield* Effect.tryPromise({ try: () => env.SCAN_WORKFLOW.create({ id: params.scanId, params }), catch: toExternalError }).pipe(
+      Effect.tapError((error) =>
+        repo.mark(accountId, params.scanId, { status: "failed", error: `could not start the workflow: ${String(error.cause)}` }).pipe(Effect.ignore),
+      ),
+    );
     return { scanId: params.scanId, status: "queued" as const, ...options };
   });

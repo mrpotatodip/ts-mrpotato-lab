@@ -18,10 +18,12 @@ import {
   FINDING_STATUS_VALUES,
   FINDING_TRIAGE_STATUS_VALUES,
   SCAN_STATE_VALUES,
+  SCAN_STEP_VALUES,
   type FindingSeverityValue,
   type FindingStatusValue,
   type FindingTriageStatusValue,
   type ScanStateValue,
+  type ScanStepValue,
 } from "@repo/contracts/elise";
 import { parties } from "./party";
 import { tenants } from "./tenant";
@@ -29,9 +31,10 @@ import { tenants } from "./tenant";
 const inList = (values: readonly string[]) => sql.raw(values.map((value) => `'${value}'`).join(", "));
 
 // -----
-// One row per scan. id is the engine's scan ID,
-// written once when the scan ends, with what
-// the agent spent (tokens, and its cost estimate). The files stay
+// One row per scan, created when the scan is queued
+// and updated at each step. id is the engine's scan ID.
+// It holds the state the API reads, and what the agent
+// spent (tokens, and its cost estimate). The files stay
 // in R2; these rows let the dashboard sort and filter.
 // -----
 export const scans = pgTable(
@@ -43,6 +46,7 @@ export const scans = pgTable(
       .references(() => tenants.id, { onDelete: "cascade" }),
     repo: text("repo").notNull(),
     status: text("status").$type<ScanStateValue>().notNull(),
+    step: text("step").$type<ScanStepValue>(),
     skill: text("skill").notNull(),
     model: text("model").notNull(),
     effort: text("effort").notNull(),
@@ -59,12 +63,44 @@ export const scans = pgTable(
     durationMs: integer("duration_ms"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
     finishedAt: timestamp("finished_at", { withTimezone: true }),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
     recordedAt: timestamp("recorded_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => ({
     chkStatus: check("scans_status", sql`${t.status} in (${inList(SCAN_STATE_VALUES)})`),
+    chkStep: check("scans_step", sql`${t.step} is null or ${t.step} in (${inList(SCAN_STEP_VALUES)})`),
     uqIdTenant: unique("uq_scans_id_tenant").on(t.id, t.tenantId),
     idxTenantCreated: index("idx_scans_tenant_created_at").on(t.tenantId, t.createdAt),
+  }),
+);
+
+// -----
+// One row per file a scan saved to R2. r2_key is
+// where the bytes are, so every object in the bucket
+// can be traced to its scan and account here.
+// -----
+export const scanFiles = pgTable(
+  "scan_files",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    scanId: text("scan_id").notNull(),
+    name: text("name").notNull(),
+    r2Key: text("r2_key").notNull(),
+    sizeBytes: bigint("size_bytes", { mode: "number" }).notNull(),
+    contentType: text("content_type").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => ({
+    fkScanTenant: foreignKey({
+      name: "scan_files_scan_tenant_fk",
+      columns: [t.scanId, t.tenantId],
+      foreignColumns: [scans.id, scans.tenantId],
+    }).onDelete("cascade"),
+    uqScanName: uniqueIndex("uq_scan_files_scan_name").on(t.scanId, t.name),
+    uqR2Key: uniqueIndex("uq_scan_files_r2_key").on(t.r2Key),
   }),
 );
 
@@ -148,5 +184,6 @@ export const scanFindingTriage = pgTable(
 );
 
 export type TScan = typeof scans.$inferSelect;
+export type TScanFile = typeof scanFiles.$inferSelect;
 export type TFinding = typeof scanFindings.$inferSelect;
 export type TFindingTriage = typeof scanFindingTriage.$inferSelect;

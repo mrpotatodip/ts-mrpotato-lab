@@ -15,5 +15,4 @@ export const SCAN_REPORT_FILES = [
   "coverage-ledger.json",
   "run-metadata.json",
 ] as const;
-export const SCAN_STATUS_FILE = "status.json";
-export const SCAN_SERVABLE_FILES = [...SCAN_REPORT_FILES, SCAN_STATUS_FILE] as const;
+export const SCAN_SERVABLE_FILES = SCAN_REPORT_FILES;

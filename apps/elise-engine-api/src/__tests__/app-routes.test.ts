@@ -1,18 +1,23 @@
+import { Effect } from "effect";
 import { beforeEach, describe, expect, it } from "vitest";
 import { z } from "zod";
 import { buildApp } from "#/index";
 import { fakeBindings, TEST_TOKEN, testExecutionContext } from "./fake-bindings";
+import { memoryScanRepo } from "./memory-scan-repo";
 
+let ledger = memoryScanRepo();
 let signedInUser: string | undefined;
 let userHoldsRole = false;
 
 const app = buildApp({
+  scanRepo: () => ledger.repo,
   monthSpend: async () => ({ spentUsd: 0, scans: 0, tokens: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }, budgetOverrideUsd: null }),
   sessionUserId: async () => signedInUser,
   userHasAccount: async () => userHoldsRole,
 }).app;
 
 beforeEach(() => {
+  ledger = memoryScanRepo();
   signedInUser = undefined;
   userHoldsRole = false;
 });
@@ -110,7 +115,7 @@ describe("envelope", () => {
 
 describe("POST /scans", () => {
   it("queues a scan and starts the workflow", async () => {
-    const { env, created, store } = fakeBindings();
+    const { env, created } = fakeBindings();
     const res = await post(env, { repo: REPO, model: "claude-haiku-5-5", effort: "low", max_budget_usd: 1 });
     const body = await res.json();
 
@@ -118,7 +123,7 @@ describe("POST /scans", () => {
     expect(body).toMatchObject({ data: { status: "queued", model: "claude-haiku-5-5", skill: "lite", maxBudgetUsd: 1 }, error: null });
     expect(created).toHaveLength(1);
     expect(created[0].params.accountId).toBe(ACCOUNT);
-    expect([...store.keys()][0]).toMatch(new RegExp(`^accounts/${ACCOUNT}/scans/.+/status\\.json$`));
+    expect(ledger.rows.get(created[0].params.scanId)).toMatchObject({ accountId: ACCOUNT, status: "queued" });
   });
 
   it("answers 429 when the account has too many active scans", async () => {
@@ -190,6 +195,9 @@ describe("GET /scans/:scanId/files/:file", () => {
   it("serves a saved file as a safe attachment", async () => {
     const { env, store } = fakeBindings();
     store.set(`accounts/${ACCOUNT}/scans/abc/REPORT.md`, "# report");
+    await Effect.runPromise(
+      ledger.repo.addFiles(ACCOUNT, "abc", [{ name: "REPORT.md", r2Key: `accounts/${ACCOUNT}/scans/abc/REPORT.md`, sizeBytes: 8, contentType: "text/markdown; charset=utf-8" }]),
+    );
     const res = await call(env, "/scans/abc/files/REPORT.md", { headers: auth });
 
     expect(res.status).toBe(200);
@@ -211,6 +219,9 @@ describe("GET /scans/:scanId/files/:file", () => {
   it("answers 404 for another account", async () => {
     const { env, store } = fakeBindings();
     store.set(`accounts/${ACCOUNT}/scans/abc/REPORT.md`, "# report");
+    await Effect.runPromise(
+      ledger.repo.addFiles(ACCOUNT, "abc", [{ name: "REPORT.md", r2Key: `accounts/${ACCOUNT}/scans/abc/REPORT.md`, sizeBytes: 8, contentType: "text/markdown; charset=utf-8" }]),
+    );
     const res = await call(env, "/scans/abc/files/REPORT.md", { headers: { ...auth, "x-account-id": OTHER } });
 
     expect(res.status).toBe(404);

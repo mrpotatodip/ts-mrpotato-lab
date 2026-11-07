@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { FINDING_SEVERITY_VALUES, FINDING_STATUS_VALUES, FINDING_TRIAGE_STATUS_VALUES } from "../enums";
+import { FINDING_SEVERITY_VALUES, FINDING_STATUS_VALUES, FINDING_TRIAGE_STATUS_VALUES, SCAN_STEP_VALUES } from "../enums";
 
 export const SCAN_MODELS = ["claude-sonnet-5-5", "claude-opus-5-5", "claude-haiku-5-5"] as const;
 export const SCAN_EFFORTS = ["low", "medium", "high", "xhigh", "max"] as const;
@@ -34,6 +34,16 @@ export const ScanUsageSchema = z.object({
   durationMs: z.number().int().min(0).nullable(),
 });
 
+// -----
+// A file the scan saved. The bytes live in R2; this row
+// in Neon says what exists, how big it is, and its key.
+// -----
+export const ScanArtifactSchema = z.object({
+  name: z.string(),
+  sizeBytes: z.number().int().min(0),
+  contentType: z.string(),
+});
+
 export const ScanStatusSchema = ScanOptionsSchema.extend({
   scanId: z.string(),
   accountId: z.string(),
@@ -44,6 +54,8 @@ export const ScanStatusSchema = ScanOptionsSchema.extend({
   finishedAt: z.string().nullable(),
   error: z.string().nullable(),
   files: z.array(z.string()).nullable(),
+  artifacts: z.array(ScanArtifactSchema).nullish(),
+  step: z.enum(SCAN_STEP_VALUES).nullish(),
   usage: ScanUsageSchema.nullish(),
 });
 
@@ -57,6 +69,7 @@ export const ScanQueuedSchema = ScanOptionsSchema.extend({
   status: z.literal("queued"),
 });
 
+export type ScanArtifact = z.infer<typeof ScanArtifactSchema>;
 export type ScanUsage = z.infer<typeof ScanUsageSchema>;
 export type ScanState = z.infer<typeof ScanStateSchema>;
 export type ScanStatus = z.infer<typeof ScanStatusSchema>;

@@ -1,4 +1,5 @@
 import type { Context } from "hono";
+import type { ScanRepo } from "#/modules/scan-ledger";
 import type { MonthSpend } from "#/modules/usage";
 import type { ScanSandbox } from "#/modules/scan-sandbox";
 import type { ScanParams } from "#/schemas";
@@ -28,6 +29,7 @@ export type Bindings = {
 // test can answer them without a database.
 // -----
 export type AppDeps = {
+  scanRepo: (env: Bindings) => ScanRepo;
   monthSpend: (env: Bindings, accountId: string) => Promise<MonthSpend>;
   sessionUserId: (c: Context<AppEnv>) => Promise<string | undefined>;
   userHasAccount: (c: Context<AppEnv>, userId: string, accountId: string) => Promise<boolean>;

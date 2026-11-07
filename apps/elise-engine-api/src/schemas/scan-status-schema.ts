@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ScanUsageSchema } from "@repo/contracts/elise";
+import { SCAN_STEP_VALUES, ScanArtifactSchema, ScanUsageSchema } from "@repo/contracts/elise";
 import { ScanOptionsSchema } from "./scan-options-schema";
 
 export const ScanStateSchema = z.enum(["queued", "running", "succeeded", "failed"]);
@@ -14,6 +14,8 @@ export const ScanStatusSchema = ScanOptionsSchema.extend({
   finishedAt: z.string().nullable(),
   error: z.string().nullable(),
   files: z.array(z.string()).nullable().meta({ example: ["REPORT.md", "findings.json"] }),
+  artifacts: z.array(ScanArtifactSchema).nullish(),
+  step: z.enum(SCAN_STEP_VALUES).nullish().meta({ example: "auditing", description: "Where a running scan is. Null once it ends." }),
   usage: ScanUsageSchema.nullish(),
 });
 

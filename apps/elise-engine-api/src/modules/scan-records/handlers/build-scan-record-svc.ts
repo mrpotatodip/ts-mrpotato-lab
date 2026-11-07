@@ -2,7 +2,7 @@ import { Effect } from "effect";
 import type { ScanUsage } from "@repo/contracts/elise";
 import { toExternalError, toParseError, type ExternalError, type ParseError } from "#/lib/effect-query";
 import type { ScanParams, ScanState } from "#/schemas";
-import { readScanFileEffect } from "#/modules/scan-store";
+import { readScanFileEffect, scanKey } from "#/modules/scan-store";
 import { SCAN_RECORDS_FINDINGS_FILE, SCAN_RECORDS_RECORDED_SKILL } from "#/modules/scan-records/constants";
 import { LiteFindingsSchema, type LiteFinding } from "#/modules/scan-records/schemas";
 import type { NewFindingRow, ScanRecord } from "#/modules/scan-records/types";
@@ -13,7 +13,7 @@ const readFindings = (
   params: ScanParams,
 ): Effect.Effect<LiteFinding[], ExternalError | ParseError> =>
   Effect.gen(function* () {
-    const object = yield* readScanFileEffect(reports, params.accountId, params.scanId, SCAN_RECORDS_FINDINGS_FILE);
+    const object = yield* readScanFileEffect(reports, scanKey(params.accountId, params.scanId, SCAN_RECORDS_FINDINGS_FILE));
     if (!object) return [];
     const text = yield* Effect.tryPromise({ try: () => object.text(), catch: toExternalError });
     return yield* Effect.try({ try: () => LiteFindingsSchema.parse(JSON.parse(text)), catch: toParseError });
