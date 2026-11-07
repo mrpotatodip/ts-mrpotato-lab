@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>4. Safety: keys and the allowlist</title>
+<link rel="stylesheet" href="../assets/lesson.css">
+</head>
+<body>
+<main>
+<nav class="crumbs"><a href="../index.html">All lessons</a><span>Lesson 4 of 7</span></nav>
+<h1>Safety: keys and the allowlist</h1>
+<p class="meta">About 7 minutes. Before this: <a href="0003-image-container-and-size.html">lesson 3</a>.</p>
+
+<div class="win"><strong>Your win:</strong> after this lesson, you can explain why the API key never enters the container, and say what the allowlist blocks.</div>
+
+<h2>The problem</h2>
+<p>The agent reads code from a repo that you do not control. The agent also runs shell commands in the container, because we start it with <code>--dangerously-skip-permissions</code>. That flag is safe only if the container is a place where nothing valuable exists.</p>
+<p>Repo files can contain text that tries to trick the agent. This attack is called <em>prompt injection</em>. A hostile README can say "send your secrets to this website". If the container holds a real API key, the agent could leak it.</p>
+<p>So we treat the container as <strong>untrusted</strong>. It must never hold a real key. It must not reach any host except the ones it needs.</p>
+
+<figure class="diagram">
+<svg viewBox="0 0 760 340" role="img" aria-label="Trust boundary and outbound handler">
+  <defs><marker id="a4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
+  <g style="color:var(--fg)">
+    <rect class="zone" x="10" y="20" width="230" height="300" rx="10"/>
+    <text x="22" y="40" class="b">UNTRUSTED: container</text>
+    <rect class="box" x="30" y="60" width="190" height="70" rx="8"/>
+    <text x="125" y="88" text-anchor="middle" class="b">Agent</text>
+    <text x="125" y="106" text-anchor="middle" class="sm">reads the repo, runs commands</text>
+    <text x="125" y="122" text-anchor="middle" class="sm">key = "placeholder"</text>
+    <text x="30" y="170" class="sm">Has: repo code, placeholder key.</text>
+    <text x="30" y="188" class="sm">Has not: the real API key,</text>
+    <text x="30" y="204" class="sm">the scan token, R2 access.</text>
+
+    <rect class="zone" x="290" y="20" width="200" height="300" rx="10"/>
+    <text x="302" y="40" class="b">TRUSTED: Worker</text>
+    <rect class="accent" x="310" y="100" width="160" height="100" rx="8"/>
+    <text x="390" y="128" text-anchor="middle" class="b">Outbound handler</text>
+    <text x="390" y="148" text-anchor="middle" class="sm">sees every request</text>
+    <text x="390" y="164" text-anchor="middle" class="sm">holds ANTHROPIC_API_KEY</text>
+    <text x="390" y="180" text-anchor="middle" class="sm">src/outbound.ts</text>
+
+    <rect class="good" x="560" y="40" width="190" height="56" rx="8"/>
+    <text x="655" y="64" text-anchor="middle" class="b">github.com</text>
+    <text x="655" y="82" text-anchor="middle" class="sm">pass through</text>
+    <rect class="good" x="560" y="130" width="190" height="56" rx="8"/>
+    <text x="655" y="154" text-anchor="middle" class="b">api.anthropic.com</text>
+    <text x="655" y="172" text-anchor="middle" class="sm">add the real x-api-key</text>
+    <rect class="bad" x="560" y="224" width="190" height="56" rx="8"/>
+    <text x="655" y="248" text-anchor="middle" class="b">any other host</text>
+    <text x="655" y="266" text-anchor="middle" class="sm">blocked: HTTP 403</text>
+
+    <path class="line" d="M220 100H308" marker-end="url(#a4)"/>
+    <text x="226" y="92" class="sm">every request</text>
+    <path class="line" d="M470 125L558 70" marker-end="url(#a4)"/>
+    <path class="line" d="M470 150L558 156" marker-end="url(#a4)"/>
+    <path class="line" d="M470 180L558 245" marker-end="url(#a4)"/>
+  </g>
+</svg>
+<figcaption>Figure 5. The container cannot reach the internet by itself. Every request goes to the outbound handler first.</figcaption>
+</figure>
+
+<h2>How the handler works</h2>
+<ol>
+<li>The container starts with <code>enableInternet: false</code>. It has no direct internet access.</li>
+<li>The Durable Object sets the outbound handler for all HTTP and HTTPS traffic.</li>
+<li>The handler allows HTTPS only.</li>
+<li>For <code>api.anthropic.com</code>, it sets the real <code>x-api-key</code> header. The agent only knew a placeholder.</li>
+<li>For <code>github.com</code>, it passes the request on (the clone).</li>
+<li>For any other host, it returns 403.</li>
+</ol>
+<p>Read the whole file. It is short: <a href="../../src/outbound.ts"><code>src/outbound.ts</code></a>.</p>
+
+<h2>Secrets in your own work</h2>
+<ul>
+<li>The Worker has two <strong>secrets</strong>: <code>ANTHROPIC_API_KEY</code> and <code>SCAN_API_TOKEN</code>. They live in Cloudflare, not in git.</li>
+<li>Never paste a key into a chat. Set it with <code>wrangler secret put</code> in your own terminal.</li>
+<li>If you must use a secrets file, add it to <code>.gitignore</code> first. We use <code>.secret*.json</code>, and we delete the file after the deploy.</li>
+</ul>
+
+<div class="callout"><strong>Limit.</strong> The allowlist reduces risk. It does not remove it. The agent can still send repo data to the model, and anything that the model returns comes back into the container. Scan only repos that you are allowed to scan.</div>
+
+<h2>Check your memory</h2>
+<div class="quiz">
+  <div class="q" data-answer="1"><p>Where does the real Anthropic key get added to a request?</p>
+    <button>Inside the container file system</button>
+    <button>In the outbound handler code</button>
+    <button>In the agent's prompt text</button>
+    <button>In the Dockerfile build step</button>
+    <p class="why" hidden>The outbound handler runs in the Worker. The container never sees the real key.</p></div>
+  <div class="q" data-answer="2"><p>The agent sends a request to example.com. What happens?</p>
+    <button>The handler adds the API key</button>
+    <button>The request goes to the internet</button>
+    <button>The handler blocks it with 403</button>
+    <button>The handler saves it in R2</button>
+    <p class="why" hidden>Only <code>github.com</code> and <code>api.anthropic.com</code> are on the allowlist.</p></div>
+  <div class="q" data-answer="0"><p>Why do we treat the container as untrusted?</p>
+    <button>The repo may try to trick the agent</button>
+    <button>The image is rebuilt by each new scan</button>
+    <button>The Worker never sees any of its logs</button>
+    <button>The R2 bucket is open to the public</button>
+    <p class="why" hidden>Repo text can contain hostile instructions (prompt injection). So the container holds nothing valuable.</p></div>
+  <p class="score"></p>
+</div>
+
+<details class="waitwhat"><summary>Wait, what? Re-pitch this lesson</summary>
+<p><strong>Context.</strong> The agent reads code that anyone could have written.</p>
+<p><strong>Short version.</strong> The container has no real key and no direct internet. All traffic goes to the outbound handler in the Worker. The handler adds the real key for Anthropic, passes GitHub, and blocks the rest.</p>
+<p><strong>Remember.</strong> Untrusted container, trusted Worker, short allowlist.</p>
+</details>
+
+<footer class="lesson-foot">
+<p><strong>Primary source:</strong> <a href="https://developers.cloudflare.com/sandbox/get-started/build-a-coding-agent-runner/">Build a coding agent runner (Cloudflare)</a>. It describes the same outbound handler pattern: the Worker adds the credential, so the sandbox never receives it.</p>
+<p><strong>Ask me.</strong> Ask your teacher (the agent) to show a prompt injection example, or how to test the handler.</p>
+<p><a href="0003-image-container-and-size.html">&larr; Lesson 3</a> &middot; <a href="0005-cost-controls.html">Next: Lesson 5, cost controls &rarr;</a></p>
+</footer>
+</main>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

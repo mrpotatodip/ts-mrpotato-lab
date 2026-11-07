@@ -1,0 +1,33 @@
+{
+  "name": "elise-engine-api",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "build": "tsc --noEmit",
+    "lint": "oxlint src",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@cloudflare/sandbox": "^1.0.3",
+    "@repo/contracts": "workspace:*",
+    "@repo/db-elise": "workspace:*",
+    "@scalar/hono-api-reference": "^0.12.9",
+    "drizzle-orm": "0.45.2",
+    "effect": "^3.21.4",
+    "hono": "^4.3.7",
+    "hono-openapi": "^1.3.3",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261001.1",
+    "@oxlint/plugins": "1.79.0",
+    "oxlint": "1.79.0",
+    "typescript": "^5.4.5",
+    "vitest": "^4.1.7",
+    "wrangler": "^4.147.0"
+  }
+}

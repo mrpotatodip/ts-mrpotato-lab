@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>2. The life of one scan</title>
+<link rel="stylesheet" href="../assets/lesson.css">
+</head>
+<body>
+<main>
+<nav class="crumbs"><a href="../index.html">All lessons</a><span>Lesson 2 of 7</span></nav>
+<h1>The life of one scan</h1>
+<p class="meta">About 7 minutes. Before this: <a href="0001-what-the-mvp-does.html">lesson 1</a>.</p>
+
+<div class="win"><strong>Your win:</strong> after this lesson, you can put the steps of one scan in the correct order.</div>
+
+<h2>The request</h2>
+<p>A scan starts with one HTTP request:</p>
+<pre>POST /scans
+authorization: Bearer &lt;SCAN_API_TOKEN&gt;
+{ "repo": "https://github.com/owner/name", "skill": "lite", "effort": "low" }</pre>
+<p>Only <code>repo</code> is required. The other fields have defaults. The Worker rejects values that are not on its lists (model, effort, skill, profile). It also rejects a repo URL that is not a public GitHub URL.</p>
+
+<figure class="diagram">
+<svg viewBox="0 0 760 540" role="img" aria-label="Sequence of one scan">
+  <defs><marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
+  <g style="color:var(--fg)">
+    <text x="60" y="20" text-anchor="middle" class="b">You</text>
+    <text x="210" y="20" text-anchor="middle" class="b">Worker</text>
+    <text x="370" y="20" text-anchor="middle" class="b">Durable Object</text>
+    <text x="530" y="20" text-anchor="middle" class="b">Container</text>
+    <text x="690" y="20" text-anchor="middle" class="b">R2 bucket</text>
+    <line class="life" x1="60" y1="30" x2="60" y2="525"/>
+    <line class="life" x1="210" y1="30" x2="210" y2="525"/>
+    <line class="life" x1="370" y1="30" x2="370" y2="525"/>
+    <line class="life" x1="530" y1="30" x2="530" y2="525"/>
+    <line class="life" x1="690" y1="30" x2="690" y2="525"/>
+
+    <path class="line" d="M60 55H206" marker-end="url(#a2)"/><text x="68" y="50" class="sm">1 POST /scans</text>
+    <path class="line" d="M214 80h40v18h-36" marker-end="url(#a2)"/><text x="262" y="93" class="sm">2 check token and options</text>
+    <path class="line" d="M210 125H366" marker-end="url(#a2)"/><text x="218" y="120" class="sm">3 scan(repo, options)</text>
+    <path class="line" d="M370 155H526" marker-end="url(#a2)"/><text x="378" y="150" class="sm">4 start (standard-1)</text>
+    <path class="line" d="M370 190H526" marker-end="url(#a2)"/><text x="378" y="185" class="sm">5 git clone --depth 1</text>
+    <path class="line" d="M370 225H526" marker-end="url(#a2)"/><text x="378" y="220" class="sm">6 start agent, detached</text>
+    <path class="line" d="M370 265H526" marker-end="url(#a2)"/><text x="378" y="260" class="sm">7 look for agent.exit</text>
+    <path class="dash" d="M526 285H374" marker-end="url(#a2)"/><text x="382" y="300" class="sm">not yet... (repeat every 5 s)</text>
+    <path class="dash" d="M526 320H374" marker-end="url(#a2)"/><text x="382" y="335" class="sm">exit code 0</text>
+    <path class="line" d="M370 365H526" marker-end="url(#a2)"/><text x="378" y="360" class="sm">8 read REPORT.md, findings.json</text>
+    <path class="line" d="M370 400H526" marker-end="url(#a2)"/><text x="378" y="395" class="sm">9 destroy (always)</text>
+    <path class="dash" d="M366 430H214" marker-end="url(#a2)"/><text x="222" y="425" class="sm">10 files</text>
+    <path class="line" d="M210 465H686" marker-end="url(#a2)"/><text x="400" y="460" class="sm">11 save report, findings, status</text>
+    <path class="dash" d="M206 500H64" marker-end="url(#a2)"/><text x="72" y="495" class="sm">12 JSON: scanId, report</text>
+    <text x="540" y="195" class="sm">(GitHub)</text>
+    <text x="540" y="230" class="sm">(model: Anthropic)</text>
+  </g>
+</svg>
+<figcaption>Figure 2. One scan, step by step. Solid arrows are calls. Dashed arrows are answers.</figcaption>
+</figure>
+
+<h2>Three details that matter</h2>
+<h3>The scan ID is the sandbox name</h3>
+<p>The Worker makes a random UUID (the <strong>scan ID</strong>). It calls <code>env.SANDBOX.getByName(scanId)</code>. The same name always gives the same Durable Object. A new UUID gives a new, empty sandbox.</p>
+<h3>The agent runs in the background</h3>
+<p>The Durable Object does not wait for the agent output. It starts the agent as a <strong>detached run</strong>. The agent writes its output to <code>agent.log</code>. When it ends, it writes its exit code to <code>agent.exit</code>. The Durable Object looks for that file every 5 seconds. Cloudflare&rsquo;s own coding-agent example uses the same pattern for long runs.</p>
+<h3>Cleanup always runs</h3>
+<p>Step 9 is in a <code>finally</code> block. The container is destroyed if the scan works, and also if it fails. See <a href="../../src/scan-sandbox.ts"><code>scan()</code></a>.</p>
+
+<h2>Check your memory</h2>
+<div class="quiz">
+  <div class="q" data-answer="3"><p>What is the name of the sandbox?</p>
+    <button>The name of the repo</button>
+    <button>The token of the caller</button>
+    <button>The model name you chose</button>
+    <button>A random scan ID (UUID)</button>
+    <p class="why" hidden>The scan ID names the sandbox and the folder in R2 (<code>scans/&lt;id&gt;/</code>).</p></div>
+  <div class="q" data-answer="0"><p>Why does the Durable Object look for <code>agent.exit</code>?</p>
+    <button>To find out when the agent ends</button>
+    <button>To save the report into the bucket</button>
+    <button>To check the bearer token each time</button>
+    <button>To measure how much memory it uses</button>
+    <p class="why" hidden>The agent runs in the background. The exit file is the signal that it has ended, and it holds the exit code.</p></div>
+  <div class="q" data-answer="2"><p>Which step comes first inside the container?</p>
+    <button>Read the report from disk</button>
+    <button>Run the agent in background</button>
+    <button>Clone the repo with git</button>
+    <button>Destroy the container at end</button>
+    <p class="why" hidden>The agent needs the code, so the clone comes first. Reading the report and destroying the container come last.</p></div>
+  <p class="score"></p>
+</div>
+
+<details class="waitwhat"><summary>Wait, what? Re-pitch this lesson</summary>
+<p><strong>Context.</strong> One scan is one HTTP request that ends with a saved report.</p>
+<p><strong>Short version.</strong> The Worker makes a scan ID and starts a sandbox with that name. The container clones the repo and runs the agent in the background. The Durable Object waits for the exit file, reads the report, and destroys the container. The Worker saves the files to R2.</p>
+<p><strong>Remember.</strong> Clone, run, wait, read, destroy, save.</p>
+</details>
+
+<footer class="lesson-foot">
+<p><strong>Primary source:</strong> <a href="https://developers.cloudflare.com/durable-objects/what-are-durable-objects/">What are Durable Objects?</a> The page says a Durable Object "uniquely combines compute with storage". Read it to see why we use one object per scan.</p>
+<p><strong>Ask me.</strong> If a step is not clear, ask your teacher (the agent). Name the step number in Figure 2.</p>
+<p><a href="0001-what-the-mvp-does.html">&larr; Lesson 1</a> &middot; <a href="0003-image-container-and-size.html">Next: Lesson 3, image, container, and size &rarr;</a></p>
+</footer>
+</main>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

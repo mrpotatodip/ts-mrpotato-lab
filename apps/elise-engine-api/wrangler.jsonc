@@ -1,0 +1,26 @@
+{
+  "name": "elise-engine-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-15",
+  // Files resolves native Linux errno names through node:os.
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+  "containers": [
+    {
+      "class_name": "ScanSandbox",
+      "scheduling_policy": "durable_object",
+      "images": { "sandbox": { "dockerfile": "./Dockerfile" } }
+    }
+  ],
+  "durable_objects": {
+    "bindings": [{ "class_name": "ScanSandbox", "name": "SANDBOX" }]
+  },
+  "exports": {
+    "ScanSandbox": { "type": "durable-object", "storage": "sqlite" }
+  },
+  "workflows": [{ "name": "elise-scan-workflow", "binding": "SCAN_WORKFLOW", "class_name": "ScanWorkflow" }],
+  "r2_buckets": [{ "binding": "REPORTS", "bucket_name": "repo-scan-reports" }],
+  "vars": { "ENVIRONMENT": "production", "MODEL": "claude-sonnet-5-5", "EFFORT": "high", "MAX_BUDGET_USD": "2", "MAX_ACTIVE_SCANS": "3" }
+  // MAX_BUDGET_USD is the per-scan spend ceiling: requests may lower it, never raise it.
+  // Secrets (wrangler secret put / --secrets-file): ANTHROPIC_API_KEY, SCAN_API_TOKEN
+}

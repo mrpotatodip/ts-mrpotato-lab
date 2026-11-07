@@ -23,7 +23,7 @@ If any of these files don't exist, **proceed silently**. Don't flag their absenc
 │       ├── GLOSSARY.md
 │       └── docs/adr/
 └── packages/
-    ├── db-amelie/
+    ├── db-elise/
     ├── contracts/
     ├── chat-bot/
     └── chat-bot-durable-stream/

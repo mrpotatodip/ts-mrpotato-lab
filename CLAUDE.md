@@ -11,8 +11,8 @@ pnpm workspace with two layers:
   - `amelie-frontend-web` — cafe owner dashboard and public customer chat (TanStack Start + React 19)
   - `amelie-frontend-host` — stand-in cafe website for embedding the Customer widget (`http://localhost:5174`)
 - `packages/` — shared libraries
-  - `@repo/db-amelie` — Drizzle ORM schema + Neon client (single source of truth for Amelie DB types)
-  - `@repo/contracts` — Zod schemas shared between the API and frontend (`amelie/` and `chat-bots/` families; the generic chat-bot protocol lives in `@repo/chat-bot-api/contracts` and is re-exported here)
+  - `@repo/db-elise` — Drizzle ORM schema + Neon client (single source of truth for Amelie DB types)
+  - `@repo/contracts` — Zod schemas shared between the API and frontend (`elise/` and `chat-bots/` families; the generic chat-bot protocol lives in `@repo/chat-bot-api/contracts` and is re-exported here)
   - `@repo/chat-bot` — chat-bot runtime used by the frontend
   - `@repo/chat-bot-react` — React chat UI for the engine (`<ChatBot />`, hooks, CSS)
   - `@repo/chat-bot-react-loader` — optional step-by-step progress display (the AG-UI loader, plain CSS) for `chat-bot-react`
@@ -37,16 +37,16 @@ pnpm --filter amelie-engine-api lint     # oxlint src
 UPDATE_POWER_USAGE=1 pnpm --filter amelie-engine-api test   # rewrites ACCESS_POWER_USAGE (where each Power is checked) after a requirePower change
 
 # Database
-pnpm --filter @repo/db-amelie db:generate  # drizzle-kit generate migration
-pnpm --filter @repo/db-amelie db:migrate   # applies to the DATABASE_URL in that package's .env, a remote Neon database: ask before running
-pnpm --filter @repo/db-amelie db:studio    # drizzle-kit studio
-pnpm --filter @repo/db-amelie db:seed      # tsx src/seed.ts
-pnpm --filter @repo/db-amelie db:sync-powers  # adds catalogue Powers missing from access_master_powers (never deletes)
+pnpm --filter @repo/db-elise db:generate  # drizzle-kit generate migration
+pnpm --filter @repo/db-elise db:migrate   # applies to the DATABASE_URL in that package's .env, a remote Neon database: ask before running
+pnpm --filter @repo/db-elise db:studio    # drizzle-kit studio
+pnpm --filter @repo/db-elise db:seed      # tsx src/seed.ts
+pnpm --filter @repo/db-elise db:sync-powers  # adds catalogue Powers missing from access_master_powers (never deletes)
 ```
 
 ## Architecture: `amelie-engine-api`
 
-Hono on Cloudflare Workers. Public REST and widget routes, plus signed-in dashboard APIs. Data goes through `@repo/db-amelie`. Chat-bot agents and tools live under `src/modules/chat-bot/`.
+Hono on Cloudflare Workers. Public REST and widget routes, plus signed-in dashboard APIs. Data goes through `@repo/db-elise`. Chat-bot agents and tools live under `src/modules/chat-bot/`.
 
 Dev server: `http://localhost:8788`. OpenAPI/Scalar at `/docs` when `ENVIRONMENT=development`.
 
@@ -77,13 +77,13 @@ Each module follows this structure:
 
 **Routes** (`src/routes/`): file-based via TanStack Router. `routeTree.gen.ts` is auto-generated — do not edit manually. Run the dev server to regenerate after adding routes.
 
-## Architecture: `@repo/db-amelie`
+## Architecture: `@repo/db-elise`
 
-Drizzle ORM with Neon serverless Postgres. Schema files are in `src/schema/`, migrations in `migrations/`. Import DB types via `@repo/db-amelie`.
+Drizzle ORM with Neon serverless Postgres. Schema files are in `src/schema/`, migrations in `migrations/`. Import DB types via `@repo/db-elise`.
 
 ## Architecture: `@repo/contracts`
 
-Zod v4 schemas and TypeScript types shared between `amelie-engine-api` and `amelie-frontend-web`. Import from `@repo/contracts/amelie` or `@repo/contracts/chat-bots`.
+Zod v4 schemas and TypeScript types shared between `amelie-engine-api` and `amelie-frontend-web`. Import from `@repo/contracts/elise` or `@repo/contracts/chat-bots`.
 
 ## Key Conventions
 

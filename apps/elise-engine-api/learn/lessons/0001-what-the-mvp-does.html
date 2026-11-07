@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>1. What the MVP does</title>
+<link rel="stylesheet" href="../assets/lesson.css">
+</head>
+<body>
+<main>
+<nav class="crumbs"><a href="../index.html">All lessons</a><span>Lesson 1 of 7</span></nav>
+<h1>What the MVP does</h1>
+<p class="meta">About 5 minutes. Mission: <a href="../MISSION.md">understand and operate elise-engine-api</a>.</p>
+
+<div class="win"><strong>Your win:</strong> after this lesson, you can name the five parts of the MVP and say what each part does.</div>
+
+<h2>The idea</h2>
+<p>You send the <strong>Worker</strong> a GitHub URL. The Worker starts a <strong>sandbox</strong>. The sandbox clones the repo. An <strong>agent</strong> reads the code and writes a security <strong>report</strong>. The Worker saves the report in an <strong>R2 bucket</strong>. Then the Worker destroys the sandbox.</p>
+<p>Each scan has its own sandbox. No scan can see the files of another scan.</p>
+
+<figure class="diagram">
+<svg viewBox="0 0 740 330" role="img" aria-label="Architecture of the MVP">
+  <defs><marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
+  <g style="color:var(--fg)">
+    <rect class="box" x="10" y="120" width="110" height="60" rx="8"/>
+    <text x="65" y="148" text-anchor="middle" class="b">You</text>
+    <text x="65" y="165" text-anchor="middle" class="sm">curl + token</text>
+
+    <rect class="accent" x="170" y="120" width="130" height="60" rx="8"/>
+    <text x="235" y="148" text-anchor="middle" class="b">Worker</text>
+    <text x="235" y="165" text-anchor="middle" class="sm">src/index.ts</text>
+
+    <rect class="zone" x="350" y="30" width="200" height="170" rx="10"/>
+    <text x="360" y="48" class="sm">SANDBOX (one per scan)</text>
+    <rect class="box" x="370" y="62" width="160" height="50" rx="6"/>
+    <text x="450" y="84" text-anchor="middle" class="b">Durable Object</text>
+    <text x="450" y="101" text-anchor="middle" class="sm">controls the container</text>
+    <rect class="box" x="370" y="132" width="160" height="56" rx="6"/>
+    <text x="450" y="154" text-anchor="middle" class="b">Container</text>
+    <text x="450" y="171" text-anchor="middle" class="sm">runs the agent</text>
+
+    <rect class="box" x="350" y="250" width="200" height="56" rx="8"/>
+    <text x="450" y="274" text-anchor="middle" class="b">R2 bucket</text>
+    <text x="450" y="292" text-anchor="middle" class="sm">saved reports</text>
+
+    <rect class="box" x="610" y="50" width="120" height="50" rx="8"/>
+    <text x="670" y="72" text-anchor="middle" class="b">GitHub</text>
+    <text x="670" y="89" text-anchor="middle" class="sm">repo code</text>
+    <rect class="box" x="610" y="150" width="120" height="50" rx="8"/>
+    <text x="670" y="172" text-anchor="middle" class="b">Anthropic</text>
+    <text x="670" y="189" text-anchor="middle" class="sm">the model</text>
+
+    <path class="line" d="M120 150H168" marker-end="url(#a1)"/>
+    <path class="line" d="M300 140H345L368 90" marker-end="url(#a1)"/>
+    <path class="line" d="M450 112V130" marker-end="url(#a1)"/>
+    <path class="line" d="M530 150H570L608 80" marker-end="url(#a1)"/>
+    <path class="line" d="M530 165H608" marker-end="url(#a1)"/>
+    <path class="line" d="M235 180V278H348" marker-end="url(#a1)"/>
+    <text x="170" y="110" class="sm">1 request</text>
+    <text x="305" y="125" class="sm">2 start</text>
+    <text x="562" y="123" class="sm">3 clone</text>
+    <text x="548" y="160" class="sm">4 model calls</text>
+    <text x="244" y="230" class="sm">5 save</text>
+  </g>
+</svg>
+<figcaption>Figure 1. The five parts and how they connect. The container reaches GitHub and Anthropic only through the Worker (lesson 4).</figcaption>
+</figure>
+
+<h2>The five parts</h2>
+<table>
+<tr><th>Part</th><th>Job</th></tr>
+<tr><td><strong>Worker</strong></td><td>Receives the request, checks the token, starts the sandbox, saves the files, and returns the report.</td></tr>
+<tr><td><strong>Durable Object</strong></td><td>Starts the container and sends commands to it. Code: <a href="../../src/scan-sandbox.ts"><code>ScanSandbox</code></a>.</td></tr>
+<tr><td><strong>Container</strong></td><td>A Linux machine. It runs <code>git</code> and the agent.</td></tr>
+<tr><td><strong>Agent</strong></td><td>Claude Code. It reads the repo and writes <code>REPORT.md</code> and <code>findings.json</code>.</td></tr>
+<tr><td><strong>R2 bucket</strong></td><td>Keeps the saved files after the container is gone.</td></tr>
+</table>
+
+<div class="callout"><strong>Limits.</strong> The MVP scans public GitHub repos only. The report is a first pass. A report with no findings does not prove the code is safe (lesson 7).</div>
+
+<h2>Check your memory</h2>
+<div class="quiz">
+  <div class="q" data-answer="2"><p>Which part holds the files after a scan ends?</p>
+    <button>The container's own hard disk</button>
+    <button>The GitHub repo you scanned</button>
+    <button>The R2 bucket in Cloudflare</button>
+    <button>The Worker's local memory only</button>
+    <p class="why" hidden>The Worker saves the files in R2. The container is destroyed, and its disk goes with it.</p></div>
+  <div class="q" data-answer="0"><p>Which part reads the repo code and finds problems?</p>
+    <button>The Claude Code agent</button>
+    <button>The Durable Object class</button>
+    <button>The R2 bucket service</button>
+    <button>The outbound handler code</button>
+    <p class="why" hidden>The agent does the review. The Durable Object only starts and controls the container.</p></div>
+  <div class="q" data-answer="1"><p>What happens to the container when a scan ends?</p>
+    <button>It stays running for reuse</button>
+    <button>It is destroyed after use</button>
+    <button>It sleeps until next scan</button>
+    <button>It is copied into R2</button>
+    <p class="why" hidden>The Durable Object destroys the container in a <code>finally</code> block, so it happens on success and on failure.</p></div>
+  <p class="score"></p>
+</div>
+
+<details class="waitwhat"><summary>Wait, what? Re-pitch this lesson</summary>
+<p><strong>Context.</strong> We built a service that checks a GitHub repo for security problems.</p>
+<p><strong>Short version.</strong> You send a repo URL. A sandbox clones the repo. An agent reads it and writes a report. The report goes to R2. The sandbox is destroyed.</p>
+<p><strong>Remember.</strong> Five parts: Worker, Durable Object, container, agent, R2 bucket.</p>
+</details>
+
+<footer class="lesson-foot">
+<p><strong>Primary source:</strong> <a href="https://developers.cloudflare.com/sandbox/get-started/build-a-coding-agent-runner/">Build a coding agent runner (Cloudflare)</a>. Our MVP follows this tutorial.</p>
+<p><strong>Ask me.</strong> If a word is not clear, ask your teacher (the agent) in the chat. Say which lesson and which sentence. Use the <a href="../GLOSSARY.md">glossary</a> for exact terms.</p>
+<p><a href="0002-life-of-one-scan.html">Next: Lesson 2, the life of one scan &rarr;</a></p>
+</footer>
+</main>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

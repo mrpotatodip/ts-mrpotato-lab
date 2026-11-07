@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>3. Image, container, and size</title>
+<link rel="stylesheet" href="../assets/lesson.css">
+</head>
+<body>
+<main>
+<nav class="crumbs"><a href="../index.html">All lessons</a><span>Lesson 3 of 7</span></nav>
+<h1>Image, container, and size</h1>
+<p class="meta">About 7 minutes. Before this: <a href="0002-life-of-one-scan.html">lesson 2</a>.</p>
+
+<div class="win"><strong>Your win:</strong> after this lesson, you can explain the difference between an image and a container, say when you need Docker, and say why the container size matters.</div>
+
+<h2>Image and container</h2>
+<p>The <strong>image</strong> is a frozen file system. It holds Linux, <code>git</code>, <code>ripgrep</code>, Claude Code, and our two skills. You write it in the <a href="../../Dockerfile">Dockerfile</a>.</p>
+<p>The <strong>container</strong> is a running machine that starts from the image. Each scan starts a new container from the same image. When the scan ends, the container is destroyed. The image stays.</p>
+
+<figure class="diagram">
+<svg viewBox="0 0 760 210" role="img" aria-label="From Dockerfile to container">
+  <defs><marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
+  <g style="color:var(--fg)">
+    <rect class="box" x="10" y="60" width="120" height="60" rx="8"/>
+    <text x="70" y="86" text-anchor="middle" class="b">Dockerfile</text>
+    <text x="70" y="104" text-anchor="middle" class="sm">recipe</text>
+
+    <rect class="accent" x="190" y="60" width="150" height="60" rx="8"/>
+    <text x="265" y="86" text-anchor="middle" class="b">wrangler deploy</text>
+    <text x="265" y="104" text-anchor="middle" class="sm">builds with Docker</text>
+
+    <rect class="box" x="400" y="60" width="150" height="60" rx="8"/>
+    <text x="475" y="86" text-anchor="middle" class="b">Cloudflare registry</text>
+    <text x="475" y="104" text-anchor="middle" class="sm">stores the image</text>
+
+    <rect class="good" x="610" y="20" width="130" height="44" rx="8"/>
+    <text x="675" y="47" text-anchor="middle" class="b">Container (scan A)</text>
+    <rect class="good" x="610" y="76" width="130" height="44" rx="8"/>
+    <text x="675" y="103" text-anchor="middle" class="b">Container (scan B)</text>
+    <rect class="good" x="610" y="132" width="130" height="44" rx="8"/>
+    <text x="675" y="159" text-anchor="middle" class="b">Container (scan C)</text>
+
+    <path class="line" d="M130 90H188" marker-end="url(#a3)"/>
+    <path class="line" d="M340 90H398" marker-end="url(#a3)"/>
+    <path class="line" d="M550 80L608 44" marker-end="url(#a3)"/>
+    <path class="line" d="M550 90L608 98" marker-end="url(#a3)"/>
+    <path class="line" d="M550 100L608 154" marker-end="url(#a3)"/>
+    <text x="150" y="195" class="sm">You need Docker (or Colima) only here: the build at deploy time.</text>
+  </g>
+</svg>
+<figcaption>Figure 3. Build once at deploy time. Start many containers from the stored image. Running a scan needs no Docker on your laptop.</figcaption>
+</figure>
+
+<p>You build the image again only when the Dockerfile or the <code>skills/</code> folders change. A change to the Worker code alone does not change the image.</p>
+
+<h2>The size problem</h2>
+<p>Cloudflare gives each container an <strong>instance type</strong>. The type sets vCPU, memory, and disk. We did not set one at first, so the container used the smallest type, <code>lite</code>.</p>
+
+<figure class="diagram">
+<svg viewBox="0 0 640 250" role="img" aria-label="Memory by instance type">
+  <g style="color:var(--fg)">
+    <text x="10" y="18" class="b">Memory per instance type (GiB)</text>
+    <text x="10" y="52">lite</text>
+    <rect class="bar hot" x="110" y="38" width="7.5" height="22"/>
+    <text x="125" y="54" class="sm">0.25 (256 MiB): the scan hung</text>
+    <text x="10" y="86">basic</text>
+    <rect class="bar" x="110" y="72" width="30" height="22"/>
+    <text x="148" y="88" class="sm">1</text>
+    <text x="10" y="120">standard-1</text>
+    <rect class="bar ok" x="110" y="106" width="120" height="22"/>
+    <text x="238" y="122" class="sm">4: the scan finished (we use this)</text>
+    <text x="10" y="154">standard-2</text>
+    <rect class="bar" x="110" y="140" width="180" height="22"/>
+    <text x="298" y="156" class="sm">6</text>
+    <text x="10" y="188">standard-3</text>
+    <rect class="bar" x="110" y="174" width="240" height="22"/>
+    <text x="358" y="190" class="sm">8</text>
+    <text x="10" y="222">standard-4</text>
+    <rect class="bar" x="110" y="208" width="360" height="22"/>
+    <text x="478" y="224" class="sm">12</text>
+  </g>
+</svg>
+<figcaption>Figure 4. Memory from the <a href="https://developers.cloudflare.com/containers/platform-details/limits/">Cloudflare Containers limits table</a>. Bar length is proportional to GiB.</figcaption>
+</figure>
+
+<h3>What we saw, and what we did not prove</h3>
+<ul>
+<li>With <code>lite</code> (256 MiB), the scan hung three times. <code>git clone</code> worked. Claude Code started, then went silent.</li>
+<li>We set <code>instance: "standard-1"</code> (4 GiB). The next scan finished.</li>
+</ul>
+<p>We think the cause is memory, because Claude Code is a Node program and 256 MiB is small. We did <strong>not</strong> measure memory use. The size change fixed the problem, but a log line that says "out of memory" would prove it. Say "probable cause" until you have that proof.</p>
+
+<h2>Check your memory</h2>
+<div class="quiz">
+  <div class="q" data-answer="1"><p>When do you need Docker (or Colima) on your laptop?</p>
+    <button>When each scan starts running</button>
+    <button>When Wrangler builds the image</button>
+    <button>When you call POST /scans</button>
+    <button>When you read a report</button>
+    <p class="why" hidden>The build happens during <code>wrangler deploy</code>. After that, Cloudflare runs the containers.</p></div>
+  <div class="q" data-answer="3"><p>Which change made the hanging scan finish?</p>
+    <button>Using the detached run pattern</button>
+    <button>Using the Haiku model instead</button>
+    <button>Using a higher effort setting</button>
+    <button>Using a larger instance type</button>
+    <p class="why" hidden>We deployed the detached run first and the scan still hung. The scan finished after we set <code>standard-1</code>.</p></div>
+  <div class="q" data-answer="0"><p>How much memory does the <code>lite</code> type have?</p>
+    <button>0.25 GiB</button>
+    <button>1.00 GiB</button>
+    <button>4.00 GiB</button>
+    <button>6.00 GiB</button>
+    <p class="why" hidden>256 MiB, which is 0.25 GiB. <code>standard-1</code> has 4 GiB.</p></div>
+  <p class="score"></p>
+</div>
+
+<details class="waitwhat"><summary>Wait, what? Re-pitch this lesson</summary>
+<p><strong>Context.</strong> Our first scans hung. The cause was probably the container size.</p>
+<p><strong>Short version.</strong> The image is the recipe result, stored at Cloudflare. A container is one running copy. The default size has 256 MiB of memory. Claude Code needs more. We use <code>standard-1</code> with 4 GiB.</p>
+<p><strong>Remember.</strong> Docker is only for the build. Size matters. "It worked after the change" is not the same as "we proved the cause".</p>
+</details>
+
+<footer class="lesson-foot">
+<p><strong>Primary source:</strong> <a href="https://developers.cloudflare.com/containers/platform-details/limits/">Cloudflare Containers: limits and instance types</a>.</p>
+<p><strong>Ask me.</strong> Ask your teacher (the agent) if you want to see how to prove a memory problem, for example with a test that prints memory use.</p>
+<p><a href="0002-life-of-one-scan.html">&larr; Lesson 2</a> &middot; <a href="0004-safety-keys-and-allowlist.html">Next: Lesson 4, safety &rarr;</a></p>
+</footer>
+</main>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>
