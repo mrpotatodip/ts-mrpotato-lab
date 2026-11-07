@@ -9,7 +9,8 @@
     "deploy": "wrangler deploy",
     "build": "tsc --noEmit",
     "lint": "oxlint src",
-    "test": "vitest run"
+    "test": "vitest run",
+    "check": "tsc --noEmit && oxlint src && vitest run"
   },
   "dependencies": {
     "@cloudflare/sandbox": "^1.0.3",

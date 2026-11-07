@@ -13,5 +13,8 @@
   "dependencies": {
     "@repo/chat-bot-api": "workspace:*",
     "zod": "^4.4.3"
+  },
+  "scripts": {
+    "check": "tsc --noEmit"
   }
 }

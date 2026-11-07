@@ -1,1 +1,2 @@
 pnpm lint:branch
+node scripts/check-changed.mjs

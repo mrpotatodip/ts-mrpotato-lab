@@ -5,7 +5,10 @@
     "dev": "pnpm --recursive --parallel dev",
     "build": "pnpm --recursive build",
     "lint:branch": "node scripts/lint-branch-name.mjs",
-    "prepare": "husky"
+    "prepare": "husky",
+    "check": "pnpm --filter @repo/contracts --filter @repo/db-elise --filter elise-engine-api check",
+    "dev:stop": "node scripts/dev-stop.mjs",
+    "check:apps": "node scripts/check-changed.mjs --all"
   },
   "devDependencies": {
     "husky": "^9.1.7",
