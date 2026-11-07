@@ -2,6 +2,7 @@ import { defineConfig } from "vitest/config";
 import { resolve } from "path";
 
 export default defineConfig({
+  define: { MIGRATIONS_DIR: JSON.stringify(resolve(__dirname, "../../packages/db-elise/migrations")) },
   resolve: {
     alias: {
       "#/": resolve(__dirname, "src") + "/",

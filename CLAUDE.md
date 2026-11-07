@@ -13,12 +13,13 @@ Elise: a pnpm workspace. A Worker clones a public GitHub repo into a Cloudflare 
 ## Commands
 
 ```bash
-pnpm check                                   # tsc, oxlint and vitest for contracts, db-elise, the engine and the dashboard (oxlint has strict custom `anti-slop` rules: run it after the first edit); the pre-commit hook runs it
-pnpm check:apps                              # quiet form of the above for every app and package: one line on success, the tail of each failure. Prefer it
+pnpm check:apps                              # tsc, oxlint and vitest for every project: one line on success, the tail of each failure; the pre-commit hook runs the changed ones. oxlint's `anti-slop` rules are strict: run it after the first edit
 pnpm --filter elise-engine-api dev           # wrangler dev
 pnpm --filter @repo/db-elise db:query "..."  # read-only SQL on the live Neon database
 pnpm --filter @repo/db-elise db:rehearse     # pending migrations in a rolled-back transaction
 pnpm --filter @repo/db-elise db:migrate      # live Neon database: ask first
+pnpm --filter @repo/db-elise db:exec "..."   # one write statement in a transaction (--dry rolls back): live database, ask first
+NEW_PASSWORD=... pnpm --filter @repo/db-elise db:set-password --email x   # live database, ask first
 ```
 
 ## Conventions

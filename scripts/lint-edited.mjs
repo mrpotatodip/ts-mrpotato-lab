@@ -32,7 +32,7 @@ for (const file of files) {
 
 const report = [];
 for (const [app, list] of byApp) {
-  const run = spawnSync("pnpm", ["exec", "oxlint", ...list], { cwd: app, encoding: "utf8" });
+  const run = spawnSync("pnpm", ["exec", "oxlint", "--no-error-on-unmatched-pattern", ...list], { cwd: app, encoding: "utf8" });
   if (run.status !== 0) report.push((run.stdout + run.stderr).trim());
 }
 if (report.length) {

@@ -9,3 +9,6 @@ The scan Worker. Terms: `GLOSSARY.md`. Rules: `docs/standards/hono.md`, `docs/st
 - Request and response shapes live in `@repo/contracts/elise`. Responses use the `{ data, error }` envelope.
 - Local: `wrangler dev` needs Docker for the container. Secrets: `ANTHROPIC_API_KEY`, `SCAN_API_TOKEN`, `DATABASE_URL`, `AUTH_SECRET`. `MAX_BUDGET_USD` is a ceiling a request may lower, never raise.
 - `pnpm check` is `tsc`, oxlint and vitest. The oxlint `anti-slop` rules are strict: lint right after the first edit.
+- Side effects enter through `AppDeps` (`src/types/variables.ts`, real ones in `src/lib/app-deps.ts`): session lookup, role check, monthly spend, scan ledger. Route tests pass in-memory fakes (`src/__tests__/memory-scan-repo.ts`); query tests run on pglite with every migration (`src/__tests__/test-db.ts`). No module mocking: the lint bans it.
+- Lint rules that bite on the first write: a route has no `try`/`catch`/`finally` (use `withPool` or a service); Promise work sits inline in `Effect.tryPromise({ try, catch })`, never in a bare `async`; an exported effect declares `Effect.Effect<A, E>`; a cast needs a `// SAFETY:` line.
+- Usage numbers (`scans.cost_usd` and friends) come from the agent's own report, and the cost is an estimate: `docs/usage-cost.md` says how to check it.
