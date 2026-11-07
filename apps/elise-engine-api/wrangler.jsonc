@@ -24,7 +24,8 @@
     { "name": "SIGN_IN_LIMITER", "namespace_id": "1002", "simple": { "limit": 10, "period": 60 } }
   ],
   "r2_buckets": [{ "binding": "REPORTS", "bucket_name": "repo-scan-reports" }],
-  "vars": { "ENVIRONMENT": "production", "MODEL": "claude-sonnet-5-5", "EFFORT": "high", "MAX_BUDGET_USD": "2", "MAX_ACTIVE_SCANS": "3", "AUTH_BASE_URL": "https://elise-engine-api.mochi-project.workers.dev", "AUTH_TRUSTED_ORIGINS": "https://elise-engine-api.mochi-project.workers.dev,http://localhost:3000" }
+  "vars": { "ENVIRONMENT": "production", "MODEL": "claude-sonnet-5-5", "EFFORT": "high", "MAX_BUDGET_USD": "2", "MAX_ACTIVE_SCANS": "3", "MONTHLY_BUDGET_USD": "20", "AUTH_BASE_URL": "https://elise-engine-api.mochi-project.workers.dev", "AUTH_TRUSTED_ORIGINS": "https://elise-engine-api.mochi-project.workers.dev,http://localhost:3000" }
+  // MONTHLY_BUDGET_USD is the default monthly spend per account (tenants.monthly_scan_budget_usd overrides it).
   // MAX_BUDGET_USD is the per-scan spend ceiling: requests may lower it, never raise it.
   // Secrets (wrangler secret put / --secrets-file): ANTHROPIC_API_KEY, SCAN_API_TOKEN, DATABASE_URL, AUTH_SECRET
 }

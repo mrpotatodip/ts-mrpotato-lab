@@ -25,6 +25,7 @@ export const SCAN_SANDBOX_REPO_DIR = "/workspace/repo";
 export const SCAN_SANDBOX_OUT_DIR = "/workspace/out";
 export const SCAN_SANDBOX_PROMPT_PATH = "/workspace/prompt.txt";
 export const SCAN_SANDBOX_AGENT_LOG = "/workspace/agent.log";
+export const SCAN_SANDBOX_AGENT_ERR = "/workspace/agent.err";
 export const SCAN_SANDBOX_AGENT_EXIT = "/workspace/agent.exit";
 export const SCAN_SANDBOX_AGENT_LOCK = "/workspace/agent.lock";
 export const SCAN_SANDBOX_CLONED_MARKER = "/workspace/repo.cloned";

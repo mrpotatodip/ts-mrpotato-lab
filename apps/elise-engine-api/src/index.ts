@@ -3,26 +3,28 @@ import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 import { openAPIRouteHandler } from "hono-openapi";
-import { realAuthDeps } from "#/lib/auth-deps";
+import { realAppDeps } from "#/lib/app-deps";
 import { AppError, TooManyRequestsError } from "#/lib/errors";
 import { rateLimitByIp } from "#/lib/rate-limit";
 import { openApiDocument, requireOpenApiEnabled, validationErrorResponse } from "#/lib/openapi-document";
 import { errorChainForLog } from "#/lib/redact-log";
 import { requireScanAccess } from "#/lib/require-scan-access";
 import authRoutes from "#/modules/auth";
+import findingsRoutes from "#/modules/findings";
 import meRoutes from "#/modules/me";
 import scansRoutes from "#/modules/scans";
 import signUpRoutes from "#/modules/sign-up";
-import type { AppEnv, AuthDeps } from "#/types/variables";
+import usageRoutes from "#/modules/usage";
+import type { AppEnv, AppDeps } from "#/types/variables";
 
 export { Outbound, ScanSandbox } from "#/modules/scan-sandbox";
 export { ScanWorkflow } from "#/modules/scan-workflow";
 
-export const buildApp = (authDeps: AuthDeps = realAuthDeps) => {
+export const buildApp = (deps: AppDeps = realAppDeps) => {
   const app = new Hono<AppEnv>();
 
   app.use("*", async (c, next) => {
-    c.set("authDeps", authDeps);
+    c.set("deps", deps);
     await next();
   });
 
@@ -33,6 +35,8 @@ export const buildApp = (authDeps: AuthDeps = realAuthDeps) => {
   // not here: they answer only in development.
   // -----
   app.use("/scans/*", requireScanAccess);
+  app.use("/usage/*", requireScanAccess);
+  app.use("/findings/*", requireScanAccess);
   app.use(
     "/auth/sign-in/*",
     rateLimitByIp("SIGN_IN_LIMITER", () => new TooManyRequestsError("Too many sign-in attempts. Wait a minute and try again.", "SIGN_IN_RATE_LIMITED")),
@@ -58,7 +62,7 @@ export const buildApp = (authDeps: AuthDeps = realAuthDeps) => {
     return c.json({ data: null, error: { code: "INTERNAL_ERROR", message: "Internal server error" } }, 500);
   });
 
-  const routes = app.route("/scans", scansRoutes).route("/auth", authRoutes).route("/sign-up", signUpRoutes).route("/me", meRoutes);
+  const routes = app.route("/scans", scansRoutes).route("/auth", authRoutes).route("/sign-up", signUpRoutes).route("/me", meRoutes).route("/usage", usageRoutes).route("/findings", findingsRoutes);
 
   // -----
   // The OpenAPI spec, for developers only.

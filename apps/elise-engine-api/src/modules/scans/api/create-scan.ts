@@ -11,7 +11,8 @@ const app = new Hono<AppEnv>();
 app.post("/", createScanDoc, zValidator("header", AccountHeaderSchema), zValidator("json", CreateScanBodySchema), async (c) => {
   const { "x-account-id": accountId } = c.req.valid("header");
   const body = c.req.valid("json");
-  const data = await runEffect(createScanSvc(c.env, accountId, body));
+  const spend = await c.get("deps").monthSpend(c.env, accountId);
+  const data = await runEffect(createScanSvc(c.env, accountId, body, spend));
   return c.json({ data, error: null }, 201);
 });
 

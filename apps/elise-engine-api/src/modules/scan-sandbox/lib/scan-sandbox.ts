@@ -1,11 +1,13 @@
 import { Files } from "@cloudflare/sandbox";
 import { DurableObject } from "cloudflare:workers";
+import type { ScanUsage } from "@repo/contracts/elise";
 import { SCAN_REPORT_FILES } from "#/constants";
 import type { ScanFiles } from "#/lib/scan-file-types";
 import type { ScanOptions } from "#/schemas";
 import type { Bindings } from "#/types/variables";
 import {
   SCAN_SANDBOX_AGENT_ENV,
+  SCAN_SANDBOX_AGENT_ERR,
   SCAN_SANDBOX_AGENT_EXIT,
   SCAN_SANDBOX_AGENT_LOG,
   SCAN_SANDBOX_CLONE_GUARD_MS,
@@ -20,7 +22,7 @@ import {
   SCAN_SANDBOX_WORK_DIR,
 } from "#/modules/scan-sandbox/constants";
 import type { AgentState, OutboundExport } from "#/modules/scan-sandbox/types";
-import { buildAgentPrompt, buildAgentScript, buildCloneScript } from "#/modules/scan-sandbox/utils";
+import { buildAgentPrompt, buildAgentScript, buildCloneScript, parseAgentUsage } from "#/modules/scan-sandbox/utils";
 
 type SandboxContext = DurableObjectState & { exports: { Outbound: OutboundExport } };
 
@@ -67,7 +69,13 @@ export class ScanSandbox extends DurableObject<Bindings> {
 
   async agentLogTail(): Promise<string> {
     const log = (await this.#readText(SCAN_SANDBOX_AGENT_LOG)) ?? "(no agent log)";
-    return log.slice(-SCAN_SANDBOX_LOG_TAIL_CHARS);
+    const err = (await this.#readText(SCAN_SANDBOX_AGENT_ERR))?.trim();
+    return `${err ? `${err.slice(-SCAN_SANDBOX_LOG_TAIL_CHARS)} ` : ""}${log.slice(-SCAN_SANDBOX_LOG_TAIL_CHARS)}`;
+  }
+
+  async readUsage(): Promise<ScanUsage | null> {
+    const log = await this.#readText(SCAN_SANDBOX_AGENT_LOG);
+    return log === null ? null : parseAgentUsage(log);
   }
 
   async readFiles(): Promise<ScanFiles> {

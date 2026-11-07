@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ScanUsageSchema } from "@repo/contracts/elise";
 import { ScanOptionsSchema } from "./scan-options-schema";
 
 export const ScanStateSchema = z.enum(["queued", "running", "succeeded", "failed"]);
@@ -13,6 +14,7 @@ export const ScanStatusSchema = ScanOptionsSchema.extend({
   finishedAt: z.string().nullable(),
   error: z.string().nullable(),
   files: z.array(z.string()).nullable().meta({ example: ["REPORT.md", "findings.json"] }),
+  usage: ScanUsageSchema.nullish(),
 });
 
 export type ScanState = z.infer<typeof ScanStateSchema>;

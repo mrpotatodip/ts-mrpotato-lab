@@ -7,7 +7,7 @@ import type { AppEnv } from "#/types/variables";
 // for the routes and middleware after it.
 // -----
 export const requireSession = createMiddleware<AppEnv>(async (c, next) => {
-  const userId = await c.get("authDeps").sessionUserId(c);
+  const userId = await c.get("deps").sessionUserId(c);
   if (!userId) throw new UnauthorizedError();
   c.set("userId", userId);
   await next();

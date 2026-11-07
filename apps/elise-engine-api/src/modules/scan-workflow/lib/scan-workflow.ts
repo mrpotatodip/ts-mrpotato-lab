@@ -1,4 +1,5 @@
 import { WorkflowEntrypoint, type WorkflowEvent, type WorkflowStep } from "cloudflare:workers";
+import { ScanUsageSchema, type ScanUsage } from "@repo/contracts/elise";
 import type { ScanParams, ScanState } from "#/schemas";
 import { runEffect } from "#/lib/effect-query";
 import { recordScanSvc } from "#/modules/scan-records";
@@ -26,18 +27,27 @@ export class ScanWorkflow extends WorkflowEntrypoint<Bindings, ScanParams> {
         return true;
       });
 
-    const record = async (status: ScanState, error: string | null) => {
+    const record = async (status: ScanState, error: string | null, usage: ScanUsage | null) => {
       try {
         await step.do(
           `record-scan-${status}`,
           { retries: SCAN_WORKFLOW_RECORD_RETRY, timeout: SCAN_WORKFLOW_RECORD_TIMEOUT },
           async () => {
-            await runEffect(recordScanSvc(this.env, params, status, error));
+            await runEffect(recordScanSvc(this.env, params, status, error, usage));
             return true;
           },
         );
       } catch (cause) {
         console.error("scan: could not record the scan in the database", cause instanceof Error ? cause.message : cause);
+      }
+    };
+
+    let usage: ScanUsage | null = null;
+    const readUsage = async () => {
+      try {
+        usage = await step.do("read-usage", async () => ScanUsageSchema.nullable().parse(await sandbox.readUsage()));
+      } catch {
+        console.error("scan: could not read the usage");
       }
     };
 
@@ -60,6 +70,7 @@ export class ScanWorkflow extends WorkflowEntrypoint<Bindings, ScanParams> {
           return polled.state === "failed" ? { state: "failed" as const, error: polled.error } : { state: polled.state };
         });
       }
+      await readUsage();
       if (outcome.state === "running") {
         const tail = await step.do("log-tail", () => sandbox.agentLogTail());
         throw new Error(`the agent timed out after ${(SCAN_WORKFLOW_MAX_POLLS * SCAN_WORKFLOW_POLL_SECONDS) / 60} minutes: ${tail}`);
@@ -69,17 +80,17 @@ export class ScanWorkflow extends WorkflowEntrypoint<Bindings, ScanParams> {
       const files = await step.do("save-files", async () =>
         runEffect(saveScanFilesEffect(this.env.REPORTS, params.accountId, params.scanId, await sandbox.readFiles())),
       );
-      await setStatus("status-succeeded", "succeeded", { files });
-      await record("succeeded", null);
+      await setStatus("status-succeeded", "succeeded", { files, usage });
+      await record("succeeded", null, usage);
       return { ok: true };
     } catch (cause) {
       const error = cause instanceof Error ? cause.message : String(cause);
       try {
-        await setStatus("status-failed", "failed", { error });
+        await setStatus("status-failed", "failed", { error, usage });
       } catch {
         console.error("scan: could not write the failed status");
       }
-      await record("failed", error);
+      await record("failed", error, usage);
       throw cause;
     } finally {
       await step.do("cleanup", async () => {

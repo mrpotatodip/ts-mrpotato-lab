@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
+  bigint,
   check,
   foreignKey,
   index,
@@ -29,7 +30,8 @@ const inList = (values: readonly string[]) => sql.raw(values.map((value) => `'${
 
 // -----
 // One row per scan. id is the engine's scan ID,
-// written once when the scan ends. The files stay
+// written once when the scan ends, with what
+// the agent spent (tokens, and its cost estimate). The files stay
 // in R2; these rows let the dashboard sort and filter.
 // -----
 export const scans = pgTable(
@@ -48,6 +50,13 @@ export const scans = pgTable(
     budget: integer("budget"),
     maxBudgetUsd: numeric("max_budget_usd", { precision: 10, scale: 2 }).notNull(),
     error: text("error"),
+    inputTokens: bigint("input_tokens", { mode: "number" }),
+    outputTokens: bigint("output_tokens", { mode: "number" }),
+    cacheReadTokens: bigint("cache_read_tokens", { mode: "number" }),
+    cacheWriteTokens: bigint("cache_write_tokens", { mode: "number" }),
+    costUsd: numeric("cost_usd", { precision: 10, scale: 4 }),
+    turns: integer("turns"),
+    durationMs: integer("duration_ms"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
     finishedAt: timestamp("finished_at", { withTimezone: true }),
     recordedAt: timestamp("recorded_at", { withTimezone: true }).defaultNow().notNull(),

@@ -14,7 +14,19 @@ export const writeScanRecordEffect = (db: DbConnectType, record: ScanRecord): Ef
         .values(scan)
         .onConflictDoUpdate({
           target: scans.id,
-          set: { status: scan.status, error: scan.error, finishedAt: scan.finishedAt, recordedAt: new Date() },
+          set: {
+            status: scan.status,
+            error: scan.error,
+            finishedAt: scan.finishedAt,
+            inputTokens: scan.inputTokens,
+            outputTokens: scan.outputTokens,
+            cacheReadTokens: scan.cacheReadTokens,
+            cacheWriteTokens: scan.cacheWriteTokens,
+            costUsd: scan.costUsd,
+            turns: scan.turns,
+            durationMs: scan.durationMs,
+            recordedAt: new Date(),
+          },
         });
       const clear = db.delete(scanFindings).where(eq(scanFindings.scanId, scan.id));
       if (rows.length === 0) {

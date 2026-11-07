@@ -7,6 +7,7 @@ let signedInUser: string | undefined;
 let userHoldsRole = false;
 
 const app = buildApp({
+  monthSpend: async () => ({ spentUsd: 0, scans: 0, tokens: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }, budgetOverrideUsd: null }),
   sessionUserId: async () => signedInUser,
   userHasAccount: async () => userHoldsRole,
 }).app;
@@ -278,6 +279,24 @@ describe("rate limits", () => {
     const res = await call(env, "/sign-up", { method: "POST", headers: { "content-type": "application/json" }, body: signUpBody });
 
     expect(res.status).toBe(400);
+  });
+});
+
+describe("usage", () => {
+  it("answers the month's spend and what is left", async () => {
+    const { env } = fakeBindings();
+    const res = await call(env, "/usage", { headers: auth });
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({ data: { budgetUsd: 20, spentUsd: 0, reservedUsd: 0, remainingUsd: 20, scans: 0 }, error: null });
+  });
+
+  it("refuses a signed-in login that holds no role in the account", async () => {
+    const { env } = fakeBindings();
+    signedInUser = "user-1";
+    const res = await call(env, "/usage", { headers: { authorization: "Bearer session-token", "x-account-id": ACCOUNT } });
+
+    expect(res.status).toBe(403);
   });
 });
 

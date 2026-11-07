@@ -386,6 +386,13 @@
       "when": 1794079465724,
       "tag": "0054_retire_store_powers",
       "breakpoints": true
+    },
+    {
+      "idx": 55,
+      "version": "7",
+      "when": 1794088706799,
+      "tag": "0055_scan_usage_and_budget",
+      "breakpoints": true
     }
   ]
 }

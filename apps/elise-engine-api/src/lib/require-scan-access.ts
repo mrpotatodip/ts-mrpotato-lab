@@ -14,7 +14,7 @@ import type { AppEnv } from "#/types/variables";
 export const requireScanAccess = createMiddleware<AppEnv>(async (c, next) => {
   if (await hasServiceToken(c)) return next();
 
-  const deps = c.get("authDeps");
+  const deps = c.get("deps");
   const userId = await deps.sessionUserId(c);
   if (!userId) throw new UnauthorizedError();
 

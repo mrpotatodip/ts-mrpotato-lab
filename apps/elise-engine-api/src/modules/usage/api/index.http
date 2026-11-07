@@ -1,0 +1,8 @@
+@baseUrl = http://localhost:8787
+@token = <service-token-or-session-token>
+@account = <tenant-uuid>
+
+# This month's spend, tokens and what is left of the budget.
+GET {{baseUrl}}/usage
+Authorization: Bearer {{token}}
+x-account-id: {{account}}

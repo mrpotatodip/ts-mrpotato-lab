@@ -24,6 +24,7 @@ export const writeScanStatusEffect = (
     finishedAt: status === "succeeded" || status === "failed" ? now : null,
     error: extra.error ?? null,
     files: extra.files ?? null,
+    usage: extra.usage ?? null,
   };
   return Effect.tryPromise({
     try: () => reports.put(scanKey(params.accountId, params.scanId, SCAN_STATUS_FILE), JSON.stringify(body)),

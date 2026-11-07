@@ -1,4 +1,5 @@
 import { Effect } from "effect";
+import type { ScanUsage } from "@repo/contracts/elise";
 import { toExternalError, toParseError, type ExternalError, type ParseError } from "#/lib/effect-query";
 import type { ScanParams, ScanState } from "#/schemas";
 import { readScanFileEffect } from "#/modules/scan-store";
@@ -41,6 +42,7 @@ export const buildScanRecordSvc = (
   params: ScanParams,
   status: ScanState,
   error: string | null,
+  usage: ScanUsage | null,
 ): Effect.Effect<ScanRecord, ExternalError | ParseError> =>
   Effect.gen(function* () {
     const found =
@@ -64,6 +66,13 @@ export const buildScanRecordSvc = (
         budget: params.options.budget ?? null,
         maxBudgetUsd: params.options.maxBudgetUsd.toFixed(2),
         error,
+        inputTokens: usage?.inputTokens ?? null,
+        outputTokens: usage?.outputTokens ?? null,
+        cacheReadTokens: usage?.cacheReadTokens ?? null,
+        cacheWriteTokens: usage?.cacheWriteTokens ?? null,
+        costUsd: usage ? usage.costUsd.toFixed(4) : null,
+        turns: usage?.turns ?? null,
+        durationMs: usage?.durationMs ?? null,
         createdAt: new Date(params.createdAt),
         finishedAt: status === "succeeded" || status === "failed" ? new Date() : null,
       },

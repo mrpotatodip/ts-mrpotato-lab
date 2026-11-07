@@ -51,6 +51,7 @@ export function fakeBindings(overrides: Partial<Bindings> = {}, workflowStatus: 
     EFFORT: "high",
     MAX_BUDGET_USD: "2",
     MAX_ACTIVE_SCANS: "3",
+    MONTHLY_BUDGET_USD: "20",
     ANTHROPIC_API_KEY: "test-key",
     SCAN_API_TOKEN: TEST_TOKEN,
     DATABASE_URL: "postgresql://user:pass@127.0.0.1:1/none",
