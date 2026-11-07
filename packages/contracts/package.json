@@ -8,10 +8,13 @@
     ".": "./src/index.ts",
     "./response": "./src/response.ts",
     "./chat-bots": "./src/chat-bots/index.ts",
-    "./amelie": "./src/amelie/index.ts"
+    "./elise": "./src/elise/index.ts"
   },
   "dependencies": {
     "@repo/chat-bot-api": "workspace:*",
     "zod": "^4.4.3"
+  },
+  "scripts": {
+    "check": "tsc --noEmit"
   }
 }

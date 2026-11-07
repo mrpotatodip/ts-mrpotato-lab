@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cheat sheet: elise-engine-api</title>
+<link rel="stylesheet" href="../assets/lesson.css">
+<style>@media print { nav.crumbs, footer.lesson-foot { display: none; } body { font-size: 12px; } main { max-width: none; } }</style>
+</head>
+<body>
+<main>
+<nav class="crumbs"><a href="../index.html">All lessons</a><span>Reference</span></nav>
+<h1>Cheat sheet</h1>
+<p class="meta">One page. Prints well. Terms follow the <a href="../GLOSSARY.md">glossary</a>.</p>
+
+<h2>The API</h2>
+<table>
+<tr><th>Call</th><th>Does</th></tr>
+<tr><td><code>POST /scans</code></td><td>Starts a scan and waits for it to end. Returns the report.</td></tr>
+<tr><td><code>GET /scans/&lt;id&gt;</code></td><td>Returns the saved <code>REPORT.md</code>.</td></tr>
+<tr><td><code>GET /scans/&lt;id&gt;/&lt;file&gt;</code></td><td>Returns another saved file, for example <code>findings.json</code>.</td></tr>
+</table>
+<p>Every call needs the header <code>authorization: Bearer &lt;SCAN_API_TOKEN&gt;</code>.</p>
+
+<h3>Request body fields</h3>
+<table>
+<tr><th>Field</th><th>Values</th><th>Default</th></tr>
+<tr><td><code>repo</code> (required)</td><td><code>https://github.com/owner/name</code> (public)</td><td></td></tr>
+<tr><td><code>skill</code></td><td><code>lite</code>, <code>full</code></td><td><code>lite</code></td></tr>
+<tr><td><code>model</code></td><td><code>claude-haiku-5-5</code>, <code>claude-sonnet-5-5</code>, <code>claude-opus-5-5</code></td><td><code>MODEL</code> var (sonnet)</td></tr>
+<tr><td><code>effort</code></td><td><code>low</code>, <code>medium</code>, <code>high</code>, <code>xhigh</code>, <code>max</code></td><td><code>EFFORT</code> var (high)</td></tr>
+<tr><td><code>max_budget_usd</code></td><td>more than 0, at most <code>MAX_BUDGET_USD</code></td><td>the ceiling (2)</td></tr>
+<tr><td><code>profile</code> (full only)</td><td><code>quick</code>, <code>standard</code>, <code>deep</code></td><td><code>quick</code></td></tr>
+<tr><td><code>budget</code> (full only)</td><td>integer 1 to 200 (agent runs)</td><td>none</td></tr>
+</table>
+
+<h3>Status codes</h3>
+<table>
+<tr><td><code>200</code></td><td>Scan finished. Body has <code>scanId</code>, the settings, <code>files</code>, <code>report</code>.</td></tr>
+<tr><td><code>400</code></td><td>A field is not valid. The message lists the allowed values.</td></tr>
+<tr><td><code>401</code></td><td>Missing or wrong bearer token.</td></tr>
+<tr><td><code>502</code></td><td>The scan failed. Body has <code>scanId</code> and <code>error</code> (with the agent log tail).</td></tr>
+</table>
+
+<h3>Example</h3>
+<pre>curl -m 900 https://elise-engine-api.mochi-project.workers.dev/scans \
+  -H "authorization: Bearer $SCAN_API_TOKEN" \
+  --json '{"repo":"https://github.com/octocat/Hello-World",
+           "skill":"lite","model":"claude-haiku-5-5",
+           "effort":"low","max_budget_usd":1}'</pre>
+
+<h2>Where things are</h2>
+<table>
+<tr><th>Thing</th><th>Place</th></tr>
+<tr><td>Request handling</td><td><a href="../../src/index.ts"><code>src/index.ts</code></a></td></tr>
+<tr><td>Sandbox (Durable Object)</td><td><a href="../../src/scan-sandbox.ts"><code>src/scan-sandbox.ts</code></a></td></tr>
+<tr><td>Outbound handler</td><td><a href="../../src/outbound.ts"><code>src/outbound.ts</code></a></td></tr>
+<tr><td>Image recipe</td><td><a href="../../Dockerfile"><code>Dockerfile</code></a></td></tr>
+<tr><td>Config and vars</td><td><a href="../../wrangler.jsonc"><code>wrangler.jsonc</code></a></td></tr>
+<tr><td>Skills</td><td><code>skills/security-audit-lite/</code>, <code>skills/security-audit/</code></td></tr>
+<tr><td>Saved files</td><td>R2 bucket <code>repo-scan-reports</code>, folder <code>scans/&lt;id&gt;/</code></td></tr>
+</table>
+
+<h2>Commands (run in <code>apps/elise-engine-api</code>)</h2>
+<pre>pnpm --filter elise-engine-api build     # type-check
+pnpm --filter elise-engine-api lint
+pnpm exec wrangler deploy                 # builds the image, so Docker/Colima must run
+pnpm exec wrangler tail                   # live logs
+pnpm exec wrangler containers list
+pnpm exec wrangler containers instances &lt;ID&gt;
+pnpm exec wrangler r2 bucket info repo-scan-reports
+pnpm exec wrangler secret put ANTHROPIC_API_KEY   # paste in your terminal, never in chat</pre>
+
+<h2>Numbers to remember</h2>
+<table>
+<tr><td>Container type</td><td><code>standard-1</code>: 1/2 vCPU, 4 GiB memory, 8 GB disk. (<code>lite</code> has 256 MiB.)</td></tr>
+<tr><td>Poll interval</td><td>5 seconds for <code>agent.exit</code></td></tr>
+<tr><td>Agent time limit</td><td>40 minutes</td></tr>
+<tr><td>Clone time limit</td><td>5 minutes</td></tr>
+<tr><td>Allowed hosts</td><td><code>github.com</code>, <code>api.anthropic.com</code></td></tr>
+</table>
+
+<h2>Rules</h2>
+<ol>
+<li>The container never holds the real key.</li>
+<li>A finding is a lead. A person checks it.</li>
+<li>No findings does not mean safe.</li>
+<li>Change one thing at a time when you debug.</li>
+<li>Read the Anthropic usage page after each test.</li>
+</ol>
+
+<footer class="lesson-foot"><p><a href="../index.html">&larr; All lessons</a></p></footer>
+</main>
+</body>
+</html>

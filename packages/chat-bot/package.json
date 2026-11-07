@@ -11,7 +11,8 @@
     "./server": "./src/server.ts"
   },
   "scripts": {
-    "test": "vitest run"
+    "test": "vitest run",
+    "check": "vitest run"
   },
   "dependencies": {
     "@repo/contracts": "workspace:*",

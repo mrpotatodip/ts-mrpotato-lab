@@ -1,0 +1,61 @@
+{
+  "name": "elise-frontend-web",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "imports": {
+    "#/*": "./src/*"
+  },
+  "scripts": {
+    "dev": "vite dev --port 3100 --strictPort",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "oxlint src",
+    "deploy": "vite build && wrangler deploy",
+    "cf-typegen": "wrangler types",
+    "dev:log": "vite dev --port 3100 --strictPort > .dev.log 2>&1",
+    "check": "tsc --noEmit && oxlint src && vitest run",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@repo/contracts": "workspace:*",
+    "@base-ui/react": "^1.5.0",
+    "@tailwindcss/vite": "^4.1.18",
+    "@tanstack/react-query": "^5.102.0",
+    "@tanstack/react-router": "^1.170.44",
+    "@tanstack/react-router-ssr-query": "^1.167.3",
+    "@tanstack/react-start": "^1.169.1",
+    "@tanstack/router-plugin": "^1.168.45",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.545.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "sonner": "^2.0.8",
+    "tailwind-merge": "^3.6.0",
+    "tailwindcss": "^4.1.18",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.47.0",
+    "@cloudflare/workers-types": "^5.20261106.1",
+    "@oxlint/plugins": "1.79.0",
+    "@tailwindcss/typography": "^0.5.16",
+    "@types/node": "^22.10.2",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "^6.0.1",
+    "oxlint": "1.79.0",
+    "typescript": "^6.0.2",
+    "vite": "^8.0.0",
+    "wrangler": "^4.114.0",
+    "vitest": "^4.1.7"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "lightningcss"
+    ]
+  }
+}

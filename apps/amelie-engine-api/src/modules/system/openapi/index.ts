@@ -1,1 +1,0 @@
-export { healthDoc } from "./health";

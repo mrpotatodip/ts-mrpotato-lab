@@ -1,0 +1,21 @@
+@baseUrl = http://localhost:8787
+
+# Start an account. The invite code comes from: pnpm --filter @repo/db-elise db:create-invite-code --email <login>
+POST {{baseUrl}}/sign-up
+Content-Type: application/json
+
+{ "inviteCode": "<invite-code>", "firstName": "Ada", "lastName": "Rossi", "email": "ada@example.com", "password": "correct-horse-battery", "accountName": "Acme Labs", "timezone": "Europe/Rome" }
+
+###
+
+# Sign in. The answer holds a session token; send it as: Authorization: Bearer <token>
+POST {{baseUrl}}/auth/sign-in/email
+Content-Type: application/json
+
+{ "email": "ada@example.com", "password": "correct-horse-battery" }
+
+###
+
+# Who is signed in, and which accounts they can use.
+GET {{baseUrl}}/me
+Authorization: Bearer <session-token>

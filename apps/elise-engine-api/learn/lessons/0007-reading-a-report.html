@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>7. Reading a report</title>
+<link rel="stylesheet" href="../assets/lesson.css">
+</head>
+<body>
+<main>
+<nav class="crumbs"><a href="../index.html">All lessons</a><span>Lesson 7 of 7</span></nav>
+<h1>Reading a report</h1>
+<p class="meta">About 8 minutes. Before this: <a href="0006-when-it-breaks.html">lesson 6</a>.</p>
+
+<div class="win"><strong>Your win:</strong> after this lesson, you can read a scan report, say which findings need a human check, and say what an empty report does not prove.</div>
+
+<h2>The two files</h2>
+<p>The <code>lite</code> skill writes two files into <code>/workspace/out</code>. The Worker saves both in R2 under <code>scans/&lt;scan ID&gt;/</code>.</p>
+<ul>
+<li><code>REPORT.md</code> is for people. It has a fixed list of sections: Summary, Findings, Needs validation, Coverage, Limits.</li>
+<li><code>findings.json</code> is for programs. It is a JSON array of findings.</li>
+</ul>
+<p>The Worker also writes <code>status.json</code> (the repo, the settings, the times, and whether the scan worked). The <code>full</code> skill writes more files, for example <code>coverage-ledger.json</code>.</p>
+<p>To read a saved file: <code>GET /scans/&lt;id&gt;</code> returns the report. <code>GET /scans/&lt;id&gt;/findings.json</code> returns the JSON. Both need the bearer token.</p>
+
+<h2>One finding</h2>
+<pre>{
+  "id": "F-001",
+  "status": "confirmed",          // or "needs_validation"
+  "severity": "medium",           // null when needs_validation
+  "title": "short title",
+  "class": "authz",
+  "location": [{ "file": "src/routes/user.ts", "line": 42 }],
+  "actor": "who exploits it",
+  "impact": "the concrete result",
+  "evidence": "code and the traced path",
+  "fix": "the smallest source change",
+  "needs": null                   // the missing fact, when needs_validation
+}</pre>
+<p>Severity has five levels: <code>critical</code>, <code>high</code>, <code>medium</code>, <code>low</code>, <code>informational</code>. A <code>needs_validation</code> finding has <strong>no</strong> severity. It means that the answer depends on a fact outside the repo, for example a cloud setting.</p>
+
+<h2>A real example</h2>
+<p>We scanned a real project with the <code>lite</code> skill. This chart shows how many findings the agent reported at each level.</p>
+
+<figure class="diagram">
+<svg viewBox="0 0 620 230" role="img" aria-label="Findings by level">
+  <g style="color:var(--fg)">
+    <text x="10" y="18" class="b">Findings in one lite scan (count)</text>
+    <text x="10" y="52">critical</text><text x="170" y="52" class="sm">0</text>
+    <text x="10" y="86">high</text><text x="170" y="86" class="sm">0</text>
+    <text x="10" y="120">medium</text>
+    <rect class="bar" x="130" y="104" width="180" height="22"/><text x="318" y="120" class="sm">3</text>
+    <text x="10" y="154">low</text>
+    <rect class="bar" x="130" y="138" width="120" height="22"/><text x="258" y="154" class="sm">2</text>
+    <text x="10" y="188">needs validation</text>
+    <rect class="bar ok" x="130" y="172" width="60" height="22"/><text x="198" y="188" class="sm">1</text>
+    <text x="130" y="218" class="sm">Bar length: 60 px per finding.</text>
+  </g>
+</svg>
+<figcaption>Figure 8. Counts from one real scan (3 medium, 2 low, 1 needs validation). These are the agent's claims. A person had not checked them.</figcaption>
+</figure>
+
+<h2>Two rules for reading</h2>
+<h3>1. An agent finding is a lead, not a fact</h3>
+<p>The status <code>confirmed</code> means that the agent traced the code and believes the problem is real. It does not mean a person checked. Before you fix a finding, open the file at the <code>location</code> and follow the <code>evidence</code>. Ask: can the named <code>actor</code> really do this?</p>
+<h3>2. No findings does not mean safe</h3>
+<p>Our first test scanned a repo that had only a one-line README. The report said "no findings". That was correct, because there was no code. A report for a big project with no findings could also mean that the agent missed things. Always read the <strong>Coverage</strong> and <strong>Limits</strong> sections. They say which classes the agent searched and how many files it read.</p>
+
+<h2>lite and full</h2>
+<table>
+<tr><th></th><th><code>lite</code> (default)</th><th><code>full</code></th></tr>
+<tr><td>Agents</td><td>One</td><td>Many (scouts, hunters, verifiers)</td></tr>
+<tr><td>Verification</td><td>The same agent checks its own hits</td><td>Fresh agents check each candidate</td></tr>
+<tr><td>Output</td><td><code>REPORT.md</code>, <code>findings.json</code></td><td>Six files, including a coverage ledger</td></tr>
+<tr><td>Cost</td><td>Lower</td><td>Higher, and you must set a budget</td></tr>
+<tr><td>Use for</td><td>A fast first look</td><td>A deeper pass on important code</td></tr>
+</table>
+
+<h2>Check your memory</h2>
+<div class="quiz">
+  <div class="q" data-answer="1"><p>A report has no findings. What does that tell you?</p>
+    <button>The code has no security problems</button>
+    <button>The agent found nothing to report</button>
+    <button>The code was fully proven safe</button>
+    <button>The scan skipped all the files</button>
+    <p class="why" hidden>It says only what the agent found. Read Coverage and Limits to see what it checked.</p></div>
+  <div class="q" data-answer="3"><p>Which finding status has no severity?</p>
+    <button>Confirmed high</button>
+    <button>Confirmed low</button>
+    <button>Confirmed medium</button>
+    <button>Needs validation</button>
+    <p class="why" hidden>The answer depends on a fact outside the repo, so the agent cannot rate it.</p></div>
+  <div class="q" data-answer="0"><p>Who must check a finding before you fix it?</p>
+    <button>A person who reads the code</button>
+    <button>The same agent running it twice</button>
+    <button>The R2 bucket service in Cloudflare</button>
+    <button>The Worker, with a fixed rule</button>
+    <p class="why" hidden>The agent can be wrong in both directions: it can report false problems and miss real ones.</p></div>
+  <p class="score"></p>
+</div>
+
+<details class="waitwhat"><summary>Wait, what? Re-pitch this lesson</summary>
+<p><strong>Context.</strong> The scan ends with a report that the agent wrote.</p>
+<p><strong>Short version.</strong> Read <code>REPORT.md</code> for people and <code>findings.json</code> for programs. Each finding has a status, a severity, a location, and a fix. A person must check each finding. An empty list does not prove safety.</p>
+<p><strong>Remember.</strong> Lead, not fact. Read Coverage and Limits.</p>
+</details>
+
+<footer class="lesson-foot">
+<p><strong>Primary source:</strong> the <a href="../../skills/security-audit-lite/SKILL.md">security-audit-lite skill</a> in this repo defines the report and the fields. For how the agent runs without a person, see <a href="https://code.claude.com/docs/en/headless">the print mode guide</a>. There is no vetted source yet on how to judge AI security findings (see <a href="../RESOURCES.md">RESOURCES.md</a>, Gaps).</p>
+<p><strong>Ask me.</strong> Ask your teacher (the agent) to walk through one finding with you, line by line.</p>
+<p><a href="0006-when-it-breaks.html">&larr; Lesson 6</a> &middot; <a href="../reference/cheatsheet.html">Reference: cheat sheet</a> &middot; <a href="../index.html">All lessons</a></p>
+</footer>
+</main>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

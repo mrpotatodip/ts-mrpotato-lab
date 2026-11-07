@@ -1,111 +1,35 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Elise: a pnpm workspace. A Worker clones a public GitHub repo into a Cloudflare sandbox, runs a Claude Code security audit, keeps the report in R2 and records scans in Neon.
 
-## Monorepo Structure
+## Map
 
-pnpm workspace with two layers:
-
-- `apps/` — runnable applications
-  - `amelie-engine-api` — Amelie backend (Hono on Cloudflare Workers): auth, tenants, menu, FAQs, chat bot, public widget. Domain terms: `apps/amelie-engine-api/GLOSSARY.md`
-  - `amelie-frontend-web` — cafe owner dashboard and public customer chat (TanStack Start + React 19)
-  - `amelie-frontend-host` — stand-in cafe website for embedding the Customer widget (`http://localhost:5174`)
-- `packages/` — shared libraries
-  - `@repo/db-amelie` — Drizzle ORM schema + Neon client (single source of truth for Amelie DB types)
-  - `@repo/contracts` — Zod schemas shared between the API and frontend (`amelie/` and `chat-bots/` families; the generic chat-bot protocol lives in `@repo/chat-bot-api/contracts` and is re-exported here)
-  - `@repo/chat-bot` — chat-bot runtime used by the frontend
-  - `@repo/chat-bot-react` — React chat UI for the engine (`<ChatBot />`, hooks, CSS)
-  - `@repo/chat-bot-react-loader` — optional step-by-step progress display (the AG-UI loader, plain CSS) for `chat-bot-react`
-  - `@repo/chat-bot-api` — domain-free chat-bot engine (threads, runs, streaming, tools) behind a storage port; see its README
-  - `@repo/chat-bot-durable-stream` — Durable Object stream helpers used by the API
-
-This repo is an amelie-only lab copy of `ts-clarice`. Clarice and Elise apps are not present.
+- `apps/elise-engine-api` — the Worker (Hono, Effect, better-auth). Its `CLAUDE.md` loads when you work there
+- `apps/elise-frontend-web` — the dashboard (TanStack Start, port 3100). Its `CLAUDE.md` loads when you work there
+- `packages/db-elise` — Drizzle schema, Neon client, migrations. Rules: `packages/db-elise/README.md`
+- `packages/contracts` — Zod schemas shared by API and frontend (`@repo/contracts/elise`)
+- `packages/chat-bot*` — chat-bot runtime, API, React UI and durable stream. Kept on purpose: `docs/adr/0001-keep-chat-bot-packages.md`
 
 ## Commands
 
 ```bash
-# Root (all apps)
-pnpm dev            # run all apps in parallel
-pnpm build          # build all
-
-# Per-app
-pnpm --filter amelie-engine-api dev      # cf dev --port 8788
-pnpm --filter amelie-frontend-web dev    # vite dev --port 3000
-pnpm --filter amelie-frontend-host dev   # vite --port 5174, loads widget.js from :3000
-pnpm --filter amelie-engine-api test     # vitest run
-pnpm --filter amelie-engine-api lint     # oxlint src
-UPDATE_POWER_USAGE=1 pnpm --filter amelie-engine-api test   # rewrites ACCESS_POWER_USAGE (where each Power is checked) after a requirePower change
-
-# Database
-pnpm --filter @repo/db-amelie db:generate  # drizzle-kit generate migration
-pnpm --filter @repo/db-amelie db:migrate   # applies to the DATABASE_URL in that package's .env, a remote Neon database: ask before running
-pnpm --filter @repo/db-amelie db:studio    # drizzle-kit studio
-pnpm --filter @repo/db-amelie db:seed      # tsx src/seed.ts
-pnpm --filter @repo/db-amelie db:sync-powers  # adds catalogue Powers missing from access_master_powers (never deletes)
+pnpm check                                   # tsc, oxlint and vitest for contracts, db-elise, the engine and the dashboard (oxlint has strict custom `anti-slop` rules: run it after the first edit); the pre-commit hook runs it
+pnpm check:apps                              # quiet form of the above for every app and package: one line on success, the tail of each failure. Prefer it
+pnpm --filter elise-engine-api dev           # wrangler dev
+pnpm --filter @repo/db-elise db:query "..."  # read-only SQL on the live Neon database
+pnpm --filter @repo/db-elise db:rehearse     # pending migrations in a rolled-back transaction
+pnpm --filter @repo/db-elise db:migrate      # live Neon database: ask first
 ```
 
-## Architecture: `amelie-engine-api`
+## Conventions
 
-Hono on Cloudflare Workers. Public REST and widget routes, plus signed-in dashboard APIs. Data goes through `@repo/db-amelie`. Chat-bot agents and tools live under `src/modules/chat-bot/`.
-
-Dev server: `http://localhost:8788`. OpenAPI/Scalar at `/docs` when `ENVIRONMENT=development`.
-
-## Architecture: `amelie-frontend-web`
-
-TanStack Start (SSR) + TanStack Router + TanStack Query + Tailwind CSS v4 + shadcn/ui.
-
-**Module layout** (`src/modules/`): `dashboard`, `menu`, `faq`, `chat-bot`, `auth`, and related feature folders.
-
-Each module follows this structure:
-
-```
-{module}/
-├── schema/schemas.ts
-├── types/index.ts
-├── api/
-├── hooks/
-├── components/
-└── index.ts
-```
-
-**API layer:** All server calls go through `src/lib/api-client.ts`.
-
-**Naming conventions:**
-- Files: `{module}-{thing}.ext`
-- Symbols: `{Module}{Thing}`
-- Query keys: `{module}Keys`
-
-**Routes** (`src/routes/`): file-based via TanStack Router. `routeTree.gen.ts` is auto-generated — do not edit manually. Run the dev server to regenerate after adding routes.
-
-## Architecture: `@repo/db-amelie`
-
-Drizzle ORM with Neon serverless Postgres. Schema files are in `src/schema/`, migrations in `migrations/`. Import DB types via `@repo/db-amelie`.
-
-## Architecture: `@repo/contracts`
-
-Zod v4 schemas and TypeScript types shared between `amelie-engine-api` and `amelie-frontend-web`. Import from `@repo/contracts/amelie` or `@repo/contracts/chat-bots`.
-
-## Key Conventions
-
-- Review-time rules for Hono route code, the React app, `@repo/contracts` and chat-bot agents, agent tools and the agent router (`{module}/agents/`, `{module}/agent-tools/`, `{module}/agent-router/`) live in `CODING_STANDARDS.md` (root)
-
-- Git branches: `<project>/<type>/<kebab-description>` where `project` is an `apps/` or `packages/` folder, or `root`. Check with `pnpm lint:branch`. Husky runs this on commit.
-- `#/*` path alias maps to `./src/*` in the amelie apps
-- All Hono apps run on Cloudflare Workers; use `@cloudflare/workers-types` for `ExecutionContext`, `MessageBatch`, etc.
-- `drizzle-orm` is pinned to `0.45.2` via root pnpm overrides
-- `zod` v4 is used in the amelie apps and `@repo/contracts`
-- Response envelope convention: `{ data: T | null, error: { code: string, message: string } | null }` — success has `error: null`, errors have `data: null`
+- Review rules live in `CODING_STANDARDS.md`; it points to one file per scope under `docs/standards/`.
+- `{ data, error }` is the response envelope: success has `error: null`, failure has `data: null`.
+- Request and response shapes both apps use live in `@repo/contracts/elise`: import them, don't redefine them.
+- `zod` is pinned to `4.4.3` in the root pnpm overrides, so every package shares one copy.
+- `#/*` maps to `./src/*` inside an app.
+- Branch names start with the project folder: `elise-engine-api/feat/...`; the hook checks them.
 
 ## Agent skills
 
-### Issue tracker
-
-This lab copy has no GitHub remote yet. Specs (PRDs) live per-project as local markdown under `apps/<project>/.scratch/<feature>/`. See `docs/agents/issue-tracker.md`.
-
-### Triage labels
-
-Default label vocabulary — `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
-
-### Domain docs
-
-`GLOSSARY-MAP.md` at the root points to `apps/amelie-engine-api/GLOSSARY.md`. See `docs/agents/domain.md`.
+Issue tracker and triage labels: `docs/agents/issue-tracker.md`, `docs/agents/triage-labels.md`. Domain docs: `GLOSSARY-MAP.md` and `docs/agents/domain.md`.

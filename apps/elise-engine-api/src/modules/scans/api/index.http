@@ -1,0 +1,33 @@
+@baseUrl = http://localhost:8787
+# The SCAN_API_TOKEN from .dev.vars
+@token = <service-token>
+@account = <tenant-uuid>
+
+# Start a scan. Returns 201 and the scanId at once.
+POST {{baseUrl}}/scans
+Authorization: Bearer {{token}}
+x-account-id: {{account}}
+Content-Type: application/json
+
+{ "repo": "https://github.com/octocat/Hello-World", "model": "claude-haiku-5-5", "effort": "low", "max_budget_usd": 1 }
+
+###
+
+# The newest 50 scans of the account.
+GET {{baseUrl}}/scans
+Authorization: Bearer {{token}}
+x-account-id: {{account}}
+
+###
+
+# The status of one scan. Paste a scanId from the calls above.
+GET {{baseUrl}}/scans/<scanId>
+Authorization: Bearer {{token}}
+x-account-id: {{account}}
+
+###
+
+# A saved file: REPORT.md, findings.json, FINDINGS-DETAIL.md, NEEDS-VALIDATION.md, coverage-ledger.json, run-metadata.json, status.json
+GET {{baseUrl}}/scans/<scanId>/files/REPORT.md
+Authorization: Bearer {{token}}
+x-account-id: {{account}}

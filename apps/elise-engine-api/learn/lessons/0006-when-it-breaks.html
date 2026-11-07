@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>6. When it breaks</title>
+<link rel="stylesheet" href="../assets/lesson.css">
+</head>
+<body>
+<main>
+<nav class="crumbs"><a href="../index.html">All lessons</a><span>Lesson 6 of 7</span></nav>
+<h1>When it breaks</h1>
+<p class="meta">About 8 minutes. Before this: <a href="0005-cost-controls.html">lesson 5</a>.</p>
+
+<div class="win"><strong>Your win:</strong> after this lesson, you can find which stage of a scan failed by using the logs and the container list.</div>
+
+<h2>Why this lesson exists</h2>
+<p>Our first scans hung. They gave no error. We lost time because we could not see inside the container. The story below is real. Learn the method, not only the fix.</p>
+
+<h2>The story</h2>
+<table>
+<tr><th>#</th><th>What we did</th><th>Result</th><th>What we learned</th></tr>
+<tr><td>1</td><td>Waited for the agent output directly.</td><td>Hung, no response.</td><td>We guessed that helper processes kept the output stream open. We did not prove it.</td></tr>
+<tr><td>2</td><td>Switched to a detached run with file polling.</td><td>Still hung.</td><td>We kept it, because the official example uses it. But it did not fix the hang.</td></tr>
+<tr><td>3</td><td>Added a debug route that returns at once.</td><td>The container was gone: "exec() cannot be called on a container that is not running".</td><td>The container itself was failing. The size was the likely cause.</td></tr>
+<tr><td>4</td><td>Set <code>standard-1</code>.</td><td>The agent ran and returned: "Credit balance is too low".</td><td>A real, readable error. The hang was gone.</td></tr>
+<tr><td>5</td><td>Added Anthropic credit.</td><td>The scan finished and saved the report.</td><td>The whole pipeline works.</td></tr>
+</table>
+
+<h2>The method</h2>
+<p>Follow the stages of a scan. Find the last stage that worked.</p>
+
+<figure class="diagram">
+<svg viewBox="0 0 760 460" role="img" aria-label="Debugging flowchart">
+  <defs><marker id="a6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
+  <g style="color:var(--fg)">
+    <rect class="accent" x="20" y="10" width="250" height="44" rx="8"/>
+    <text x="145" y="37" text-anchor="middle" class="b">A scan hangs or fails</text>
+
+    <rect class="box" x="20" y="90" width="250" height="56" rx="8"/>
+    <text x="145" y="114" text-anchor="middle" class="b">Is there error text?</text>
+    <text x="145" y="132" text-anchor="middle" class="sm">in the response, or the log tail</text>
+    <rect class="good" x="400" y="90" width="340" height="56" rx="8"/>
+    <text x="570" y="114" text-anchor="middle" class="b">Yes: fix what it says</text>
+    <text x="570" y="132" text-anchor="middle" class="sm">example: "Credit balance is too low"</text>
+
+    <rect class="box" x="20" y="180" width="250" height="56" rx="8"/>
+    <text x="145" y="204" text-anchor="middle" class="b">Run wrangler tail</text>
+    <text x="145" y="222" text-anchor="middle" class="sm">Do you see git clone requests?</text>
+    <rect class="bad" x="400" y="180" width="340" height="56" rx="8"/>
+    <text x="570" y="204" text-anchor="middle" class="b">No: the problem is before the clone</text>
+    <text x="570" y="222" text-anchor="middle" class="sm">check token, repo URL, container start</text>
+
+    <rect class="box" x="20" y="270" width="250" height="56" rx="8"/>
+    <text x="145" y="294" text-anchor="middle" class="b">Do you see Anthropic requests?</text>
+    <text x="145" y="312" text-anchor="middle" class="sm">in the same wrangler tail</text>
+    <rect class="bad" x="400" y="270" width="340" height="56" rx="8"/>
+    <text x="570" y="294" text-anchor="middle" class="b">No: the agent did not start well</text>
+    <text x="570" y="312" text-anchor="middle" class="sm">check image, skill folders, API key</text>
+
+    <rect class="box" x="20" y="360" width="250" height="70" rx="8"/>
+    <text x="145" y="384" text-anchor="middle" class="b">Requests stop, no result?</text>
+    <text x="145" y="402" text-anchor="middle" class="sm">wrangler containers instances &lt;ID&gt;</text>
+    <text x="145" y="418" text-anchor="middle" class="sm">is the instance still active?</text>
+    <rect class="bad" x="400" y="360" width="340" height="70" rx="8"/>
+    <text x="570" y="384" text-anchor="middle" class="b">Suspect the size or a stuck process</text>
+    <text x="570" y="402" text-anchor="middle" class="sm">test a tiny prompt, check the instance type</text>
+    <text x="570" y="418" text-anchor="middle" class="sm">change ONE thing, then test again</text>
+
+    <path class="line" d="M145 54V88" marker-end="url(#a6)"/>
+    <path class="line" d="M270 118H398" marker-end="url(#a6)"/>
+    <path class="line" d="M145 146V178" marker-end="url(#a6)"/>
+    <text x="152" y="166" class="sm">no</text>
+    <path class="line" d="M270 208H398" marker-end="url(#a6)"/>
+    <path class="line" d="M145 236V268" marker-end="url(#a6)"/>
+    <text x="152" y="256" class="sm">yes</text>
+    <path class="line" d="M270 298H398" marker-end="url(#a6)"/>
+    <path class="line" d="M145 326V358" marker-end="url(#a6)"/>
+    <text x="152" y="346" class="sm">yes</text>
+    <path class="line" d="M270 395H398" marker-end="url(#a6)"/>
+  </g>
+</svg>
+<figcaption>Figure 7. Follow the arrows down the left side. Each stage that worked moves you one step further.</figcaption>
+</figure>
+
+<h2>The tools</h2>
+<pre># live logs of the Worker (only shows new requests)
+pnpm exec wrangler tail
+
+# list container apps, then the instances of one app
+pnpm exec wrangler containers list
+pnpm exec wrangler containers instances &lt;ID&gt;
+
+# are reports saved?
+pnpm exec wrangler r2 bucket info repo-scan-reports</pre>
+<p>Run them in <code>apps/elise-engine-api</code>. <code>wrangler tail</code> shows a request only after it ends. A long request can look silent. Wait for the request to end or cancel before you decide there is nothing.</p>
+
+<h2>Rules we learned</h2>
+<ol>
+<li><strong>Make failures visible.</strong> A failed scan returns the last 2 KB of the agent log.</li>
+<li><strong>Change one thing at a time.</strong> We changed the run pattern first. The size was the real cause. Two changes at once would have hidden that.</li>
+<li><strong>Build a tiny test.</strong> A 60-second test with one word as the prompt told us more than a 10-minute scan.</li>
+<li><strong>Read the limits table.</strong> It showed that the default size has 256 MiB of memory.</li>
+</ol>
+
+<h2>Check your memory</h2>
+<div class="quiz">
+  <div class="q" data-answer="2"><p>Which command shows live Worker logs?</p>
+    <button>wrangler deploy</button>
+    <button>wrangler login</button>
+    <button>wrangler tail</button>
+    <button>wrangler whoami</button>
+    <p class="why" hidden><code>wrangler tail</code> streams logs. Remember it shows a request only after the request ends.</p></div>
+  <div class="q" data-answer="0"><p>You see clone requests but no Anthropic requests. Where is the problem?</p>
+    <button>After the clone, in the agent</button>
+    <button>Before the clone, at the start</button>
+    <button>In the R2 bucket upload step</button>
+    <button>In the bearer token check step</button>
+    <p class="why" hidden>The clone worked, so the token, the start, and the repo URL are fine. The agent did not reach the model.</p></div>
+  <div class="q" data-answer="1"><p>We changed two things before the fix worked. What is the lesson?</p>
+    <button>Always pick the very largest size</button>
+    <button>Change one thing at a time</button>
+    <button>Never poll for any exit codes</button>
+    <button>Do not use the Haiku model</button>
+    <p class="why" hidden>Single changes show which change has an effect. The size was the fix, and the run pattern was not.</p></div>
+  <p class="score"></p>
+</div>
+
+<details class="waitwhat"><summary>Wait, what? Re-pitch this lesson</summary>
+<p><strong>Context.</strong> Our first scans hung with no error.</p>
+<p><strong>Short version.</strong> Find the last stage that worked: request, clone, model call, result. Use <code>wrangler tail</code> and the container list. Make the failure show its own error text. Change one thing at a time.</p>
+<p><strong>Remember.</strong> A silent hang is a lack of information. Add information first.</p>
+</details>
+
+<footer class="lesson-foot">
+<p><strong>Primary source:</strong> <a href="https://developers.cloudflare.com/containers/platform-details/limits/">Cloudflare Containers: limits</a> (the table that showed the memory of each type). For Claude Code exit codes, see <a href="https://code.claude.com/docs/en/headless">the print mode guide</a>: a failed run exits non-zero.</p>
+<p><strong>Ask me.</strong> Ask your teacher (the agent) to practice: give it a broken log and ask where you should look first.</p>
+<p><a href="0005-cost-controls.html">&larr; Lesson 5</a> &middot; <a href="0007-reading-a-report.html">Next: Lesson 7, reading a report &rarr;</a></p>
+</footer>
+</main>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

@@ -19,11 +19,11 @@ If any of these files don't exist, **proceed silently**. Don't flag their absenc
 ├── GLOSSARY-MAP.md
 ├── docs/adr/
 ├── apps/
-│   └── amelie-engine-api/
+│   └── elise-engine-api/
 │       ├── GLOSSARY.md
 │       └── docs/adr/
 └── packages/
-    ├── db-amelie/
+    ├── db-elise/
     ├── contracts/
     ├── chat-bot/
     └── chat-bot-durable-stream/

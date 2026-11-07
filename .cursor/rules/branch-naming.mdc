@@ -12,6 +12,6 @@ Pattern: `<project>/<type>/<kebab-description>`
 - `project` is an `apps/` or `packages/` folder name, or `root` for repo-wide work
 - `type` is one of: feat, fix, chore, docs, refactor, test, ci, hotfix, research, prototype
 
-Examples: `amelie-engine-api/feat/team-bindings`, `skills-config/chore/sort-init`, `root/docs/branch-names`
+Examples: `elise-engine-api/feat/scan-retry`, `skills-config/chore/sort-init`, `root/docs/branch-names`
 
 `main` is only for integrating already-reviewed work. Leave the pre-commit hook enabled so the lint runs.

@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>5. Cost controls</title>
+<link rel="stylesheet" href="../assets/lesson.css">
+</head>
+<body>
+<main>
+<nav class="crumbs"><a href="../index.html">All lessons</a><span>Lesson 5 of 7</span></nav>
+<h1>Cost controls</h1>
+<p class="meta">About 7 minutes. Before this: <a href="0004-safety-keys-and-allowlist.html">lesson 4</a>.</p>
+
+<div class="win"><strong>Your win:</strong> after this lesson, you can set the cost limits for a scan, and say what each limit does and does not do.</div>
+
+<h2>Where the money goes</h2>
+<p>Each scan costs money in two places:</p>
+<ul>
+<li><strong>Anthropic:</strong> you pay for the tokens the agent reads and writes. This is the large cost.</li>
+<li><strong>Cloudflare:</strong> you pay for the container while it runs. The scan is short, so this is the small cost.</li>
+</ul>
+<p>We have <strong>not measured</strong> the dollar cost of a scan. Read the usage page in the Anthropic Console after each test. A repo with one file costs far less than a real project, so do not use that number to plan.</p>
+
+<h2>The layers</h2>
+<p>We use several limits. Each limit is a layer. A scan must pass through all of them.</p>
+
+<figure class="diagram">
+<svg viewBox="0 0 740 360" role="img" aria-label="Cost control layers">
+  <g style="color:var(--fg)">
+    <rect class="zone" x="10" y="10" width="720" height="340" rx="14"/>
+    <text x="26" y="34" class="b">Layer 1. Anthropic Console: monthly spend limit</text>
+    <text x="26" y="52" class="sm">You set it. The last backstop. Status: not set yet.</text>
+
+    <rect class="box" x="40" y="70" width="660" height="268" rx="12"/>
+    <text x="56" y="94" class="b">Layer 2. MAX_BUDGET_USD = "2" (wrangler.jsonc)</text>
+    <text x="56" y="112" class="sm">The highest dollar cap that any request may ask for.</text>
+
+    <rect class="accent" x="70" y="130" width="600" height="196" rx="12"/>
+    <text x="86" y="154" class="b">Layer 3. max_budget_usd in the request (at most the ceiling)</text>
+    <text x="86" y="172" class="sm">Passed to Claude Code as --max-budget-usd. A hard stop.</text>
+
+    <rect class="good" x="100" y="190" width="540" height="124" rx="12"/>
+    <text x="116" y="214" class="b">Layer 4. Choices that lower the cost before the cap</text>
+    <text x="116" y="238">skill: lite (default) uses one agent; full uses many</text>
+    <text x="116" y="258">effort: low or medium use fewer tokens than high</text>
+    <text x="116" y="278">model: haiku costs less than sonnet; sonnet less than opus</text>
+    <text x="116" y="298">profile and budget (full skill only): fewer agent runs</text>
+  </g>
+</svg>
+<figcaption>Figure 6. Four layers. Only layer 1 and layer 3 are hard stops on dollars. Layer 4 lowers the usual cost, but does not guarantee a maximum.</figcaption>
+</figure>
+
+<h2>The levers</h2>
+<table>
+<tr><th>Lever</th><th>Where you set it</th><th>What it does</th></tr>
+<tr><td><code>max_budget_usd</code></td><td>Request body</td><td>Hard dollar cap for one scan. A value above the ceiling gets a 400 error.</td></tr>
+<tr><td><code>MAX_BUDGET_USD</code></td><td><code>wrangler.jsonc</code></td><td>The ceiling. Change it and deploy to raise it.</td></tr>
+<tr><td><code>skill</code></td><td>Request body</td><td><code>lite</code> (default) or <code>full</code>.</td></tr>
+<tr><td><code>effort</code></td><td>Request body</td><td><code>low</code> to <code>max</code>. Higher effort uses more tokens.</td></tr>
+<tr><td><code>model</code></td><td>Request body</td><td><code>claude-haiku-5-5</code>, <code>claude-sonnet-5-5</code>, or <code>claude-opus-5-5</code>.</td></tr>
+<tr><td><code>profile</code>, <code>budget</code></td><td>Request body</td><td>Full skill only. Fewer waves and a cap on agent runs.</td></tr>
+</table>
+
+<h2>What the cap does not do</h2>
+<ul>
+<li>When the cap stops a scan early, the report may not exist. The Worker then returns an error and saves nothing. We do not keep partial files yet.</li>
+<li>The cap only covers the Claude Code process. It does not cover the Cloudflare container time.</li>
+<li>Claude Code can show its own cost estimate with <code>--output-format json</code> (<code>total_cost_usd</code>). The docs say it is a client-side estimate and can differ from your bill. We do not record it yet. That is a good first improvement.</li>
+</ul>
+
+<h2>Check your memory</h2>
+<div class="quiz">
+  <div class="q" data-answer="0"><p>Which setting is a hard stop on dollars for one scan?</p>
+    <button>The max budget cap</button>
+    <button>The effort level setting</button>
+    <button>The model name choice</button>
+    <button>The skill name option</button>
+    <p class="why" hidden>The cap becomes <code>--max-budget-usd</code>. The other settings lower the usual cost but set no maximum.</p></div>
+  <div class="q" data-answer="3"><p>A request asks for max_budget_usd 5, and the ceiling is 2. What happens?</p>
+    <button>The scan runs with a 5 cap</button>
+    <button>The scan runs with a 2 cap</button>
+    <button>The Worker asks Anthropic for approval first</button>
+    <button>The Worker returns a 400 error response</button>
+    <p class="why" hidden>The Worker checks that the value is more than 0 and at most the ceiling. A higher value is rejected.</p></div>
+  <div class="q" data-answer="1"><p>Which limit do you set in the Anthropic Console?</p>
+    <button>A per-scan agent count</button>
+    <button>A monthly spend limit</button>
+    <button>A per-request effort level</button>
+    <button>A container memory size</button>
+    <p class="why" hidden>It is the last backstop if a bug ignores every limit in our code.</p></div>
+  <p class="score"></p>
+</div>
+
+<details class="waitwhat"><summary>Wait, what? Re-pitch this lesson</summary>
+<p><strong>Context.</strong> The agent uses paid model calls. A stuck or large scan could cost a lot.</p>
+<p><strong>Short version.</strong> We stack limits. The Anthropic monthly limit is the outer layer. The Worker ceiling is next. Each request can set a lower cap. Choices such as effort and model lower the usual cost.</p>
+<p><strong>Remember.</strong> Hard stops: the monthly limit and the cap. Everything else only helps.</p>
+</details>
+
+<footer class="lesson-foot">
+<p><strong>Primary source:</strong> <a href="https://code.claude.com/docs/en/headless">Run Claude Code programmatically</a>. It documents print mode, the cost fields in JSON output, and how the budget cap stops background work.</p>
+<p><strong>Ask me.</strong> Ask your teacher (the agent) how to record the cost of each scan in <code>status.json</code>.</p>
+<p><a href="0004-safety-keys-and-allowlist.html">&larr; Lesson 4</a> &middot; <a href="0006-when-it-breaks.html">Next: Lesson 6, when it breaks &rarr;</a></p>
+</footer>
+</main>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

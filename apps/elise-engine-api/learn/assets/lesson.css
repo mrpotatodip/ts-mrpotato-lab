@@ -1,0 +1,63 @@
+:root {
+  --bg: #fffdf8; --fg: #1f1d1a; --muted: #6b665d; --line: #c9c2b4;
+  --box: #f4efe3; --accent: #1a5fb4; --accent-bg: #e3edf9;
+  --good: #1b7a3d; --good-bg: #e2f3e8; --bad: #b3261e; --bad-bg: #fbe7e5;
+  --warn-bg: #fff3d6; --code-bg: #f1ece0;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #17160f; --fg: #ece8dc; --muted: #a39d8e; --line: #4a463b;
+    --box: #232117; --accent: #7db0f0; --accent-bg: #1b2a3f;
+    --good: #6fcf8f; --good-bg: #17301f; --bad: #f08a82; --bad-bg: #3a1c19;
+    --warn-bg: #3a3012; --code-bg: #26231a;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 18px/1.6 Georgia, "Iowan Old Style", serif; }
+main { max-width: 46rem; margin: 0 auto; padding: 2rem 16px 4rem; }
+h1 { font-size: 2rem; line-height: 1.2; margin: .2rem 0 .4rem; }
+h2 { font-size: 1.3rem; margin: 2.2rem 0 .5rem; border-top: 1px solid var(--line); padding-top: 1rem; }
+h3 { font-size: 1.05rem; margin: 1.4rem 0 .3rem; }
+a { color: var(--accent); }
+code, pre { font: 0.85em/1.5 ui-monospace, Menlo, Consolas, monospace; background: var(--code-bg); border-radius: 4px; }
+code { padding: .1em .35em; }
+pre { padding: .8rem 1rem; overflow-x: auto; }
+nav.crumbs { font: 14px/1.4 system-ui, sans-serif; color: var(--muted); display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.meta { font: 14px/1.4 system-ui, sans-serif; color: var(--muted); }
+.win { background: var(--accent-bg); border-left: 4px solid var(--accent); padding: .6rem 1rem; margin: 1rem 0; border-radius: 0 6px 6px 0; }
+.callout { background: var(--warn-bg); padding: .6rem 1rem; border-radius: 6px; margin: 1rem 0; }
+.diagram { margin: 1.2rem 0; }
+.diagram svg { width: 100%; height: auto; display: block; font: 13px system-ui, sans-serif; }
+.diagram figcaption { font: 14px/1.4 system-ui, sans-serif; color: var(--muted); margin-top: .3rem; }
+.diagram .box { fill: var(--box); stroke: var(--line); stroke-width: 1.5; }
+.diagram .accent { fill: var(--accent-bg); stroke: var(--accent); stroke-width: 1.5; }
+.diagram .good { fill: var(--good-bg); stroke: var(--good); stroke-width: 1.5; }
+.diagram .bad { fill: var(--bad-bg); stroke: var(--bad); stroke-width: 1.5; }
+.diagram .zone { fill: none; stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 6 4; }
+.diagram .line { stroke: var(--fg); stroke-width: 1.5; fill: none; }
+.diagram .dash { stroke: var(--muted); stroke-width: 1.2; stroke-dasharray: 5 4; fill: none; }
+.diagram .life { stroke: var(--line); stroke-width: 1.2; stroke-dasharray: 3 4; }
+.diagram text { fill: var(--fg); }
+.diagram .sm { font-size: 11.5px; fill: var(--muted); }
+.diagram .b { font-weight: 700; }
+.diagram .num { fill: var(--accent); font-weight: 700; }
+.diagram .bar { fill: var(--accent); }
+.diagram .bar.hot { fill: var(--bad); }
+.diagram .bar.ok { fill: var(--good); }
+table { border-collapse: collapse; width: 100%; font: 15px/1.4 system-ui, sans-serif; margin: 1rem 0; }
+th, td { border-bottom: 1px solid var(--line); padding: .45rem .5rem; text-align: left; vertical-align: top; }
+th { color: var(--muted); font-weight: 600; }
+.quiz { margin: 1.5rem 0; font: 16px/1.5 system-ui, sans-serif; }
+.q { border: 1px solid var(--line); border-radius: 8px; padding: .8rem 1rem; margin: .8rem 0; }
+.q p { margin: 0 0 .5rem; font-weight: 600; }
+.q button { display: block; width: 100%; text-align: left; margin: .3rem 0; padding: .5rem .7rem; font: inherit; color: inherit; background: var(--box); border: 1px solid var(--line); border-radius: 6px; cursor: pointer; }
+.q button:hover { border-color: var(--accent); }
+.q.answered button { cursor: default; }
+.q button.correct { background: var(--good-bg); border-color: var(--good); }
+.q button.wrong { background: var(--bad-bg); border-color: var(--bad); }
+.why { margin: .5rem 0 0; font-size: 15px; color: var(--muted); }
+.score { font-weight: 600; }
+details.waitwhat { background: var(--box); border: 1px solid var(--line); border-radius: 8px; padding: .5rem 1rem; margin: 1.5rem 0; font: 16px/1.5 system-ui, sans-serif; }
+details.waitwhat summary { cursor: pointer; font-weight: 600; }
+footer.lesson-foot { margin-top: 2.5rem; border-top: 1px solid var(--line); padding-top: 1rem; font: 15px/1.5 system-ui, sans-serif; }
+@media (max-width: 480px) { body { font-size: 17px; } }
