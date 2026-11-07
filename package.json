@@ -1,5 +1,6 @@
 {
   "name": "ts-elise-lab",
+  "packageManager": "pnpm@10.13.1",
   "private": true,
   "scripts": {
     "dev": "pnpm --recursive --parallel dev",
