@@ -4,7 +4,8 @@ import { HTTPException } from "hono/http-exception";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 import { openAPIRouteHandler } from "hono-openapi";
 import { realAuthDeps } from "#/lib/auth-deps";
-import { AppError } from "#/lib/errors";
+import { AppError, TooManyRequestsError } from "#/lib/errors";
+import { rateLimitByIp } from "#/lib/rate-limit";
 import { openApiDocument, requireOpenApiEnabled, validationErrorResponse } from "#/lib/openapi-document";
 import { errorChainForLog } from "#/lib/redact-log";
 import { requireScanAccess } from "#/lib/require-scan-access";
@@ -32,6 +33,10 @@ export const buildApp = (authDeps: AuthDeps = realAuthDeps) => {
   // not here: they answer only in development.
   // -----
   app.use("/scans/*", requireScanAccess);
+  app.use(
+    "/auth/sign-in/*",
+    rateLimitByIp("SIGN_IN_LIMITER", () => new TooManyRequestsError("Too many sign-in attempts. Wait a minute and try again.", "SIGN_IN_RATE_LIMITED")),
+  );
 
   app.onError((err, c) => {
     if (err instanceof HTTPException) {

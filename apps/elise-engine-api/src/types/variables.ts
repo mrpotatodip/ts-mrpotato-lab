@@ -14,6 +14,8 @@ export type Bindings = {
   AUTH_SECRET: string;
   AUTH_BASE_URL: string;
   AUTH_TRUSTED_ORIGINS: string;
+  SIGN_UP_LIMITER?: RateLimit;
+  SIGN_IN_LIMITER?: RateLimit;
   REPORTS: R2Bucket;
   SANDBOX: DurableObjectNamespace<ScanSandbox>;
   SCAN_WORKFLOW: Workflow<ScanParams>;

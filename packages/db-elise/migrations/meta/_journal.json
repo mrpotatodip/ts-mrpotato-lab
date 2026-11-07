@@ -372,6 +372,20 @@
       "when": 1794076622834,
       "tag": "0052_party_master_types_guard",
       "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1794079338228,
+      "tag": "0053_retire_cafe_powers",
+      "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1794079465724,
+      "tag": "0054_retire_store_powers",
+      "breakpoints": true
     }
   ]
 }

@@ -251,3 +251,33 @@ describe("signed-in session", () => {
     expect(res.status).toBe(401);
   });
 });
+
+const limiter = (success: boolean) => ({ limit: async () => ({ success }) });
+
+describe("rate limits", () => {
+  const signUpBody = JSON.stringify({ inviteCode: "x" });
+
+  it("answers a limited sign-up like a wrong invite code", async () => {
+    const { env } = fakeBindings({ SIGN_UP_LIMITER: limiter(false) });
+    const res = await call(env, "/sign-up", { method: "POST", headers: { "content-type": "application/json" }, body: signUpBody });
+
+    expect(res.status).toBe(403);
+    expect(await res.json()).toMatchObject({ data: null, error: { code: "FORBIDDEN", message: "Invalid invite code" } });
+  });
+
+  it("answers 429 to a limited sign-in", async () => {
+    const { env } = fakeBindings({ SIGN_IN_LIMITER: limiter(false) });
+    const res = await call(env, "/auth/sign-in/email", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" });
+
+    expect(res.status).toBe(429);
+    expect(await res.json()).toMatchObject({ error: { code: "SIGN_IN_RATE_LIMITED" } });
+  });
+
+  it("lets a request through while the limit holds", async () => {
+    const { env } = fakeBindings({ SIGN_UP_LIMITER: limiter(true) });
+    const res = await call(env, "/sign-up", { method: "POST", headers: { "content-type": "application/json" }, body: signUpBody });
+
+    expect(res.status).toBe(400);
+  });
+});
+

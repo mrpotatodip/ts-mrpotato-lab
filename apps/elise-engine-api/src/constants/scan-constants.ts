@@ -1,10 +1,7 @@
 // -----
 // Scan options
 // -----
-export const SCAN_MODELS = ["claude-sonnet-5-5", "claude-opus-5-5", "claude-haiku-5-5"] as const;
-export const SCAN_EFFORTS = ["low", "medium", "high", "xhigh", "max"] as const;
-export const SCAN_SKILLS = ["lite", "full"] as const;
-export const SCAN_PROFILES = ["quick", "standard", "deep"] as const;
+export { SCAN_EFFORTS, SCAN_MODELS, SCAN_PROFILES, SCAN_SKILLS } from "@repo/contracts/elise";
 export const SCAN_AGENT_BUDGET_MAX = 200;
 
 // -----
