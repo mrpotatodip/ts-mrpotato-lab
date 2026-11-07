@@ -1,2 +1,0 @@
-export const MCP_SERVER_NAME = "amelie";
-export const MCP_SERVER_VERSION = "1.0.0";

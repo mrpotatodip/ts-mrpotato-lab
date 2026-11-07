@@ -1,1 +1,0 @@
-export const ADMIN_AUDIT_ENTRY_LIMIT = 50;
