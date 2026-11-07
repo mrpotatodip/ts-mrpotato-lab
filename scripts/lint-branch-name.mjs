@@ -24,7 +24,7 @@ const fail = (message) => {
 Use: <project>/<type>/<kebab-description>
 Projects: ${scopes.join(", ")}
 Types: ${TYPES.join(", ")}
-Example: amelie-engine-api/feat/team-bindings`);
+Example: elise-engine-api/feat/scan-retry`);
   process.exit(1);
 };
 

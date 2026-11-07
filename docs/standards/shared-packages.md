@@ -53,7 +53,7 @@ packages/{package}/src/
 
 **1.3 `[House]` Server-only code has its own entry, and frontends never import it.** Feature barrels export only code that can run in a browser: parsers, pure helpers, and the types and schemas they use. Code that only runs on a server goes out through one `./server` entry (`src/server.ts`, a barrel of `export *` lines). That's code which calls an AI model, does HTTP to the backend, or reads bindings.
 
-- The point is that a frontend import can't reach server code, even by accident. Without the split, `import { parseChatBotJson } from "@repo/chat-bot/chat"` also brings `runChatBot` into reach, and only tree-shaking keeps it out of the bundle.
+- The point is that a frontend import can't reach server code, even by accident. Without the split, `import { parseThing } from "@repo/{package}"` also brings the server runner into reach, and only tree-shaking keeps it out of the bundle.
 - A frontend file that imports `@repo/{package}/server` is a bug.
 
 ```ts

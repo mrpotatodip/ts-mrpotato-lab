@@ -16,7 +16,8 @@
   },
   "scripts": {
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "check": "tsc --noEmit && vitest run"
   },
   "dependencies": {
     "@repo/chat-bot-durable-stream": "workspace:*"

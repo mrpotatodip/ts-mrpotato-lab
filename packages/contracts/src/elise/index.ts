@@ -11,3 +11,4 @@ export * from "./me";
 export * from "./invite-code";
 export * from "./team";
 export * from "./admin";
+export * from "./scan";

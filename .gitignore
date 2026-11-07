@@ -36,3 +36,4 @@ dist-ssr/
 # Local Claude agent checkouts and machine-specific permissions
 .claude/worktrees/
 .claude/settings.local.json
+.dev.log
