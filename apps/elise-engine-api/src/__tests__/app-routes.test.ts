@@ -1,7 +1,20 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { z } from "zod";
-import app from "#/index";
-import { fakeBindings, TEST_TOKEN } from "./fake-bindings";
+import { buildApp } from "#/index";
+import { fakeBindings, TEST_TOKEN, testExecutionContext } from "./fake-bindings";
+
+let signedInUser: string | undefined;
+let userHoldsRole = false;
+
+const app = buildApp({
+  sessionUserId: async () => signedInUser,
+  userHasAccount: async () => userHoldsRole,
+}).app;
+
+beforeEach(() => {
+  signedInUser = undefined;
+  userHoldsRole = false;
+});
 
 const REPO = "https://github.com/octocat/Hello-World";
 const ACCOUNT = "0b8c1d2e-3f4a-4b5c-8d6e-7f8091a2b3c4";
@@ -17,7 +30,7 @@ const ListBodySchema = z.object({
 
 const queuedScanId = async (res: Response): Promise<string> => QueuedBodySchema.parse(await res.json()).data.scanId;
 
-const call = (env: never, path: string, init: RequestInit = {}) => app.fetch(new Request(`http://localhost${path}`, init), env);
+const call = (env: never, path: string, init: RequestInit = {}) => app.fetch(new Request(`http://localhost${path}`, init), env, testExecutionContext);
 const post = (env: never, body: ScanRequestBody, headers: Record<string, string> = auth) =>
   call(env, "/scans", { method: "POST", headers: { ...headers, "content-type": "application/json" }, body: JSON.stringify(body) });
 
@@ -200,5 +213,41 @@ describe("GET /scans/:scanId/files/:file", () => {
     const res = await call(env, "/scans/abc/files/REPORT.md", { headers: { ...auth, "x-account-id": OTHER } });
 
     expect(res.status).toBe(404);
+  });
+});
+
+describe("signed-in session", () => {
+  it("lets a login use an account where it holds a role", async () => {
+    const { env } = fakeBindings();
+    signedInUser = "user-1";
+    userHoldsRole = true;
+    const res = await call(env, "/scans", { headers: { authorization: "Bearer session-token", "x-account-id": ACCOUNT } });
+
+    expect(res.status).toBe(200);
+  });
+
+  it("refuses a login that holds no role in the account", async () => {
+    const { env } = fakeBindings();
+    signedInUser = "user-1";
+    const res = await call(env, "/scans", { headers: { authorization: "Bearer session-token", "x-account-id": ACCOUNT } });
+
+    expect(res.status).toBe(403);
+    expect(await res.json()).toMatchObject({ data: null, error: { code: "FORBIDDEN" } });
+  });
+
+  it("answers 400 when a signed-in login names no account", async () => {
+    const { env } = fakeBindings();
+    signedInUser = "user-1";
+    userHoldsRole = true;
+    const res = await call(env, "/scans", { headers: { authorization: "Bearer session-token" } });
+
+    expect(res.status).toBe(400);
+  });
+
+  it("answers 401 on /me without a session", async () => {
+    const { env } = fakeBindings();
+    const res = await call(env, "/me");
+
+    expect(res.status).toBe(401);
   });
 });

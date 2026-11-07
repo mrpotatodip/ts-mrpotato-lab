@@ -6,7 +6,6 @@ import {
   SIGN_UP_PASSWORD_MAX,
   SIGN_UP_PASSWORD_MIN,
   SIGN_UP_PERSON_NAME_MAX,
-  SIGN_UP_WEBSITE_MAX,
 } from "../constants";
 import { TenantSchema } from "../tenant";
 
@@ -34,7 +33,6 @@ export const SignUpBodySchema = z.object({
   password: z.string().min(SIGN_UP_PASSWORD_MIN).max(SIGN_UP_PASSWORD_MAX),
   accountName: z.string().trim().min(1).max(SIGN_UP_ACCOUNT_NAME_MAX),
   timezone: z.string().refine(isTimezone, "Must be an IANA timezone, e.g. Europe/Rome"),
-  website: z.url({ protocol: /^https?$/ }).max(SIGN_UP_WEBSITE_MAX).optional(),
 });
 
 // -----

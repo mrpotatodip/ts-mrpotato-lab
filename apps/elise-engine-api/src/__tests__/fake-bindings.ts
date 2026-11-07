@@ -3,6 +3,8 @@ import type { Bindings } from "#/types/variables";
 
 export const TEST_TOKEN = "test-token-test-token";
 
+export const testExecutionContext = { waitUntil: () => undefined, passThroughOnException: () => undefined };
+
 type Created = { id: string; params: ScanParams };
 type WorkflowStatus = { status: string; error?: { name: string; message: string } };
 
@@ -51,6 +53,10 @@ export function fakeBindings(overrides: Partial<Bindings> = {}, workflowStatus: 
     MAX_ACTIVE_SCANS: "3",
     ANTHROPIC_API_KEY: "test-key",
     SCAN_API_TOKEN: TEST_TOKEN,
+    DATABASE_URL: "postgresql://user:pass@127.0.0.1:1/none",
+    AUTH_SECRET: "test-auth-secret-test-auth-secret",
+    AUTH_BASE_URL: "http://localhost",
+    AUTH_TRUSTED_ORIGINS: "http://localhost",
     REPORTS: reports,
     SCAN_WORKFLOW: workflow,
     ...overrides,

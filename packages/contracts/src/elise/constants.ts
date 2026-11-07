@@ -9,7 +9,6 @@ export const SIGN_UP_ACCOUNT_NAME_MAX = 80;
 export const SIGN_UP_EMAIL_MAX = 254;
 export const SIGN_UP_PASSWORD_MIN = 8;
 export const SIGN_UP_PASSWORD_MAX = 128;
-export const SIGN_UP_WEBSITE_MAX = 2048;
 
 // -----
 // Invite codes: limits the admin form and the server share

@@ -1,10 +1,21 @@
 import { drizzle } from "drizzle-orm/neon-http";
-import { neon } from "@neondatabase/serverless";
+import { drizzle as drizzlePool } from "drizzle-orm/neon-serverless";
+import { neon, Pool } from "@neondatabase/serverless";
 import * as schema from "./schema";
 
 export function createDb(url: string) {
   const sql = neon(url);
   return drizzle(sql, { schema });
+}
+
+// -----
+// The HTTP client above cannot run a transaction.
+// This one speaks over a WebSocket pool and can;
+// call close() once the request is done.
+// -----
+export function createPoolDb(url: string) {
+  const pool = new Pool({ connectionString: url });
+  return { db: drizzlePool(pool, { schema }), close: () => pool.end() };
 }
 
 let _db: ReturnType<typeof createDb>;

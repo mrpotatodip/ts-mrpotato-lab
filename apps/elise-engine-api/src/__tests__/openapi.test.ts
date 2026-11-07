@@ -19,10 +19,12 @@ describe("GET /openapi.json", () => {
 
     expect(spec.openapi).toBe("3.1.0");
     expect(operations(spec).map(({ route }) => route).toSorted()).toEqual([
+      "GET /me",
       "GET /scans",
       "GET /scans/{scanId}",
       "GET /scans/{scanId}/files/{file}",
       "POST /scans",
+      "POST /sign-up",
     ]);
   });
 
@@ -32,8 +34,10 @@ describe("GET /openapi.json", () => {
     for (const { route, operation } of operations(spec)) {
       expect({ route, summary: Boolean(operation.summary) }).toEqual({ route, summary: true });
       expect({ route, description: operation.description?.includes("**Context.**") }).toEqual({ route, description: true });
-      expect({ route, tags: operation.tags }).toEqual({ route, tags: ["scans"] });
-      expect({ route, security: operation.security }).toEqual({ route, security: [{ bearerAuth: [] }] });
+      const tag = route.includes("/scans") ? "scans" : route.includes("/me") ? "me" : "sign-up";
+      expect({ route, tags: operation.tags }).toEqual({ route, tags: [tag] });
+      const security = tag === "sign-up" ? undefined : [{ bearerAuth: [] }];
+      expect({ route, security: operation.security }).toEqual({ route, security });
     }
   });
 
