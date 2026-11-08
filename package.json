@@ -9,6 +9,8 @@
     "prepare": "husky",
     "check": "pnpm --filter @repo/contracts --filter @repo/db-elise --filter elise-engine-api --filter elise-frontend-web check",
     "dev:stop": "node scripts/dev-stop.mjs",
+    "engine:probe": "node scripts/engine-probe.mjs",
+    "scan:run": "node scripts/scan-run.mjs",
     "check:apps": "node scripts/check-changed.mjs --all"
   },
   "devDependencies": {

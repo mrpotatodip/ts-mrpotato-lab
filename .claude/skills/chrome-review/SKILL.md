@@ -29,6 +29,8 @@ The pattern matches the MCP's own Chrome profile, so the user's regular Chrome s
 
 Reload a signed-out or isolated tab after any server restart: it keeps the 500 it saw while the server was down.
 
+Drive a Base UI select (`role=combobox`) with the keyboard: `click` the combobox by a uid from the latest snapshot, press `Home`, `End` or `ArrowDown`, then `Enter`. Option clicks time out and uids go stale after every open, so take a fresh `take_snapshot` before the next control. Confirm the choice by reading the trigger with `evaluate_script` (`document.querySelector('#id').innerText`) before submitting.
+
 ## 3. Review
 
 Keep output small. Judge a long list from a screenshot and Lighthouse, and take `take_snapshot` only on short pages. Save any screenshot or snapshot with `filePath` inside the repo, in the gitignored `.review/` directory: the tools refuse paths outside the workspace.

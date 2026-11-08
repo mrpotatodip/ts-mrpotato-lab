@@ -236,6 +236,8 @@ Put business logic in `utils/` so it can be tested without rendering (`nextProje
 
 **7.5 `[House]` Inline `style` only for what a class can't express.** For example, a runtime value such as a computed width or color. Everything else is a Tailwind class.
 
+**7.6 `[House]` Change a page's layout or flow, change its pattern in `DESIGN.md` in the same PR.** The "Patterns in use" bullet for that page says what a person sees and does there; a PR that moves a control, adds a route or changes a list's shape edits that bullet.
+
 ---
 
 ## 8. React: TypeScript, lint and tests
