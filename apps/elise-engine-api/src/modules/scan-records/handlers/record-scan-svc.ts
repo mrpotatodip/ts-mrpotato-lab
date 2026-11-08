@@ -4,7 +4,7 @@ import { dbConnect } from "#/lib/db-connection";
 import type { DbError, ExternalError, ParseError } from "#/lib/effect-query";
 import type { ScanParams, ScanState } from "#/schemas";
 import { SCAN_RECORDS_RECORDED_SKILL } from "#/modules/scan-records/constants";
-import { resolveScanBranchEffect } from "#/modules/branches";
+import { resolveScanBranchEffect, type ScanBranchOutcome } from "#/modules/branches";
 import { readHistoryEffect, scanRowOfEffect, writeScanRecordEffect } from "#/modules/scan-records/queries";
 import type { HistoryContext, RecordScanEnv } from "#/modules/scan-records/types";
 import { buildScanRecordSvc } from "./build-scan-record-svc";
@@ -38,10 +38,10 @@ export const recordScanSvc = (
       return;
     }
     const recorded = status === "succeeded" && params.options.skill === SCAN_RECORDS_RECORDED_SKILL;
-    const outcome = recorded ? yield* resolveScanBranchEffect(db, params.accountId, repoId, { name: branchName, ref }) : { id: null, reason: null };
+    const outcome: ScanBranchOutcome = recorded ? yield* resolveScanBranchEffect(db, params.accountId, repoId, { name: branchName, ref }) : { id: null, reason: null };
     const context = outcome.id
       ? { ...(yield* readHistoryEffect(db, params.accountId, repoId, outcome.id)), given: yield* readGivenSvc(env.REPORTS, params) }
       : NO_HISTORY;
-    const record = yield* buildScanRecordSvc(env.REPORTS, params, repoId, { ...outcome, name: branchName }, status, error, usage, context);
+    const record = yield* buildScanRecordSvc(env.REPORTS, params, repoId, { ...outcome, name: outcome.name ?? branchName }, status, error, usage, context);
     yield* writeScanRecordEffect(db, record);
   });

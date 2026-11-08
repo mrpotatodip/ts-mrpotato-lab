@@ -1,10 +1,11 @@
-import { and, asc, count, eq } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, isNotNull } from "drizzle-orm";
 import { Effect } from "effect";
 import { REPO_BRANCH_LIMIT } from "@repo/contracts/elise";
-import { scanRepoBranches, scanRepos } from "@repo/db-elise/schema";
+import { scanRepoBranches, scanRepos, scans } from "@repo/db-elise/schema";
 import type { DbConnectType, PoolDbType } from "#/lib/db-connection";
 import { Conflict, NotFound, toDbError, type DbError } from "#/lib/effect-query";
 import { PG_UNIQUE_VIOLATION, pgErrorCode } from "#/lib/pg-error";
+import { isCommitId } from "#/modules/branches/utils";
 
 export const BRANCH_LIMIT_MESSAGE = `A repo can track at most ${REPO_BRANCH_LIMIT} branches`;
 
@@ -33,7 +34,31 @@ export const listBranchesEffect = (db: DbConnectType, tenantId: string, repoId: 
     catch: toDbError,
   });
 
-export type ScanBranchOutcome = { id: string | null; reason: string | null };
+// -----
+// The tracked branches of a repo whose latest commit is this one:
+// the commit of the newest succeeded lite scan of the branch, the
+// same commit the repo page shows as its latest.
+// -----
+export const findBranchesAtTipEffect = (db: DbConnectType, tenantId: string, repoId: string, commit: string): Effect.Effect<BranchRef[], DbError> =>
+  Effect.tryPromise({
+    try: async () => {
+      const tips = await db
+        .selectDistinctOn([scans.branchId], { branchId: scans.branchId, commitSha: scans.commitSha })
+        .from(scans)
+        .where(and(eq(scans.tenantId, tenantId), eq(scans.repoId, repoId), isNotNull(scans.branchId), eq(scans.status, "succeeded"), eq(scans.skill, "lite")))
+        .orderBy(scans.branchId, desc(scans.createdAt));
+      const ids = tips.flatMap((tip) => (tip.commitSha === commit && tip.branchId !== null ? [tip.branchId] : []));
+      if (ids.length === 0) return [];
+      return db
+        .select({ id: scanRepoBranches.id, name: scanRepoBranches.name })
+        .from(scanRepoBranches)
+        .where(and(eq(scanRepoBranches.tenantId, tenantId), eq(scanRepoBranches.repoId, repoId), inArray(scanRepoBranches.id, ids)))
+        .orderBy(asc(scanRepoBranches.name));
+    },
+    catch: toDbError,
+  });
+
+export type ScanBranchOutcome = { id: string | null; reason: string | null; name?: string };
 
 // -----
 // The branch a finished scan belongs to, or no branch and the
@@ -45,7 +70,7 @@ export type ScanBranchOutcome = { id: string | null; reason: string | null };
 // or a tag cannot use a slot. A scan with no ref also moves the
 // repo's default pointer to the name git reported.
 // -----
-export const resolveScanBranchEffect = (
+const resolveNamedScanBranchEffect = (
   db: DbConnectType,
   tenantId: string,
   repoId: string,
@@ -82,6 +107,28 @@ export const resolveScanBranchEffect = (
       return { id: raced?.id ?? null, reason: null };
     },
     catch: toDbError,
+  });
+
+// -----
+// A scan of a full commit id read no branch name, but when that
+// commit is the latest of exactly one tracked branch it read the
+// code that branch's History is about, so it is recorded there.
+// An older commit, or a commit that is the latest of two branches
+// (one History would have to be chosen), stays untracked, and the
+// reason says which.
+// -----
+export const resolveScanBranchEffect = (
+  db: DbConnectType,
+  tenantId: string,
+  repoId: string,
+  scan: { name: string | null; ref: string | null },
+): Effect.Effect<ScanBranchOutcome, DbError> =>
+  Effect.gen(function* () {
+    if (scan.name || !scan.ref || !isCommitId(scan.ref)) return yield* resolveNamedScanBranchEffect(db, tenantId, repoId, scan);
+    const atTip = yield* findBranchesAtTipEffect(db, tenantId, repoId, scan.ref.toLowerCase());
+    if (atTip.length === 1) return { id: atTip[0].id, name: atTip[0].name, reason: null };
+    if (atTip.length === 0) return { id: null, reason: "this commit is not the latest of a tracked branch, so this scan has no History" };
+    return { id: null, reason: `this commit is the latest of ${atTip.length} tracked branches (${atTip.map((branch) => branch.name).join(", ")}), so this scan has no History` };
   });
 
 type PoolTransaction = Parameters<Parameters<PoolDbType["transaction"]>[0]>[0];

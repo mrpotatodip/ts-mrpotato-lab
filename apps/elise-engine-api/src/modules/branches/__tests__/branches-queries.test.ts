@@ -1,9 +1,9 @@
 import { eq } from "drizzle-orm";
 import { Effect } from "effect";
 import { REPO_BRANCH_LIMIT, REPO_LIMIT_PER_TENANT } from "@repo/contracts/elise";
-import { scanRepoBranches, scanRepos } from "@repo/db-elise/schema";
+import { scanRepoBranches, scanRepos, scans } from "@repo/db-elise/schema";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { openTestDb, seedTenant, type TestDb } from "#/__tests__/test-db";
+import { openTestDb, scanValues, seedTenant, type TestDb } from "#/__tests__/test-db";
 import { addBranchesEffect, findBranchEffect, normalizeBranchName, resolveScanBranchEffect } from "#/modules/branches";
 import { addRepoEffect } from "#/modules/repos/queries";
 
@@ -66,6 +66,60 @@ describe("resolveScanBranchEffect", () => {
     expect(await resolveOutcome(repoId, null, null)).toEqual({ id: null, reason: "the clone was not on a branch, so this scan has no History" });
     expect(await resolveOutcome(repoId, null, "v1.0.0")).toEqual({ id: null, reason: '"v1.0.0" is a tag or a commit, not a branch, so this scan has no History' });
     expect(await namesOf(repoId)).toEqual([]);
+  });
+
+  describe("a scan of a commit id", () => {
+    const TIP = "a".repeat(40);
+    const OLD = "b".repeat(40);
+    let seeded = 0;
+    const seedTip = async (repoId: string, branch: string, commit: string, createdAt: string) => {
+      seeded += 1;
+      const branchId = await resolve(repoId, branch, null);
+      await test.raw.insert(scans).values(scanValues(tenantId, repoId, `tip-${seeded}`, createdAt, { branchId, branch, commitSha: commit }));
+      return branchId;
+    };
+
+    it("is recorded on the branch whose latest commit it is", async () => {
+      const repoId = await newRepo();
+      const branchId = await seedTip(repoId, "main", TIP, "2026-11-01T00:00:00Z");
+
+      expect(await resolveOutcome(repoId, null, TIP)).toEqual({ id: branchId, name: "main", reason: null });
+      expect(await resolveOutcome(repoId, null, TIP.toUpperCase())).toEqual({ id: branchId, name: "main", reason: null });
+      expect(await namesOf(repoId)).toEqual(["main"]);
+    });
+
+    it("stays untracked when the branch has moved past the commit", async () => {
+      const repoId = await newRepo();
+      await seedTip(repoId, "main", OLD, "2026-11-01T00:00:00Z");
+      await seedTip(repoId, "main", TIP, "2026-11-02T00:00:00Z");
+
+      expect(await resolveOutcome(repoId, null, OLD)).toEqual({ id: null, reason: "this commit is not the latest of a tracked branch, so this scan has no History" });
+    });
+
+    it("ignores a scan that failed, because it read nothing the History can use", async () => {
+      const repoId = await newRepo();
+      await seedTip(repoId, "main", OLD, "2026-11-01T00:00:00Z");
+      const branchId = await resolve(repoId, "main", null);
+      await test.raw.insert(scans).values(scanValues(tenantId, repoId, "failed-newer", "2026-11-02T00:00:00Z", { branchId, branch: "main", commitSha: TIP, status: "failed" }));
+
+      expect((await resolveOutcome(repoId, null, TIP)).id).toBeNull();
+      expect((await resolveOutcome(repoId, null, OLD)).id).toBe(branchId);
+    });
+
+    it("chooses no History when two branches are at that commit, and names them", async () => {
+      const repoId = await newRepo();
+      await seedTip(repoId, "main", TIP, "2026-11-01T00:00:00Z");
+      await seedTip(repoId, "release", TIP, "2026-11-01T01:00:00Z");
+
+      expect(await resolveOutcome(repoId, null, TIP)).toEqual({ id: null, reason: "this commit is the latest of 2 tracked branches (main, release), so this scan has no History" });
+    });
+
+    it("does not look at a repo of another account", async () => {
+      const repoId = await newRepo();
+      await seedTip(repoId, "main", TIP, "2026-11-01T00:00:00Z");
+
+      expect((await resolveOutcome(repoId, null, TIP, otherTenantId)).id).toBeNull();
+    });
   });
 
   it("makes the default branch tracked at its first scan, and points the repo at it", async () => {
