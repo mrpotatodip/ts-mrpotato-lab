@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useSuspenseQueries } from "@tanstack/react-query";
 import { Pencil, Users, X } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "#/components/ui/badge";
@@ -140,8 +140,7 @@ function GroupRow({ group, members }: { group: Group; members: readonly TeamMemb
 }
 
 export function TeamGroupsCard() {
-  const { data: groups } = useSuspenseQuery(groupsQuery());
-  const { data: team } = useSuspenseQuery(teamQuery());
+  const [{ data: groups }, { data: team }] = useSuspenseQueries({ queries: [groupsQuery(), teamQuery()] });
   const [name, setName] = useState("");
   const [nameError, setNameError] = useState<string | null>(null);
   const queryClient = useQueryClient();

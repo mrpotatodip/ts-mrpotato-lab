@@ -6,7 +6,7 @@ import { ScanList, scansQuery } from "#/modules/scan";
 
 export const Route = createFileRoute("/_app/scans/")({
   head: () => ({ meta: [{ title: "Scans · Elise" }] }),
-  loader: ({ context }) => context.queryClient.ensureQueryData(scansQuery()),
+  loader: ({ context }) => context.queryClient.query({ ...scansQuery(), staleTime: "static" }),
   component: ScansPage,
 });
 

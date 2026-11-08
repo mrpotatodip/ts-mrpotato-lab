@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useSuspenseQueries } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Badge } from "#/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
@@ -13,8 +13,7 @@ import { TeamInviteDialog } from "./team-invite-dialog";
 const DATE = new Intl.DateTimeFormat("en", { month: "short", day: "numeric", timeZone: "UTC" });
 
 export function TeamMembersCard({ email }: { email: string }) {
-  const { data } = useSuspenseQuery(teamQuery());
-  const { data: groups } = useSuspenseQuery(groupsQuery());
+  const [{ data }, { data: groups }] = useSuspenseQueries({ queries: [teamQuery(), groupsQuery()] });
   const queryClient = useQueryClient();
   const groupNames = (ids: readonly string[]) => ids.flatMap((id) => groups.find((g) => g.id === id)?.name ?? []);
 

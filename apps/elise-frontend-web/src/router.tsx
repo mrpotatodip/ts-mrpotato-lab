@@ -1,6 +1,7 @@
 import { createRouter as createTanStackRouter } from '@tanstack/react-router'
 import { setupRouterSsrQueryIntegration } from '@tanstack/react-router-ssr-query'
 import { routeTree } from './routeTree.gen'
+import { ShellRouteError, ShellRouteNotFound, ShellRoutePending } from '#/modules/shell'
 
 import { QueryClient } from '@tanstack/react-query'
 
@@ -21,7 +22,13 @@ export function getRouter() {
     },
     scrollRestoration: true,
     defaultPreload: 'intent',
+    defaultPreloadDelay: 30,
     defaultPreloadStaleTime: 0,
+    defaultPendingMs: 150,
+    defaultPendingMinMs: 250,
+    defaultPendingComponent: ShellRoutePending,
+    defaultErrorComponent: ShellRouteError,
+    defaultNotFoundComponent: ShellRouteNotFound,
   })
 
   // -----

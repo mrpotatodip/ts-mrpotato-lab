@@ -5,7 +5,7 @@ import { inviteQuery, TeamInviteAccept, TeamInviteInvalid } from "#/modules/team
 
 export const Route = createFileRoute("/invite/$token")({
   head: () => ({ meta: [{ title: "Join · Elise" }] }),
-  loader: ({ context, params }) => context.queryClient.ensureQueryData(inviteQuery(params.token)),
+  loader: ({ context, params }) => context.queryClient.query({ ...inviteQuery(params.token), staleTime: "static" }),
   errorComponent: TeamInviteInvalid,
   component: InvitePage,
 });

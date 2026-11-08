@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { ShellBrand } from "#/modules/shell";
@@ -7,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
 import { signIn, signUp } from "../api";
+import { authKeys } from "../hooks";
 import { SignInSchema, SignUpInputSchema } from "../schemas";
 
 const COPY = {
@@ -24,6 +26,7 @@ export function AuthForm({ mode }: { mode: "signin" | "signup" }) {
   const [pending, setPending] = useState(false);
   const router = useRouter();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const copy = COPY[mode];
 
   const submit = async (event: React.FormEvent) => {
@@ -47,6 +50,7 @@ export function AuthForm({ mode }: { mode: "signin" | "signup" }) {
     } finally {
       setPending(false);
     }
+    queryClient.removeQueries({ queryKey: authKeys.session() });
     await router.invalidate();
     await navigate({ to: "/overview" });
   };

@@ -12,7 +12,7 @@ import { Skeleton } from "#/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "#/components/ui/table";
 import { cn } from "#/lib/utils";
 import { FindingDecisionNote, FindingLocation, FindingStatusBadge, FindingStatusBanner, FindingTriageSelect, findingGroup } from "#/modules/finding";
-import { ScanFindingSheet, ScanNewDialog, ScanSeverityBadge, ScanSeverityDots, ScanStatusBadge, ScanTime, fromRecorded, scanCost, scanDuration, scanFailure, scanPlural, type ScanStatus } from "#/modules/scan";
+import { ScanFindingSheet, ScanNewDialog, ScanSeverityBadge, ScanSeverityDots, ScanStatusBadge, ScanTime, ScanVerdictCard, fromRecorded, scanCost, scanDuration, scanFailure, scanPlural, type ScanStatus } from "#/modules/scan";
 import { ShellStatTile } from "#/modules/shell";
 import { repoFindingsQuery, repoKeys, repoQuery } from "../hooks";
 import type { RepoFinding } from "../schemas";
@@ -350,6 +350,8 @@ export function RepoDetail({ repoId, branchId }: { repoId: string; branchId?: st
         />
       </section>
 
+      {current?.latestCommit && <ScanVerdictCard repoId={repoId} commit={current.latestCommit} scope="branch" />}
+
       {current ? (
         <Suspense key={current.name} fallback={<Skeleton className="h-56 w-full" />}>
           <RepoFindings repoId={repoId} branch={current.name} history={repo.history} />
@@ -393,6 +395,7 @@ export function RepoDetail({ repoId, branchId }: { repoId: string; branchId?: st
               <TableRow>
                 <TableHead>Started</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Commit</TableHead>
                 <TableHead>Findings</TableHead>
                 <TableHead className="text-right">Took</TableHead>
                 <TableHead className="text-right">Cost</TableHead>
@@ -412,6 +415,7 @@ export function RepoDetail({ repoId, branchId }: { repoId: string; branchId?: st
                   <TableCell>
                     <ScanStatusBadge status={scan.status} />
                   </TableCell>
+                  <TableCell className="font-mono text-xs text-muted-foreground">{scan.commitSha ? scan.commitSha.slice(0, 7) : "-"}</TableCell>
                   <TableCell>
                     {scan.summary ? (
                       <span className="flex flex-wrap items-center gap-x-3 gap-y-1">

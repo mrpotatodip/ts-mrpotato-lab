@@ -8,7 +8,7 @@ export const Route = createFileRoute("/_app")({
   beforeLoad: ({ context }) => {
     if (!context.user) throw redirect({ to: "/signin" });
   },
-  loader: ({ context }) => context.queryClient.ensureQueryData(scansQuery()),
+  loader: ({ context }) => context.queryClient.query({ ...scansQuery(), staleTime: "static" }),
   component: AppLayout,
 });
 

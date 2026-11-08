@@ -2,7 +2,9 @@ import { Badge } from "#/components/ui/badge";
 import { cn } from "#/lib/utils";
 import { SCAN_FINDING_STATE_COPY } from "../constants";
 import type { Finding } from "../schemas";
+import { scanFindingPrompt } from "../utils";
 import { ScanEvidence } from "./scan-evidence";
+import { ScanFindingCopy } from "./scan-finding-copy";
 
 type SectionProps = { title: string; children: string | null | undefined; mono?: boolean };
 
@@ -61,6 +63,7 @@ export function ScanFindingDetail({ finding, layout = "table" }: ScanFindingDeta
         <SheetSection title="Suggested fix" tone="success">
           {detail.fix}
         </SheetSection>
+        {detail.fix && <ScanFindingCopy text={scanFindingPrompt(finding)} />}
         {finding.state === "needs_validation" ? (
           <SheetSection title="What a person should check" tone="warning">
             {detail.needs}

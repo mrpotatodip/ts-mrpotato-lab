@@ -23,7 +23,7 @@
     "@repo/contracts": "workspace:*",
     "@tailwindcss/vite": "^4.1.18",
     "@tanstack/highlight": "^1.2.11",
-    "@tanstack/react-query": "^5.102.0",
+    "@tanstack/react-query": "^5.107.1",
     "@tanstack/react-router": "^1.170.44",
     "@tanstack/react-router-ssr-query": "^1.167.3",
     "@tanstack/react-start": "^1.169.1",

@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { SIGN_UP_PASSWORD_MIN } from "@repo/contracts/elise";
 import { Button } from "#/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
+import { authKeys } from "#/modules/auth";
 import { ShellBrand } from "#/modules/shell";
 import { acceptTeamInvite } from "../api";
 import { inviteQuery } from "../hooks";
@@ -33,6 +34,7 @@ function FieldError({ id, message }: FieldErrorProps) {
 export function TeamInviteAccept({ token, signedIn }: { token: string; signedIn: boolean }) {
   const { data: invite } = useSuspenseQuery(inviteQuery(token));
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [password, setPassword] = useState("");
@@ -44,6 +46,7 @@ export function TeamInviteAccept({ token, signedIn }: { token: string; signedIn:
     mutationFn: () => acceptTeamInvite({ data: needsDetails ? { token, firstName, lastName, password } : { token } }),
     onSuccess: async () => {
       toast.success(`You joined ${invite.accountName}.`);
+      queryClient.removeQueries({ queryKey: authKeys.session() });
       await navigate({ to: signedIn ? "/overview" : "/signin" });
     },
     onError: (error) => toast.error(`We couldn't accept the invite. ${error.message}`),

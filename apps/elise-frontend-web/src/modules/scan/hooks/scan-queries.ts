@@ -1,6 +1,6 @@
-import { queryOptions } from "@tanstack/react-query";
+import { noop, queryOptions, type QueryClient } from "@tanstack/react-query";
 import { fetchOverview, fetchScan, fetchScanRepoBranches, fetchScanRepos, fetchScanDiff, fetchScanFile, fetchScanFindings, fetchScans, fetchVerdict } from "../api";
-import type { ScanState } from "../schemas";
+import type { ScanState, ScanStatus } from "../schemas";
 
 export const scanKeys = {
   all: ["scans"] as const,
@@ -75,3 +75,17 @@ export const verdictQuery = (repoId: string, commit: string) =>
 export const scanReposQuery = () => queryOptions({ queryKey: scanKeys.repos(), queryFn: () => fetchScanRepos() });
 
 export const scanRepoBranchesQuery = (repoId: string) => queryOptions({ queryKey: scanKeys.repoBranches(repoId), queryFn: () => fetchScanRepoBranches({ data: { repoId } }) });
+
+// -----
+// Starts the report's other reads as soon as the scan itself has arrived, so
+// the findings, verdict and comparison load beside each other instead of one
+// after the other. It does not wait: a failed read shows in its own card.
+// -----
+export function prefetchScanReport(queryClient: QueryClient, scan: ScanStatus) {
+  if (scan.status !== "succeeded") return;
+  const hasFindings = scan.summary != null || (scan.files ?? []).includes("findings.json");
+  if (hasFindings) void queryClient.query(scanFindingsQuery(scan.scanId)).catch(noop);
+  if (scan.skill !== "lite") return;
+  if (scan.commitSha) void queryClient.query(verdictQuery(scan.repoId, scan.commitSha)).catch(noop);
+  if (scan.branchId) void queryClient.query(scanDiffQuery(scan.scanId)).catch(noop);
+}

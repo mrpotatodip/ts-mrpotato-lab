@@ -172,7 +172,7 @@ export function ScanDetail({ scanId }: { scanId: string }) {
               </CardHeader>
               <CardContent className="overflow-hidden p-0">
                 <Suspense fallback={<Skeleton className="m-5 h-24" />}>
-                  <ScanFindingsTable scanId={scanId} repoId={live ? scan.repoId : undefined} />
+                  <ScanFindingsTable scanId={scanId} repoId={live ? scan.repoId : undefined} repoLabel={owner ? `${owner}/${name}` : name} commit={scan.commitSha ?? undefined} />
                 </Suspense>
               </CardContent>
             </Card>

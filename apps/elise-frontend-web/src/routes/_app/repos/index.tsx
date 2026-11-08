@@ -6,7 +6,7 @@ import { ShellPageHeader } from "#/modules/shell";
 
 export const Route = createFileRoute("/_app/repos/")({
   head: () => ({ meta: [{ title: "Repositories · Elise" }] }),
-  loader: ({ context }) => context.queryClient.ensureQueryData(reposQuery()),
+  loader: ({ context }) => context.queryClient.query({ ...reposQuery(), staleTime: "static" }),
   component: ReposPage,
 });
 

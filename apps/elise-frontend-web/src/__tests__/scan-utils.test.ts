@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { scanActivity } from "#/modules/scan/utils/scan-activity";
+import { scanFindingPrompt, scanFindingsPrompt } from "#/modules/scan/utils/scan-finding-prompt";
 import { scanPlanSummary } from "#/modules/scan/utils/scan-plan-summary";
 import { scanRepoName } from "#/modules/scan/utils/scan-repo-name";
 import { scanSidebarItems } from "#/modules/scan/utils/scan-sidebar";
@@ -96,5 +97,37 @@ describe("scanPlanSummary", () => {
   it("mentions coverage only for a full audit", () => {
     expect(scanPlanSummary({ ...base, skill: "full", profile: "deep" })).toContain("full audit, exhaustive coverage, on honojs/hono");
     expect(scanPlanSummary(base)).not.toContain("coverage");
+  });
+});
+
+describe("scanFindingPrompt", () => {
+  const finding = {
+    title: "SQL injection in search",
+    state: "confirmed" as const,
+    severity: "high" as const,
+    place: { file: "src/search.ts", line: 42 },
+    detail: { class: "injection", actor: null, impact: "Anyone can read the users table.", evidence: "db.query(`select * from t where q = ${q}`)", fix: "Use a parameterized query.", needs: null, triage: null },
+  };
+
+  it("gives the location, evidence and fix", () => {
+    const text = scanFindingPrompt(finding);
+    expect(text).toContain("Location: src/search.ts:42");
+    expect(text).toContain("## Evidence in the code\ndb.query");
+    expect(text).toContain("## Suggested fix\nUse a parameterized query.");
+  });
+
+  it("lists every finding most severe first and skips rejected ones", () => {
+    const low = { ...finding, title: "Verbose errors", severity: "low" as const };
+    const rejected = { ...finding, title: "False alarm", state: "rejected" as const };
+    const text = scanFindingsPrompt([low, rejected, finding], { repo: "o/n", commit: "abcdef1234" });
+    expect(text).toContain("Fix these 2 security findings from an Elise audit in o/n at commit abcdef1");
+    expect(text.indexOf("SQL injection")).toBeLessThan(text.indexOf("Verbose errors"));
+    expect(text).not.toContain("False alarm");
+  });
+
+  it("leaves out sections the finding does not have", () => {
+    const text = scanFindingPrompt({ ...finding, place: null, detail: { ...finding.detail, impact: null } });
+    expect(text).toContain("No file was recorded");
+    expect(text).not.toContain("What could happen");
   });
 });

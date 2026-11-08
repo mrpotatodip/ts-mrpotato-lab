@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useSuspenseQueries } from "@tanstack/react-query";
 import { ArrowUpRight, CheckCircle2, Layers, LoaderCircle, TriangleAlert, XCircle, type LucideIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Progress } from "#/components/ui/progress";
@@ -53,8 +53,7 @@ function Stat({ label, value, note, icon: Icon, tone, pulse }: StatProps) {
 }
 
 export function ScanOverview() {
-  const { data: overview } = useSuspenseQuery(overviewQuery());
-  const { data: list } = useSuspenseQuery(scansQuery());
+  const [{ data: overview }, { data: list }] = useSuspenseQueries({ queries: [overviewQuery(), scansQuery()] });
   const peak = Math.max(1, ...SEVERITIES.map((s) => overview.severity[s]));
   const confirmed = SEVERITIES.reduce((sum, s) => sum + overview.severity[s], 0);
   const active = overview.byState.queued + overview.byState.running;

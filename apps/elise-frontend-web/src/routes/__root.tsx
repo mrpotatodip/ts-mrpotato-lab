@@ -1,12 +1,11 @@
 import { HeadContent, Scripts, createRootRouteWithContext } from "@tanstack/react-router";
 import type { QueryClient } from "@tanstack/react-query";
 import { Toaster } from "#/components/ui/sonner";
-import { fetchSession } from "#/modules/auth/api";
-import type { SessionUser } from "#/modules/auth";
+import { sessionQuery, type SessionUser } from "#/modules/auth";
 import appCss from "../styles/globals.css?url";
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient; user: SessionUser | null }>()({
-  beforeLoad: async () => ({ user: await fetchSession() }),
+  beforeLoad: async ({ context }) => ({ user: await context.queryClient.query(sessionQuery()) }),
   head: () => ({
     meta: [
       { charSet: "utf-8" },

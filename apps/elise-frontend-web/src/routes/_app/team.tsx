@@ -7,7 +7,7 @@ export const Route = createFileRoute("/_app/team")({
     if (context.user?.role !== TENANT_ADMIN_ROLE_KEY) throw redirect({ to: "/overview" });
   },
   loader: ({ context }) =>
-    Promise.all([context.queryClient.ensureQueryData(teamQuery()), context.queryClient.ensureQueryData(groupsQuery()), context.queryClient.ensureQueryData(teamRolesQuery())]),
+    Promise.all([context.queryClient.query({ ...teamQuery(), staleTime: "static" }), context.queryClient.query({ ...groupsQuery(), staleTime: "static" }), context.queryClient.query({ ...teamRolesQuery(), staleTime: "static" })]),
   component: RouteComponent,
 });
 

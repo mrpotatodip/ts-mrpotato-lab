@@ -9,6 +9,8 @@ import { cn } from "#/lib/utils";
 import { SCAN_FINDING_STATE_COPY } from "../constants";
 import { scanFindingsQuery } from "../hooks";
 import { SEVERITIES, type Finding } from "../schemas";
+import { scanFindingsPrompt } from "../utils";
+import { ScanFindingCopy } from "./scan-finding-copy";
 import { ScanFindingSheet } from "./scan-finding-sheet";
 import { ScanSeverityBadge } from "./scan-severity-badge";
 
@@ -33,7 +35,9 @@ function ScanFindingDecisionLink({ repoId }: { repoId: string | undefined }) {
   );
 }
 
-export function ScanFindingsTable({ scanId, repoId }: { scanId: string; repoId?: string }) {
+type ScanFindingsTableProps = { scanId: string; repoId?: string; repoLabel?: string; commit?: string };
+
+export function ScanFindingsTable({ scanId, repoId, repoLabel, commit }: ScanFindingsTableProps) {
   const { data } = useSuspenseQuery(scanFindingsQuery(scanId));
   const [selected, setSelected] = useState<number | undefined>();
 
@@ -53,8 +57,15 @@ export function ScanFindingsTable({ scanId, repoId }: { scanId: string; repoId?:
 
   const sorted = data.toSorted((a, b) => (RANK.get(a.severity) ?? 0) - (RANK.get(b.severity) ?? 0));
 
+  const actionable = sorted.filter((f) => f.state !== "rejected");
+
   return (
     <>
+      {actionable.length > 0 && (
+        <div className="flex justify-end border-b px-5 py-3">
+          <ScanFindingCopy text={scanFindingsPrompt(sorted, { repo: repoLabel, commit })} label={`Copy ${actionable.length === 1 ? "finding" : `all ${actionable.length} findings`} for coding agent`} />
+        </div>
+      )}
       <Table>
         <TableHeader>
           <TableRow>

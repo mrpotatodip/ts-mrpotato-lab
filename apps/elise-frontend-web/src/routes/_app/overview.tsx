@@ -6,7 +6,7 @@ import { usageQuery } from "#/modules/usage";
 
 export const Route = createFileRoute("/_app/overview")({
   head: () => ({ meta: [{ title: "Overview · Elise" }] }),
-  loader: ({ context }) => Promise.all([context.queryClient.ensureQueryData(overviewQuery()), context.queryClient.ensureQueryData(scansQuery()), context.queryClient.ensureQueryData(usageQuery())]),
+  loader: ({ context }) => Promise.all([context.queryClient.query({ ...overviewQuery(), staleTime: "static" }), context.queryClient.query({ ...scansQuery(), staleTime: "static" }), context.queryClient.query({ ...usageQuery(), staleTime: "static" })]),
   component: OverviewPage,
 });
 

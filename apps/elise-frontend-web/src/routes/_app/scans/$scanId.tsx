@@ -2,11 +2,12 @@ import { Suspense } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import { Skeleton } from "#/components/ui/skeleton";
-import { ScanDetail, scanQuery, scanRepoName } from "#/modules/scan";
+import { prefetchScanReport, ScanDetail, scanQuery, scanRepoName } from "#/modules/scan";
 
 export const Route = createFileRoute("/_app/scans/$scanId")({
   loader: async ({ context, params }) => {
-    const scan = await context.queryClient.ensureQueryData(scanQuery(params.scanId));
+    const scan = await context.queryClient.query({ ...scanQuery(params.scanId), staleTime: "static" });
+    prefetchScanReport(context.queryClient, scan);
     return { name: scanRepoName(scan.repo, scan.scanId).name };
   },
   head: ({ loaderData }) => ({ meta: [{ title: `${loaderData?.name ?? "Scan"} report · Elise` }] }),

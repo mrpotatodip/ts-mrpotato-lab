@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_app/repos/$repoId")({
   validateSearch: SearchSchema,
   loaderDeps: ({ search }) => ({ branch: search.branch }),
   loader: async ({ context, params, deps }) => {
-    const repo = await context.queryClient.ensureQueryData(repoQuery(params.repoId));
+    const repo = await context.queryClient.query({ ...repoQuery(params.repoId), staleTime: "static" });
     const target = repo.branches.find((branch) => branch.name === deps.branch) ?? repo.branches.find((branch) => branch.isDefault) ?? repo.branches[0];
     if (target) throw redirect({ to: "/repos/$repoId/branches/$branchId", params: { repoId: params.repoId, branchId: target.id }, replace: true });
     return { name: repoName(repo.url) };

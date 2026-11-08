@@ -10,7 +10,6 @@ export * from "./scan-detail";
 export * from "./scan-diff-card";
 export * from "./scan-list";
 export * from "./scan-new-dialog";
-export * from "./scan-new-form";
 export * from "./scan-status-badge";
 export * from "./scan-summary";
 export * from "./scan-time";
