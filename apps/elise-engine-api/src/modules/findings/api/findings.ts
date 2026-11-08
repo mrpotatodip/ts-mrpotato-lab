@@ -1,7 +1,8 @@
 import { Hono } from "hono";
 import { FindingTriageBodySchema, FindingsQuerySchema } from "@repo/contracts/elise";
-import { dbConnect } from "#/lib/db-connection";
+import { dbConnect, withPool } from "#/lib/db-connection";
 import { runEffect } from "#/lib/effect-query";
+import { assertTenantManager } from "#/lib/require-tenant-manager";
 import { zValidator } from "#/lib/zod-validator";
 import { listFindingsSvc, setFindingTriageSvc } from "#/modules/findings/handlers";
 import { listFindingsDoc, setFindingTriageDoc } from "#/modules/findings/openapi";
@@ -18,7 +19,13 @@ app.get("/", listFindingsDoc, zValidator("header", AccountHeaderSchema), zValida
 
 app.put("/triage", setFindingTriageDoc, zValidator("header", AccountHeaderSchema), zValidator("json", FindingTriageBodySchema), async (c) => {
   const { "x-account-id": accountId } = c.req.valid("header");
-  const data = await runEffect(setFindingTriageSvc(dbConnect(c.env.DATABASE_URL), accountId, c.req.valid("json"), c.get("userId")));
+  const body = c.req.valid("json");
+  const userId = body.status === "accepted_risk" ? await assertTenantManager(c) : c.get("userId");
+  const data = await withPool(
+    c.env.DATABASE_URL,
+    (promise) => c.executionCtx.waitUntil(promise),
+    (pool) => runEffect(setFindingTriageSvc(dbConnect(c.env.DATABASE_URL), pool, accountId, body, userId)),
+  );
   return c.json({ data, error: null });
 });
 

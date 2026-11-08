@@ -41,9 +41,17 @@ export type InviteCodeStatusValue = (typeof INVITE_CODE_STATUS_VALUES)[number];
 export const SCAN_STATE_VALUES = ["queued", "running", "succeeded", "failed"] as const;
 export const FINDING_STATUS_VALUES = ["confirmed", "needs_validation"] as const;
 export const FINDING_SEVERITY_VALUES = ["critical", "high", "medium", "low", "informational"] as const;
+// -----
+// A finding in a scan is new there, or carried from an
+// earlier scan after the agent re-checked it.
+// -----
+export const FINDING_ORIGIN_VALUES = ["new", "carried"] as const;
+export const REPO_FINDING_STATE_VALUES = ["open", "fixed_by_code", "regressed"] as const;
 export const FINDING_TRIAGE_STATUS_VALUES = ["open", "fixed", "false_positive", "accepted_risk"] as const;
 
 export type ScanStateValue = (typeof SCAN_STATE_VALUES)[number];
+export type FindingOriginValue = (typeof FINDING_ORIGIN_VALUES)[number];
+export type RepoFindingStateValue = (typeof REPO_FINDING_STATE_VALUES)[number];
 export type FindingStatusValue = (typeof FINDING_STATUS_VALUES)[number];
 export type FindingSeverityValue = (typeof FINDING_SEVERITY_VALUES)[number];
 export type FindingTriageStatusValue = (typeof FINDING_TRIAGE_STATUS_VALUES)[number];

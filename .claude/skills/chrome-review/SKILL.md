@@ -27,7 +27,11 @@ pkill -f chrome-devtools-mcp
 
 The pattern matches the MCP's own Chrome profile, so the user's regular Chrome stays open.
 
+Reload a signed-out or isolated tab after any server restart: it keeps the 500 it saw while the server was down.
+
 ## 3. Review
+
+Keep output small. Judge a long list from a screenshot and Lighthouse, and take `take_snapshot` only on short pages. Save any screenshot or snapshot with `filePath` inside the repo, in the gitignored `.review/` directory: the tools refuse paths outside the workspace.
 
 Run every pass; each ends with a finding or an explicit "clean".
 

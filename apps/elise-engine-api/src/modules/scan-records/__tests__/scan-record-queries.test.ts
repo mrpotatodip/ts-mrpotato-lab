@@ -11,6 +11,7 @@ const record: ScanRecord = {
     id: "scan-1",
     tenantId: ACCOUNT,
     repo: "https://github.com/octocat/Hello-World",
+    repoId: "5d1f0c9a-2b3e-4f60-9a71-8b92c3d4e5f6",
     status: "succeeded",
     skill: "lite",
     model: "claude-haiku-5-5",
@@ -21,6 +22,7 @@ const record: ScanRecord = {
     finishedAt: new Date("2026-11-07T00:01:00.000Z"),
   },
   findings: [],
+  history: [],
 };
 
 describe("writeScanRecordEffect", () => {

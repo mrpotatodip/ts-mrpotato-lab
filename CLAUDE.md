@@ -14,8 +14,11 @@ Elise: a pnpm workspace. A Worker clones a public GitHub repo into a Cloudflare 
 
 ```bash
 pnpm check:apps                              # tsc, oxlint and vitest for every project: one line on success, the tail of each failure; the pre-commit hook runs the changed ones. oxlint's `anti-slop` rules are strict: run it after the first edit
-pnpm --filter elise-engine-api dev           # wrangler dev
-pnpm --filter @repo/db-elise db:query "..."  # read-only SQL on the live Neon database
+pnpm dev                                     # engine (8787) and dashboard (3100) together; first run: copy `.dev.vars.example` to `.dev.vars` in both apps (engine `DATABASE_URL`: `packages/db-elise/.env`). Up when `curl -s -o /dev/null -w "%{http_code}" localhost:8787/me` prints 401
+pnpm --filter elise-engine-api dev:log       # wrangler dev, output teed to apps/elise-engine-api/.dev.log (the dashboard has the same `dev:log`)
+pnpm dev:stop                                # free ports 8787 and 3100 from stale servers
+pnpm -s --filter @repo/db-elise db:query "..."  # read-only SQL on the live Neon database; `-s` leaves only the rows in the output
+pnpm -s --filter elise-engine-api live:get /repos <accountId>   # GET one route of the app in-process against the live database: read only, no token
 pnpm --filter @repo/db-elise db:rehearse     # pending migrations in a rolled-back transaction
 pnpm --filter @repo/db-elise db:migrate      # live Neon database: ask first
 pnpm --filter @repo/db-elise db:exec "..."   # one write statement in a transaction (--dry rolls back): live database, ask first

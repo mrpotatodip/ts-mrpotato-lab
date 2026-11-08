@@ -9,7 +9,7 @@ Authorization: Bearer {{token}}
 x-account-id: {{account}}
 Content-Type: application/json
 
-{ "repo": "https://github.com/octocat/Hello-World", "model": "claude-haiku-5-5", "effort": "low", "max_budget_usd": 1 }
+{ "repo": "https://github.com/octocat/Hello-World", "model": "claude-haiku-5-5", "effort": "low", "max_budget_usd": 1, "ref": "main" }
 
 ###
 

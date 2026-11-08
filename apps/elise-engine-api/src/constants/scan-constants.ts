@@ -13,6 +13,8 @@ export const SCAN_REPORT_FILES = [
   "FINDINGS-DETAIL.md",
   "NEEDS-VALIDATION.md",
   "coverage-ledger.json",
+  "recheck.json",
+  "prior-findings.json",
   "run-metadata.json",
 ] as const;
 export const SCAN_SERVABLE_FILES = SCAN_REPORT_FILES;

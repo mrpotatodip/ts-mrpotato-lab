@@ -1,10 +1,11 @@
 import { index, jsonb, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
 // -----
-// Append-only record of every change a
-// superuser makes to Master Roles and their
-// Powers. subject_id is not a foreign key, so
-// the trail outlives a deleted Master Role.
+// Append-only record of changes to access: a
+// superuser's edits to Master Roles and Powers,
+// and a Tenant's team invites and Groups (the
+// Tenant is in `after`). subject_id is not a
+// foreign key, so the trail outlives the row.
 // -----
 export const accessAuditLog = pgTable(
   "access_audit_log",

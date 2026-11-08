@@ -19,9 +19,10 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@repo/contracts": "workspace:*",
     "@base-ui/react": "^1.5.0",
+    "@repo/contracts": "workspace:*",
     "@tailwindcss/vite": "^4.1.18",
+    "@tanstack/highlight": "^1.2.11",
     "@tanstack/react-query": "^5.102.0",
     "@tanstack/react-router": "^1.170.44",
     "@tanstack/react-router-ssr-query": "^1.167.3",
@@ -49,13 +50,7 @@
     "oxlint": "1.79.0",
     "typescript": "^6.0.2",
     "vite": "^8.0.0",
-    "wrangler": "^4.114.0",
-    "vitest": "^4.1.7"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild",
-      "lightningcss"
-    ]
+    "vitest": "^4.1.7",
+    "wrangler": "^4.114.0"
   }
 }

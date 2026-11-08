@@ -1,12 +1,14 @@
 import { sql } from "drizzle-orm";
 import {
   bigint,
+  boolean,
   check,
   foreignKey,
   index,
   integer,
   numeric,
   pgTable,
+  primaryKey,
   text,
   timestamp,
   unique,
@@ -14,14 +16,18 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 import {
+  FINDING_ORIGIN_VALUES,
   FINDING_SEVERITY_VALUES,
   FINDING_STATUS_VALUES,
   FINDING_TRIAGE_STATUS_VALUES,
+  REPO_FINDING_STATE_VALUES,
   SCAN_STATE_VALUES,
   SCAN_STEP_VALUES,
+  type FindingOriginValue,
   type FindingSeverityValue,
   type FindingStatusValue,
   type FindingTriageStatusValue,
+  type RepoFindingStateValue,
   type ScanStateValue,
   type ScanStepValue,
 } from "@repo/contracts/elise";
@@ -29,6 +35,60 @@ import { parties } from "./party";
 import { tenants } from "./tenant";
 
 const inList = (values: readonly string[]) => sql.raw(values.map((value) => `'${value}'`).join(", "));
+
+// -----
+// One row per repo an Account scans, so a repo has
+// one history however its URL was spelled. canonical
+// is owner/name in lowercase, without .git or a
+// trailing slash. url keeps the first spelling seen,
+// minus those two.
+// -----
+export const scanRepos = pgTable(
+  "scan_repos",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    canonical: text("canonical").notNull(),
+    url: text("url").notNull(),
+    defaultBranch: text("default_branch"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => ({
+    uqTenantCanonical: uniqueIndex("uq_scan_repos_tenant_canonical").on(t.tenantId, t.canonical),
+    uqIdTenant: uniqueIndex("uq_scan_repos_id_tenant").on(t.id, t.tenantId),
+  }),
+);
+
+// -----
+// A branch of a repo that has its own history. It is
+// known by its exact name (case counts), so "main"
+// typed and "main" read from the remote are one row.
+// scan_repos.default_branch is a pointer to the name
+// git last reported as the default; it is not a row of
+// its own. The app caps the rows per repo.
+// -----
+export const scanRepoBranches = pgTable(
+  "scan_repo_branches",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id").notNull(),
+    repoId: uuid("repo_id").notNull(),
+    name: text("name").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => ({
+    chkName: check("scan_repo_branches_name", sql`length(${t.name}) > 0`),
+    uqRepoName: uniqueIndex("uq_scan_repo_branches_repo_name").on(t.repoId, t.name),
+    uqIdTenant: uniqueIndex("uq_scan_repo_branches_id_tenant").on(t.id, t.tenantId),
+    fkRepoTenant: foreignKey({
+      name: "scan_repo_branches_repo_tenant_fk",
+      columns: [t.repoId, t.tenantId],
+      foreignColumns: [scanRepos.id, scanRepos.tenantId],
+    }).onDelete("cascade"),
+  }),
+);
 
 // -----
 // One row per scan, created when the scan is queued
@@ -45,6 +105,16 @@ export const scans = pgTable(
       .notNull()
       .references(() => tenants.id, { onDelete: "cascade" }),
     repo: text("repo").notNull(),
+    repoId: uuid("repo_id").notNull(),
+    commitSha: text("commit_sha"),
+    ref: text("ref"),
+    branch: text("branch"),
+    branchId: uuid("branch_id"),
+    untrackedReason: text("untracked_reason"),
+    priorsGiven: integer("priors_given"),
+    priorsCarried: integer("priors_carried"),
+    priorsClosed: integer("priors_closed"),
+    priorsUnchecked: integer("priors_unchecked"),
     status: text("status").$type<ScanStateValue>().notNull(),
     step: text("step").$type<ScanStepValue>(),
     skill: text("skill").notNull(),
@@ -71,6 +141,21 @@ export const scans = pgTable(
     chkStep: check("scans_step", sql`${t.step} is null or ${t.step} in (${inList(SCAN_STEP_VALUES)})`),
     uqIdTenant: unique("uq_scans_id_tenant").on(t.id, t.tenantId),
     idxTenantCreated: index("idx_scans_tenant_created_at").on(t.tenantId, t.createdAt),
+    fkRepoTenant: foreignKey({
+      name: "scans_repo_tenant_fk",
+      columns: [t.repoId, t.tenantId],
+      foreignColumns: [scanRepos.id, scanRepos.tenantId],
+    }).onDelete("cascade"),
+    idxRepoCreated: index("idx_scans_repo_id_created_at").on(t.repoId, t.createdAt),
+    fkBranchTenant: foreignKey({
+      name: "scans_branch_tenant_fk",
+      columns: [t.branchId, t.tenantId],
+      foreignColumns: [scanRepoBranches.id, scanRepoBranches.tenantId],
+    }).onDelete("set null"),
+    // One active scan per repo. A scan that stalls is expired before a new one is queued.
+    uqActivePerRepo: uniqueIndex("uq_scans_active_per_repo")
+      .on(t.repoId)
+      .where(sql`${t.status} in ('queued', 'running')`),
   }),
 );
 
@@ -131,9 +216,11 @@ export const scanFindings = pgTable(
     evidence: text("evidence"),
     fix: text("fix"),
     needs: text("needs"),
+    origin: text("origin").$type<FindingOriginValue>().notNull().default("new"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => ({
+    chkOrigin: check("scan_findings_origin", sql`${t.origin} in (${inList(FINDING_ORIGIN_VALUES)})`),
     fkScanTenant: foreignKey({
       name: "scan_findings_scan_tenant_fk",
       columns: [t.scanId, t.tenantId],
@@ -151,6 +238,53 @@ export const scanFindings = pgTable(
 );
 
 // -----
+// Where a repo's problems stand across its scans, one
+// row per fingerprint. A scan updates it only when it
+// succeeds, in the same transaction that records it.
+//   open          found, not yet shown to be gone
+//   fixed_by_code a later scan checked and it was gone
+//   regressed     it was gone and came back
+// unchecked means the latest scan could not re-check
+// it, so it stays as it was. The words of the problem
+// are in the scan_findings row of last_seen_scan_id.
+// -----
+export const scanRepoFindings = pgTable(
+  "scan_repo_findings",
+  {
+    repoId: uuid("repo_id").notNull(),
+    tenantId: uuid("tenant_id").notNull(),
+    branchId: uuid("branch_id").notNull(),
+    fingerprint: text("fingerprint").notNull(),
+    state: text("state").$type<RepoFindingStateValue>().notNull(),
+    unchecked: boolean("unchecked").notNull().default(false),
+    firstSeenScanId: text("first_seen_scan_id").notNull(),
+    lastSeenScanId: text("last_seen_scan_id").notNull(),
+    fixedInScanId: text("fixed_in_scan_id"),
+    possibleDuplicateOf: text("possible_duplicate_of"),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (t) => ({
+    pk: primaryKey({ name: "scan_repo_findings_pkey", columns: [t.branchId, t.fingerprint] }),
+    chkState: check("scan_repo_findings_state", sql`${t.state} in (${inList(REPO_FINDING_STATE_VALUES)})`),
+    fkRepoTenant: foreignKey({
+      name: "scan_repo_findings_repo_tenant_fk",
+      columns: [t.repoId, t.tenantId],
+      foreignColumns: [scanRepos.id, scanRepos.tenantId],
+    }).onDelete("cascade"),
+    fkBranchTenant: foreignKey({
+      name: "scan_repo_findings_branch_tenant_fk",
+      columns: [t.branchId, t.tenantId],
+      foreignColumns: [scanRepoBranches.id, scanRepoBranches.tenantId],
+    }).onDelete("cascade"),
+    idxRepoState: index("idx_scan_repo_findings_repo_state").on(t.repoId, t.state),
+    idxBranchState: index("idx_scan_repo_findings_branch_state").on(t.branchId, t.state),
+  }),
+);
+
+// -----
 // What a person decided about a problem, kept per
 // repo and fingerprint so a rescan never overwrites
 // it. Only the dashboard writes this table.
@@ -162,10 +296,11 @@ export const scanFindingTriage = pgTable(
     tenantId: uuid("tenant_id")
       .notNull()
       .references(() => tenants.id, { onDelete: "cascade" }),
-    repo: text("repo").notNull(),
+    repoId: uuid("repo_id").notNull(),
     fingerprint: text("fingerprint").notNull(),
     status: text("status").$type<FindingTriageStatusValue>().notNull(),
     note: text("note"),
+    acceptedUntil: timestamp("accepted_until", { withTimezone: true }),
     setByPartyId: uuid("set_by_party_id").references(() => parties.id, { onDelete: "set null" }),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true })
@@ -175,14 +310,26 @@ export const scanFindingTriage = pgTable(
   },
   (t) => ({
     chkStatus: check("scan_finding_triage_status", sql`${t.status} in (${inList(FINDING_TRIAGE_STATUS_VALUES)})`),
+    chkAccepted: check(
+      "scan_finding_triage_accepted",
+      sql`(${t.status} = 'accepted_risk') = (${t.acceptedUntil} is not null) and (${t.status} <> 'accepted_risk' or ${t.note} is not null)`,
+    ),
+    fkRepoTenant: foreignKey({
+      name: "scan_finding_triage_repo_tenant_fk",
+      columns: [t.repoId, t.tenantId],
+      foreignColumns: [scanRepos.id, scanRepos.tenantId],
+    }).onDelete("cascade"),
     uqTenantRepoFingerprint: uniqueIndex("uq_scan_finding_triage_tenant_repo_fingerprint").on(
       t.tenantId,
-      t.repo,
+      t.repoId,
       t.fingerprint,
     ),
   }),
 );
 
+export type TScanRepo = typeof scanRepos.$inferSelect;
+export type TScanRepoBranch = typeof scanRepoBranches.$inferSelect;
+export type TScanRepoFinding = typeof scanRepoFindings.$inferSelect;
 export type TScan = typeof scans.$inferSelect;
 export type TScanFile = typeof scanFiles.$inferSelect;
 export type TFinding = typeof scanFindings.$inferSelect;

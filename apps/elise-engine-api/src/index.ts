@@ -11,10 +11,14 @@ import { errorChainForLog } from "#/lib/redact-log";
 import { requireScanAccess } from "#/lib/require-scan-access";
 import authRoutes from "#/modules/auth";
 import findingsRoutes from "#/modules/findings";
+import groupsRoutes from "#/modules/groups";
 import meRoutes from "#/modules/me";
+import reposRoutes from "#/modules/repos";
 import scansRoutes from "#/modules/scans";
 import signUpRoutes from "#/modules/sign-up";
+import teamRoutes from "#/modules/team";
 import usageRoutes from "#/modules/usage";
+import verdictRoutes from "#/modules/verdict";
 import type { AppEnv, AppDeps } from "#/types/variables";
 
 export { Outbound, ScanSandbox } from "#/modules/scan-sandbox";
@@ -31,12 +35,13 @@ export const buildApp = (deps: AppDeps = realAppDeps) => {
   // -----
   // Every /scans route needs the service token or a
   // signed-in session. /auth, /sign-up and /me do
-  // their own checks. The OpenAPI routes below are
+  // their own checks, and so do /team and /groups. The OpenAPI routes below are
   // not here: they answer only in development.
   // -----
   app.use("/scans/*", requireScanAccess);
   app.use("/usage/*", requireScanAccess);
   app.use("/findings/*", requireScanAccess);
+  app.use("/repos/*", requireScanAccess);
   app.use(
     "/auth/sign-in/*",
     rateLimitByIp("SIGN_IN_LIMITER", () => new TooManyRequestsError("Too many sign-in attempts. Wait a minute and try again.", "SIGN_IN_RATE_LIMITED")),
@@ -62,7 +67,7 @@ export const buildApp = (deps: AppDeps = realAppDeps) => {
     return c.json({ data: null, error: { code: "INTERNAL_ERROR", message: "Internal server error" } }, 500);
   });
 
-  const routes = app.route("/scans", scansRoutes).route("/auth", authRoutes).route("/sign-up", signUpRoutes).route("/me", meRoutes).route("/usage", usageRoutes).route("/findings", findingsRoutes);
+  const routes = app.route("/scans", scansRoutes).route("/auth", authRoutes).route("/sign-up", signUpRoutes).route("/me", meRoutes).route("/usage", usageRoutes).route("/findings", findingsRoutes).route("/team", teamRoutes).route("/groups", groupsRoutes).route("/repos", reposRoutes).route("/repos", verdictRoutes);
 
   // -----
   // The OpenAPI spec, for developers only.

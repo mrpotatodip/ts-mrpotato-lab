@@ -10,5 +10,7 @@ export * from "./customer-thread";
 export * from "./me";
 export * from "./invite-code";
 export * from "./team";
+export * from "./group";
 export * from "./admin";
 export * from "./scan";
+export * from "./verdict";

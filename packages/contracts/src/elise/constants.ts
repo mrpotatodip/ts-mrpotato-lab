@@ -19,3 +19,27 @@ export const INVITE_CODE_MAX_USES_LIMIT = 1000;
 
 export const TEAM_INVITE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 export const TEAM_INVITE_TOKEN_BYTES = 32;
+
+// -----
+// Groups and team invites: caps the form and the
+// server share, so one Tenant cannot grow without
+// bound
+// -----
+export const GROUP_NAME_MAX = 60;
+export const GROUP_LIMIT_PER_TENANT = 100;
+export const GROUP_MEMBER_LIMIT = 500;
+export const TEAM_PENDING_INVITE_LIMIT = 200;
+export const TEAM_INVITE_GROUP_LIMIT = 20;
+
+// -----
+// Verdict: an accepted risk lasts at most this many days;
+// a pass needs this many succeeded lite scans of the commit
+// -----
+export const ACCEPTED_RISK_MAX_DAYS = 90;
+export const VERDICT_MIN_SCANS = 2;
+
+// -----
+// Repos and branches: caps per Account and per Repo
+// -----
+export const REPO_LIMIT_PER_TENANT = 200;
+export const REPO_BRANCH_LIMIT = 25;

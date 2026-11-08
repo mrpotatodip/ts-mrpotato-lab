@@ -1,39 +1,25 @@
-import { createFileRoute, Link, Outlet, redirect } from "@tanstack/react-router";
-import { AuthSignOutButton } from "#/modules/auth";
+import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { ScanNewDialog, scansQuery, scanSidebarItems } from "#/modules/scan";
+import { TENANT_ADMIN_ROLE_KEY } from "#/modules/team";
+import { ShellFrame } from "#/modules/shell";
 
 export const Route = createFileRoute("/_app")({
   beforeLoad: ({ context }) => {
     if (!context.user) throw redirect({ to: "/signin" });
   },
-  component: ScansLayout,
+  loader: ({ context }) => context.queryClient.ensureQueryData(scansQuery()),
+  component: AppLayout,
 });
 
-function ScansLayout() {
+function AppLayout() {
   const { user } = Route.useRouteContext();
+  const { data } = useQuery(scansQuery());
+  const { repos, repoCount, running, total } = scanSidebarItems(data?.scans ?? []);
+
   return (
-    <>
-      <header className="border-b">
-        <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-3 px-6 py-3">
-          <nav className="flex items-center gap-4 text-sm">
-            <Link to="/overview" className="font-semibold">
-              Elise
-            </Link>
-            <Link to="/overview" className="text-muted-foreground hover:text-foreground" activeProps={{ className: "text-foreground" }}>
-              Overview
-            </Link>
-            <Link to="/scans" className="text-muted-foreground hover:text-foreground" activeProps={{ className: "text-foreground" }}>
-              Scans
-            </Link>
-          </nav>
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-muted-foreground">
-              {user?.accountName} · {user?.email}
-            </span>
-            <AuthSignOutButton />
-          </div>
-        </div>
-      </header>
+    <ShellFrame accountName={user?.accountName ?? ""} email={user?.email ?? ""} scanCount={total} running={running} repos={repos} repoCount={repoCount} mode="live" showTeam={user?.role === TENANT_ADMIN_ROLE_KEY} actions={<ScanNewDialog />}>
       <Outlet />
-    </>
+    </ShellFrame>
   );
 }

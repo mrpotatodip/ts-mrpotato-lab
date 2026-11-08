@@ -31,9 +31,26 @@ describe("buildCloneScript", () => {
     expect(script).toContain("timeout --kill-after=5 300 git clone --depth 1 -- \"$1\"");
     expect(script).not.toContain("github.com");
   });
+
+  it("fetches a ref given as the second argument, never as script text, and writes the commit it read", () => {
+    const script = buildCloneScript();
+
+    expect(script).toContain("git fetch --depth 1 origin \"$2\"");
+    expect(script).toContain("git fetch --depth 1 origin \"refs/heads/$2\"");
+    expect(script).toContain("echo branch > /workspace/repo.kind");
+    expect(script).toContain("echo other > /workspace/repo.kind");
+    expect(script).toContain("rev-parse --abbrev-ref HEAD > /workspace/repo.branch");
+    expect(script).toContain("rev-parse HEAD > /workspace/repo.sha");
+    expect(script.startsWith("set -e;")).toBe(true);
+  });
 });
 
 describe("buildAgentPrompt", () => {
+  it("points a lite scan at the prior findings only when there are some", () => {
+    expect(buildAgentPrompt(options)).not.toContain("prior-findings.json");
+    expect(buildAgentPrompt(options, 3)).toContain("3 unresolved findings in /workspace/prior-findings.json");
+  });
+
   it("names the lite skill for the lite option", () => {
     expect(buildAgentPrompt(options)).toContain("security-audit-lite");
   });

@@ -1,0 +1,2 @@
+ALTER TABLE "scan_finding_triage" ADD COLUMN "accepted_until" timestamp with time zone;--> statement-breakpoint
+ALTER TABLE "scan_finding_triage" ADD CONSTRAINT "scan_finding_triage_accepted" CHECK (("scan_finding_triage"."status" = 'accepted_risk') = ("scan_finding_triage"."accepted_until" is not null) and ("scan_finding_triage"."status" <> 'accepted_risk' or "scan_finding_triage"."note" is not null));

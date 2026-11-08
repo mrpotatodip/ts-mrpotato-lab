@@ -1,7 +1,8 @@
 import { Effect } from "effect";
-import { DbError } from "#/lib/effect-query";
+import { Conflict, DbError } from "#/lib/effect-query";
+import { canonicalRepo, displayRepoUrl } from "#/modules/scan-ledger/utils";
 import type { ScanStatus } from "#/schemas";
-import type { NewScanFile, ScanRepo } from "#/modules/scan-ledger";
+import type { NewScanFile, RepoRecord, ScanRepo } from "#/modules/scan-ledger";
 
 type StoredFile = NewScanFile & { accountId: string; scanId: string };
 
@@ -13,6 +14,7 @@ type StoredFile = NewScanFile & { accountId: string; scanId: string };
 export function memoryScanRepo() {
   const rows = new Map<string, ScanStatus>();
   const files = new Map<string, StoredFile>();
+  const repos = new Map<string, RepoRecord>();
 
   const artifactsOf = (scanId: string) =>
     [...files.values()]
@@ -26,13 +28,31 @@ export function memoryScanRepo() {
   };
 
   const repo: ScanRepo = {
-    create: (params) =>
+    ensureRepo: (accountId, url) =>
       Effect.sync(() => {
+        const canonical = canonicalRepo(url);
+        const key = `${accountId}/${canonical}`;
+        const found = repos.get(key) ?? { id: crypto.randomUUID(), canonical, url: displayRepoUrl(url) };
+        repos.set(key, found);
+        return found;
+      }),
+    create: (params, repoId, staleBeforeMs) =>
+      Effect.suspend(() => {
+        const live = [...rows.values()].find(
+          (row) => row.repoId === repoId && (row.status === "queued" || row.status === "running") && Date.parse(row.updatedAt) >= staleBeforeMs,
+        );
+        if (live) return Effect.fail(new Conflict({ message: `This repo already has an active scan: ${live.scanId}` }));
         const now = new Date().toISOString();
         rows.set(params.scanId, {
           scanId: params.scanId,
           accountId: params.accountId,
           repo: params.repo,
+          repoId,
+          ref: params.ref ?? null,
+          branch: null,
+          branchId: null,
+          untrackedReason: null,
+          commitSha: null,
           ...params.options,
           status: "queued",
           step: null,
@@ -43,11 +63,13 @@ export function memoryScanRepo() {
           files: null,
           usage: null,
         });
+        return Effect.void;
       }),
     mark: (accountId, scanId, patch) =>
       Effect.sync(() => {
         const row = rows.get(scanId);
         if (!row || row.accountId !== accountId) return;
+        if (row.status === "failed" && patch.status !== "failed") return;
         const now = new Date().toISOString();
         const ended = patch.status === "succeeded" || patch.status === "failed";
         rows.set(scanId, {
@@ -55,6 +77,8 @@ export function memoryScanRepo() {
           ...(patch.status !== undefined && { status: patch.status }),
           ...(patch.step !== undefined && { step: patch.step }),
           ...(patch.error !== undefined && { error: patch.error }),
+          ...(patch.commitSha !== undefined && { commitSha: patch.commitSha }),
+          ...(patch.branch !== undefined && { branch: patch.branch }),
           ...(patch.usage && { usage: patch.usage }),
           ...(ended && { finishedAt: now, step: null }),
           updatedAt: now,
@@ -64,10 +88,16 @@ export function memoryScanRepo() {
       Effect.sync(() => {
         for (const file of added) files.set(`${scanId}/${file.name}`, { ...file, accountId, scanId });
       }),
-    list: (accountId, limit, cursor) =>
+    list: (accountId, limit, cursor, filter) =>
       Effect.sync(() => {
         const mine = [...rows.values()]
-          .filter((row) => row.accountId === accountId && (cursor === undefined || row.scanId > cursor))
+          .filter(
+            (row) =>
+              row.accountId === accountId &&
+              (cursor === undefined || row.scanId > cursor) &&
+              (filter?.repoId === undefined || row.repoId === filter.repoId) &&
+              (filter?.status === undefined || row.status === filter.status),
+          )
           .toSorted((a, b) => a.scanId.localeCompare(b.scanId));
         const page = mine.slice(0, limit).map(withFiles);
         return { scans: page, nextCursor: mine.length > limit ? page[page.length - 1].scanId : null };
@@ -90,13 +120,14 @@ export function memoryScanRepo() {
       }),
   };
 
-  return { repo, rows, files };
+  return { repo, rows, files, repos };
 }
 
 // -----
 // Every call fails with a DbError, for the error paths.
 // -----
 export const brokenScanRepo: ScanRepo = {
+  ensureRepo: () => Effect.fail(new DbError({ cause: new Error("db down") })),
   create: () => Effect.fail(new DbError({ cause: new Error("db down") })),
   mark: () => Effect.fail(new DbError({ cause: new Error("db down") })),
   addFiles: () => Effect.fail(new DbError({ cause: new Error("db down") })),

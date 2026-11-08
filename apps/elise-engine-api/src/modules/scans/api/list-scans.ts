@@ -10,8 +10,7 @@ const app = new Hono<AppEnv>();
 
 app.get("/", listScansDoc, zValidator("header", AccountHeaderSchema), zValidator("query", ScanListQuerySchema), async (c) => {
   const { "x-account-id": accountId } = c.req.valid("header");
-  const { cursor } = c.req.valid("query");
-  const data = await runEffect(listScansSvc(c.get("deps").scanRepo(c.env), accountId, cursor));
+  const data = await runEffect(listScansSvc(c.get("deps").scanRepo(c.env), accountId, c.req.valid("query")));
   return c.json({ data, error: null });
 });
 

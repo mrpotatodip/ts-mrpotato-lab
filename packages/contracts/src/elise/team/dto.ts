@@ -1,5 +1,11 @@
 import { z } from "zod";
-import { SIGN_UP_EMAIL_MAX, SIGN_UP_PASSWORD_MAX, SIGN_UP_PASSWORD_MIN, SIGN_UP_PERSON_NAME_MAX } from "../constants";
+import {
+  SIGN_UP_EMAIL_MAX,
+  SIGN_UP_PASSWORD_MAX,
+  SIGN_UP_PASSWORD_MIN,
+  SIGN_UP_PERSON_NAME_MAX,
+  TEAM_INVITE_GROUP_LIMIT,
+} from "../constants";
 
 export const TeamInviteIdSchema = z.uuid();
 export const TeamPartyIdSchema = z.uuid();
@@ -34,6 +40,7 @@ export const TeamRolesSchema = z.array(TeamRoleSchema);
 
 export const CreateTeamInviteBodySchema = TeamRoleBodySchema.extend({
   email: z.email().max(SIGN_UP_EMAIL_MAX).trim().toLowerCase(),
+  groupIds: z.array(z.uuid()).max(TEAM_INVITE_GROUP_LIMIT).optional(),
 });
 
 export const AcceptTeamInviteBodySchema = z.object({
@@ -48,6 +55,7 @@ export const TeamMemberSchema = z.object({
   email: z.string(),
   role: z.string(),
   roleLabel: z.string(),
+  groupIds: z.array(z.uuid()),
 });
 
 export const TeamInviteSchema = z.object({
@@ -55,6 +63,7 @@ export const TeamInviteSchema = z.object({
   email: z.string(),
   role: z.string(),
   roleLabel: z.string(),
+  groupIds: z.array(z.uuid()),
   expiresAt: z.iso.datetime(),
   createdAt: z.iso.datetime(),
 });
@@ -73,7 +82,6 @@ export const TeamDeletedSchema = z.object({ id: z.uuid() });
 
 export const TeamInvitePreviewSchema = z.object({
   accountName: z.string(),
-  email: z.string(),
   role: z.string(),
   roleLabel: z.string(),
   hasAccount: z.boolean(),

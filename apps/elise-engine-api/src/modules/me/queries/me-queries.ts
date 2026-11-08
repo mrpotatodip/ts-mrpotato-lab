@@ -10,7 +10,7 @@ import {
   SUPERUSER_ROLE_KEY,
   tenants,
 } from "@repo/db-elise";
-import type { Me, MeAccount } from "@repo/contracts/elise";
+import { TENANT_ADMIN_ROLE_KEY, type Me, type MeAccount } from "@repo/contracts/elise";
 import type { DbConnectType } from "#/lib/db-connection";
 import { NotFound, toDbError, type DbError } from "#/lib/effect-query";
 
@@ -90,6 +90,24 @@ export const userHasAccountEffect = (db: DbConnectType, userId: string, accountI
         .from(partyRoles)
         .innerJoin(authUser, eq(authUser.partyId, partyRoles.partyId))
         .where(and(eq(authUser.id, userId), eq(partyRoles.tenantId, accountId)))
+        .limit(1),
+    catch: toDbError,
+  }).pipe(Effect.map((rows) => rows.length > 0));
+
+// -----
+// Is this login a tenant_admin of this Account?
+// The guard for managing its team and groups.
+// -----
+export const userManagesAccountEffect = (db: DbConnectType, userId: string, accountId: string): Effect.Effect<boolean, DbError> =>
+  Effect.tryPromise({
+    try: () =>
+      db
+        .select({ id: partyRoles.id })
+        .from(partyRoles)
+        .innerJoin(authUser, eq(authUser.partyId, partyRoles.partyId))
+        .innerJoin(partyMasterRoles, eq(partyMasterRoles.id, partyRoles.roleId))
+        .innerJoin(accessMasterRoles, eq(accessMasterRoles.id, partyMasterRoles.masterRoleId))
+        .where(and(eq(authUser.id, userId), eq(partyRoles.tenantId, accountId), eq(accessMasterRoles.key, TENANT_ADMIN_ROLE_KEY)))
         .limit(1),
     catch: toDbError,
   }).pipe(Effect.map((rows) => rows.length > 0));

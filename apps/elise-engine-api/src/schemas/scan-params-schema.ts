@@ -5,6 +5,7 @@ export const ScanParamsSchema = z.object({
   scanId: z.string(),
   accountId: z.string(),
   repo: z.string(),
+  ref: z.string().optional(),
   options: ScanOptionsSchema,
   createdAt: z.string(),
 });

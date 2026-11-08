@@ -19,6 +19,16 @@ A bounded, read-only, single-agent review. It finds likely vulnerabilities from 
 
 Follow them in this order.
 
+### 0. Prior findings (only if the prompt names a `prior-findings.json`)
+
+The file lists findings that earlier scans of this repository left unresolved, each with a `priorId`. Check each one first, against the current source: read the cited file and trace the same path.
+
+- Still there: keep it in `findings.json` as a full item with `"priorId"` set to its `priorId`. Update `location` and `evidence` to what the code shows now.
+- Gone (the code changed, or the path is no longer reachable): add `{ "priorId": "...", "result": "not_found" }` to `recheck.json`.
+- You cannot tell: add `{ "priorId": "...", "result": "cannot_tell" }` instead.
+
+Never report a prior again as a new item under another title. Keep this to a few reads each, then spend the rest of your reads on steps 1 to 4 for new problems.
+
 ### 1. Orient (about 5 minutes of reading)
 
 Read the README, the manifest (`package.json`, `pyproject.toml`, `go.mod`, ...), and the directory tree. Write down in one line each: what the project is, its entry points (routes, handlers, CLIs, queues, webhooks), and where untrusted input enters.
@@ -64,7 +74,7 @@ If you cannot state the concrete damage, rate it lower than it feels.
 
 ### 5. Write the outputs
 
-Write both files to the output directory.
+Write the files to the output directory.
 
 **`findings.json`** is a JSON array. Each item has exactly these fields:
 
@@ -88,7 +98,10 @@ Write both files to the output directory.
 - `severity` is `null` unless `status` is `confirmed`.
 - `needs` is `null` for confirmed findings. For `needs_validation` it is the exact missing fact.
 - Number ids `F-001`, `F-002`, ... in order of severity, most severe first. Order within a severity by file path.
+- `priorId` is present only on an item that re-reports a prior finding (step 0). New items leave it out.
 - Write `[]` if there are no findings. Do not invent findings.
+
+**`recheck.json`** is written only when there was a `prior-findings.json`. It is a JSON array of `{ "priorId": "...", "result": "not_found" | "cannot_tell" }`, one entry for each prior that is not in `findings.json`. Write `[]` if every prior is still there.
 
 **`REPORT.md`** has exactly these sections in this order:
 
@@ -103,4 +116,4 @@ The prose and the JSON must agree. Write the JSON first and derive the report fr
 
 ### 6. Finish
 
-Check that both files exist and that `findings.json` parses as JSON. Then stop. Do not start a second pass.
+Run `node ~/.claude/skills/security-audit-lite/validate-output.cjs <output directory>`, and add the path of `prior-findings.json` as a second argument when there was one. It prints `ok` or one line per problem. Fix every problem it lists, run it again until it prints `ok`, and check that `REPORT.md` exists. Then stop. Do not start a second pass.

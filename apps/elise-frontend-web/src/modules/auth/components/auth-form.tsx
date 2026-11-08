@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { toast } from "sonner";
+import { ShellBrand } from "#/modules/shell";
 import { Button } from "#/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Input } from "#/components/ui/input";
@@ -9,8 +10,8 @@ import { signIn, signUp } from "../api";
 import { SignInSchema, SignUpInputSchema } from "../schemas";
 
 const COPY = {
-  signin: { title: "Sign in", submit: "Sign in", swap: "Create an account", to: "/signup" },
-  signup: { title: "Create an account", submit: "Create account", swap: "I already have an account", to: "/signin" },
+  signin: { title: "Sign in", hint: "Enter your details to continue.", submit: "Sign in", swap: "Create an account", to: "/signup" },
+  signup: { title: "Create an account", hint: "You need an invite code to join.", submit: "Create account", swap: "I already have an account", to: "/signin" },
 } as const;
 
 export function AuthForm({ mode }: { mode: "signin" | "signup" }) {
@@ -51,12 +52,16 @@ export function AuthForm({ mode }: { mode: "signin" | "signup" }) {
   };
 
   return (
-    <div className="mx-auto grid min-h-svh w-full max-w-sm content-center gap-4 p-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>{copy.title}</CardTitle>
+    <main className="mx-auto grid min-h-svh w-full max-w-sm content-center gap-8 p-6">
+      <div className="justify-self-center text-center">
+        <ShellBrand />
+      </div>
+      <Card className="shadow-raised">
+        <CardHeader className="gap-1.5 px-6 pb-9 pt-6">
+          <CardTitle className="text-xl">{copy.title}</CardTitle>
+          <p className="text-sm text-muted-foreground">{copy.hint}</p>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-6">
           <form onSubmit={submit} className="grid gap-4">
             {mode === "signup" && (
               <>
@@ -95,15 +100,15 @@ export function AuthForm({ mode }: { mode: "signin" | "signup" }) {
                 required
               />
             </div>
-            <Button type="submit" disabled={pending}>
+            <Button type="submit" size="lg" className="mt-1 w-full" disabled={pending}>
               {pending ? "Please wait…" : copy.submit}
             </Button>
           </form>
         </CardContent>
       </Card>
-      <Link to={copy.to} className="text-center text-sm text-muted-foreground underline-offset-4 hover:underline">
+      <Link to={copy.to} className="justify-self-center rounded-sm text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
         {copy.swap}
       </Link>
-    </div>
+    </main>
   );
 }

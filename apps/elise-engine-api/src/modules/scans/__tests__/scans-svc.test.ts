@@ -107,6 +107,30 @@ describe("createScanSvc", () => {
   });
 });
 
+describe("createScanSvc: the ref", () => {
+  const paramsOf = async (ref: string | undefined) => {
+    const { env, created } = fakeBindings();
+    await Effect.runPromise(createScanSvc(env, memoryScanRepo().repo, "acme", { ...input, ref }, NO_SPEND));
+    return created[0].params;
+  };
+
+  it("keeps a branch, a tag and a commit as they were typed, and leaves it to the clone to tell which", async () => {
+    expect((await paramsOf("release")).ref).toBe("release");
+    expect((await paramsOf("v1.0.0")).ref).toBe("v1.0.0");
+    expect((await paramsOf("7495881".padEnd(40, "a"))).ref).toBe("7495881".padEnd(40, "a"));
+  });
+
+  it("reads refs/heads/release as release, and knows Release is not release", async () => {
+    expect((await paramsOf("refs/heads/release")).ref).toBe("release");
+    expect((await paramsOf("Release")).ref).toBe("Release");
+  });
+
+  it("takes HEAD, and no ref, as a plain scan of the default branch", async () => {
+    expect((await paramsOf("HEAD")).ref).toBeUndefined();
+    expect((await paramsOf(undefined)).ref).toBeUndefined();
+  });
+});
+
 describe("detailScanSvc", () => {
   it("fails with NotFound for a scan that does not exist", async () => {
     const error = await Effect.runPromise(Effect.flip(detailScanSvc(fakeBindings().env, repo, "acme", "none")));

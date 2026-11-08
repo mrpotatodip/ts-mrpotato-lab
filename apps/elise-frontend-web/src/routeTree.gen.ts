@@ -11,11 +11,21 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteRouteImport } from './routes/_app/route'
+import { Route as PrototypeRouteRouteImport } from './routes/prototype/route'
 import { Route as SigninRouteImport } from './routes/signin'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as AppOverviewRouteImport } from './routes/_app/overview'
+import { Route as AppTeamRouteImport } from './routes/_app/team'
+import { Route as InviteTokenRouteImport } from './routes/invite.$token'
+import { Route as PrototypeIndexRouteImport } from './routes/prototype/index'
+import { Route as PrototypeOverviewRouteImport } from './routes/prototype/overview'
+import { Route as AppReposIndexRouteImport } from './routes/_app/repos/index'
+import { Route as AppReposRepoIdRouteImport } from './routes/_app/repos/$repoId'
 import { Route as AppScansIndexRouteImport } from './routes/_app/scans/index'
 import { Route as AppScansScanIdRouteImport } from './routes/_app/scans/$scanId'
+import { Route as PrototypeScansIndexRouteImport } from './routes/prototype/scans/index'
+import { Route as PrototypeScansScanIdRouteImport } from './routes/prototype/scans/$scanId'
+import { Route as AppReposRepoIdBranchesBranchIdRouteImport } from './routes/_app/repos/$repoId_.branches.$branchId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -24,6 +34,11 @@ const IndexRoute = IndexRouteImport.update({
 } as any)
 const AppRouteRoute = AppRouteRouteImport.update({
   id: '/_app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrototypeRouteRoute = PrototypeRouteRouteImport.update({
+  id: '/prototype',
+  path: '/prototype',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SigninRoute = SigninRouteImport.update({
@@ -41,6 +56,36 @@ const AppOverviewRoute = AppOverviewRouteImport.update({
   path: '/overview',
   getParentRoute: () => AppRouteRoute,
 } as any)
+const AppTeamRoute = AppTeamRouteImport.update({
+  id: '/team',
+  path: '/team',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const InviteTokenRoute = InviteTokenRouteImport.update({
+  id: '/invite/$token',
+  path: '/invite/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrototypeIndexRoute = PrototypeIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => PrototypeRouteRoute,
+} as any)
+const PrototypeOverviewRoute = PrototypeOverviewRouteImport.update({
+  id: '/overview',
+  path: '/overview',
+  getParentRoute: () => PrototypeRouteRoute,
+} as any)
+const AppReposIndexRoute = AppReposIndexRouteImport.update({
+  id: '/repos/',
+  path: '/repos/',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppReposRepoIdRoute = AppReposRepoIdRouteImport.update({
+  id: '/repos/$repoId',
+  path: '/repos/$repoId',
+  getParentRoute: () => AppRouteRoute,
+} as any)
 const AppScansIndexRoute = AppScansIndexRouteImport.update({
   id: '/scans/',
   path: '/scans/',
@@ -51,55 +96,142 @@ const AppScansScanIdRoute = AppScansScanIdRouteImport.update({
   path: '/scans/$scanId',
   getParentRoute: () => AppRouteRoute,
 } as any)
+const PrototypeScansIndexRoute = PrototypeScansIndexRouteImport.update({
+  id: '/scans/',
+  path: '/scans/',
+  getParentRoute: () => PrototypeRouteRoute,
+} as any)
+const PrototypeScansScanIdRoute = PrototypeScansScanIdRouteImport.update({
+  id: '/scans/$scanId',
+  path: '/scans/$scanId',
+  getParentRoute: () => PrototypeRouteRoute,
+} as any)
+const AppReposRepoIdBranchesBranchIdRoute =
+  AppReposRepoIdBranchesBranchIdRouteImport.update({
+    id: '/repos/$repoId_/branches/$branchId',
+    path: '/repos/$repoId/branches/$branchId',
+    getParentRoute: () => AppRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/prototype': typeof PrototypeRouteRouteWithChildren
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
   '/overview': typeof AppOverviewRoute
+  '/team': typeof AppTeamRoute
+  '/invite/$token': typeof InviteTokenRoute
+  '/prototype/overview': typeof PrototypeOverviewRoute
+  '/prototype/': typeof PrototypeIndexRoute
+  '/repos/$repoId': typeof AppReposRepoIdRoute
   '/scans/$scanId': typeof AppScansScanIdRoute
+  '/prototype/scans/$scanId': typeof PrototypeScansScanIdRoute
+  '/repos/': typeof AppReposIndexRoute
   '/scans/': typeof AppScansIndexRoute
+  '/prototype/scans/': typeof PrototypeScansIndexRoute
+  '/repos/$repoId/branches/$branchId': typeof AppReposRepoIdBranchesBranchIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
   '/overview': typeof AppOverviewRoute
+  '/team': typeof AppTeamRoute
+  '/invite/$token': typeof InviteTokenRoute
+  '/prototype/overview': typeof PrototypeOverviewRoute
+  '/prototype': typeof PrototypeIndexRoute
+  '/repos/$repoId': typeof AppReposRepoIdRoute
   '/scans/$scanId': typeof AppScansScanIdRoute
+  '/prototype/scans/$scanId': typeof PrototypeScansScanIdRoute
+  '/repos': typeof AppReposIndexRoute
   '/scans': typeof AppScansIndexRoute
+  '/prototype/scans': typeof PrototypeScansIndexRoute
+  '/repos/$repoId/branches/$branchId': typeof AppReposRepoIdBranchesBranchIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_app': typeof AppRouteRouteWithChildren
+  '/prototype': typeof PrototypeRouteRouteWithChildren
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
   '/_app/overview': typeof AppOverviewRoute
+  '/_app/team': typeof AppTeamRoute
+  '/invite/$token': typeof InviteTokenRoute
+  '/prototype/overview': typeof PrototypeOverviewRoute
+  '/prototype/': typeof PrototypeIndexRoute
+  '/_app/repos/$repoId': typeof AppReposRepoIdRoute
   '/_app/scans/$scanId': typeof AppScansScanIdRoute
+  '/prototype/scans/$scanId': typeof PrototypeScansScanIdRoute
+  '/_app/repos/': typeof AppReposIndexRoute
   '/_app/scans/': typeof AppScansIndexRoute
+  '/prototype/scans/': typeof PrototypeScansIndexRoute
+  '/_app/repos/$repoId_/branches/$branchId': typeof AppReposRepoIdBranchesBranchIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/signin' | '/signup' | '/overview' | '/scans/$scanId' | '/scans/'
+    | '/'
+    | '/prototype'
+    | '/signin'
+    | '/signup'
+    | '/overview'
+    | '/team'
+    | '/invite/$token'
+    | '/prototype/overview'
+    | '/prototype/'
+    | '/repos/$repoId'
+    | '/scans/$scanId'
+    | '/prototype/scans/$scanId'
+    | '/repos/'
+    | '/scans/'
+    | '/prototype/scans/'
+    | '/repos/$repoId/branches/$branchId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/signin' | '/signup' | '/overview' | '/scans/$scanId' | '/scans'
+  to:
+    | '/'
+    | '/signin'
+    | '/signup'
+    | '/overview'
+    | '/team'
+    | '/invite/$token'
+    | '/prototype/overview'
+    | '/prototype'
+    | '/repos/$repoId'
+    | '/scans/$scanId'
+    | '/prototype/scans/$scanId'
+    | '/repos'
+    | '/scans'
+    | '/prototype/scans'
+    | '/repos/$repoId/branches/$branchId'
   id:
     | '__root__'
     | '/'
     | '/_app'
+    | '/prototype'
     | '/signin'
     | '/signup'
     | '/_app/overview'
+    | '/_app/team'
+    | '/invite/$token'
+    | '/prototype/overview'
+    | '/prototype/'
+    | '/_app/repos/$repoId'
     | '/_app/scans/$scanId'
+    | '/prototype/scans/$scanId'
+    | '/_app/repos/'
     | '/_app/scans/'
+    | '/prototype/scans/'
+    | '/_app/repos/$repoId_/branches/$branchId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRouteRoute: typeof AppRouteRouteWithChildren
+  PrototypeRouteRoute: typeof PrototypeRouteRouteWithChildren
   SigninRoute: typeof SigninRoute
   SignupRoute: typeof SignupRoute
+  InviteTokenRoute: typeof InviteTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -116,6 +248,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AppRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/prototype': {
+      id: '/prototype'
+      path: '/prototype'
+      fullPath: '/prototype'
+      preLoaderRoute: typeof PrototypeRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/signin': {
@@ -139,6 +278,48 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppOverviewRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/_app/team': {
+      id: '/_app/team'
+      path: '/team'
+      fullPath: '/team'
+      preLoaderRoute: typeof AppTeamRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/invite/$token': {
+      id: '/invite/$token'
+      path: '/invite/$token'
+      fullPath: '/invite/$token'
+      preLoaderRoute: typeof InviteTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/prototype/': {
+      id: '/prototype/'
+      path: '/'
+      fullPath: '/prototype/'
+      preLoaderRoute: typeof PrototypeIndexRouteImport
+      parentRoute: typeof PrototypeRouteRoute
+    }
+    '/prototype/overview': {
+      id: '/prototype/overview'
+      path: '/overview'
+      fullPath: '/prototype/overview'
+      preLoaderRoute: typeof PrototypeOverviewRouteImport
+      parentRoute: typeof PrototypeRouteRoute
+    }
+    '/_app/repos/': {
+      id: '/_app/repos/'
+      path: '/repos'
+      fullPath: '/repos/'
+      preLoaderRoute: typeof AppReposIndexRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/_app/repos/$repoId': {
+      id: '/_app/repos/$repoId'
+      path: '/repos/$repoId'
+      fullPath: '/repos/$repoId'
+      preLoaderRoute: typeof AppReposRepoIdRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
     '/_app/scans/': {
       id: '/_app/scans/'
       path: '/scans'
@@ -153,30 +334,79 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppScansScanIdRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/prototype/scans/': {
+      id: '/prototype/scans/'
+      path: '/scans'
+      fullPath: '/prototype/scans/'
+      preLoaderRoute: typeof PrototypeScansIndexRouteImport
+      parentRoute: typeof PrototypeRouteRoute
+    }
+    '/prototype/scans/$scanId': {
+      id: '/prototype/scans/$scanId'
+      path: '/scans/$scanId'
+      fullPath: '/prototype/scans/$scanId'
+      preLoaderRoute: typeof PrototypeScansScanIdRouteImport
+      parentRoute: typeof PrototypeRouteRoute
+    }
+    '/_app/repos/$repoId_/branches/$branchId': {
+      id: '/_app/repos/$repoId_/branches/$branchId'
+      path: '/repos/$repoId/branches/$branchId'
+      fullPath: '/repos/$repoId/branches/$branchId'
+      preLoaderRoute: typeof AppReposRepoIdBranchesBranchIdRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
   }
 }
 
 interface AppRouteRouteChildren {
   AppOverviewRoute: typeof AppOverviewRoute
+  AppTeamRoute: typeof AppTeamRoute
+  AppReposRepoIdRoute: typeof AppReposRepoIdRoute
   AppScansScanIdRoute: typeof AppScansScanIdRoute
+  AppReposIndexRoute: typeof AppReposIndexRoute
   AppScansIndexRoute: typeof AppScansIndexRoute
+  AppReposRepoIdBranchesBranchIdRoute: typeof AppReposRepoIdBranchesBranchIdRoute
 }
 
 const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppOverviewRoute: AppOverviewRoute,
+  AppTeamRoute: AppTeamRoute,
+  AppReposRepoIdRoute: AppReposRepoIdRoute,
   AppScansScanIdRoute: AppScansScanIdRoute,
+  AppReposIndexRoute: AppReposIndexRoute,
   AppScansIndexRoute: AppScansIndexRoute,
+  AppReposRepoIdBranchesBranchIdRoute: AppReposRepoIdBranchesBranchIdRoute,
 }
 
 const AppRouteRouteWithChildren = AppRouteRoute._addFileChildren(
   AppRouteRouteChildren,
 )
 
+interface PrototypeRouteRouteChildren {
+  PrototypeOverviewRoute: typeof PrototypeOverviewRoute
+  PrototypeIndexRoute: typeof PrototypeIndexRoute
+  PrototypeScansScanIdRoute: typeof PrototypeScansScanIdRoute
+  PrototypeScansIndexRoute: typeof PrototypeScansIndexRoute
+}
+
+const PrototypeRouteRouteChildren: PrototypeRouteRouteChildren = {
+  PrototypeOverviewRoute: PrototypeOverviewRoute,
+  PrototypeIndexRoute: PrototypeIndexRoute,
+  PrototypeScansScanIdRoute: PrototypeScansScanIdRoute,
+  PrototypeScansIndexRoute: PrototypeScansIndexRoute,
+}
+
+const PrototypeRouteRouteWithChildren = PrototypeRouteRoute._addFileChildren(
+  PrototypeRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRouteRoute: AppRouteRouteWithChildren,
+  PrototypeRouteRoute: PrototypeRouteRouteWithChildren,
   SigninRoute: SigninRoute,
   SignupRoute: SignupRoute,
+  InviteTokenRoute: InviteTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

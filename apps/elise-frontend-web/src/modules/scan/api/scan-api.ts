@@ -1,18 +1,28 @@
 import { createServerFn } from "@tanstack/react-start";
 import {
   CreateScanInputSchema,
+  FindingListSchema,
   FindingsFileSchema,
+  RepoDetailSchema,
+  RepoListSchema,
+  RepoParamSchema,
+  SEVERITIES,
+  fromRecorded,
+  type Finding,
   OverviewSchema,
   type Severity,
   ScanQueuedSchema,
   ScanCursorInputSchema,
+  ScanDiffSchema,
   ScanFileInputSchema,
   ScanIdInputSchema,
   ScanListSchema,
   ScanStatusSchema,
+  VerdictInputSchema,
+  VerdictSchema,
 } from "../schemas";
-import { engineFetch, engineJson, jsonPost, type EngineAuth } from "#/lib/engine-client";
-import { requireSession } from "#/modules/auth/server/session";
+import { EngineError, engineFetch, engineJson, jsonPost, type EngineAuth } from "#/lib/engine-client";
+import { engineAuth } from "#/modules/auth/server/session";
 
 export const fetchScans = createServerFn({ method: "GET" })
   .validator(ScanCursorInputSchema)
@@ -20,6 +30,12 @@ export const fetchScans = createServerFn({ method: "GET" })
     const query = data.cursor ? `?cursor=${encodeURIComponent(data.cursor)}` : "";
     return engineJson(ScanListSchema, `/scans${query}`, {}, await engineAuth());
   });
+
+export const fetchScanRepos = createServerFn({ method: "GET" }).handler(async () => engineJson(RepoListSchema, "/repos", {}, await engineAuth()));
+
+export const fetchScanRepoBranches = createServerFn({ method: "GET" })
+  .validator(RepoParamSchema)
+  .handler(async ({ data }) => engineJson(RepoDetailSchema, `/repos/${data.repoId}`, {}, await engineAuth()));
 
 export const fetchScan = createServerFn({ method: "GET" })
   .validator(ScanIdInputSchema)
@@ -40,17 +56,22 @@ export const createScan = createServerFn({ method: "POST" })
     return engineJson(ScanQueuedSchema, "/scans", jsonPost(JSON.stringify(data)), await engineAuth());
   });
 
-async function engineAuth(): Promise<EngineAuth> {
-  const { token, accountId } = await requireSession();
-  return { token, accountId };
-}
+const RECORDED_PAGE = 100;
 
-async function readFindings(auth: EngineAuth, scanId: string) {
+// -----
+// Lite scans record their findings in Neon; the full skill does not, so
+// its findings.json is the only source. A missing file means nothing was
+// saved. Any other failure is raised, not shown as "No findings".
+// -----
+async function readFindings(auth: EngineAuth, scanId: string): Promise<Finding[]> {
+  const recorded = await engineJson(FindingListSchema, `/findings?scanId=${encodeURIComponent(scanId)}&limit=${RECORDED_PAGE}`, {}, auth);
+  if (recorded.findings.length > 0) return recorded.findings.map(fromRecorded);
   try {
     const res = await engineFetch(`/scans/${scanId}/files/findings.json`, {}, auth);
     return FindingsFileSchema.parse(await res.json());
-  } catch {
-    return [];
+  } catch (error) {
+    if (error instanceof EngineError && error.status === 404) return [];
+    throw error;
   }
 }
 
@@ -60,27 +81,22 @@ export const fetchScanFindings = createServerFn({ method: "GET" })
     return readFindings(await engineAuth(), data.scanId);
   });
 
-const FINDINGS_SAMPLE = 10;
-
 // -----
-// Counts come from the newest page of scans only, and findings from the
-// newest FINDINGS_SAMPLE finished ones: the engine has no summary endpoint.
+// Scan counts come from the newest page of scans. Open findings come from
+// the repo list, which counts every repo's open findings exactly.
 // -----
 export const fetchOverview = createServerFn({ method: "GET" }).handler(async () => {
   const auth = await engineAuth();
-  const list = await engineJson(ScanListSchema, "/scans", {}, auth);
+  const [list, repoList] = await Promise.all([engineJson(ScanListSchema, "/scans", {}, auth), engineJson(RepoListSchema, "/repos", {}, auth)]);
 
   const byState = { queued: 0, running: 0, succeeded: 0, failed: 0 };
   for (const scan of list.scans) byState[scan.status] += 1;
 
-  const sampled = list.scans.filter((s) => s.status === "succeeded" && s.files?.includes("findings.json")).slice(0, FINDINGS_SAMPLE);
-  const findings = (await Promise.all(sampled.map((s) => readFindings(auth, s.scanId)))).flat();
-
   const severity = { critical: 0, high: 0, medium: 0, low: 0, informational: 0 } satisfies Record<Severity, number>;
   let needsValidation = 0;
-  for (const f of findings) {
-    if (f.state === "needs_validation") needsValidation += 1;
-    if (f.state === "confirmed" && f.severity) severity[f.severity] += 1;
+  for (const { open } of repoList.repos) {
+    needsValidation += open.needsValidation;
+    for (const key of SEVERITIES) severity[key] += open.severity[key];
   }
 
   return OverviewSchema.parse({
@@ -89,6 +105,14 @@ export const fetchOverview = createServerFn({ method: "GET" }).handler(async () 
     byState,
     severity,
     needsValidation,
-    scannedForFindings: sampled.length,
+    repos: repoList.repos.length,
   });
 });
+
+export const fetchScanDiff = createServerFn({ method: "GET" })
+  .validator(ScanIdInputSchema)
+  .handler(async ({ data }) => engineJson(ScanDiffSchema, `/scans/${data.scanId}/diff`, {}, await engineAuth()));
+
+export const fetchVerdict = createServerFn({ method: "GET" })
+  .validator(VerdictInputSchema)
+  .handler(async ({ data }) => engineJson(VerdictSchema, `/repos/${data.repoId}/verdict?commit=${data.commit}`, {}, await engineAuth()));

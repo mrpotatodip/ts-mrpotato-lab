@@ -6,11 +6,13 @@
   "main": "src/index.ts",
   "scripts": {
     "dev": "wrangler dev",
+    "dev:log": "wrangler dev > .dev.log 2>&1",
     "deploy": "wrangler deploy",
     "build": "tsc --noEmit",
     "lint": "oxlint src",
     "test": "vitest run",
-    "check": "tsc --noEmit && oxlint src && vitest run"
+    "live:get": "node tools/live-get.mjs",
+    "check": "tsc --noEmit && tsc -p tsconfig.test.json --noEmit && oxlint src && vitest run"
   },
   "dependencies": {
     "@cloudflare/sandbox": "^1.0.3",
@@ -27,6 +29,7 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20261001.1",
     "@oxlint/plugins": "1.79.0",
+    "@types/node": "^22.19.19",
     "oxlint": "1.79.0",
     "typescript": "^5.4.5",
     "vitest": "^4.1.7",

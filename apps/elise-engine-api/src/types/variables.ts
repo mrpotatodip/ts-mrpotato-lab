@@ -19,6 +19,7 @@ export type Bindings = {
   AUTH_TRUSTED_ORIGINS: string;
   SIGN_UP_LIMITER?: RateLimit;
   SIGN_IN_LIMITER?: RateLimit;
+  TEAM_INVITE_LIMITER?: RateLimit;
   REPORTS: R2Bucket;
   SANDBOX: DurableObjectNamespace<ScanSandbox>;
   SCAN_WORKFLOW: Workflow<ScanParams>;
@@ -33,6 +34,7 @@ export type AppDeps = {
   monthSpend: (env: Bindings, accountId: string) => Promise<MonthSpend>;
   sessionUserId: (c: Context<AppEnv>) => Promise<string | undefined>;
   userHasAccount: (c: Context<AppEnv>, userId: string, accountId: string) => Promise<boolean>;
+  userManagesAccount: (c: Context<AppEnv>, userId: string, accountId: string) => Promise<boolean>;
 };
 
 export type Variables = { userId?: string; deps: AppDeps };

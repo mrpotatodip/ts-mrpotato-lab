@@ -21,7 +21,8 @@
   "workflows": [{ "name": "elise-scan-workflow", "binding": "SCAN_WORKFLOW", "class_name": "ScanWorkflow" }],
   "ratelimits": [
     { "name": "SIGN_UP_LIMITER", "namespace_id": "1001", "simple": { "limit": 5, "period": 60 } },
-    { "name": "SIGN_IN_LIMITER", "namespace_id": "1002", "simple": { "limit": 10, "period": 60 } }
+    { "name": "SIGN_IN_LIMITER", "namespace_id": "1002", "simple": { "limit": 10, "period": 60 } },
+    { "name": "TEAM_INVITE_LIMITER", "namespace_id": "1003", "simple": { "limit": 10, "period": 60 } }
   ],
   "r2_buckets": [{ "binding": "REPORTS", "bucket_name": "repo-scan-reports" }],
   "vars": { "ENVIRONMENT": "production", "MODEL": "claude-sonnet-5-5", "EFFORT": "high", "MAX_BUDGET_USD": "2", "MAX_ACTIVE_SCANS": "3", "MONTHLY_BUDGET_USD": "20", "AUTH_BASE_URL": "https://elise-engine-api.mochi-project.workers.dev", "AUTH_TRUSTED_ORIGINS": "https://elise-engine-api.mochi-project.workers.dev,http://localhost:3000" }

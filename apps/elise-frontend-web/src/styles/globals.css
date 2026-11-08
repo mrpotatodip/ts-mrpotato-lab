@@ -1,144 +1,79 @@
 @import "tailwindcss";
 @import "sonner/dist/styles.css";
 
-@custom-variant dark (&:is(.dark *));
-
 :root {
-  --background: oklch(0.99 0.004 75);
-  --foreground: oklch(0.28 0.02 55);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.28 0.02 55);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.28 0.02 55);
-  --primary: oklch(0.58 0.09 30);
-  --primary-foreground: oklch(0.99 0.004 75);
-  --secondary: oklch(0.965 0.006 75);
-  --secondary-foreground: oklch(0.32 0.02 55);
-  --muted: oklch(0.965 0.006 75);
-  --muted-foreground: oklch(0.54 0.012 60);
-  --accent: oklch(0.955 0.01 75);
-  --accent-foreground: oklch(0.32 0.02 55);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(1 0 0);
-  --border: oklch(0.93 0.006 75);
-  --input: oklch(0.93 0.006 75);
-  --ring: oklch(0.64 0.07 30);
-  /* ----- */
-  /* Status colour for screens outside the dashboard theme: a solid
-     ink plus a soft fill. Dashboard overrides it with the same values. */
-  /* ----- */
-  --status-success: oklch(0.52 0.12 155);
-  --status-success-soft: oklch(0.95 0.04 155);
-  --status-danger: oklch(0.55 0.17 27);
-  --status-danger-soft: oklch(0.95 0.03 20);
+  color-scheme: light;
+  --background: oklch(0.958 0.004 258);
+  --foreground: oklch(0.22 0.012 258);
+  --sidebar: oklch(0.93 0.005 258);
+  --card: oklch(0.99 0.002 258);
+  --card-foreground: oklch(0.22 0.012 258);
+  --popover: oklch(0.998 0.001 258);
+  --popover-foreground: oklch(0.22 0.012 258);
+  --primary: oklch(0.27 0.012 258);
+  --primary-foreground: oklch(0.99 0.002 258);
+  --primary-ink: oklch(0.3 0.012 258);
+  --secondary: oklch(0.9 0.006 258);
+  --secondary-foreground: oklch(0.26 0.012 258);
+  --muted: oklch(0.94 0.004 258);
+  --muted-foreground: oklch(0.36 0.012 258);
+  --accent: oklch(0 0 0 / 0.055);
+  --accent-foreground: oklch(0.2 0.012 258);
+  --destructive: oklch(0.52 0.19 27);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: oklch(0 0 0 / 0.09);
+  --input: oklch(0 0 0 / 0.16);
+  --ring: oklch(0.4 0.015 258 / 0.5);
+
+  --status-success: oklch(0.4 0.12 155);
+  --status-success-soft: oklch(0.55 0.14 155 / 0.13);
+  --status-danger: oklch(0.44 0.18 27);
+  --status-danger-soft: oklch(0.58 0.2 27 / 0.12);
+  --status-warning: oklch(0.4 0.1 70);
+  --status-warning-soft: oklch(0.72 0.15 80 / 0.2);
+  --status-info: oklch(0.41 0.14 245);
+  --status-info-soft: oklch(0.6 0.14 245 / 0.13);
+  --status-neutral: oklch(0.38 0.012 258);
+  --status-neutral-soft: oklch(0.5 0.012 258 / 0.12);
+
+  --severity-critical: oklch(0.44 0.2 25);
+  --severity-high: oklch(0.44 0.14 48);
+  --severity-medium: oklch(0.42 0.1 80);
+  --severity-low: oklch(0.42 0.14 245);
+  --severity-informational: oklch(0.4 0.012 258);
+
   --font-sans:
     ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-  --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
   --font-mono:
     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
     "Courier New", monospace;
   --radius: 0.75rem;
-  --shadow-x: 0;
-  --shadow-y: 1px;
-  --shadow-blur: 3px;
-  --shadow-spread: 0px;
-  --shadow-opacity: 0.1;
-  --shadow-color: oklch(0 0 0);
-  --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
-  --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
-  --shadow-sm:
-    0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
-  --shadow: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
-  --shadow-md:
-    0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 2px 4px -1px hsl(0 0% 0% / 0.1);
-  --shadow-lg:
-    0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 4px 6px -1px hsl(0 0% 0% / 0.1);
-  --shadow-xl:
-    0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 8px 10px -1px hsl(0 0% 0% / 0.1);
-  --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
-  --tracking-normal: 0em;
-  --spacing: 0.25rem;
-  --status-warning: oklch(0.58 0.12 75);
-  --status-warning-soft: oklch(0.96 0.05 90);
-  --status-info: oklch(0.52 0.12 245);
-  --status-info-soft: oklch(0.95 0.03 245);
-  --status-neutral: oklch(0.5 0.01 60);
-  --status-neutral-soft: oklch(0.95 0.005 75);
-}
 
-.dark {
-  --background: oklch(0.17 0.004 60);
-  --foreground: oklch(0.95 0.005 75);
-  --card: oklch(0.21 0.005 60);
-  --card-foreground: oklch(0.95 0.005 75);
-  --popover: oklch(0.21 0.005 60);
-  --popover-foreground: oklch(0.95 0.005 75);
-  --primary: oklch(0.8 0.08 30);
-  --primary-foreground: oklch(0.22 0.02 30);
-  --secondary: oklch(0.27 0.006 60);
-  --secondary-foreground: oklch(0.95 0.005 75);
-  --muted: oklch(0.27 0.006 60);
-  --muted-foreground: oklch(0.7 0.01 70);
-  --accent: oklch(0.29 0.008 60);
-  --accent-foreground: oklch(0.95 0.005 75);
-  --destructive: oklch(0.6600 0.1900 25.5);
-  --destructive-foreground: oklch(0.16 0 0);
-  --border: oklch(0.29 0.006 60);
-  --input: oklch(0.29 0.006 60);
-  --ring: oklch(0.64 0.07 30);
-  /* ----- */
-  /* Dark: the ink gains lightness to hold contrast, and the soft
-     fill becomes a dark tint of the same hue. */
-  /* ----- */
-  --status-success: oklch(0.78 0.13 155);
-  --status-success-soft: oklch(0.3 0.05 155);
-  --status-danger: oklch(0.72 0.16 27);
-  --status-danger-soft: oklch(0.3 0.055 27);
-  --font-sans:
-    ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif,
-    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-  --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
-  --font-mono:
-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
-    "Courier New", monospace;
-  --shadow-x: 0;
-  --shadow-y: 1px;
-  --shadow-blur: 3px;
-  --shadow-spread: 0px;
-  --shadow-opacity: 0.1;
-  --shadow-color: oklch(0 0 0);
-  --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
-  --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
-  --shadow-sm:
-    0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
-  --shadow: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
-  --shadow-md:
-    0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 2px 4px -1px hsl(0 0% 0% / 0.1);
-  --shadow-lg:
-    0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 4px 6px -1px hsl(0 0% 0% / 0.1);
-  --shadow-xl:
-    0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 8px 10px -1px hsl(0 0% 0% / 0.1);
-  --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
-  --status-warning: oklch(0.83 0.13 85);
-  --status-warning-soft: oklch(0.31 0.05 85);
-  --status-info: oklch(0.76 0.11 245);
-  --status-info-soft: oklch(0.3 0.045 245);
-  --status-neutral: oklch(0.75 0.01 70);
-  --status-neutral-soft: oklch(0.28 0.005 60);
+  --shadow-card:
+    inset 0 1px 0 oklch(1 0 0 / 0.9), 0 1px 2px oklch(0 0 0 / 0.06),
+    0 10px 24px -14px oklch(0 0 0 / 0.14);
+  --shadow-raised:
+    inset 0 1px 0 oklch(1 0 0 / 0.9), 0 1px 2px oklch(0 0 0 / 0.08),
+    0 18px 38px -16px oklch(0 0 0 / 0.28);
+  --shadow-control: 0 1px 1px oklch(0 0 0 / 0.05);
+  --shadow-primary:
+    inset 0 1px 0 oklch(1 0 0 / 0.16), 0 1px 2px oklch(0 0 0 / 0.3),
+    0 6px 14px -6px oklch(0 0 0 / 0.4);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-sidebar: var(--sidebar);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-ink: var(--primary-ink);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
@@ -151,7 +86,6 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-
   --color-status-success: var(--status-success);
   --color-status-success-soft: var(--status-success-soft);
   --color-status-danger: var(--status-danger);
@@ -163,24 +97,24 @@
   --color-status-neutral: var(--status-neutral);
   --color-status-neutral-soft: var(--status-neutral-soft);
 
+  --color-severity-critical: var(--severity-critical);
+  --color-severity-high: var(--severity-high);
+  --color-severity-medium: var(--severity-medium);
+  --color-severity-low: var(--severity-low);
+  --color-severity-informational: var(--severity-informational);
+
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);
-  --font-serif: var(--font-serif);
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 
-  --shadow-2xs: var(--shadow-2xs);
-  --shadow-xs: var(--shadow-xs);
-  --shadow-sm: var(--shadow-sm);
-  --shadow: var(--shadow);
-  --shadow-md: var(--shadow-md);
-  --shadow-lg: var(--shadow-lg);
-  --shadow-xl: var(--shadow-xl);
-  --shadow-2xl: var(--shadow-2xl);
-  --shadow-floating: 0 8px 40px 12px oklch(0 0 0 / 0.06);
+  --shadow-card: var(--shadow-card);
+  --shadow-raised: var(--shadow-raised);
+  --shadow-control: var(--shadow-control);
+  --shadow-primary: var(--shadow-primary);
 }
 
 @layer base {
@@ -193,17 +127,20 @@
   body {
     @apply bg-background text-foreground;
     position: relative;
-    /* ----- */
-    /* Installed standalone there is no browser chrome, so content
-       runs under the notch and the home indicator. Every inset is 0
-       in a normal browser tab, so this is inert outside standalone.
-       Fixed/sticky elements ignore this padding and pad themselves. */
-    /* ----- */
-    padding-top: env(safe-area-inset-top);
-    padding-right: env(safe-area-inset-right);
-    padding-bottom: env(safe-area-inset-bottom);
-    padding-left: env(safe-area-inset-left);
-    overscroll-behavior-y: contain;
+    min-height: 100svh;
+    background-image: radial-gradient(
+      70rem 26rem at 78% -12%,
+      oklch(1 0 0 / 0.6),
+      transparent 70%
+    );
+    background-repeat: no-repeat;
+    font-feature-settings: "cv11", "ss01";
     -webkit-tap-highlight-color: transparent;
+  }
+  :where(svg.lucide) {
+    stroke-width: 1.5;
+  }
+  ::selection {
+    background: oklch(0.3 0.012 258 / 0.16);
   }
 }

@@ -1,6 +1,6 @@
 import { deleteCookie, getCookie, setCookie } from "@tanstack/react-start/server";
 import { MeSchema } from "@repo/contracts/elise";
-import { EngineError, engineJson } from "#/lib/engine-client";
+import { EngineError, engineJson, type EngineAuth } from "#/lib/engine-client";
 import type { SessionUser } from "../types";
 
 const SESSION_COOKIE = "elise_session";
@@ -37,7 +37,7 @@ export async function findSession(): Promise<ServerSession | null> {
     return {
       token,
       accountId: account.id,
-      user: { id: me.user.id, email: me.user.email, name: me.user.name, accountName: account.name },
+      user: { id: me.user.id, email: me.user.email, name: me.user.name, accountName: account.name, role: account.role },
     };
   } catch (error) {
     if (error instanceof EngineError && error.status === 401) clearSessionToken();
@@ -50,4 +50,13 @@ export async function requireSession() {
   const session = await findSession();
   if (!session) throw new Error("Not signed in");
   return session;
+}
+
+// -----
+// The token and account every engine call sends. Take the account from
+// the session, never from input.
+// -----
+export async function engineAuth(): Promise<EngineAuth> {
+  const { token, accountId } = await requireSession();
+  return { token, accountId };
 }

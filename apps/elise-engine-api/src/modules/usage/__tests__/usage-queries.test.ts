@@ -2,33 +2,26 @@ import { Effect } from "effect";
 import { eq } from "drizzle-orm";
 import { scans, tenants } from "@repo/db-elise/schema";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { openTestDb, seedTenant, type TestDb } from "#/__tests__/test-db";
+import { openTestDb, scanValues, seedRepo, seedTenant, type TestDb } from "#/__tests__/test-db";
 import { monthSpendEffect } from "#/modules/usage";
 
 let test: TestDb;
 let tenantId: string;
+let repoId: string;
 
-const row = (id: string, createdAt: string, costUsd: string | null, tokens: number | null) => ({
-  id,
-  tenantId,
-  repo: "https://github.com/octocat/Hello-World",
-  status: "succeeded" as const,
-  skill: "lite",
-  model: "claude-haiku-5-5",
-  effort: "low",
-  profile: "quick",
-  maxBudgetUsd: "1.00",
-  createdAt: new Date(createdAt),
-  costUsd,
-  inputTokens: tokens,
-  outputTokens: tokens,
-  cacheReadTokens: tokens,
-  cacheWriteTokens: tokens,
-});
+const row = (id: string, createdAt: string, costUsd: string | null, tokens: number | null) =>
+  scanValues(tenantId, repoId, id, createdAt, {
+    costUsd,
+    inputTokens: tokens,
+    outputTokens: tokens,
+    cacheReadTokens: tokens,
+    cacheWriteTokens: tokens,
+  });
 
 beforeAll(async () => {
   test = await openTestDb();
   tenantId = (await seedTenant(test)).tenantId;
+  repoId = await seedRepo(test, tenantId);
   await test.raw.insert(scans).values([
     row("in-1", "2026-11-03T10:00:00Z", "0.5000", 100),
     row("in-2", "2026-11-20T10:00:00Z", "0.2500", 50),

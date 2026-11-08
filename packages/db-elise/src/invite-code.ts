@@ -40,7 +40,7 @@ export const generateInviteCode = (): string => formatInviteCode(randomSymbols(I
 // -----
 export const normalizeInviteCode = (code: string): string => code.replace(INVITE_CODE_SEPARATOR_PATTERN, "").toUpperCase();
 
-const sha256Hex = async (text: string): Promise<string> => {
+export const sha256Hex = async (text: string): Promise<string> => {
   const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)));
   return Array.from(digest, (byte) => byte.toString(16).padStart(2, "0")).join("");
 };

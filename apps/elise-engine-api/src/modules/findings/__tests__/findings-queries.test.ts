@@ -2,29 +2,21 @@ import { Effect } from "effect";
 import type { FindingsQuery } from "@repo/contracts/elise";
 import { scanFindings, scans } from "@repo/db-elise/schema";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { openTestDb, seedTenant, type TestDb } from "#/__tests__/test-db";
-import { findingExistsEffect, listFindingsEffect, upsertTriageEffect } from "#/modules/findings/queries";
+import { openTestDb, scanValues, seedRepo, seedTenant, type TestDb } from "#/__tests__/test-db";
+import { findingRepoIdEffect, listFindingsEffect, setTriageEffect } from "#/modules/findings/queries";
 import { listFindingsSvc } from "#/modules/findings/handlers";
 
 let test: TestDb;
 let tenantId: string;
 let otherTenantId: string;
+let repoId: string;
+let otherRepoId: string;
 
 const REPO = "https://github.com/octocat/Hello-World";
 const fp = (letter: string) => letter.repeat(64);
 
-const scanRow = (id: string, createdAt: string, status: "succeeded" | "failed", tenant = tenantId) => ({
-  id,
-  tenantId: tenant,
-  repo: REPO,
-  status,
-  skill: "lite",
-  model: "claude-haiku-5-5",
-  effort: "low",
-  profile: "quick",
-  maxBudgetUsd: "1.00",
-  createdAt: new Date(createdAt),
-});
+const scanRow = (id: string, createdAt: string, status: "succeeded" | "failed", tenant = tenantId) =>
+  scanValues(tenant, tenant === tenantId ? repoId : otherRepoId, id, createdAt, { status });
 
 const finding = (scanId: string, findingId: string, letter: string, severity: "high" | "low" | "critical" | null, tenant = tenantId) => ({
   tenantId: tenant,
@@ -43,6 +35,8 @@ beforeAll(async () => {
   test = await openTestDb();
   tenantId = (await seedTenant(test, "acme")).tenantId;
   otherTenantId = (await seedTenant(test, "other")).tenantId;
+  repoId = await seedRepo(test, tenantId, REPO);
+  otherRepoId = await seedRepo(test, otherTenantId, REPO);
   await test.raw.insert(scans).values([
     scanRow("old", "2026-11-01T00:00:00Z", "succeeded"),
     scanRow("new", "2026-11-02T00:00:00Z", "succeeded"),
@@ -98,14 +92,15 @@ describe("listFindingsEffect", () => {
 });
 
 describe("triage", () => {
-  it("reports whether a finding exists for this account and repo", async () => {
-    expect(await Effect.runPromise(findingExistsEffect(test.http, tenantId, REPO, fp("a")))).toBe(true);
-    expect(await Effect.runPromise(findingExistsEffect(test.http, tenantId, REPO, fp("z")))).toBe(false);
-    expect(await Effect.runPromise(findingExistsEffect(test.http, tenantId, REPO, fp("d")))).toBe(false);
+  it("finds the repo of a finding for this account, in any spelling of the URL", async () => {
+    expect(await Effect.runPromise(findingRepoIdEffect(test.http, tenantId, REPO, fp("a")))).toBe(repoId);
+    expect(await Effect.runPromise(findingRepoIdEffect(test.http, tenantId, "https://github.com/OCTOCAT/hello-WORLD.git/", fp("a")))).toBe(repoId);
+    expect(await Effect.runPromise(findingRepoIdEffect(test.http, tenantId, REPO, fp("z")))).toBeNull();
+    expect(await Effect.runPromise(findingRepoIdEffect(test.http, tenantId, REPO, fp("d")))).toBeNull();
   });
 
   it("saves a decision that then shows on the finding and filters it out of open", async () => {
-    const saved = await Effect.runPromise(upsertTriageEffect(test.http, tenantId, { repo: REPO, fingerprint: fp("a"), status: "false_positive", note: "fixture" }, null));
+    const saved = await Effect.runPromise(setTriageEffect(test.pool, tenantId, repoId, { repo: REPO, fingerprint: fp("a"), status: "false_positive", note: "fixture" }, undefined, new Date()));
     const all = await Effect.runPromise(listFindingsEffect(test.http, tenantId, query()));
     const open = await Effect.runPromise(listFindingsEffect(test.http, tenantId, query({ triage: "open" })));
     const decided = await Effect.runPromise(listFindingsEffect(test.http, tenantId, query({ triage: "false_positive" })));
@@ -117,7 +112,7 @@ describe("triage", () => {
   });
 
   it("changes the decision on a second save instead of adding a row", async () => {
-    await Effect.runPromise(upsertTriageEffect(test.http, tenantId, { repo: REPO, fingerprint: fp("a"), status: "fixed" }, null));
+    await Effect.runPromise(setTriageEffect(test.pool, tenantId, repoId, { repo: REPO, fingerprint: fp("a"), status: "fixed" }, undefined, new Date()));
     const rows = await Effect.runPromise(listFindingsEffect(test.http, tenantId, query({ triage: "fixed" })));
 
     expect(ids(rows)).toEqual(["F-001"]);
@@ -132,4 +127,14 @@ describe("triage", () => {
     expect(ids(rows)).toEqual(["F-001"]);
     expect(rows[0]).toMatchObject({ scanId: "rescan", triage: { status: "fixed" } });
   });
+
+describe("scans of a ref", () => {
+  it("do not replace the default view of a repo's findings, but can be asked for by scan id", async () => {
+    await test.raw.insert(scans).values(scanValues(tenantId, repoId, "on-branch", "2026-11-09T00:00:00Z", { ref: "feature/x" }));
+    await test.raw.insert(scanFindings).values(finding("on-branch", "F-BRANCH", "f", "high"));
+
+    expect(ids(await Effect.runPromise(listFindingsEffect(test.http, tenantId, query())))).not.toContain("F-BRANCH");
+    expect(ids(await Effect.runPromise(listFindingsEffect(test.http, tenantId, query({ scanId: "on-branch" }))))).toEqual(["F-BRANCH"]);
+  });
+});
 });
