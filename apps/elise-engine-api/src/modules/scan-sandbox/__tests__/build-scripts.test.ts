@@ -22,6 +22,13 @@ describe("buildAgentScript", () => {
 
     expect(script).toContain("--model claude-haiku-5-5 --effort low --max-budget-usd 1");
   });
+
+  it("ignores the clone's own Claude config", () => {
+    const script = buildAgentScript(options);
+
+    expect(script).toContain("--setting-sources user");
+    expect(script).toContain("rm -rf /workspace/repo/.claude /workspace/repo/CLAUDE.md");
+  });
 });
 
 describe("buildCloneScript", () => {

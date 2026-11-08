@@ -54,3 +54,18 @@ export const SCAN_SANDBOX_ANTHROPIC_ROUTES = [
   "GET /api/claude_code/settings",
   "GET /api/claude_code/policy_limits",
 ];
+
+// -----
+// Metering: the Outbound proxy counts what the container spends.
+// USD per million tokens. A model not listed is priced like the
+// dearest one, so it still counts against the cap. Haiku is priced
+// at its rate above 100K prompt tokens.
+// -----
+export const SCAN_SANDBOX_METER_KEY = "meter";
+export const SCAN_SANDBOX_MAX_OUTPUT_TOKENS = 64000;
+export const SCAN_SANDBOX_MODEL_PRICES = {
+  "claude-haiku-5-5": { input: 0.5, output: 2.5, cacheRead: 0.05, cacheWrite: 0.625 },
+  "claude-sonnet-5-5": { input: 2, output: 10, cacheRead: 0.2, cacheWrite: 2.5 },
+  "claude-opus-5-5": { input: 4, output: 20, cacheRead: 0.2, cacheWrite: 5 },
+} as const;
+export const SCAN_SANDBOX_DEFAULT_PRICE = { input: 10, output: 50, cacheRead: 0.25, cacheWrite: 12.5 } as const;

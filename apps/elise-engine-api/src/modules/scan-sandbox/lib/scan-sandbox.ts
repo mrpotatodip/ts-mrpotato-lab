@@ -20,6 +20,7 @@ import {
   SCAN_SANDBOX_INSTANCE_TYPE,
   SCAN_SANDBOX_KIND_FILE,
   SCAN_SANDBOX_LOG_TAIL_CHARS,
+  SCAN_SANDBOX_METER_KEY,
   SCAN_SANDBOX_OUT_DIR,
   SCAN_SANDBOX_PRIOR_PATH,
   SCAN_SANDBOX_PROMPT_PATH,
@@ -27,8 +28,8 @@ import {
   SCAN_SANDBOX_TRUST_ENV,
   SCAN_SANDBOX_WORK_DIR,
 } from "#/modules/scan-sandbox/constants";
-import type { AgentState, OutboundExport, ScanCheckout } from "#/modules/scan-sandbox/types";
-import { buildAgentPrompt, buildAgentScript, buildCloneScript, parseAgentUsage } from "#/modules/scan-sandbox/utils";
+import type { AgentState, Meter, MeteredTokens, OutboundExport, ScanCheckout } from "#/modules/scan-sandbox/types";
+import { buildAgentPrompt, buildAgentScript, buildCloneScript, parseAgentUsage, priceUsage } from "#/modules/scan-sandbox/utils";
 
 type SandboxContext = DurableObjectState & { exports: { Outbound: OutboundExport } };
 
@@ -42,7 +43,30 @@ export class ScanSandbox extends DurableObject<Bindings> {
     if (!ctx.container) throw new Error("The container binding is not configured");
     this.#container = ctx.container;
     this.#files = new Files(ctx.container);
-    this.#outbound = ctx.exports.Outbound({});
+    this.#outbound = ctx.exports.Outbound({ props: { sandboxId: ctx.id.toString() } });
+  }
+
+  // -----
+  // The meter. Outbound asks before each model call and reports
+  // what came back, so the cap and the recorded cost come from
+  // here, not from a file the container can write.
+  // -----
+  async meterAllows(): Promise<boolean> {
+    const meter = await this.ctx.storage.get<Meter>(SCAN_SANDBOX_METER_KEY);
+    return meter !== undefined && meter.spentUsd < meter.budgetUsd;
+  }
+
+  async meterRecord(model: string, tokens: MeteredTokens): Promise<void> {
+    const meter = await this.ctx.storage.get<Meter>(SCAN_SANDBOX_METER_KEY);
+    if (meter === undefined) return;
+    await this.ctx.storage.put<Meter>(SCAN_SANDBOX_METER_KEY, {
+      ...meter,
+      inputTokens: meter.inputTokens + tokens.inputTokens,
+      outputTokens: meter.outputTokens + tokens.outputTokens,
+      cacheReadTokens: meter.cacheReadTokens + tokens.cacheReadTokens,
+      cacheWriteTokens: meter.cacheWriteTokens + tokens.cacheWriteTokens,
+      spentUsd: meter.spentUsd + priceUsage(model, tokens),
+    });
   }
 
   // -----
@@ -67,6 +91,16 @@ export class ScanSandbox extends DurableObject<Bindings> {
 
   async launchAgent(options: ScanOptions, priors: PriorFinding[] = []): Promise<void> {
     console.log("scan: running agent", options, `${priors.length} prior findings`);
+    if ((await this.ctx.storage.get(SCAN_SANDBOX_METER_KEY)) === undefined) {
+      await this.ctx.storage.put<Meter>(SCAN_SANDBOX_METER_KEY, {
+        budgetUsd: options.maxBudgetUsd,
+        spentUsd: 0,
+        inputTokens: 0,
+        outputTokens: 0,
+        cacheReadTokens: 0,
+        cacheWriteTokens: 0,
+      });
+    }
     if (priors.length > 0) await this.#files.writeFile(SCAN_SANDBOX_PRIOR_PATH, JSON.stringify(priors, null, 2));
     await this.#files.writeFile(SCAN_SANDBOX_PROMPT_PATH, buildAgentPrompt(options, priors.length));
     await this.#container.exec(["/bin/sh", "-c", buildAgentScript(options)], {
@@ -92,8 +126,19 @@ export class ScanSandbox extends DurableObject<Bindings> {
   }
 
   async readUsage(): Promise<ScanUsage | null> {
+    const meter = await this.ctx.storage.get<Meter>(SCAN_SANDBOX_METER_KEY);
     const log = await this.#readText(SCAN_SANDBOX_AGENT_LOG);
-    return log === null ? null : parseAgentUsage(log);
+    const reported = log === null ? null : parseAgentUsage(log);
+    if (meter === undefined) return reported;
+    return {
+      inputTokens: meter.inputTokens,
+      outputTokens: meter.outputTokens,
+      cacheReadTokens: meter.cacheReadTokens,
+      cacheWriteTokens: meter.cacheWriteTokens,
+      costUsd: meter.spentUsd,
+      turns: reported?.turns ?? null,
+      durationMs: reported?.durationMs ?? null,
+    };
   }
 
   async readFiles(): Promise<ScanFiles> {
