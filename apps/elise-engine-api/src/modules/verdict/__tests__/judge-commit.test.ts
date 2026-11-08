@@ -45,6 +45,7 @@ describe("judgeCommit: enough trusted scans", () => {
 
     expect(verdict).toMatchObject({ verdict: "cannot_tell", scans: { required: 2, counted: 0 } });
     expect(codes(verdict)).toEqual(["not_scanned"]);
+    expect(verdict.basis).toBe("ai_audit");
   });
 
   it("cannot tell from one clean scan, because one look can miss a problem", () => {

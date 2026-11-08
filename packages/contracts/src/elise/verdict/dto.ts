@@ -39,6 +39,8 @@ export const VerdictOpenSchema = VerdictFindingSchema.extend({
 
 export const VerdictSchema = z.object({
   verdict: z.enum(VERDICT_VALUES),
+  // What the verdict rests on. "ai_audit": findings an AI agent wrote after reading the repo, so text planted in the repo can hide a problem and no check proves the list is complete.
+  basis: z.literal("ai_audit").optional(),
   commit: z.string(),
   reasons: z.array(z.object({ code: z.enum(VERDICT_REASON_VALUES), message: z.string() })),
   scans: z.object({ required: z.number().int(), counted: z.number().int(), ids: z.array(z.string()) }),

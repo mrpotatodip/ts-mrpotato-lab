@@ -104,6 +104,7 @@ export const judgeCommit = ({ commit, scans, findings, triage, now }: JudgeInput
 
   return {
     verdict: untrusted.length > 0 ? "cannot_tell" : code === "over_limit" ? "fail" : "pass",
+    basis: "ai_audit",
     commit,
     reasons,
     scans: { required: VERDICT_MIN_SCANS, counted: newestFirst.length, ids: newestFirst.map((scan) => scan.id) },

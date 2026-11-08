@@ -13,7 +13,7 @@ export const getVerdictDoc = describeRoute({
   summary: "Can this commit ship?",
   description: routeText({
     context:
-      "A verdict for one commit of a repo: `pass`, `fail` or `cannot_tell`. A `pass` means the scans of this commit found nothing over the limit. It does not mean the commit is safe. Only `pass` ships.",
+      "A verdict for one commit of a repo: `pass`, `fail` or `cannot_tell`. A `pass` means the scans of this commit found nothing over the limit. It does not mean the commit is safe: the findings come from an AI agent that reads the repo, and text planted in the repo can steer it to leave a problem out, so no check here proves the list is complete. The response says so in `basis: \"ai_audit\"`. Treat a verdict as advice next to your own review and deterministic checks. Only `pass` ships.",
     steps: [
       "The Worker reads the succeeded lite scans of the commit (a scan of a branch counts too) and merges their findings: a problem any scan found is open.",
       "`cannot_tell` when the commit has fewer than 2 scans, or one of the 2 newest did not check every problem the History had open, or the History had 50 or more open problems.",
