@@ -137,14 +137,14 @@ const TEAM_WRITES = TENANT_POWERS.filter(
   (power) => power.startsWith("company:team:") && powerAction(power) !== "read",
 );
 
-const STORE_STAFF_EXTRA = [
+const WORKSPACE_MEMBER_EXTRA = [
   "company:unanswered:questions:dismiss",
   "company:assistant:threads:create",
   "company:assistant:threads:update",
   "company:assistant:threads:delete",
 ] as const;
 
-for (const power of STORE_STAFF_EXTRA) {
+for (const power of WORKSPACE_MEMBER_EXTRA) {
   if (!ACCESS_POWER_SET.has(power)) {
     throw new Error(`ACCESS_ROLE_GRANTS seed is not a catalogue leaf: ${power}`);
   }
@@ -152,7 +152,7 @@ for (const power of STORE_STAFF_EXTRA) {
 
 export const ACCESS_ROLE_GRANTS = {
   tenant_admin: TENANT_POWERS,
-  store_admin: TENANT_POWERS.filter((power) => !TEAM_WRITES.includes(power)),
-  store_staff: [...TENANT_READS, ...STORE_STAFF_EXTRA],
+  workspace_admin: TENANT_POWERS.filter((power) => !TEAM_WRITES.includes(power)),
+  workspace_member: [...TENANT_READS, ...WORKSPACE_MEMBER_EXTRA],
   superuser: PLATFORM_POWERS,
 } as const;
