@@ -173,8 +173,21 @@ describe("readScanFileSvc", () => {
   });
 
   it("fails with NotFound when the ledger lists a file that R2 lost", async () => {
-    await Effect.runPromise(repo.addFiles("acme", "abc", [{ name: "REPORT.md", r2Key: "gone", sizeBytes: 1, contentType: "text/markdown; charset=utf-8" }]));
+    await Effect.runPromise(
+      repo.addFiles("acme", "abc", [{ name: "REPORT.md", r2Key: "accounts/acme/scans/abc/REPORT.md", sizeBytes: 1, contentType: "text/markdown; charset=utf-8" }]),
+    );
     const error = await Effect.runPromise(Effect.flip(readScanFileSvc(fakeBindings().env.REPORTS, repo, "acme", "abc", "REPORT.md")));
+
+    expect(error._tag).toBe("NotFound");
+  });
+
+  it("fails with NotFound for a key outside the account's prefix, even when R2 holds it", async () => {
+    const { env, store } = fakeBindings();
+    store.set("accounts/other/scans/abc/REPORT.md", "# theirs");
+    await Effect.runPromise(
+      repo.addFiles("acme", "abc", [{ name: "REPORT.md", r2Key: "accounts/other/scans/abc/REPORT.md", sizeBytes: 8, contentType: "text/markdown; charset=utf-8" }]),
+    );
+    const error = await Effect.runPromise(Effect.flip(readScanFileSvc(env.REPORTS, repo, "acme", "abc", "REPORT.md")));
 
     expect(error._tag).toBe("NotFound");
   });

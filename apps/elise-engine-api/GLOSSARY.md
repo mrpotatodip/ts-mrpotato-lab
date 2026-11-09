@@ -59,6 +59,10 @@ What a Scan spent: tokens, a cost estimate, turns and duration. The Agent report
 **Scan file**:
 A file a Scan saved. Its bytes are in R2; its row in `scan_files` (Neon) holds the name, size and R2 key.
 
+**File**:
+An entry in the Account's Files list (`GET /files`): one of the written Scan files (`REPORT.md`, `FINDINGS-DETAIL.md`, `NEEDS-VALIDATION.md`) with the Repo, Branch and Scan it came from. The machine-readable Scan files are not listed there.
+_Avoid_: Document, upload (no one uploads a File)
+
 **Report**:
 The `REPORT.md` file the agent writes for people to read.
 _Avoid_: Output, result

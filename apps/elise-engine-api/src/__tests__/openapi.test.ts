@@ -27,6 +27,7 @@ describe("GET /openapi.json", () => {
       "DELETE /groups/{groupId}",
       "DELETE /groups/{groupId}/members/{partyId}",
       "DELETE /team/invites/{inviteId}",
+      "GET /files",
       "GET /findings",
       "GET /groups",
       "GET /me",
@@ -61,7 +62,7 @@ describe("GET /openapi.json", () => {
     for (const { route, operation } of operations(spec)) {
       expect({ route, summary: Boolean(operation.summary) }).toEqual({ route, summary: true });
       expect({ route, description: operation.description?.includes("**Context.**") }).toEqual({ route, description: true });
-      const tag = ["groups", "team", "repos", "scans", "findings", "usage", "me", "sign-up"].find((name) => route.includes(`/${name}`));
+      const tag = ["groups", "team", "repos", "scans", "files", "findings", "usage", "me", "sign-up"].find((name) => route.includes(`/${name}`));
       expect({ route, tags: operation.tags }).toEqual({ route, tags: [tag] });
       const security = tag === "sign-up" || PUBLIC_INVITE_ROUTES.has(route) ? undefined : [{ bearerAuth: [] }];
       expect({ route, security: operation.security }).toEqual({ route, security });

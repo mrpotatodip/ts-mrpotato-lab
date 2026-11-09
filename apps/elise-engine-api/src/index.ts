@@ -10,6 +10,7 @@ import { openApiDocument, requireOpenApiEnabled, validationErrorResponse } from 
 import { errorChainForLog } from "#/lib/redact-log";
 import { requireScanAccess } from "#/lib/require-scan-access";
 import authRoutes from "#/modules/auth";
+import filesRoutes from "#/modules/files";
 import findingsRoutes from "#/modules/findings";
 import groupsRoutes from "#/modules/groups";
 import meRoutes from "#/modules/me";
@@ -41,6 +42,7 @@ export const buildApp = (deps: AppDeps = realAppDeps) => {
   app.use("/scans/*", requireScanAccess);
   app.use("/usage/*", requireScanAccess);
   app.use("/findings/*", requireScanAccess);
+  app.use("/files/*", requireScanAccess);
   app.use("/repos/*", requireScanAccess);
   app.use(
     "/auth/sign-in/*",
@@ -67,7 +69,7 @@ export const buildApp = (deps: AppDeps = realAppDeps) => {
     return c.json({ data: null, error: { code: "INTERNAL_ERROR", message: "Internal server error" } }, 500);
   });
 
-  const routes = app.route("/scans", scansRoutes).route("/auth", authRoutes).route("/sign-up", signUpRoutes).route("/me", meRoutes).route("/usage", usageRoutes).route("/findings", findingsRoutes).route("/team", teamRoutes).route("/groups", groupsRoutes).route("/repos", reposRoutes).route("/repos", verdictRoutes);
+  const routes = app.route("/scans", scansRoutes).route("/auth", authRoutes).route("/sign-up", signUpRoutes).route("/me", meRoutes).route("/usage", usageRoutes).route("/findings", findingsRoutes).route("/files", filesRoutes).route("/team", teamRoutes).route("/groups", groupsRoutes).route("/repos", reposRoutes).route("/repos", verdictRoutes);
 
   // -----
   // The OpenAPI spec, for developers only.
