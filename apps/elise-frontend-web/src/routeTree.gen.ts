@@ -14,6 +14,7 @@ import { Route as AppRouteRouteImport } from './routes/_app/route'
 import { Route as PrototypeRouteRouteImport } from './routes/prototype/route'
 import { Route as SigninRouteImport } from './routes/signin'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as AppFilesRouteImport } from './routes/_app/files'
 import { Route as AppOverviewRouteImport } from './routes/_app/overview'
 import { Route as AppTeamRouteImport } from './routes/_app/team'
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
@@ -50,6 +51,11 @@ const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AppFilesRoute = AppFilesRouteImport.update({
+  id: '/files',
+  path: '/files',
+  getParentRoute: () => AppRouteRoute,
 } as any)
 const AppOverviewRoute = AppOverviewRouteImport.update({
   id: '/overview',
@@ -118,6 +124,7 @@ export interface FileRoutesByFullPath {
   '/prototype': typeof PrototypeRouteRouteWithChildren
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
+  '/files': typeof AppFilesRoute
   '/overview': typeof AppOverviewRoute
   '/team': typeof AppTeamRoute
   '/invite/$token': typeof InviteTokenRoute
@@ -135,6 +142,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
+  '/files': typeof AppFilesRoute
   '/overview': typeof AppOverviewRoute
   '/team': typeof AppTeamRoute
   '/invite/$token': typeof InviteTokenRoute
@@ -155,6 +163,7 @@ export interface FileRoutesById {
   '/prototype': typeof PrototypeRouteRouteWithChildren
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
+  '/_app/files': typeof AppFilesRoute
   '/_app/overview': typeof AppOverviewRoute
   '/_app/team': typeof AppTeamRoute
   '/invite/$token': typeof InviteTokenRoute
@@ -175,6 +184,7 @@ export interface FileRouteTypes {
     | '/prototype'
     | '/signin'
     | '/signup'
+    | '/files'
     | '/overview'
     | '/team'
     | '/invite/$token'
@@ -192,6 +202,7 @@ export interface FileRouteTypes {
     | '/'
     | '/signin'
     | '/signup'
+    | '/files'
     | '/overview'
     | '/team'
     | '/invite/$token'
@@ -211,6 +222,7 @@ export interface FileRouteTypes {
     | '/prototype'
     | '/signin'
     | '/signup'
+    | '/_app/files'
     | '/_app/overview'
     | '/_app/team'
     | '/invite/$token'
@@ -270,6 +282,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/signup'
       preLoaderRoute: typeof SignupRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_app/files': {
+      id: '/_app/files'
+      path: '/files'
+      fullPath: '/files'
+      preLoaderRoute: typeof AppFilesRouteImport
+      parentRoute: typeof AppRouteRoute
     }
     '/_app/overview': {
       id: '/_app/overview'
@@ -359,6 +378,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppRouteRouteChildren {
+  AppFilesRoute: typeof AppFilesRoute
   AppOverviewRoute: typeof AppOverviewRoute
   AppTeamRoute: typeof AppTeamRoute
   AppReposRepoIdRoute: typeof AppReposRepoIdRoute
@@ -369,6 +389,7 @@ interface AppRouteRouteChildren {
 }
 
 const AppRouteRouteChildren: AppRouteRouteChildren = {
+  AppFilesRoute: AppFilesRoute,
   AppOverviewRoute: AppOverviewRoute,
   AppTeamRoute: AppTeamRoute,
   AppReposRepoIdRoute: AppReposRepoIdRoute,

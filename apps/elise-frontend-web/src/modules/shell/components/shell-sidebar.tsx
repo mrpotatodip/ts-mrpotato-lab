@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
-import { ChevronUp, FlaskConical, FolderGit2, LayoutDashboard, PanelLeftClose, PanelLeftOpen, ScanSearch, Sparkles, Users } from "lucide-react";
+import { ChevronUp, FileText, FlaskConical, FolderGit2, LayoutDashboard, PanelLeftClose, PanelLeftOpen, ScanSearch, Sparkles, Users } from "lucide-react";
 import { Avatar, AvatarFallback } from "#/components/ui/avatar";
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
@@ -140,6 +140,13 @@ export function ShellSidebar({ accountName, email, scanCount, running, repos, re
             </CollapsiblePanel>
           </Collapsible>
         )}
+
+        <Hint label="Files" collapsed={collapsed}>
+          <Link to="/files" aria-label="Files" className={cn(ROW, collapsed && "justify-center px-0")} activeProps={ACTIVE}>
+            <FileText className={ICON} strokeWidth={1.5} />
+            {!collapsed && "Files"}
+          </Link>
+        </Hint>
 
         {showTeam && (
           <Hint label="Team" collapsed={collapsed}>
