@@ -2,11 +2,11 @@ import { cn } from "#/lib/utils";
 import { SEVERITIES, type SeverityCounts } from "../schemas";
 
 const DOT = {
-  critical: "bg-severity-critical",
-  high: "bg-severity-high",
-  medium: "bg-severity-medium",
-  low: "bg-severity-low",
-  informational: "bg-severity-informational",
+  critical: "bg-mark-critical",
+  high: "bg-mark-high",
+  medium: "bg-mark-medium",
+  low: "bg-mark-low",
+  informational: "bg-mark-informational",
 } as const;
 
 export function ScanSeverityDots({ counts }: { counts: SeverityCounts }) {

@@ -21,7 +21,7 @@ const invite = (overrides: Partial<NewInvite> = {}): NewInvite => ({
   tenantId,
   actorUserId: adminUserId,
   email: "new@example.com",
-  roleKey: "store_staff",
+  roleKey: "workspace_member",
   groupIds: [],
   tokenHash: crypto.randomUUID(),
   now: NOW,
@@ -65,7 +65,7 @@ describe("createInviteEffect", () => {
   it("saves a pending invite with its Groups and lists it", async () => {
     const created = await run(createInviteEffect(test.pool, invite({ email: "listed@example.com", groupIds: [groupId, groupId] })));
 
-    expect(created).toMatchObject({ email: "listed@example.com", role: "store_staff", groupIds: [groupId] });
+    expect(created).toMatchObject({ email: "listed@example.com", role: "workspace_member", groupIds: [groupId] });
     const team = await run(listTeamEffect(test.http, tenantId, NOW));
     expect(team.invites.map((row) => row.email)).toContain("listed@example.com");
     expect(team.members).toEqual([expect.objectContaining({ partyId: adminPartyId, role: "tenant_admin", groupIds: [] })]);
@@ -116,7 +116,7 @@ describe("previewInviteEffect", () => {
     await test.raw.insert(tenantTeamInvites).values({
       tenantId,
       email: pending.email,
-      roleId: (await findTenantRole(test.raw, tenantId, "store_staff"))!.id,
+      roleId: (await findTenantRole(test.raw, tenantId, "workspace_member"))!.id,
       tokenHash: pending.tokenHash,
       invitedBy: adminPartyId,
       expiresAt: LATER,
@@ -124,7 +124,7 @@ describe("previewInviteEffect", () => {
 
     const preview = await run(previewInviteEffect(test.http, pending.tokenHash, NOW));
 
-    expect(preview).toEqual({ accountName: "acme", role: "store_staff", roleLabel: expect.any(String), hasAccount: true });
+    expect(preview).toEqual({ accountName: "acme", role: "workspace_member", roleLabel: expect.any(String), hasAccount: true });
   });
 
   it("answers one generic error for an unknown, expired or revoked token", async () => {
@@ -178,11 +178,11 @@ describe("acceptInviteEffect", () => {
   });
 
   it("refuses when the Role was disabled after the invite was made", async () => {
-    const pending = invite({ email: "stale@example.com", roleKey: "store_admin" });
+    const pending = invite({ email: "stale@example.com", roleKey: "workspace_admin" });
     await run(createInviteEffect(test.pool, pending));
-    await test.raw.execute(`update access_master_roles set enabled = false where key = 'store_admin'`);
+    await test.raw.execute(`update access_master_roles set enabled = false where key = 'workspace_admin'`);
 
     expect(await fail(accept(pending.tokenHash))).toMatchObject({ _tag: "Forbidden" });
-    await test.raw.execute(`update access_master_roles set enabled = true where key = 'store_admin'`);
+    await test.raw.execute(`update access_master_roles set enabled = true where key = 'workspace_admin'`);
   });
 });

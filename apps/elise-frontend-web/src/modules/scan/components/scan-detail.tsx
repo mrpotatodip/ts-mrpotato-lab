@@ -1,12 +1,12 @@
 import { Suspense, useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
-import { ExternalLink, FileText, FolderGit2, LoaderCircle, OctagonX } from "lucide-react";
+import { ExternalLink, FileText, FolderGit2, GitBranch, LoaderCircle, OctagonX } from "lucide-react";
 import { Alert, AlertDescription } from "#/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Skeleton } from "#/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "#/components/ui/tabs";
-import { SCAN_EFFORT_OPTIONS, SCAN_MODEL_OPTIONS, SCAN_PROFILE_OPTIONS, SCAN_SKILL_OPTIONS, SCAN_STEP_COPY } from "../constants";
+import { SCAN_EFFORT_OPTIONS, SCAN_MODEL_NAMES, SCAN_PROFILE_OPTIONS, SCAN_SKILL_OPTIONS, SCAN_STEP_COPY } from "../constants";
 import { scanFileQuery, scanQuery, useRefreshOnFinish, useScanLinkMode } from "../hooks";
 import type { ScanStatus } from "../schemas";
 import { scanBytes, scanCost, scanDuration, scanFailure, scanPlural, scanRepoName } from "../utils";
@@ -15,9 +15,13 @@ import { ScanFindingsTable } from "./scan-findings-table";
 import { ScanStatusBadge } from "./scan-status-badge";
 import { ScanSummary } from "./scan-summary";
 import { ScanVerdictCard } from "./scan-verdict-card";
+import { ScanVerdictStrip } from "./scan-verdict-strip";
 import { ScanTime } from "./scan-time";
 
 const DEFAULT_FILE = "REPORT.md";
+
+const HISTORY_LINK =
+  "inline-flex min-h-6 items-center gap-1.5 rounded-sm text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
 const labelOf = <T extends string>(options: readonly { value: T; label: string }[], value: T) => options.find((o) => o.value === value)?.label ?? value;
 
@@ -59,7 +63,7 @@ function ScanFacts({ scan }: { scan: ScanStatus }) {
         {labelOf(SCAN_SKILL_OPTIONS, scan.skill)}
         {scan.skill === "full" ? `, ${labelOf(SCAN_PROFILE_OPTIONS, scan.profile).toLowerCase()}` : ""}
       </Fact>
-      <Fact label="Model">{labelOf(SCAN_MODEL_OPTIONS, scan.model)}</Fact>
+      <Fact label="Model">{labelOf(SCAN_MODEL_NAMES, scan.model)}</Fact>
       <Fact label="Effort">{labelOf(SCAN_EFFORT_OPTIONS, scan.effort)}</Fact>
       <Fact label="Started">
         <ScanTime value={scan.createdAt} />
@@ -67,7 +71,7 @@ function ScanFacts({ scan }: { scan: ScanStatus }) {
       <Fact label={scan.finishedAt ? "Took" : "Running for"}>{duration ?? (scan.finishedAt ? "Not recorded" : "Just started")}</Fact>
       <Fact label="Code read">
         {commit ? (
-          <a href={`${scan.repo.replace(/\.git$/, "").replace(/\/$/, "")}/commit/${scan.commitSha}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-mono text-[13px] underline-offset-4 hover:underline">
+          <a href={`${scan.repo.replace(/\.git$/, "").replace(/\/$/, "")}/commit/${scan.commitSha}`} target="_blank" rel="noreferrer" className="inline-flex min-h-6 items-center gap-1 font-mono text-[13px] underline-offset-4 hover:underline">
             {commit}
             <ExternalLink aria-hidden="true" className="size-3" />
             <span className="sr-only">, opens the commit on GitHub</span>
@@ -77,6 +81,32 @@ function ScanFacts({ scan }: { scan: ScanStatus }) {
         )}
       </Fact>
     </dl>
+  );
+}
+
+// -----
+// The branch this scan read, as on the branch page. A scan of a pasted commit
+// has no branch: it is a one-off scan, and its findings count toward the
+// commit's answer, not a branch's history.
+// -----
+function ScanBranchChip({ scan }: { scan: ScanStatus }) {
+  const label = scan.branch ?? scan.ref;
+  if (!label && !scan.commitSha) return null;
+  const chip = "inline-flex min-h-6 items-center gap-1.5 rounded-md border bg-card px-2 py-0.5 text-xs";
+
+  if (label) {
+    return (
+      <span className={`${chip} max-w-full font-mono`} title={label}>
+        <GitBranch aria-hidden="true" className="size-3.5 shrink-0 text-muted-foreground" />
+        <span className="truncate">{label}</span>
+      </span>
+    );
+  }
+  return (
+    <span className={chip} title="A one-off scan of this commit. Its findings count toward the commit's answer but are not added to a branch's findings.">
+      <GitBranch aria-hidden="true" className="size-3.5 shrink-0 text-muted-foreground" />
+      One-off scan
+    </span>
   );
 }
 
@@ -138,19 +168,22 @@ export function ScanDetail({ scanId }: { scanId: string }) {
 
   return (
     <>
-      <div className="grid gap-5">
+      <div data-slot="page-header" className="grid gap-5">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <h1 className="text-[26px] font-semibold leading-none tracking-tight">
             {owner && <span className="text-muted-foreground">{owner}/</span>}
             {name}
           </h1>
           <ScanStatusBadge status={scan.status} />
-          {live && (
-            <Link
-              to="/repos/$repoId"
-              params={{ repoId: scan.repoId }}
-              className="inline-flex items-center gap-1.5 rounded-sm text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
+          <ScanBranchChip scan={scan} />
+          {live && scan.branchId && (
+            <Link to="/repos/$repoId/branches/$branchId" params={{ repoId: scan.repoId, branchId: scan.branchId }} className={HISTORY_LINK}>
+              <FolderGit2 aria-hidden="true" className="size-3.5" />
+              Branch history
+            </Link>
+          )}
+          {live && !scan.branchId && (
+            <Link to="/repos/$repoId" params={{ repoId: scan.repoId }} className={HISTORY_LINK}>
               <FolderGit2 aria-hidden="true" className="size-3.5" />
               Repository history
             </Link>
@@ -164,11 +197,12 @@ export function ScanDetail({ scanId }: { scanId: string }) {
       {scan.status === "succeeded" && (
         <>
           <ScanSummary scan={scan} />
+          {live && scan.skill === "lite" && scan.commitSha && scan.branchId && <ScanVerdictStrip repoId={scan.repoId} branchId={scan.branchId} commit={scan.commitSha} />}
           {showFindings && (
             <Card>
               <CardHeader className="gap-1.5">
                 <CardTitle>Findings</CardTitle>
-                <p className="text-xs text-muted-foreground">{findingsDescription(scan)}</p>
+                <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">{findingsDescription(scan)}</p>
               </CardHeader>
               <CardContent className="overflow-hidden p-0">
                 <Suspense fallback={<Skeleton className="m-5 h-24" />}>
@@ -177,7 +211,7 @@ export function ScanDetail({ scanId }: { scanId: string }) {
               </CardContent>
             </Card>
           )}
-          {live && scan.skill === "lite" && scan.commitSha && <ScanVerdictCard repoId={scan.repoId} commit={scan.commitSha} found={scan.summary?.total ?? 0} />}
+          {live && scan.skill === "lite" && scan.commitSha && !scan.branchId && <ScanVerdictCard repoId={scan.repoId} commit={scan.commitSha} repoUrl={scan.repo} found={scan.summary?.total ?? 0} />}
           {scan.skill === "lite" && (!live || scan.branchId) && (
             <Suspense fallback={<Skeleton className="h-24 w-full" />}>
               <ScanDiffCard scanId={scanId} />
@@ -187,7 +221,7 @@ export function ScanDetail({ scanId }: { scanId: string }) {
             <Card>
               <CardHeader className="gap-1.5">
                 <CardTitle>No history to compare with</CardTitle>
-                <p className="text-xs text-muted-foreground">
+                <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">
                   {scan.untrackedReason ? `This scan has no History: ${scan.untrackedReason}` : scan.ref ? `Elise does not track ${scan.ref}, so this scan has no earlier scans to compare with.` : "This scan has no earlier scans to compare with."}
                 </p>
               </CardHeader>
@@ -198,7 +232,7 @@ export function ScanDetail({ scanId }: { scanId: string }) {
               <CardHeader className="gap-3">
                 <div className="grid gap-1.5">
                   <CardTitle>Files</CardTitle>
-                  <p className="text-xs text-muted-foreground">What the scan saved. REPORT.md is the written summary; findings.json is the same findings as data.</p>
+                  <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">What the scan saved. REPORT.md is the written summary; findings.json is the same findings as data.</p>
                 </div>
                 <TabsList aria-label="Report files">
                   {files.map((item) => (

@@ -19,9 +19,9 @@ function Section({ title, children, mono = false }: SectionProps) {
 }
 
 const SHEET_TONE = {
-  danger: "text-status-danger",
-  success: "text-status-success",
-  warning: "text-status-warning",
+  danger: "text-status-danger/80",
+  success: "text-status-success/80",
+  warning: "text-status-warning/80",
   neutral: "text-muted-foreground",
 } as const;
 
@@ -30,12 +30,12 @@ type SheetSectionProps = { title: string; tone: keyof typeof SHEET_TONE; code?: 
 function SheetSection({ title, tone, code = false, children }: SheetSectionProps) {
   if (!children) return null;
   return (
-    <section className="grid content-start gap-3">
-      <h3 className={cn("text-xs font-semibold uppercase tracking-widest", SHEET_TONE[tone])}>{title}</h3>
+    <section className="grid content-start gap-2">
+      <h3 className={cn("text-xs font-medium uppercase tracking-wider", SHEET_TONE[tone])}>{title}</h3>
       {code ? (
         <ScanEvidence text={children} />
       ) : (
-        <p className="whitespace-pre-wrap text-[15px] leading-7 text-foreground">{children}</p>
+        <p className="whitespace-pre-wrap text-[15px] leading-[1.65] text-foreground">{children}</p>
       )}
     </section>
   );
@@ -53,17 +53,21 @@ export function ScanFindingDetail({ finding, layout = "table" }: ScanFindingDeta
 
   if (layout === "sheet") {
     return (
-      <div className="grid gap-9">
+      <div className="grid gap-8">
         <SheetSection title="What could happen" tone="danger">
           {detail.impact}
         </SheetSection>
         <SheetSection title="Evidence in the code" tone="neutral" code>
           {detail.evidence}
         </SheetSection>
-        <SheetSection title="Suggested fix" tone="success">
-          {detail.fix}
-        </SheetSection>
-        {detail.fix && <ScanFindingCopy text={scanFindingPrompt(finding)} />}
+        {detail.fix && (
+          <div className="grid gap-4">
+            <SheetSection title="Suggested fix" tone="success">
+              {detail.fix}
+            </SheetSection>
+            <ScanFindingCopy text={scanFindingPrompt(finding)} />
+          </div>
+        )}
         {finding.state === "needs_validation" ? (
           <SheetSection title="What a person should check" tone="warning">
             {detail.needs}

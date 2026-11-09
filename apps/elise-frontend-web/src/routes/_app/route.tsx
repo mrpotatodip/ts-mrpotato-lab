@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import { createFileRoute, Outlet, redirect, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ScanNewDialog, scansQuery, scanSidebarItems } from "#/modules/scan";
 import { TENANT_ADMIN_ROLE_KEY } from "#/modules/team";
@@ -16,9 +16,21 @@ function AppLayout() {
   const { user } = Route.useRouteContext();
   const { data } = useQuery(scansQuery());
   const { repos, repoCount, running, total } = scanSidebarItems(data?.scans ?? []);
+  const onRepoPage = useRouterState({ select: (state) => state.location.pathname.startsWith("/repos/") });
 
   return (
-    <ShellFrame accountName={user?.accountName ?? ""} email={user?.email ?? ""} scanCount={total} running={running} repos={repos} repoCount={repoCount} mode="live" showTeam={user?.role === TENANT_ADMIN_ROLE_KEY} actions={<ScanNewDialog />}>
+    <ShellFrame
+      accountName={user?.accountName ?? ""}
+      userName={user?.name ?? ""}
+      email={user?.email ?? ""}
+      scanCount={total}
+      running={running}
+      repos={repos}
+      repoCount={repoCount}
+      mode="live"
+      showTeam={user?.role === TENANT_ADMIN_ROLE_KEY}
+      actions={<ScanNewDialog variant={onRepoPage ? "outline" : "default"} />}
+    >
       <Outlet />
     </ShellFrame>
   );

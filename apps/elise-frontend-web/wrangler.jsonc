@@ -7,5 +7,5 @@
   "observability": {
     "enabled": true,
   },
-  "vars": { "ELISE_ENGINE_URL": "http://localhost:8787" },
+  "vars": { "ELISE_ENGINE_URL": "https://elise-engine-api.mochi-project.workers.dev" },
 }

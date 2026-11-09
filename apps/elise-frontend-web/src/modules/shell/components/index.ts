@@ -3,6 +3,7 @@ export * from "./shell-frame";
 export * from "./shell-page-header";
 export * from "./shell-repo-tree";
 export * from "./shell-sidebar";
+export * from "./shell-theme-switch";
 export * from "./shell-topbar";
 export * from "./shell-stat-tile";
 export * from "./shell-route-states";

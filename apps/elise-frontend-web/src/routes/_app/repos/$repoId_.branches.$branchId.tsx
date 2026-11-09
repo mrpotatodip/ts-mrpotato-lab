@@ -1,6 +1,5 @@
 import { Suspense } from "react";
-import { createFileRoute, Link, redirect } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { Skeleton } from "#/components/ui/skeleton";
 import { noop } from "@tanstack/react-query";
 import { RepoDetail, repoFindingsQuery, repoName, repoQuery } from "#/modules/repo";
@@ -13,7 +12,10 @@ export const Route = createFileRoute("/_app/repos/$repoId_/branches/$branchId")(
     if (!branch) throw redirect({ to: "/repos/$repoId", params: { repoId: params.repoId }, replace: true });
     await context.queryClient.infiniteQuery({ ...repoFindingsQuery(params.repoId, { branch: branch.name }), staleTime: "static" });
     if (branch.latestCommit) void context.queryClient.query(verdictQuery(params.repoId, branch.latestCommit)).catch(noop);
-    return { name: repoName(repo.url), branch: branch.name };
+    const branches = repo.branches
+      .map((item) => ({ id: item.id, name: item.name, isDefault: item.isDefault, latestScanAt: item.latestScanAt, status: repo.history.find((scan) => scan.scanId === item.latestScanId)?.status ?? null }))
+      .toSorted((a, b) => Number(b.isDefault) - Number(a.isDefault) || (b.latestScanAt ?? "").localeCompare(a.latestScanAt ?? ""));
+    return { name: repoName(repo.url), branch: branch.name, repoId: params.repoId, branchId: branch.id, branches };
   },
   head: ({ loaderData }) => ({ meta: [{ title: `${loaderData ? `${loaderData.name} · ${loaderData.branch}` : "Branch"} · Elise` }] }),
   component: BranchPage,
@@ -22,14 +24,8 @@ export const Route = createFileRoute("/_app/repos/$repoId_/branches/$branchId")(
 function BranchPage() {
   const { repoId, branchId } = Route.useParams();
   return (
-    <>
-      <Link to="/repos" className="-mb-4 inline-flex w-fit items-center gap-1.5 rounded-sm text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-        <ArrowLeft className="size-3.5" />
-        All repositories
-      </Link>
-      <Suspense fallback={<Skeleton className="h-64 w-full" />}>
-        <RepoDetail repoId={repoId} branchId={branchId} />
-      </Suspense>
-    </>
+    <Suspense fallback={<Skeleton className="h-64 w-full" />}>
+      <RepoDetail repoId={repoId} branchId={branchId} />
+    </Suspense>
   );
 }

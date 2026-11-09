@@ -44,7 +44,7 @@
     <text x="116" y="214" class="b">Layer 4. Choices that lower the cost before the cap</text>
     <text x="116" y="238">skill: lite (default) uses one agent; full uses many</text>
     <text x="116" y="258">effort: low or medium use fewer tokens than high</text>
-    <text x="116" y="278">model: haiku costs less than sonnet; sonnet less than opus</text>
+    <text x="116" y="278">model: haiku costs less than sonnet</text>
     <text x="116" y="298">profile and budget (full skill only): fewer agent runs</text>
   </g>
 </svg>
@@ -58,7 +58,7 @@
 <tr><td><code>MAX_BUDGET_USD</code></td><td><code>wrangler.jsonc</code></td><td>The ceiling. Change it and deploy to raise it.</td></tr>
 <tr><td><code>skill</code></td><td>Request body</td><td><code>lite</code> (default) or <code>full</code>.</td></tr>
 <tr><td><code>effort</code></td><td>Request body</td><td><code>low</code> to <code>max</code>. Higher effort uses more tokens.</td></tr>
-<tr><td><code>model</code></td><td>Request body</td><td><code>claude-haiku-5-5</code>, <code>claude-sonnet-5-5</code>, or <code>claude-opus-5-5</code>.</td></tr>
+<tr><td><code>model</code></td><td>Request body</td><td><code>claude-haiku-5-5</code> or <code>claude-sonnet-5-5</code>.</td></tr>
 <tr><td><code>profile</code>, <code>budget</code></td><td>Request body</td><td>Full skill only. Fewer waves and a cap on agent runs.</td></tr>
 </table>
 

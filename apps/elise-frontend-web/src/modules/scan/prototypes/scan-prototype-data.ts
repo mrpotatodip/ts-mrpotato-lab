@@ -1,3 +1,4 @@
+import type { Usage } from "@repo/contracts/elise";
 import type { Finding, Overview, ScanStatus } from "../schemas";
 
 const HOUR = 3_600_000;
@@ -21,7 +22,7 @@ const REPOS = [
   "t3-oss/create-t3-app",
 ];
 
-const MODELS = ["claude-sonnet-5-5", "claude-opus-5-5", "claude-haiku-5-5"] as const;
+const MODELS = ["claude-sonnet-5-5", "claude-haiku-5-5"] as const;
 const EFFORTS = ["high", "medium", "xhigh", "low", "max"] as const;
 const PROFILES = ["quick", "standard", "deep"] as const;
 
@@ -86,7 +87,7 @@ function scanFor(index: number, now: number): ScanStatus {
     status,
     skill: full ? "full" : "lite",
     profile: full ? (index === 4 ? "deep" : (PROFILES[index % PROFILES.length] ?? "quick")) : "quick",
-    model: index === 4 ? "claude-opus-5-5" : (MODELS[index % MODELS.length] ?? "claude-sonnet-5-5"),
+    model: MODELS[index % MODELS.length] ?? "claude-sonnet-5-5",
     effort: index === 4 ? "max" : (EFFORTS[index % EFFORTS.length] ?? "high"),
     maxBudgetUsd: full ? 6 : 2,
     createdAt: new Date(created).toISOString(),
@@ -170,4 +171,26 @@ export function buildOverviewPrototype(entries: readonly ScanPrototypeEntry[]): 
     if (finding.state === "confirmed" && finding.severity) severity[finding.severity] += 1;
   }
   return { total: entries.length, hasMore: false, byState, severity, needsValidation, repos: 1 };
+}
+
+const DEMO_BUDGET_USD = 20;
+const DEMO_RESERVED_PER_RUNNING_SCAN_USD = 1;
+
+// -----
+// The budget card reads the usage query. The demo has no engine, so the demo
+// spend is the sum of the demo scans' own reports, and each running scan holds a
+// dollar, so the "held by running scans" line has something to show.
+// -----
+export function buildUsagePrototype(entries: readonly ScanPrototypeEntry[], now: number): Usage {
+  const spentUsd = entries.reduce((sum, { scan }) => sum + (scan.usage?.costUsd ?? 0), 0);
+  const running = entries.filter(({ scan }) => scan.status === "running" || scan.status === "queued").length;
+  const reservedUsd = running * DEMO_RESERVED_PER_RUNNING_SCAN_USD;
+  const tokens = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 };
+  for (const { scan } of entries) {
+    tokens.input += scan.usage?.inputTokens ?? 0;
+    tokens.output += scan.usage?.outputTokens ?? 0;
+    tokens.cacheRead += scan.usage?.cacheReadTokens ?? 0;
+    tokens.cacheWrite += scan.usage?.cacheWriteTokens ?? 0;
+  }
+  return { month: new Date(now).toISOString().slice(0, 7), budgetUsd: DEMO_BUDGET_USD, spentUsd, reservedUsd, remainingUsd: DEMO_BUDGET_USD - spentUsd - reservedUsd, scans: entries.length, tokens };
 }

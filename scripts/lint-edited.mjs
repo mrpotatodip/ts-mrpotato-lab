@@ -29,7 +29,22 @@ const dirty = () => {
   );
 };
 
+const isTracked = (target) => spawnSync("git", ["ls-files", "--error-unmatch", "--", target], { cwd: root, stdio: "ignore" }).status === 0;
+
+// A script that rewrites a tracked file skips the Edit tool's stale-read check, so a change
+// the user or another session made meanwhile is lost. New and untracked files are fine.
+const rewritesTrackedFile = (command) => {
+  const inPlace = /\b(?:sed|perl)\b[^|;&\n]*\s(?:-[A-Za-z]*i[A-Za-z]*|--in-place)(?:\s|=|$)/.test(command);
+  const redirected = [...command.matchAll(/(?:>>?|\btee\s+(?:-a\s+)?)\s*([^\s|;&<>]+)/g)].map((match) => match[1]);
+  const words = command.split(/\s+/).map((word) => word.replace(/^['"]|['"]$/g, ""));
+  return (inPlace && words.some(isTracked)) || redirected.some(isTracked);
+};
+
 if (input.hook_event_name === "PreToolUse") {
+  if (input.tool_name === "Bash" && rewritesTrackedFile(input.tool_input?.command ?? "")) {
+    console.error("This command rewrites a tracked file. Use the Edit tool on existing files (sed -i, perl -i, >, >> and tee skip its stale-read check). New files may be written any way.");
+    process.exit(2);
+  }
   if (input.tool_name === "Bash") fs.writeFileSync(snapshotPath, JSON.stringify(Object.fromEntries(dirty())));
   process.exit(0);
 }
@@ -61,9 +76,10 @@ for (const file of files) {
   byApp.set(app, [...(byApp.get(app) ?? []), path.relative(app, file)]);
 }
 
-// A change made of several edits leaves an unused import or variable after the first one.
+// A change made of several edits leaves an unused import or variable after the first one,
+// or a JSX tag whose import comes in the next edit.
 // That is not worth an interruption: `pnpm check:apps` still catches it at the end.
-const HALF_DONE = /\bno-unused-vars\b/;
+const HALF_DONE = /\b(?:no-unused-vars|jsx-no-undef|no-undef)\b/;
 
 const report = [];
 for (const [app, list] of byApp) {

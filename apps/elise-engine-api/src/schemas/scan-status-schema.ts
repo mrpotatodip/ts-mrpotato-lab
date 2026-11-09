@@ -1,10 +1,11 @@
 import { z } from "zod";
-import { SCAN_STEP_VALUES, ScanArtifactSchema, ScanSummarySchema, ScanUsageSchema } from "@repo/contracts/elise";
+import { SCAN_RECORDED_MODELS, SCAN_STEP_VALUES, ScanArtifactSchema, ScanSummarySchema, ScanUsageSchema } from "@repo/contracts/elise";
 import { ScanOptionsSchema } from "./scan-options-schema";
 
 export const ScanStateSchema = z.enum(["queued", "running", "succeeded", "failed"]);
 
 export const ScanStatusSchema = ScanOptionsSchema.extend({
+  model: z.enum(SCAN_RECORDED_MODELS).meta({ example: "claude-haiku-5-5", description: "The model the scan ran with. A stored scan may carry one that new scans no longer offer." }),
   scanId: z.string().meta({ example: "zd3u73nfd-06ac9c07-b80c-45da-8fc5-ece4768b5b22" }),
   accountId: z.string().meta({ example: "0b8c1d2e-3f4a-4b5c-8d6e-7f8091a2b3c4" }),
   repo: z.string().meta({ example: "https://github.com/octocat/Hello-World" }),

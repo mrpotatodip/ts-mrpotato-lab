@@ -81,10 +81,12 @@ type ScanNewFormProps = {
   onDone: () => void;
   repo?: string;
   startBranch?: string;
+  startRef?: string;
+  startOptions?: Partial<Pick<CreateScanInput, "model" | "effort" | "skill" | "profile">>;
 };
 
-export function ScanNewForm({ preview, onDone, repo, startBranch }: ScanNewFormProps) {
-  const [values, setValues] = useState(INITIAL);
+export function ScanNewForm({ preview, onDone, repo, startBranch, startRef, startOptions }: ScanNewFormProps) {
+  const [values, setValues] = useState<CreateScanInput>({ ...INITIAL, ...startOptions, ref: startRef });
   const [picked, setPicked] = useState<string | null>(null);
   const repoInput = useRef<HTMLInputElement>(null);
   const { data: list } = useQuery(scansQuery());
@@ -93,7 +95,7 @@ export function ScanNewForm({ preview, onDone, repo, startBranch }: ScanNewFormP
   const choice = picked ?? repo ?? known[0]?.url ?? OTHER_REPO;
   const chosen = known.find((item) => item.url === choice);
   const typing = choice === OTHER_REPO || (chosen === undefined && repo === undefined);
-  const [branchPick, setBranchPick] = useState(startBranch ?? DEFAULT_BRANCH);
+  const [branchPick, setBranchPick] = useState(startRef ? OTHER_BRANCH : (startBranch ?? DEFAULT_BRANCH));
   const { data: detail } = useQuery({ ...scanRepoBranchesQuery(chosen?.repoId ?? ""), enabled: !preview && !typing && chosen !== undefined });
   const ref = typing || branchPick === OTHER_BRANCH ? values.ref : branchPick === DEFAULT_BRANCH ? undefined : branchPick;
   const plan: CreateScanInput = { ...values, repo: typing ? values.repo : choice, ref };
@@ -254,7 +256,7 @@ export function ScanNewForm({ preview, onDone, repo, startBranch }: ScanNewFormP
           {freeBranch && (
             <>
               <Label htmlFor="ref" className={typing ? "mt-2" : undefined}>
-                {typing ? "Which branch should we audit? (optional)" : "Branch name"}
+                {typing ? "Which branch should we audit? (optional)" : "Branch name or commit"}
               </Label>
               <Input id="ref" className="font-mono" autoComplete="off" placeholder="Leave empty for the default branch" value={values.ref ?? ""} onChange={(e) => set("ref", e.target.value === "" ? undefined : e.target.value)} />
               <p className="text-xs text-muted-foreground">Capital letters count. A branch, tag or commit of the repository.</p>

@@ -40,6 +40,7 @@ export async function engineFetch(path: string, init: RequestInit = {}, auth: En
 
   const res = await fetch(`${env.ELISE_ENGINE_URL}${path}`, { ...init, headers });
   if (!res.ok) {
+    console.error(`engine: ${init.method ?? "GET"} ${path} answered ${res.status}`);
     const body = ErrorBodySchema.safeParse(await res.json().catch(() => null));
     throw new EngineError(body.success ? body.data.message : `Engine error ${res.status}`, res.status, body.success ? body.data.code : undefined);
   }

@@ -23,7 +23,7 @@ export function RepoBranchSwitch({ repoId, branches, current }: RepoBranchSwitch
 
   if (branches.length < 2) {
     return (
-      <span className="inline-flex w-fit max-w-full items-center gap-1.5 rounded-md border bg-card px-2.5 py-1 font-mono text-sm">
+      <span className="inline-flex min-h-9 w-fit max-w-full items-center gap-1.5 rounded-md border bg-card px-2.5 py-1 font-mono text-sm">
         <GitBranch aria-hidden="true" className="size-3.5 shrink-0 text-muted-foreground" />
         <span className="[overflow-wrap:anywhere]">{current.name}</span>
         {current.isDefault && <span className="font-sans text-xs text-muted-foreground">(default)</span>}

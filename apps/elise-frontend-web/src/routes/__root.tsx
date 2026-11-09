@@ -2,6 +2,7 @@ import { HeadContent, Scripts, createRootRouteWithContext } from "@tanstack/reac
 import type { QueryClient } from "@tanstack/react-query";
 import { Toaster } from "#/components/ui/sonner";
 import { sessionQuery, type SessionUser } from "#/modules/auth";
+import { themeInitScript } from "#/modules/shell/hooks/use-theme";
 import appCss from "../styles/globals.css?url";
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient; user: SessionUser | null }>()({
@@ -30,6 +31,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <HeadContent />
       </head>
       <body className="font-sans antialiased [overflow-wrap:anywhere]">

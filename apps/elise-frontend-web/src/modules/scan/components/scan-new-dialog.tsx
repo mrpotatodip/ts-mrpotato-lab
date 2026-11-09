@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useState, type ComponentProps } from "react";
 import { noop, useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import { Button } from "#/components/ui/button";
@@ -15,9 +15,11 @@ type ScanNewDialogProps = {
   variant?: "default" | "outline";
   repo?: string;
   startBranch?: string;
+  startRef?: string;
+  startOptions?: ComponentProps<typeof ScanNewForm>["startOptions"];
 };
 
-export function ScanNewDialog({ label = "New scan", size = "sm", variant = "default", repo, startBranch }: ScanNewDialogProps) {
+export function ScanNewDialog({ label = "New scan", size = "sm", variant = "default", repo, startBranch, startRef, startOptions }: ScanNewDialogProps) {
   const [open, setOpen] = useState(false);
   const preview = useScanLinkMode() === "demo";
   const queryClient = useQueryClient();
@@ -43,7 +45,7 @@ export function ScanNewDialog({ label = "New scan", size = "sm", variant = "defa
           <DialogDescription>Pick a repository you already scan, or add a new one. We'll clone it, review the code for security issues, and save a report to your account.</DialogDescription>
         </DialogHeader>
         <Suspense fallback={<Skeleton className="h-72 w-full" />}>
-          <ScanNewForm preview={preview} repo={repo} startBranch={startBranch} onDone={() => setOpen(false)} />
+          <ScanNewForm preview={preview} repo={repo} startBranch={startBranch} startRef={startRef} startOptions={startOptions} onDone={() => setOpen(false)} />
         </Suspense>
       </DialogContent>
     </Dialog>

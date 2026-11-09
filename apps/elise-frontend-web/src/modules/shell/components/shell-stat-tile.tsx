@@ -20,7 +20,7 @@ export function ShellStatTile({ label, value, note, icon: Icon, tone }: ShellSta
           <Icon aria-hidden="true" className="size-4" />
         </span>
       </div>
-      <p className="mt-3 text-[28px] font-semibold leading-none tracking-tight tabular-nums">{value}</p>
+      <p className={cn("mt-3 text-[28px] font-semibold leading-none tracking-tight tabular-nums", value === 0 && "text-muted-foreground")}>{value}</p>
       <div className="mt-2.5 text-xs leading-relaxed text-muted-foreground">{note}</div>
     </Card>
   );

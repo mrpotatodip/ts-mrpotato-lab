@@ -10,10 +10,23 @@ const TONE = {
   informational: "border-severity-informational/30 bg-severity-informational/12 text-severity-informational",
 } as const;
 
+const MEANING = {
+  critical: "Very serious. Fix it before shipping.",
+  high: "Serious. Fix it before shipping.",
+  medium: "Worth fixing. A few can be shipped with.",
+  low: "Minor. It does not block shipping.",
+  informational: "Good to know. It does not block shipping.",
+} as const satisfies Record<Severity, string>;
+
 export function ScanSeverityBadge({ severity }: { severity: Severity | null }) {
-  if (!severity) return <Badge variant="outline">Unrated</Badge>;
+  if (!severity)
+    return (
+      <Badge variant="outline" title="Not rated yet. A person has to check it and decide how serious it is.">
+        Unrated
+      </Badge>
+    );
   return (
-    <Badge variant="outline" className={cn("capitalize", TONE[severity])}>
+    <Badge variant="outline" title={MEANING[severity]} className={cn("capitalize", TONE[severity])}>
       <span className="size-1.5 rounded-full bg-current" />
       {severity}
     </Badge>

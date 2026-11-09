@@ -1,6 +1,7 @@
 import { createHighlighter } from "@tanstack/highlight/core";
 import { ts } from "@tanstack/highlight/languages/ts";
 import { createThemeCss } from "@tanstack/highlight/theme";
+import { githubDarkTheme } from "@tanstack/highlight/themes/github-dark";
 import { githubLightTheme } from "@tanstack/highlight/themes/github-light";
 
 const highlighter = createHighlighter({ languages: [ts] });
@@ -25,7 +26,7 @@ const readableTheme = {
   },
 };
 
-export const highlightThemeCss = createThemeCss({ light: readableTheme });
+export const highlightThemeCss = createThemeCss({ light: readableTheme, dark: githubDarkTheme, darkSelector: ':root[data-theme="moonlight"]' });
 
 // -----
 // Splits a code snippet into tokens with a class each (`th-keyword`,

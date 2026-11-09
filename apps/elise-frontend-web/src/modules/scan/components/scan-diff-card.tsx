@@ -124,7 +124,7 @@ export function ScanDiffCard({ scanId }: { scanId: string }) {
       </CardHeader>
       <CardContent className="grid grid-cols-[minmax(0,1fr)] gap-4">
         {data.previousScanId === null ? (
-          <p className="text-sm text-muted-foreground">This is the first scan of the repository. Later scans will show what is new, fixed or still open.</p>
+          <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">This is the first scan of the repository. Later scans will show what is new, fixed or still open.</p>
         ) : (
           groups.map((group) => (
             <Collapsible key={group.key} defaultOpen={group.openByDefault} className={cn("rounded-xl border", TONE[group.tone])}>

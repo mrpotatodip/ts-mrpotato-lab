@@ -9,11 +9,12 @@ import { Label } from "#/components/ui/label";
 import { Tabs, TabsList, TabsTrigger } from "#/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "#/components/ui/table";
 import { fetchScans } from "../api";
-import { SCAN_MODEL_OPTIONS, SCAN_SKILL_OPTIONS } from "../constants";
+import { SCAN_MODEL_NAMES, SCAN_SKILL_OPTIONS } from "../constants";
 import { scansQuery } from "../hooks";
 import type { ScanState, ScanStatus } from "../schemas";
 import { scanCost, scanPlural } from "../utils";
 import { ScanNewDialog } from "./scan-new-dialog";
+import { ScanOrigin } from "./scan-origin";
 import { ScanRepoLink } from "./scan-repo-link";
 import { ScanSeverityDots } from "./scan-severity-dots";
 import { ScanStatusBadge } from "./scan-status-badge";
@@ -73,7 +74,7 @@ export function ScanList() {
   const firstIds = new Set(data.scans.map((scan) => scan.scanId));
   const all = [...data.scans, ...older.filter((scan) => !firstIds.has(scan.scanId))];
   const query = search.trim().toLowerCase();
-  const visible = all.filter((scan) => matches(filter, scan.status) && (query === "" || (scan.repo ?? "").toLowerCase().includes(query)));
+  const visible = all.filter((scan) => matches(filter, scan.status) && (query === "" || [scan.repo, scan.branch, scan.commitSha].some((field) => (field ?? "").toLowerCase().includes(query))));
   const count = (value: Filter) => all.filter((scan) => matches(value, scan.status)).length;
   const total = `${all.length}${nextCursor ? "+" : ""}`;
 
@@ -119,9 +120,9 @@ export function ScanList() {
                 ))}
               </TabsList>
             </Tabs>
-            <div className="relative w-full sm:w-72">
+            <div className="relative w-full sm:w-80">
               <Label htmlFor="scan-search" className="sr-only">
-                Search scans by owner or repository
+                Search scans by repository, branch or commit
               </Label>
               <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -129,7 +130,7 @@ export function ScanList() {
                 name="search"
                 type="search"
                 autoComplete="off"
-                placeholder="Search by owner or repository"
+                placeholder="Search by repository, branch or commit"
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 className="h-9 pl-9"
@@ -179,6 +180,7 @@ export function ScanList() {
                   <TableRow key={scan.scanId} className="relative">
                     <TableCell className="max-w-[18rem]">
                       <ScanRepoLink scanId={scan.scanId} repo={scan.repo} stretch />
+                      <ScanOrigin scan={scan} />
                     </TableCell>
                     <TableCell>
                       <ScanStatusBadge status={scan.status} />
@@ -188,7 +190,7 @@ export function ScanList() {
                     </TableCell>
                     <TableCell>
                       <span className="block text-sm">{labelOf(SCAN_SKILL_OPTIONS, scan.skill)}</span>
-                      <span className="block text-xs text-muted-foreground">{labelOf(SCAN_MODEL_OPTIONS, scan.model)}</span>
+                      <span className="block text-xs text-muted-foreground">{labelOf(SCAN_MODEL_NAMES, scan.model)}</span>
                     </TableCell>
                     <TableCell className="text-right tabular-nums text-muted-foreground">{scan.usage ? scanCost(scan.usage.costUsd) : "-"}</TableCell>
                     <TableCell>

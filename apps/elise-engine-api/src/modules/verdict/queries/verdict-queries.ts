@@ -34,6 +34,10 @@ export const commitEvidenceEffect = (db: DbConnectType, tenantId: string, repoId
           class: scanFindings.class,
           file: scanFindings.file,
           line: scanFindings.line,
+          impact: scanFindings.impact,
+          evidence: scanFindings.evidence,
+          fix: scanFindings.fix,
+          needs: scanFindings.needs,
         })
         .from(scanFindings)
         .where(

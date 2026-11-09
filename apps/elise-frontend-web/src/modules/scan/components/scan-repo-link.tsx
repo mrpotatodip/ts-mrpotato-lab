@@ -10,7 +10,7 @@ type ScanRepoLinkProps = {
 };
 
 const LINK_CLASS =
-  "group/link inline-flex min-w-0 items-baseline gap-0.5 rounded-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+  "group/link inline-flex min-h-6 min-w-0 items-center gap-0.5 rounded-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
 const STRETCH = "after:absolute after:inset-0";
 

@@ -3,7 +3,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "#/components/ui/tooltip
 import { cn } from "#/lib/utils";
 import type { ScanActivityDay } from "../utils";
 
-const PLOT_HEIGHT = 212;
+const PLOT_HEIGHT = 168;
 
 type ScanActivityChartProps = {
   days: readonly ScanActivityDay[];
@@ -18,27 +18,25 @@ export function ScanActivityChart({ days }: ScanActivityChartProps) {
 
   return (
     <Card>
-      <CardHeader className="flex-row flex-wrap items-start justify-between gap-3">
-        <div className="grid gap-1.5">
-          <CardTitle>Scan activity</CardTitle>
-          <p className="text-xs text-muted-foreground">Scans started per day, last {days.length} days</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 whitespace-nowrap text-xs text-muted-foreground">
+      <CardHeader>
+        <CardTitle>Scan activity</CardTitle>
+        <p className="text-sm leading-relaxed text-muted-foreground">Scans started per day, last {days.length} days.</p>
+      </CardHeader>
+      <CardContent className="grid grid-cols-[2rem_minmax(0,1fr)] gap-x-3 gap-y-4">
+        <div className="col-span-2 flex flex-wrap items-center gap-x-4 gap-y-1 whitespace-nowrap text-xs text-muted-foreground">
           <span className="flex items-center gap-1.5">
-            <span className="size-2 rounded-full bg-status-success/70" />
+            <span className="size-2 rounded-full bg-mark-neutral" />
             Succeeded
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="size-2 rounded-full bg-status-danger/70" />
+            <span className="size-2 rounded-full bg-mark-danger" />
             Failed
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="size-2 rounded-full bg-status-info/70" />
+            <span className="size-2 rounded-full bg-mark-info" />
             In progress
           </span>
         </div>
-      </CardHeader>
-      <CardContent className="grid grid-cols-[2rem_minmax(0,1fr)] gap-3">
         <div className="flex flex-col justify-between text-right text-[11px] tabular-nums text-muted-foreground" style={{ height: PLOT_HEIGHT }} aria-hidden="true">
           {ticks.map((tick) => (
             <span key={tick} className="leading-none">
@@ -61,13 +59,14 @@ export function ScanActivityChart({ days }: ScanActivityChartProps) {
                       aria-label={`${day.label}: ${day.total} ${plural(day.total)}`}
                       className={cn(
                         "group flex w-full flex-col-reverse justify-start overflow-hidden rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                        day.total === 0 && "h-1 bg-muted",
+                        day.total === 0 && "h-6",
                       )}
                       style={day.total === 0 ? undefined : { height: `${(day.total / peak) * 100}%` }}
                     >
-                      {day.succeeded > 0 && <span className="block w-full bg-status-success/70 transition-opacity group-hover:opacity-80" style={{ flexGrow: day.succeeded }} />}
-                      {day.failed > 0 && <span className="block w-full bg-status-danger/70 transition-opacity group-hover:opacity-80" style={{ flexGrow: day.failed }} />}
-                      {day.active > 0 && <span className="block w-full bg-status-info/70 transition-opacity group-hover:opacity-80" style={{ flexGrow: day.active }} />}
+                      {day.total === 0 && <span className="block h-1 w-full rounded-md bg-muted" />}
+                      {day.succeeded > 0 && <span className="block w-full bg-mark-neutral transition-opacity group-hover:opacity-80" style={{ flexGrow: day.succeeded }} />}
+                      {day.failed > 0 && <span className="block w-full bg-mark-danger transition-opacity group-hover:opacity-80" style={{ flexGrow: day.failed }} />}
+                      {day.active > 0 && <span className="block w-full bg-mark-info transition-opacity group-hover:opacity-80" style={{ flexGrow: day.active }} />}
                     </TooltipTrigger>
                     <TooltipContent>
                       <p className="font-medium">{day.label}</p>

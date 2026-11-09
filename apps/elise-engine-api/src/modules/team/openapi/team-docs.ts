@@ -12,7 +12,7 @@ import { EXAMPLE_ACCOUNT_ID, EXAMPLE_BASE_URL, SERVICE_SECURITY, bash, envelope,
 const SESSION = '  -H "authorization: Bearer $SESSION_TOKEN" \\';
 const ACCOUNT = `  -H "x-account-id: ${EXAMPLE_ACCOUNT_ID}"`;
 const INVITE_ID = "7c9e6679-7425-40de-944b-e07fc1f90ae7";
-const INVITE_EXAMPLE = `{ "id": "${INVITE_ID}", "email": "bo@example.com", "role": "store_staff", "roleLabel": "Store staff", "groupIds": [], "expiresAt": "2026-11-15T09:00:00.000Z", "createdAt": "2026-11-08T09:00:00.000Z" }`;
+const INVITE_EXAMPLE = `{ "id": "${INVITE_ID}", "email": "bo@example.com", "role": "workspace_member", "roleLabel": "Workspace member", "groupIds": [], "expiresAt": "2026-11-15T09:00:00.000Z", "createdAt": "2026-11-08T09:00:00.000Z" }`;
 
 export const listTeamDoc = describeRoute({
   tags: ["team"],
@@ -62,7 +62,7 @@ export const createTeamInviteDoc = describeRoute({
     ],
     example: [
       "Invite Bo as store staff:",
-      bash(`curl -X POST ${EXAMPLE_BASE_URL}/team/invites \\`, SESSION, ACCOUNT + " \\", '  -H "Content-Type: application/json" \\', `  -d '{"email":"bo@example.com","role":"store_staff"}'`),
+      bash(`curl -X POST ${EXAMPLE_BASE_URL}/team/invites \\`, SESSION, ACCOUNT + " \\", '  -H "Content-Type: application/json" \\', `  -d '{"email":"bo@example.com","role":"workspace_member"}'`),
       json(`{ "data": { "token": "Zr0tQ1...", "invite": ${INVITE_EXAMPLE} }, "error": null }`),
     ],
   }),

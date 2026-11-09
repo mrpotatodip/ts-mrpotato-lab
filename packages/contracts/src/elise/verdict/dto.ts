@@ -25,6 +25,10 @@ export const VerdictFindingSchema = z.object({
   class: z.string(),
   file: z.string().nullable(),
   line: z.number().int().nullable(),
+  impact: z.string().nullable().optional(),
+  evidence: z.string().nullable().optional(),
+  fix: z.string().nullable().optional(),
+  needs: z.string().nullable().optional(),
 });
 
 export const VerdictAcceptedSchema = VerdictFindingSchema.extend({

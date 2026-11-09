@@ -34,7 +34,7 @@ const callWith = (env: Bindings, path: string, init: RequestInit, headers: Recor
 const MANAGER_ROUTES: Array<[string, string, string | undefined]> = [
   ["GET", "/team", undefined],
   ["GET", "/team/roles", undefined],
-  ["POST", "/team/invites", JSON.stringify({ email: "bo@example.com", role: "store_staff" })],
+  ["POST", "/team/invites", JSON.stringify({ email: "bo@example.com", role: "workspace_member" })],
   ["DELETE", `/team/invites/${ID}`, undefined],
   ["GET", "/groups", undefined],
   ["POST", "/groups", JSON.stringify({ name: "Backend" })],
@@ -72,7 +72,7 @@ describe("validation, after the admin check", () => {
   it("rejects a bad invite body", async () => {
     signedInUser = "admin";
     managesAccount = true;
-    const res = await call("/team/invites", { method: "POST", body: JSON.stringify({ email: "not-an-email", role: "store_staff" }) });
+    const res = await call("/team/invites", { method: "POST", body: JSON.stringify({ email: "not-an-email", role: "workspace_member" }) });
 
     expect(res.status).toBe(400);
   });

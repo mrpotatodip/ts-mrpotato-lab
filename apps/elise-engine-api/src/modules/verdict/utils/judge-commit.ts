@@ -25,7 +25,7 @@ const unionOf = (findings: JudgedFinding[], newestFirst: JudgedScan[]): JudgedFi
   return [...byFingerprint.values()].toSorted((a, b) => rank(a.severity) - rank(b.severity) || a.title.localeCompare(b.title));
 };
 
-const detail = ({ fingerprint, title, severity, class: kind, file, line }: JudgedFinding) => ({ fingerprint, title, severity, class: kind, file, line });
+const detail = ({ fingerprint, title, severity, class: kind, file, line, impact, evidence, fix, needs }: JudgedFinding) => ({ fingerprint, title, severity, class: kind, file, line, impact, evidence, fix, needs });
 
 const emptyCounts = (): SeverityCounts & { needsValidation: number } => ({ critical: 0, high: 0, medium: 0, low: 0, informational: 0, needsValidation: 0 });
 

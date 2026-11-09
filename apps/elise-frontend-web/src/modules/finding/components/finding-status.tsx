@@ -21,14 +21,16 @@ export function FindingStatusBadge({ state, triage }: Pick<FindingStatusProps, "
 }
 
 // -----
-// One short line under the decision select: who decided, and when. It is only
-// there when a person or a scan settled the finding.
+// A few short lines under the decision select: what was decided, by whom
+// and when. An accepted risk also says when it blocks again and why it was
+// accepted. It is only there when a person or a scan settled the finding.
 // -----
 export function FindingDecisionNote({ state, triage, fixedOn }: FindingStatusProps) {
   const key = findingStatusKey(state, triage);
   if (key === "open" || key === "came_back") return null;
 
-  let first: ReactNode = `By ${whoOf(triage)}`;
+  const verb = key === "accepted_risk" ? "Accepted" : key === "false_positive" ? "Dismissed" : "Marked fixed";
+  let first: ReactNode = `${verb} by ${whoOf(triage)}`;
   let second: ReactNode = <ScanTime value={triage?.updatedAt} />;
   if (key === "fixed_by_scan") {
     first = "Confirmed by a scan";
@@ -40,15 +42,16 @@ export function FindingDecisionNote({ state, triage, fixedOn }: FindingStatusPro
       </span>
     ) : (
       <>
-        Until <ScanTime value={triage.acceptedUntil} />
+        Blocks the commit again on <ScanTime value={triage.acceptedUntil} />
       </>
     );
   }
 
   return (
-    <span className="grid gap-0.5 text-xs text-muted-foreground">
+    <span className="grid gap-0.5 text-sm leading-relaxed text-muted-foreground">
       <span>{first}</span>
       {second && <span className="whitespace-nowrap">{second}</span>}
+      {key === "accepted_risk" && triage?.note && <span className="line-clamp-2">Reason: {triage.note}</span>}
       {key === "marked_fixed" && <span>Not confirmed by a scan yet</span>}
     </span>
   );

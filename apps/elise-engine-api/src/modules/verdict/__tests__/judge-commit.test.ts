@@ -166,6 +166,12 @@ describe("judgeCommit: decisions by a person", () => {
     expect(judge({ findings: [finding("s2", "a", "high")], triage: [triage("a", { status: "fixed" })] }).verdict).toBe("fail");
   });
 
+  it("hands the impact, evidence and fix of an open problem to the caller", () => {
+    const withWords: JudgedFinding = { ...finding("s2", "a", "high"), impact: "An attacker reads other accounts.", evidence: "src/a.ts:1 skips the owner check.", fix: "Check the owner.", needs: null };
+
+    expect(judge({ findings: [withWords] }).open[0]).toMatchObject({ impact: "An attacker reads other accounts.", evidence: "src/a.ts:1 skips the owner check.", fix: "Check the owner.", needs: null });
+  });
+
   it("applies a decision only to its own problem", () => {
     const verdict = judge({ findings: [finding("s2", "a", "high"), finding("s2", "b", "high")], triage: [triage("a", { status: "false_positive" })] });
 

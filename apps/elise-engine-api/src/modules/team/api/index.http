@@ -22,7 +22,7 @@ Authorization: Bearer <session-token>
 x-account-id: {{account}}
 Content-Type: application/json
 
-{ "email": "bo@example.com", "role": "store_staff", "groupIds": [] }
+{ "email": "bo@example.com", "role": "workspace_member", "groupIds": [] }
 
 ###
 

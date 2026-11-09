@@ -1,4 +1,16 @@
-import { defineConfig } from "oxlint";
+import { defineConfig, type OxlintOverride } from "oxlint";
+
+// -----
+// Modules import in one direction only: shell and usage at the bottom, then scan,
+// then finding, then repo. A lower module that imports a higher one makes a cycle,
+// so the file that needs both (a route) composes them and passes the parts down.
+// -----
+const forbidModules = (files: string, modules: readonly string[], message: string): OxlintOverride => ({
+  files: [files],
+  rules: {
+    "no-restricted-imports": ["error", { patterns: [{ group: modules.flatMap((name) => [`#/modules/${name}`, `#/modules/${name}/*`]), message }] }],
+  },
+});
 
 export default defineConfig({
   ignorePatterns: ["tools/oxlint/anti-slop/**", "src/routeTree.gen.ts", "worker-configuration.d.ts"],
@@ -10,10 +22,17 @@ export default defineConfig({
   jsPlugins: [
     { name: "anti-slop", specifier: "./tools/oxlint/anti-slop/index.ts" },
   ],
+  overrides: [
+    forbidModules("src/modules/shell/**", ["scan", "repo", "finding", "team", "usage"], "The shell is the frame every screen sits in, so it cannot import a screen's module. Take what it needs as props."),
+    forbidModules("src/modules/scan/**", ["repo", "finding", "team"], "The scan module sits below repo and finding. Take their parts as props or slots from the route that composes them."),
+    forbidModules("src/modules/usage/**", ["scan", "repo", "finding", "team"], "The usage module sits below the screens that show it."),
+    forbidModules("src/modules/finding/**", ["repo"], "The finding module sits below repo."),
+  ],
   rules: {
     "react/react-in-jsx-scope": "off",
     "anti-slop/no-chained-type-assertions": "error",
     "anti-slop/no-conditional-empty-object-spread": "error",
+    "anti-slop/no-deprecated-query-client-calls": "error",
     "anti-slop/no-known-value-widening": "error",
     "anti-slop/no-module-mocking": "error",
     "anti-slop/no-object-parameters": "error",

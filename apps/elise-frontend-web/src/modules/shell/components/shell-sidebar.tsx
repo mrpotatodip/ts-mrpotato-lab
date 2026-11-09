@@ -5,13 +5,13 @@ import { Avatar, AvatarFallback } from "#/components/ui/avatar";
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "#/components/ui/collapsible";
-import { Separator } from "#/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "#/components/ui/tooltip";
 import { AuthSignOutButton } from "#/modules/auth";
 import { cn } from "#/lib/utils";
 import { ShellBrand } from "./shell-brand";
 import { useSidebarReposOpen } from "../hooks";
 import { ShellRepoTree } from "./shell-repo-tree";
+import { ShellThemeSwitch } from "./shell-theme-switch";
 
 export type ShellRepo = {
   id: string;
@@ -31,6 +31,7 @@ const TOGGLE =
 
 type ShellSidebarProps = {
   accountName: string;
+  userName?: string;
   email: string;
   scanCount: number;
   running: number;
@@ -61,14 +62,16 @@ function Hint({ label, collapsed, children }: { label: string; collapsed: boolea
   );
 }
 
-export function ShellSidebar({ accountName, email, scanCount, running, repos, repoCount, mode, showTeam, collapsed, canToggle, onToggle }: ShellSidebarProps) {
+export function ShellSidebar({ accountName, userName, email, scanCount, running, repos, repoCount, mode, showTeam, collapsed, canToggle, onToggle }: ShellSidebarProps) {
   const { open: reposOpen, setOpen: setReposOpen } = useSidebarReposOpen();
   const scansLabel = running > 0 ? `Scans, ${running} in progress` : "Scans";
   const hasRepoChildren = repoCount >= 2;
   const empty = scanCount === 0;
+  const personName = userName || accountName;
+  const personDetail = userName ? accountName : email;
 
   return (
-    <aside className={cn("sticky top-0 flex h-svh flex-col gap-5 overflow-y-auto overflow-x-hidden border-r bg-sidebar pb-4 pt-6", collapsed ? "px-2.5" : "px-3")}>
+    <aside className={cn("sticky top-0 flex h-svh flex-col gap-6 overflow-y-auto overflow-x-hidden border-r bg-sidebar pb-4 pt-6", collapsed ? "px-2.5" : "px-3")}>
       <div className={cn("flex items-center", collapsed ? "flex-col gap-3" : "justify-between pl-2 pr-1")}>
         <Link to="/overview" aria-label={collapsed ? "Elise overview" : undefined} className="rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
           {collapsed ? <span className="text-xl font-semibold tracking-tight">E</span> : <ShellBrand />}
@@ -97,13 +100,13 @@ export function ShellSidebar({ accountName, email, scanCount, running, repos, re
           <Link to="/scans" aria-label={collapsed ? scansLabel : undefined} className={cn(ROW, collapsed && "justify-center px-0")} activeProps={ACTIVE}>
             <ScanSearch className={ICON} strokeWidth={1.5} />
             {collapsed ? (
-              running > 0 && <span aria-hidden="true" className="absolute right-2.5 top-2 size-2 animate-pulse rounded-full bg-status-info" />
+              running > 0 && <span aria-hidden="true" className="absolute right-2.5 top-2 size-2 animate-pulse rounded-full bg-mark-info" />
             ) : (
               <>
                 <span className="flex-1">Scans</span>
                 {running > 0 && (
                   <>
-                    <span aria-hidden="true" className="size-2 animate-pulse rounded-full bg-status-info" />
+                    <span aria-hidden="true" className="size-2 animate-pulse rounded-full bg-mark-info" />
                     <span className="sr-only">{running} in progress</span>
                   </>
                 )}
@@ -125,7 +128,7 @@ export function ShellSidebar({ accountName, email, scanCount, running, repos, re
             </Link>
           </Hint>
         ) : (
-          <Collapsible open={reposOpen} onOpenChange={setReposOpen}>
+          <Collapsible open={reposOpen} onOpenChange={setReposOpen} className="mb-2">
             <div className="relative">
               <Link to="/repos" activeOptions={{ exact: true }} className={cn(ROW, "pr-10")} activeProps={ACTIVE}>
                 <FolderGit2 className={ICON} strokeWidth={1.5} />
@@ -184,33 +187,37 @@ export function ShellSidebar({ accountName, email, scanCount, running, repos, re
       )}
 
       <div className="mt-auto grid gap-3">
-        <Separator />
         {collapsed ? (
           <div className="grid justify-items-center gap-2">
+            <ShellThemeSwitch collapsed />
             <Tooltip>
               <TooltipTrigger render={<div />}>
                 <Avatar className="size-10">
-                  <AvatarFallback>{initials(accountName)}</AvatarFallback>
+                  <AvatarFallback>{initials(personName)}</AvatarFallback>
                 </Avatar>
               </TooltipTrigger>
               <TooltipContent side="right">
-                {accountName}
+                {personName}
+                <span className="block text-muted-foreground">{personDetail}</span>
                 <span className="block text-muted-foreground">{email}</span>
               </TooltipContent>
             </Tooltip>
             <AuthSignOutButton />
           </div>
         ) : (
-          <div className="flex items-center gap-3 rounded-xl bg-card p-2.5 shadow-card">
+          <>
+          <ShellThemeSwitch />
+          <div className="flex items-center gap-3 rounded-xl bg-card p-2.5 shadow-card" title={email}>
             <Avatar className="size-10">
-              <AvatarFallback>{initials(accountName)}</AvatarFallback>
+              <AvatarFallback>{initials(personName)}</AvatarFallback>
             </Avatar>
             <div className="grid min-w-0 flex-1 leading-tight">
-              <span className="truncate text-sm font-medium">{accountName}</span>
-              <span className="truncate text-xs text-muted-foreground">{email}</span>
+              <span className="truncate text-sm font-medium">{personName}</span>
+              <span className="truncate text-xs text-muted-foreground">{personDetail}</span>
             </div>
             <AuthSignOutButton />
           </div>
+          </>
         )}
       </div>
     </aside>

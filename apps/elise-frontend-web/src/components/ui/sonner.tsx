@@ -9,13 +9,15 @@ import {
   TriangleAlert,
 } from "lucide-react";
 import { Toaster as Sonner } from "sonner";
+import { useTheme } from "#/modules/shell/hooks/use-theme";
 
 type ToasterProps = ComponentProps<typeof Sonner>;
 
 const Toaster = ({ ...props }: ToasterProps) => {
+  const { theme } = useTheme();
   return (
     <Sonner
-      theme="light"
+      theme={theme === "moonlight" ? "dark" : "light"}
       position="bottom-right"
       className="toaster group"
       icons={{

@@ -207,5 +207,6 @@ A reviewer checks that the two lists match exactly.
 | Remove or rename a response field | Stop reading it in the frontend and deploy that first. Then remove it from the backend and the contract. |
 | Add an enum value | Deploy the frontend first. An old frontend's `z.enum` parse rejects the **whole response** when it meets a value it doesn't know. Only then let the backend send the new value. |
 | Tighten request validation | Deploy the frontend (form) first, so it stops sending input the backend will reject. |
+| Remove an enum value that stored rows still carry | Keep the value in the schema the backend uses for **responses** (a separate `*_RECORDED_VALUES` list) and remove it only from the request schema. A response schema built from the request enum throws on the first stored row with the old value, and every list that reaches that row returns 500. Then deploy the frontend first, as for tightened request validation. |
 
 **5.3 `[House]` Say which rows of 5.2 apply.** A PR that changes the contracts package names the change type and the deploy order in its description.

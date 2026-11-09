@@ -2,7 +2,9 @@ import { z } from "zod";
 import { ACCEPTED_RISK_MAX_DAYS } from "../constants";
 import { FINDING_SEVERITY_VALUES, FINDING_STATUS_VALUES, FINDING_TRIAGE_STATUS_VALUES, REPO_FINDING_STATE_VALUES, SCAN_STEP_VALUES } from "../enums";
 
-export const SCAN_MODELS = ["claude-sonnet-5-5", "claude-opus-5-5", "claude-haiku-5-5"] as const;
+export const SCAN_MODELS = ["claude-sonnet-5-5", "claude-haiku-5-5"] as const;
+// Opus is not offered for new scans, but a stored scan may still carry it.
+export const SCAN_RECORDED_MODELS =[...SCAN_MODELS, "claude-opus-5-5"] as const;
 export const SCAN_EFFORTS = ["low", "medium", "high", "xhigh", "max"] as const;
 export const SCAN_SKILLS = ["lite", "full"] as const;
 export const SCAN_PROFILES = ["quick", "standard", "deep"] as const;
@@ -14,7 +16,7 @@ export const ScanStateSchema = z.enum(["queued", "running", "succeeded", "failed
 
 export const ScanOptionsSchema = z.object({
   skill: z.enum(SCAN_SKILLS),
-  model: z.enum(SCAN_MODELS),
+  model: z.enum(SCAN_RECORDED_MODELS),
   effort: z.enum(SCAN_EFFORTS),
   profile: z.enum(SCAN_PROFILES),
   budget: z.number().int().min(1).optional(),

@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "wrangler dev",
     "dev:log": "wrangler dev > .dev.log 2>&1",
-    "deploy": "wrangler deploy",
+    "deploy": "node ../../scripts/deploy-guard.mjs apps/elise-engine-api && wrangler deploy",
     "build": "tsc --noEmit",
     "lint": "oxlint src",
     "test": "vitest run",

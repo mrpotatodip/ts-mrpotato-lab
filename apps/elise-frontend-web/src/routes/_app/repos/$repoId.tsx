@@ -1,6 +1,5 @@
 import { Suspense } from "react";
-import { createFileRoute, Link, redirect } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { z } from "zod";
 import { Skeleton } from "#/components/ui/skeleton";
 import { RepoDetail, repoName, repoQuery } from "#/modules/repo";
@@ -27,14 +26,8 @@ export const Route = createFileRoute("/_app/repos/$repoId")({
 function RepoPage() {
   const { repoId } = Route.useParams();
   return (
-    <>
-      <Link to="/repos" className="-mb-4 inline-flex w-fit items-center gap-1.5 rounded-sm text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-        <ArrowLeft className="size-3.5" />
-        All repositories
-      </Link>
-      <Suspense fallback={<Skeleton className="h-64 w-full" />}>
-        <RepoDetail repoId={repoId} />
-      </Suspense>
-    </>
+    <Suspense fallback={<Skeleton className="h-64 w-full" />}>
+      <RepoDetail repoId={repoId} />
+    </Suspense>
   );
 }

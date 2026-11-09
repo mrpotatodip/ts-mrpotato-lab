@@ -57,6 +57,15 @@ describe("neonScanRepo", () => {
     });
   });
 
+  it("still reads a scan stored with a model that new scans no longer offer", async () => {
+    const repo = neonScanRepo(test.http);
+    const params = paramsFor(acme, "a-retired-model");
+    // SAFETY: a scan stored before the model left SCAN_MODELS, as the database may still hold it.
+    await queue(repo, { ...params, options: { ...params.options, model: "claude-opus-5-5" as "claude-haiku-5-5" } });
+
+    expect(await Effect.runPromise(repo.get(acme, "a-retired-model"))).toMatchObject({ scanId: "a-retired-model", model: "claude-opus-5-5" });
+  });
+
   it("moves through a step to a final state, with usage", async () => {
     const repo = neonScanRepo(test.http);
     await queue(repo, paramsFor(acme, "a-flow"));

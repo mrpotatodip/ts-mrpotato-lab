@@ -1,7 +1,8 @@
 import { Suspense, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQueryClient, useSuspenseInfiniteQuery, useSuspenseQuery } from "@tanstack/react-query";
-import { ChevronRight, CircleAlert, ExternalLink, FolderGit2, GitBranch, History, Search, ShieldCheck, Undo2 } from "lucide-react";
+import { ChevronRight, CircleAlert, ExternalLink, GitBranch, Search, ShieldCheck, Undo2 } from "lucide-react";
+import { Alert, AlertDescription } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "#/components/ui/empty";
@@ -10,14 +11,18 @@ import { Label } from "#/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#/components/ui/select";
 import { Skeleton } from "#/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "#/components/ui/table";
+import { Tooltip, TooltipContent, TooltipTrigger } from "#/components/ui/tooltip";
 import { cn } from "#/lib/utils";
 import { FindingDecisionNote, FindingLocation, FindingStatusBadge, FindingStatusBanner, FindingTriageSelect, findingGroup } from "#/modules/finding";
-import { ScanFindingSheet, ScanNewDialog, ScanSeverityBadge, ScanSeverityDots, ScanStatusBadge, ScanTime, ScanVerdictCard, fromRecorded, scanCost, scanDuration, scanFailure, scanPlural, type ScanStatus } from "#/modules/scan";
-import { ShellStatTile } from "#/modules/shell";
+import { ScanFindingSheet, ScanNewDialog, ScanSeverityBadge, ScanSeverityDots, ScanStatusBadge, ScanTime, ScanVerdictCard, fromRecorded, scanKeys, scanFailure, scanPlural, type DecideFindingProps, type ScanStatus } from "#/modules/scan";
 import { repoFindingsQuery, repoKeys, repoQuery } from "../hooks";
 import type { RepoFinding } from "../schemas";
 import { repoName } from "../utils";
 import { RepoBranchSwitch } from "./repo-branch-switch";
+
+const RECENT_SCAN_COUNT = 3;
+
+const unratedOf = (summary: { total: number; severity: Record<string, number> }) => summary.total - Object.values(summary.severity).reduce((sum, count) => sum + count, 0);
 
 type FindingFilter = "action" | "decided" | "scan" | "all";
 
@@ -38,6 +43,14 @@ const EMPTY_COPY = {
 } as const satisfies Record<FindingFilter, { title: string; text: string }>;
 
 const asFilter = (value: string | null): FindingFilter => FILTER_VALUES.find((filter) => filter === value) ?? "action";
+
+// -----
+// Open findings already show in the verdict above, so the history
+// opens on what people decided, then on what a scan fixed, then on
+// everything when neither has any.
+// -----
+const firstFilledFilter = (findings: readonly RepoFinding[]): FindingFilter =>
+  (["decided", "scan"] as const).find((value) => findings.some((f) => findingGroup(f.state, f.triage) === value)) ?? "all";
 
 function ScanLink({ scanId, history }: { scanId: string; history: readonly ScanStatus[] }) {
   const scan = history.find((item) => item.scanId === scanId);
@@ -77,12 +90,12 @@ function RepoFindingFacts({ finding, history }: { finding: RepoFinding; history:
 }
 
 function RepoFindings({ repoId, branch, history }: { repoId: string; branch: string; history: readonly ScanStatus[] }) {
-  const [filter, setFilter] = useState<FindingFilter>("action");
-  const [search, setSearch] = useState("");
-  const [selected, setSelected] = useState<number | undefined>();
   const queryClient = useQueryClient();
   const findingsOptions = repoFindingsQuery(repoId, { branch });
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = useSuspenseInfiniteQuery(findingsOptions);
+  const [filter, setFilter] = useState<FindingFilter>(() => firstFilledFilter(data.pages.flatMap((page) => page.findings)));
+  const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState<number | undefined>();
   const decided = (fingerprint: string, triage: RepoFinding["triage"]) =>
     queryClient.setQueryData(findingsOptions.queryKey, (old) => old && { ...old, pages: old.pages.map((page) => ({ ...page, findings: page.findings.map((f) => (f.fingerprint === fingerprint ? { ...f, triage } : f)) })) });
   const all = data.pages.flatMap((page) => page.findings);
@@ -93,17 +106,16 @@ function RepoFindings({ repoId, branch, history }: { repoId: string; branch: str
   const query = search.trim().toLowerCase();
   const findings = query === "" ? inGroup : inGroup.filter((f) => [f.title, f.file ?? "", f.class].some((text) => text.toLowerCase().includes(query)));
   const selectedFinding = selected === undefined ? undefined : findings[selected];
+  const showStatus = filter === "action" || filter === "all";
 
   return (
     <Card>
-      <CardHeader className="flex-row flex-wrap items-center justify-between gap-3">
+      <CardHeader className="flex-row flex-wrap items-center justify-between gap-3 pb-7">
         <div className="grid max-w-xl gap-1.5">
-          <CardTitle>
-            Findings on <span className="font-mono">{branch}</span>
-          </CardTitle>
-          <p className="text-xs leading-relaxed text-muted-foreground">
+          <CardTitle className="text-lg">Findings history</CardTitle>
+          <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">
             {FILTER_COPY[filter].note}
-            {findings.length > 0 ? " Select a row for the impact, evidence and fix, and record your decision." : ""}
+            {findings.length > 0 ? (filter === "action" ? " Select a row for the impact, evidence and fix, and record your decision." : " Select a row to read the impact, evidence and fix.") : ""}
           </p>
         </div>
         <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
@@ -160,7 +172,7 @@ function RepoFindings({ repoId, branch, history }: { repoId: string; branch: str
               <TableRow>
                 <TableHead className="whitespace-nowrap">Severity</TableHead>
                 <TableHead className="w-[36%]">Finding</TableHead>
-                <TableHead>Status</TableHead>
+                {showStatus && <TableHead>Status</TableHead>}
                 <TableHead>Where</TableHead>
                 <TableHead>Your decision</TableHead>
                 <TableHead className="w-10">
@@ -183,11 +195,13 @@ function RepoFindings({ repoId, branch, history }: { repoId: string; branch: str
                     >
                       {finding.title}
                     </button>
-                    {finding.unchecked && <p className="mt-1 text-xs text-muted-foreground">Not re-checked in the latest scan</p>}
+                    {finding.unchecked && <p className="mt-1 text-sm leading-relaxed text-muted-foreground">Not re-checked in the latest scan</p>}
                   </TableCell>
-                  <TableCell>
-                    <FindingStatusBadge state={finding.state} triage={finding.triage} />
-                  </TableCell>
+                  {showStatus && (
+                    <TableCell>
+                      <FindingStatusBadge state={finding.state} triage={finding.triage} />
+                    </TableCell>
+                  )}
                   <TableCell className="max-w-[18rem]">
                     <FindingLocation file={finding.file} line={finding.line} />
                   </TableCell>
@@ -235,11 +249,15 @@ function RepoFindings({ repoId, branch, history }: { repoId: string; branch: str
   );
 }
 
-type FactProps = { label: string; children: React.ReactNode };
+function VerdictDecision({ repoId, repoUrl, finding }: DecideFindingProps) {
+  return <FindingTriageSelect finding={{ repo: repoUrl, fingerprint: finding.fingerprint, title: finding.title, triage: null }} also={[repoKeys.detail(repoId), scanKeys.all]} />;
+}
+
+type FactProps ={ label: string; children: React.ReactNode };
 
 function Fact({ label, children }: FactProps) {
   return (
-    <div className="grid gap-0.5">
+    <div className="grid gap-1">
       <dt className="text-xs text-muted-foreground">{label}</dt>
       <dd className="text-sm font-medium">{children}</dd>
     </div>
@@ -251,106 +269,107 @@ export function RepoDetail({ repoId, branchId }: { repoId: string; branchId?: st
   const oldest = repo.history.at(-1);
   const current = repo.branches.find((branch) => branch.id === branchId);
   const open = current?.open ?? repo.open;
-  const branchScans = current ? repo.history.filter((scan) => scan.branchId === current.id || (current.isDefault && !scan.branchId && !scan.ref)) : repo.history;
+  const branchCommits = new Set(repo.history.filter((scan) => current && scan.branchId === current.id && scan.commitSha).map((scan) => scan.commitSha));
+  const pinnedToBranch = (scan: ScanStatus) => !scan.branchId && scan.commitSha != null && branchCommits.has(scan.commitSha);
+  const branchScans = current ? repo.history.filter((scan) => scan.branchId === current.id || (current.isDefault && !scan.branchId && !scan.ref) || pinnedToBranch(scan)) : repo.history;
   const otherScans = repo.history.length - branchScans.length;
-  const latestStatus = repo.history.find((scan) => scan.scanId === current?.latestScanId)?.status;
+  const recentScans = branchScans.slice(0, RECENT_SCAN_COUNT);
+  const olderScans = branchScans.length - recentScans.length;
+  const newestScan = branchScans[0];
   const github = repo.url.replace(/\.git$/, "").replace(/\/$/, "");
 
   return (
     <>
-      <div className="grid gap-5">
+      <div className="grid gap-3">
         <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
-          <div className="grid min-w-0 gap-2.5">
-            <h1 className="text-[26px] font-semibold leading-none tracking-tight">{repoName(repo.url)}</h1>
-            {current && <RepoBranchSwitch repoId={repoId} branches={repo.branches} current={current} />}
+          <div className="grid min-w-0 gap-3">
+            <h1 className="text-[26px] font-semibold leading-tight tracking-tight">{repoName(repo.url)}</h1>
+            {current && (
+              <div className="flex min-w-0 items-center gap-2">
+                <RepoBranchSwitch repoId={repoId} branches={repo.branches} current={current} />
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <a
+                        href={`${github}/tree/${encodeURI(current.name)}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-label="Open this branch on GitHub"
+                        className="inline-flex size-9 shrink-0 items-center justify-center rounded-md border bg-card text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      />
+                    }
+                  >
+                    <ExternalLink aria-hidden="true" className="size-4" />
+                  </TooltipTrigger>
+                  <TooltipContent>Open this branch on GitHub</TooltipContent>
+                </Tooltip>
+              </div>
+            )}
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <a
-              href={current ? `${github}/tree/${encodeURI(current.name)}` : github}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-sm text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <ExternalLink aria-hidden="true" className="size-3.5" />
-              {current ? "Open branch on GitHub" : "Open on GitHub"}
-            </a>
-            <ScanNewDialog label={current ? "Scan this branch" : "Scan"} variant="outline" repo={repo.url} startBranch={current?.name} />
+            {!current && (
+              <a
+                href={github}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex min-h-6 items-center gap-1.5 rounded-sm text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <ExternalLink aria-hidden="true" className="size-3.5" />
+                Open on GitHub
+              </a>
+            )}
+            <ScanNewDialog label={current ? "Scan this branch" : "Scan"} size="default" repo={repo.url} startBranch={current?.name} />
           </div>
         </div>
-        <dl className="grid grid-cols-2 gap-x-8 gap-y-4 sm:grid-cols-3">
-          {current ? (
-            <>
-              <Fact label="Latest scan of this branch">
-                {current.latestScanAt ? (
-                  <span className="flex flex-wrap items-center gap-2">
-                    {latestStatus && <ScanStatusBadge status={latestStatus} />}
-                    <ScanTime value={current.latestScanAt} />
-                  </span>
-                ) : (
-                  <span className="text-muted-foreground">Never scanned</span>
-                )}
-              </Fact>
-              <Fact label="Commit read">
-                {current.latestCommit ? (
-                  <a href={`${github}/commit/${current.latestCommit}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-sm font-mono underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                    {current.latestCommit.slice(0, 7)}
-                    <ExternalLink aria-hidden="true" className="size-3" />
-                  </a>
-                ) : (
-                  <span className="text-muted-foreground">-</span>
-                )}
-              </Fact>
-              <Fact label="Scans of this branch">{branchScans.length}</Fact>
-            </>
-          ) : (
-            <>
-              <Fact label="Scans">{repo.scans}</Fact>
-              <Fact label="Latest scan">
-                <span className="flex flex-wrap items-center gap-2">
-                  {repo.lastScanStatus && <ScanStatusBadge status={repo.lastScanStatus} />}
-                  <ScanTime value={repo.lastScanAt} />
+        {current ? (
+          <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+            {newestScan ? (
+              <>
+                <ScanStatusBadge status={newestScan.status} />
+                <span>
+                  Last scan <ScanTime value={newestScan.createdAt} />
                 </span>
-              </Fact>
-              <Fact label="First scanned">
-                <ScanTime value={oldest?.createdAt} />
-              </Fact>
-            </>
-          )}
-        </dl>
+              </>
+            ) : (
+              <span>Never scanned</span>
+            )}
+            <span aria-hidden="true">·</span>
+            <span>{scanPlural(branchScans.length, "scan", "scans")} of this branch</span>
+          </p>
+        ) : (
+          <dl className="grid grid-cols-2 gap-x-8 gap-y-4 sm:grid-cols-3">
+            <Fact label="Scans">{repo.scans}</Fact>
+            <Fact label="Latest scan">
+              <span className="flex flex-wrap items-center gap-2">
+                {repo.lastScanStatus && <ScanStatusBadge status={repo.lastScanStatus} />}
+                <ScanTime value={repo.lastScanAt} />
+              </span>
+            </Fact>
+            <Fact label="First scanned">
+              <ScanTime value={oldest?.createdAt} />
+            </Fact>
+          </dl>
+        )}
       </div>
 
-      <section aria-label="Summary" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <ShellStatTile
-          label="Open findings"
-          value={open.total}
-          icon={FolderGit2}
-          tone="bg-secondary text-foreground"
-          note={open.total === 0 ? "Nothing is open in the latest scan. That is not proof the code is safe." : <span className="flex flex-wrap items-center gap-x-3 gap-y-1"><ScanSeverityDots counts={open.severity} /></span>}
-        />
-        <ShellStatTile
-          label="Came back"
-          value={open.regressed}
-          icon={Undo2}
-          tone={open.regressed > 0 ? "bg-status-danger-soft text-status-danger" : "bg-secondary text-foreground"}
-          note={open.regressed > 0 ? "Fixed before, reported again. Find what reintroduced them." : "Nothing that was fixed has returned."}
-        />
-        <ShellStatTile
-          label="Needs a person"
-          value={open.needsValidation}
-          icon={CircleAlert}
-          tone={open.needsValidation > 0 ? "bg-status-warning-soft text-status-warning" : "bg-secondary text-foreground"}
-          note={open.needsValidation > 0 ? "Likely but unverified. Check by hand before acting." : "Every open finding was verified."}
-        />
-        <ShellStatTile
-          label="Not re-checked"
-          value={open.unchecked}
-          icon={History}
-          tone="bg-secondary text-foreground"
-          note={open.unchecked > 0 ? "The latest scan did not re-verify these. Treat them as still open." : "The latest scan re-checked every open finding."}
-        />
-      </section>
+      {current?.latestCommit && <ScanVerdictCard repoId={repoId} commit={current.latestCommit} repoUrl={repo.url} scope="branch" branchOpen={open.total} Decision={VerdictDecision} />}
 
-      {current?.latestCommit && <ScanVerdictCard repoId={repoId} commit={current.latestCommit} scope="branch" />}
+      {open.regressed > 0 && (
+        <Alert variant="destructive">
+          <Undo2 />
+          <AlertDescription>
+            <span className="font-medium">{scanPlural(open.regressed, "problem came", "problems came")} back after being fixed.</span> A scan reported {open.regressed === 1 ? "it" : "them"} again. Find the change that brought {open.regressed === 1 ? "it" : "them"} back.
+          </AlertDescription>
+        </Alert>
+      )}
+      {open.unchecked > 0 && (
+        <Alert variant="warning">
+          <CircleAlert />
+          <AlertDescription>
+            <span className="font-medium">{scanPlural(open.unchecked, "open problem was", "open problems were")} not re-checked by the latest scan.</span> Treat {open.unchecked === 1 ? "it" : "them"} as still open.
+          </AlertDescription>
+        </Alert>
+      )}
 
       {current ? (
         <Suspense key={current.name} fallback={<Skeleton className="h-56 w-full" />}>
@@ -373,20 +392,10 @@ export function RepoDetail({ repoId, branchId }: { repoId: string; branchId?: st
       )}
 
       <Card>
-        <CardHeader className="gap-1.5">
-          <CardTitle>Scan history</CardTitle>
-          <p className="text-xs text-muted-foreground">
-            {current ? "Scans of this branch" : "Every scan of this repository"}, newest first. Open one for its report and what changed.
-            {otherScans > 0 && (
-              <>
-                {" "}
-                {scanPlural(otherScans, "other scan", "other scans")} of this repository (other branches, tags or commits) {otherScans === 1 ? "is" : "are"} not listed here.{" "}
-                <Link to="/scans" className="rounded-sm underline underline-offset-4 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                  See every scan
-                </Link>
-                .
-              </>
-            )}
+        <CardHeader className="gap-1.5 pb-7">
+          <CardTitle className="text-lg">Recent scans</CardTitle>
+          <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">
+            The latest {current ? "scans of this branch" : "scans of this repository"}. Open one for its report and what changed.
           </p>
         </CardHeader>
         <CardContent className="overflow-hidden p-0">
@@ -397,15 +406,13 @@ export function RepoDetail({ repoId, branchId }: { repoId: string; branchId?: st
                 <TableHead>Status</TableHead>
                 <TableHead>Commit</TableHead>
                 <TableHead>Findings</TableHead>
-                <TableHead className="text-right">Took</TableHead>
-                <TableHead className="text-right">Cost</TableHead>
                 <TableHead className="w-10">
                   <span className="sr-only">Open</span>
                 </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {branchScans.map((scan) => (
+              {recentScans.map((scan) => (
                 <TableRow key={scan.scanId} className="relative">
                   <TableCell>
                     <Link to="/scans/$scanId" params={{ scanId: scan.scanId }} className="after:absolute after:inset-0 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
@@ -415,12 +422,16 @@ export function RepoDetail({ repoId, branchId }: { repoId: string; branchId?: st
                   <TableCell>
                     <ScanStatusBadge status={scan.status} />
                   </TableCell>
-                  <TableCell className="font-mono text-xs text-muted-foreground">{scan.commitSha ? scan.commitSha.slice(0, 7) : "-"}</TableCell>
+                  <TableCell className="font-mono text-xs text-muted-foreground">
+                    {scan.commitSha ? scan.commitSha.slice(0, 7) : "-"}
+                    {current && !scan.branchId && scan.commitSha && <span className="ml-2 font-sans" title="A one-off scan of this commit. Its findings count toward the commit's answer but are not added to the branch's findings.">one-off scan</span>}
+                  </TableCell>
                   <TableCell>
                     {scan.summary ? (
                       <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
                         <span className="font-medium tabular-nums">{scanPlural(scan.summary.total, "finding", "findings")}</span>
                         <ScanSeverityDots counts={scan.summary.severity} />
+                        {unratedOf(scan.summary) > 0 && <span className="text-xs text-muted-foreground">{unratedOf(scan.summary)} unrated</span>}
                         {scan.summary.new > 0 && <span className="text-xs text-muted-foreground">{scan.summary.new} new</span>}
                       </span>
                     ) : scan.status === "failed" ? (
@@ -429,8 +440,6 @@ export function RepoDetail({ repoId, branchId }: { repoId: string; branchId?: st
                       <span className="text-muted-foreground">{scan.status === "succeeded" ? "Not recorded" : "No report"}</span>
                     )}
                   </TableCell>
-                  <TableCell className="text-right tabular-nums text-muted-foreground">{scanDuration(scan.usage?.durationMs) ?? "-"}</TableCell>
-                  <TableCell className="text-right tabular-nums text-muted-foreground">{scan.usage ? scanCost(scan.usage.costUsd) : "-"}</TableCell>
                   <TableCell>
                     <ChevronRight aria-hidden="true" className="size-4 text-muted-foreground" />
                   </TableCell>
@@ -438,6 +447,15 @@ export function RepoDetail({ repoId, branchId }: { repoId: string; branchId?: st
               ))}
             </TableBody>
           </Table>
+          {(olderScans > 0 || otherScans > 0) && (
+            <p className="border-t px-6 py-3 text-sm leading-relaxed text-muted-foreground">
+              {olderScans > 0 && `${scanPlural(olderScans, "older scan", "older scans")} of this ${current ? "branch" : "repository"}. `}
+              {otherScans > 0 && `${scanPlural(otherScans, "scan", "scans")} of other branches, tags or commits. `}
+              <Link to="/scans" className="rounded-sm underline underline-offset-4 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                See every scan
+              </Link>
+            </p>
+          )}
         </CardContent>
       </Card>
     </>

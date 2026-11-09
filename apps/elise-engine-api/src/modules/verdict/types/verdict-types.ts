@@ -21,6 +21,10 @@ export type JudgedFinding = {
   class: string;
   file: string | null;
   line: number | null;
+  impact?: string | null;
+  evidence?: string | null;
+  fix?: string | null;
+  needs?: string | null;
 };
 
 export type JudgedTriage = {

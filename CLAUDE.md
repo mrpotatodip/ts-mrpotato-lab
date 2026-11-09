@@ -17,6 +17,8 @@ pnpm check:apps                              # tsc, oxlint and vitest for every 
 pnpm dev                                     # engine (8787) and dashboard (3100) together; first run: copy `.dev.vars.example` to `.dev.vars` in both apps (engine `DATABASE_URL`: `packages/db-elise/.env`). Up when `curl -s -o /dev/null -w "%{http_code}" localhost:8787/me` prints 401
 pnpm --filter elise-engine-api dev:log       # wrangler dev, output teed to apps/elise-engine-api/.dev.log (the dashboard has the same `dev:log`)
 pnpm dev:stop                                # free ports 8787 and 3100 from stale servers
+node scripts/check-changed.mjs               # the pre-commit check: only the projects with staged changes (`check:apps` runs all nine)
+pnpm --filter <app> run deploy               # live Worker: ask first. `pnpm deploy` is pnpm's own command. Ships the working tree, so it refuses uncommitted edits under the app or `packages/` (`ALLOW_DIRTY_DEPLOY=1` overrides)
 pnpm -s --filter @repo/db-elise db:query "..."  # read-only SQL on the live Neon database; `-s` leaves only the rows in the output
 pnpm -s --filter elise-engine-api live:get /repos <accountId>   # GET one route of the app in-process against the live database: read only, no token
 pnpm engine:probe /repos                     # the raw JSON the DEPLOYED Worker sends (`--local` for port 8787); needs its SCAN_API_TOKEN secret in the env
@@ -32,7 +34,7 @@ NEW_PASSWORD=... pnpm --filter @repo/db-elise db:set-password --email x   # live
 - Review rules live in `CODING_STANDARDS.md`; it points to one file per scope under `docs/standards/`.
 - `{ data, error }` is the response envelope: success has `error: null`, failure has `data: null`.
 - Request and response shapes both apps use live in `@repo/contracts/elise`: import them, don't redefine them.
-- Is a field or route deployed? Run `pnpm engine:probe <path>`; the dashboard working once proves nothing. Contract changes follow the deploy order in `docs/standards/contracts.md` section 5.
+- Is a field or route deployed? Run `pnpm engine:probe <path>`; the dashboard working once proves nothing. Contract changes follow the deploy order in `docs/standards/contracts.md` section 5; read it before any deploy that touches `packages/contracts`.
 - `zod` is pinned to `4.4.3` in the root pnpm overrides, so every package shares one copy.
 - `#/*` maps to `./src/*` inside an app.
 - Branch names start with the project folder: `elise-engine-api/feat/...`; the hook checks them.

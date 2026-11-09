@@ -13,7 +13,7 @@ import { reposQuery } from "../hooks";
 import { repoAttention, repoName } from "../utils";
 import { RepoAddDialog } from "./repo-add-dialog";
 import { RepoOpenFindings } from "./repo-open-findings";
-import { RepoSummary } from "./repo-summary";
+import { RepoSummaryStrip } from "./repo-summary-strip";
 
 const BRANCH_ROW =
   "grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-6 gap-y-1 px-5 py-3 transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]";
@@ -54,12 +54,12 @@ export function RepoList() {
 
   return (
     <>
-      <RepoSummary repos={data.repos} />
+      <RepoSummaryStrip repos={data.repos} />
       <Card>
         <CardHeader className="flex-row flex-wrap items-center justify-between gap-3">
           <div className="grid gap-1.5">
-            <CardTitle>Repositories</CardTitle>
-            <p className="text-xs text-muted-foreground">Sorted by what needs attention first: findings that came back, then the most severe.</p>
+            <CardTitle>By repository</CardTitle>
+            <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">Sorted by what needs attention first: findings that came back, then the most severe.</p>
           </div>
           <div className="flex items-center gap-4">
             <span className="text-xs tabular-nums text-muted-foreground">{visible.length === sorted.length ? `${sorted.length} ${sorted.length === 1 ? "repository" : "repositories"}` : `${visible.length} of ${sorted.length}`}</span>
@@ -101,11 +101,11 @@ export function RepoList() {
                   <li key={repo.id}>
                     <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-1 bg-muted/40 px-5 py-3">
                       <h3 className="font-medium">{repoName(repo.url)}</h3>
-                      <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                         <span className="tabular-nums">{repo.scans} {repo.scans === 1 ? "scan" : "scans"}</span>
                         {repo.lastScanStatus && <ScanStatusBadge status={repo.lastScanStatus} />}
                         <ScanTime value={repo.lastScanAt} />
-                      </p>
+                      </div>
                     </div>
                     <ul className="divide-y divide-border/70">
                       {names.length === 0 ? (

@@ -42,6 +42,20 @@
   --severity-low: oklch(0.42 0.14 245);
   --severity-informational: oklch(0.4 0.012 258);
 
+  /* Marks are colour used as a shape: a bar, a ring, a dot. They are brighter
+     and more saturated than the inks above, which have to carry text at 4.5:1,
+     and each keeps 3:1 against a card. */
+  --mark-success: oklch(0.6 0.12 160);
+  --mark-danger: oklch(0.6 0.17 18);
+  --mark-warning: oklch(0.66 0.14 72);
+  --mark-info: oklch(0.6 0.15 245);
+  --mark-neutral: oklch(0.62 0.015 258);
+  --mark-critical: oklch(0.55 0.21 20);
+  --mark-high: oklch(0.6 0.19 42);
+  --mark-medium: oklch(0.66 0.14 72);
+  --mark-low: oklch(0.6 0.15 245);
+  --mark-informational: oklch(0.62 0.015 258);
+
   --font-sans:
     ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif,
@@ -50,6 +64,9 @@
     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
     "Courier New", monospace;
   --radius: 0.75rem;
+
+  --glow: oklch(1 0 0 / 0.6);
+  --selection: oklch(0.3 0.012 258 / 0.16);
 
   --shadow-card:
     inset 0 1px 0 oklch(1 0 0 / 0.9), 0 1px 2px oklch(0 0 0 / 0.06),
@@ -61,6 +78,190 @@
   --shadow-primary:
     inset 0 1px 0 oklch(1 0 0 / 0.16), 0 1px 2px oklch(0 0 0 / 0.3),
     0 6px 14px -6px oklch(0 0 0 / 0.4);
+}
+
+/* -----
+   Daylight: the same structure, brighter and firmer. A whiter page, pure
+   white cards, darker text and stronger edges for bright rooms.
+   ----- */
+:root[data-theme="daylight"] {
+  /* The sky is the `::before` layer below; the page itself is plain white. */
+  --sky: url("/bg-daylight.jpeg");
+  --bg-color: oklch(1 0 0);
+  --background: oklch(0.985 0.002 258 / 0.12);
+  --foreground: oklch(0.15 0.012 258);
+  --sidebar: oklch(0.99 0.002 258 / 0.5);
+  --card: oklch(1 0 0 / 0.58);
+  --card-foreground: oklch(0.18 0.012 258);
+  --popover: oklch(1 0 0 / 0.92);
+  --popover-foreground: oklch(0.18 0.012 258);
+  --primary: oklch(0.22 0.012 258);
+  --primary-ink: oklch(0.25 0.012 258);
+  --secondary: oklch(0.935 0.004 258);
+  --secondary-foreground: oklch(0.22 0.012 258);
+  --muted: oklch(0.965 0.003 258 / 0.45);
+  --muted-foreground: oklch(0.34 0.012 258);
+  --accent: oklch(0 0 0 / 0.06);
+  --accent-foreground: oklch(0.16 0.012 258);
+  --border: oklch(0 0 0 / 0.14);
+  --input: oklch(0 0 0 / 0.26);
+  --ring: oklch(0.3 0.015 258 / 0.6);
+}
+
+/* -----
+   Moonlight: a dark theme on the same cool ramp (hue 258). Surfaces get
+   lighter as they come forward, as in light. The primary action flips to
+   near-white with dark text. Status and severity inks are light so they
+   read on dark and on their own tinted fills.
+   ----- */
+:root[data-theme="moonlight"] {
+  color-scheme: dark;
+  /* The sky is the `::before` layer below; the page is a deep navy that the
+     picture fades into. */
+  --sky: url("/bg-moonlight.jpeg");
+  --bg-color: oklch(0.17 0.03 268);
+  --background: oklch(0.18 0.012 258 / 0.12);
+  --foreground: oklch(0.95 0.004 258);
+  --sidebar: oklch(0.15 0.012 258 / 0.4);
+  --card: oklch(0.225 0.013 258 / 0.42);
+  --card-foreground: oklch(0.95 0.004 258);
+  --popover: oklch(0.26 0.014 258 / 0.94);
+  --popover-foreground: oklch(0.95 0.004 258);
+  --primary: oklch(0.93 0.005 258);
+  --primary-foreground: oklch(0.2 0.012 258);
+  --primary-ink: oklch(0.9 0.006 258);
+  --secondary: oklch(0.3 0.014 258);
+  --secondary-foreground: oklch(0.93 0.005 258);
+  --muted: oklch(0.255 0.013 258 / 0.4);
+  --muted-foreground: oklch(0.76 0.01 258);
+  --accent: oklch(1 0 0 / 0.07);
+  --accent-foreground: oklch(0.97 0.004 258);
+  --destructive: oklch(0.56 0.2 27);
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(1 0 0 / 0.1);
+  --input: oklch(1 0 0 / 0.18);
+  --ring: oklch(0.85 0.01 258 / 0.5);
+
+  --status-success: oklch(0.8 0.15 155);
+  --status-success-soft: oklch(0.7 0.15 155 / 0.16);
+  --status-danger: oklch(0.78 0.14 27);
+  --status-danger-soft: oklch(0.65 0.19 27 / 0.2);
+  --status-warning: oklch(0.84 0.13 82);
+  --status-warning-soft: oklch(0.78 0.15 82 / 0.18);
+  --status-info: oklch(0.8 0.11 245);
+  --status-info-soft: oklch(0.65 0.14 245 / 0.2);
+  --status-neutral: oklch(0.82 0.01 258);
+  --status-neutral-soft: oklch(0.7 0.012 258 / 0.18);
+
+  --severity-critical: oklch(0.76 0.16 25);
+  --severity-high: oklch(0.8 0.13 52);
+  --severity-medium: oklch(0.85 0.12 90);
+  --severity-low: oklch(0.78 0.11 245);
+  --severity-informational: oklch(0.8 0.01 258);
+
+  --mark-success: oklch(0.74 0.15 155);
+  --mark-danger: oklch(0.72 0.17 25);
+  --mark-warning: oklch(0.82 0.14 85);
+  --mark-info: oklch(0.74 0.13 245);
+  --mark-neutral: oklch(0.72 0.015 258);
+  --mark-critical: oklch(0.7 0.2 25);
+  --mark-high: oklch(0.76 0.15 50);
+  --mark-medium: oklch(0.84 0.14 88);
+  --mark-low: oklch(0.74 0.13 245);
+  --mark-informational: oklch(0.72 0.015 258);
+
+  --glow: oklch(0.6 0.04 258 / 0.12);
+  --selection: oklch(0.8 0.04 258 / 0.3);
+
+  --shadow-card:
+    inset 0 1px 0 oklch(1 0 0 / 0.05), 0 1px 2px oklch(0 0 0 / 0.4),
+    0 10px 24px -14px oklch(0 0 0 / 0.6);
+  --shadow-raised:
+    inset 0 1px 0 oklch(1 0 0 / 0.07), 0 1px 2px oklch(0 0 0 / 0.5),
+    0 18px 38px -16px oklch(0 0 0 / 0.8);
+  --shadow-control: 0 1px 1px oklch(0 0 0 / 0.3);
+  --shadow-primary:
+    inset 0 1px 0 oklch(1 0 0 / 0.5), 0 1px 2px oklch(0 0 0 / 0.5),
+    0 6px 14px -6px oklch(0 0 0 / 0.6);
+}
+
+/* -----
+   Glass: only the two image themes set --sky. The picture sits fixed behind
+   the page and the surfaces above it blur what is under them.
+   ----- */
+:root[data-theme="daylight"],
+:root[data-theme="moonlight"] {
+  background-color: var(--bg-color);
+}
+/* -----
+   Each sky is a small banner (1500 by 500: public/bg-daylight.jpeg and
+   public/bg-moonlight.jpeg, the second a night grading of the first), shown
+   zoomed to 1.5 times, centred at the top, and its sides and bottom fade
+   into the page colour. Zooming further softens it more.
+   ----- */
+:root[data-theme="daylight"]::before,
+:root[data-theme="moonlight"]::before {
+  content: "";
+  position: fixed;
+  z-index: -1;
+  top: 0;
+  left: 50%;
+  width: min(150%, 2250px);
+  aspect-ratio: 3 / 1;
+  transform: translateX(-50%);
+  pointer-events: none;
+  background: var(--sky) center / 100% 100% no-repeat;
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 14%, #000 86%, transparent), linear-gradient(to bottom, #000 35%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(to right, transparent, #000 14%, #000 86%, transparent), linear-gradient(to bottom, #000 35%, transparent);
+  mask-composite: intersect;
+}
+/* Page titles and their description sit straight on the sky, with no glass
+   behind them. A soft dark halo and a brighter description keep them
+   readable over bright clouds in Moonlight. */
+:root[data-theme="daylight"] [data-slot="page-header"] {
+  text-shadow: 0 0 14px oklch(1 0 0 / 0.9), 0 0 3px oklch(1 0 0 / 0.7);
+}
+:root[data-theme="moonlight"] [data-slot="page-header"] {
+  text-shadow: 0 0 14px oklch(0.12 0.03 268 / 0.95), 0 1px 3px oklch(0.1 0.03 268 / 0.85);
+}
+:root[data-theme="moonlight"] [data-slot="page-header"] .text-muted-foreground,
+:root[data-theme="moonlight"] .text-muted-foreground[data-slot="page-header"] {
+  color: oklch(0.9 0.008 258);
+}
+/* A card body sits inside its card, and two translucent layers would stack
+   into a near-opaque one. In both glass themes the inner one is clear, so
+   the whole card is one pane of glass. */
+:root[data-theme="daylight"] .bg-card .bg-card,
+:root[data-theme="moonlight"] .bg-card .bg-card {
+  background-color: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+/* Dialogs and sheets are glass like the cards: the same fill and blur. The
+   dialog body is a second layer, so it is clear. Menus and tooltips keep the
+   stronger popover fill so they stay legible over page text. */
+:root[data-theme="daylight"] :is([data-slot="dialog-content"], [data-slot="sheet-content"]),
+:root[data-theme="moonlight"] :is([data-slot="dialog-content"], [data-slot="sheet-content"]) {
+  background-color: var(--card);
+}
+:root[data-theme="daylight"] :is([data-slot="dialog-content"], [data-slot="sheet-content"]) .bg-popover,
+:root[data-theme="moonlight"] :is([data-slot="dialog-content"], [data-slot="sheet-content"]) .bg-popover {
+  background-color: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+:root[data-theme="daylight"] :is(.bg-sidebar, .bg-card, .bg-popover),
+:root[data-theme="moonlight"] :is(.bg-sidebar, .bg-card, .bg-popover) {
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  backdrop-filter: blur(14px) saturate(1.4);
+}
+/* Dialogs and sheets float over the page, so they blur more than the cards.
+   This sits after the shared rule above, which has the same specificity. */
+:root[data-theme="daylight"] :is([data-slot="dialog-content"], [data-slot="sheet-content"]),
+:root[data-theme="moonlight"] :is([data-slot="dialog-content"], [data-slot="sheet-content"]) {
+  -webkit-backdrop-filter: blur(48px) saturate(1.5);
+  backdrop-filter: blur(48px) saturate(1.5);
 }
 
 @theme inline {
@@ -103,6 +304,17 @@
   --color-severity-low: var(--severity-low);
   --color-severity-informational: var(--severity-informational);
 
+  --color-mark-success: var(--mark-success);
+  --color-mark-danger: var(--mark-danger);
+  --color-mark-warning: var(--mark-warning);
+  --color-mark-info: var(--mark-info);
+  --color-mark-neutral: var(--mark-neutral);
+  --color-mark-critical: var(--mark-critical);
+  --color-mark-high: var(--mark-high);
+  --color-mark-medium: var(--mark-medium);
+  --color-mark-low: var(--mark-low);
+  --color-mark-informational: var(--mark-informational);
+
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);
 
@@ -130,7 +342,7 @@
     min-height: 100svh;
     background-image: radial-gradient(
       70rem 26rem at 78% -12%,
-      oklch(1 0 0 / 0.6),
+      var(--glow),
       transparent 70%
     );
     background-repeat: no-repeat;
@@ -141,6 +353,6 @@
     stroke-width: 1.5;
   }
   ::selection {
-    background: oklch(0.3 0.012 258 / 0.16);
+    background: var(--selection);
   }
 }

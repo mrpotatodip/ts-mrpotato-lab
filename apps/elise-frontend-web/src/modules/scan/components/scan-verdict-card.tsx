@@ -1,42 +1,118 @@
+import { useId, useState, type ComponentType } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { CircleCheck, CircleDashed, CircleHelp, CircleX, OctagonX } from "lucide-react";
+import { ChevronRight, CircleCheck, CircleDashed, CircleHelp, CircleX, ExternalLink, OctagonX } from "lucide-react";
 import { Alert, AlertDescription } from "#/components/ui/alert";
-import { Badge } from "#/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Skeleton } from "#/components/ui/skeleton";
-import { verdictQuery } from "../hooks";
-import type { Verdict, VerdictFinding } from "../schemas";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "#/components/ui/table";
+import { scansQuery, verdictQuery } from "../hooks";
+import type { Finding, Verdict, VerdictFinding } from "../schemas";
+import { ScanFindingSheet } from "./scan-finding-sheet";
+import { ScanNewDialog } from "./scan-new-dialog";
+import { scanPlural } from "../utils";
 import { ScanSeverityBadge } from "./scan-severity-badge";
 
-const VERDICT_COPY = {
+export const VERDICT_COPY = {
   pass: { title: "Passed the scan policy", note: "Scanned enough times and nothing open is over the limits. An AI audit can miss problems, so this is advice and not proof that the commit is safe.", variant: "success", Icon: CircleCheck },
-  fail: { title: "Do not ship yet", note: "Trusted scans left problems that block this commit. Fix them, have a person check the unrated ones, or accept the risk with a note.", variant: "destructive", Icon: OctagonX },
-  cannot_tell: { title: "Cannot tell yet", note: "This is not a failure. Elise needs more scans of this exact commit before it will say yes or no.", variant: "warning", Icon: CircleHelp },
+  fail: { title: "Do not ship yet", note: "Trusted scans left problems that block this commit. You can fix them, or an account admin can accept the risk with a note.", variant: "destructive", Icon: OctagonX },
+  cannot_tell: { title: "Cannot tell yet", note: "This is not a failure. This commit needs more scans before the answer can be yes or no.", variant: "warning", Icon: CircleHelp },
 } as const;
 
-function FindingRows({ title, findings }: { title: string; findings: readonly (VerdictFinding & { note?: string; acceptedUntil?: string })[] }) {
+// -----
+// A screen that can record decisions passes this component in.
+// The scan module does not import the finding module (it imports
+// this one), so the control comes from outside.
+// -----
+export type DecideFindingProps = { repoId: string; repoUrl: string; finding: VerdictFinding };
+export type DecideFinding = ComponentType<DecideFindingProps>;
+
+type FindingRowsProps = { title: string; hint: string; findings: readonly (VerdictFinding & { note?: string; acceptedUntil?: string })[]; decide?: { Control: DecideFinding; repoId: string; repoUrl: string } };
+
+const sheetFinding = (finding: VerdictFinding): Finding => ({
+  title: finding.title,
+  state: finding.severity === null ? "needs_validation" : "confirmed",
+  severity: finding.severity,
+  place: finding.file && finding.line !== null ? { file: finding.file, line: finding.line } : null,
+  detail: { class: finding.class, actor: null, impact: finding.impact ?? null, evidence: finding.evidence ?? null, fix: finding.fix ?? null, needs: finding.needs ?? null, triage: null },
+});
+
+function FindingRows({ title, hint, findings, decide }: FindingRowsProps) {
+  const [selected, setSelected] = useState<number | undefined>();
+  const headingId = useId();
   if (findings.length === 0) return null;
+  const selectedFinding = selected === undefined ? undefined : findings[selected];
   return (
-    <div className="grid gap-1">
-      <h3 className="text-sm font-semibold">
-        {title} <span className="tabular-nums text-muted-foreground">{findings.length}</span>
-      </h3>
-      <ul className="divide-y divide-border/70">
-        {findings.map((finding) => (
-          <li key={finding.fingerprint} className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-3 gap-y-0.5 py-2 text-sm">
-            <ScanSeverityBadge severity={finding.severity} />
-            <span className="font-medium">{finding.title}</span>
-            {finding.file && (
-              <span className="col-start-2 font-mono text-xs text-muted-foreground [overflow-wrap:anywhere]">
-                {finding.file}
-                {finding.line ? `:${finding.line}` : ""}
-              </span>
-            )}
-            {finding.note && <span className="col-start-2 text-xs text-muted-foreground">Accepted until {finding.acceptedUntil?.slice(0, 10)}: {finding.note}</span>}
-          </li>
-        ))}
-      </ul>
-    </div>
+    <section aria-labelledby={headingId} className="grid gap-3">
+      <div className="grid gap-1.5">
+        <h3 id={headingId} className="text-[15px] font-semibold">
+          {title}
+        </h3>
+        <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">{hint}</p>
+      </div>
+      <div className="overflow-hidden rounded-lg border">
+        <Table className="table-fixed" aria-labelledby={headingId}>
+          <colgroup>
+            <col className="w-32" />
+            <col />
+            <col className="w-[36%]" />
+            <col className="w-56" />
+          </colgroup>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="whitespace-nowrap">Severity</TableHead>
+              <TableHead>Finding</TableHead>
+              <TableHead>Where</TableHead>
+              {decide ? <TableHead>Your decision</TableHead> : <TableHead aria-hidden="true" />}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {findings.map((finding, index) => (
+              <TableRow key={finding.fingerprint} className={decide ? undefined : "hover:bg-transparent"}>
+                <TableCell className="align-top">
+                  <ScanSeverityBadge severity={finding.severity} />
+                </TableCell>
+                <TableCell className="whitespace-normal align-top font-medium">
+                  {decide ? (
+                    <button type="button" aria-haspopup="dialog" onClick={() => setSelected(index)} className="rounded-sm text-left hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                      {finding.title}
+                    </button>
+                  ) : (
+                    finding.title
+                  )}
+                  {finding.impact && <span className="mt-1 line-clamp-2 text-sm font-normal leading-relaxed text-muted-foreground" title={finding.impact}>{finding.impact}</span>}
+                  {finding.note && <span className="mt-1 block text-sm font-normal leading-relaxed text-muted-foreground">Accepted until {finding.acceptedUntil?.slice(0, 10)}: {finding.note}</span>}
+                </TableCell>
+                <TableCell className="whitespace-normal align-top font-mono text-xs text-muted-foreground [overflow-wrap:anywhere]">
+                  {finding.file ? `${finding.file}${finding.line ? `:${finding.line}` : ""}` : "-"}
+                </TableCell>
+                {decide ? (
+                  <TableCell className="align-top">
+                    <decide.Control repoId={decide.repoId} repoUrl={decide.repoUrl} finding={finding} />
+                  </TableCell>
+                ) : (
+                  <TableCell aria-hidden="true" />
+                )}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+      {decide && (
+        <ScanFindingSheet
+          findings={findings.map(sheetFinding)}
+          selected={selectedFinding ? selected : undefined}
+          onSelect={setSelected}
+          decision={
+            selectedFinding && (
+              <>
+                <span className="text-sm font-medium">Your decision</span>
+                <decide.Control repoId={decide.repoId} repoUrl={decide.repoUrl} finding={selectedFinding} />
+              </>
+            )
+          }
+        />
+      )}
+    </section>
   );
 }
 
@@ -61,21 +137,39 @@ function verdictChecks(verdict: Verdict): Check[] {
 
   return [
     {
-      label: `Scanned ${scans.required} times`,
-      detail: missing === 0 ? `${scans.counted} scans of this commit.` : `${scans.counted} of ${scans.required} so far. Run ${missing} more scan${missing === 1 ? "" : "s"} of this exact commit. Only finished lite scans count.`,
+      label: `At least ${scans.required} scans of this commit`,
+      detail: missing === 0 ? `This commit has ${scans.counted} scans.` : `${scans.counted} of ${scans.required} so far. Run ${missing} more scan${missing === 1 ? "" : "s"} of this exact commit. Only finished lite scans count.`,
       state: missing === 0 ? "ok" : "wait",
     },
     {
       label: "Earlier problems re-checked",
-      detail: historyReason ? historyReason.message : "The scans checked every problem already open in the History.",
+      detail: historyReason ? historyReason.message : "The scans checked every problem that was already open.",
       state: historyReason ? "fail" : scans.counted === 0 ? "wait" : "ok",
     },
     {
       label: "Nothing open over the limits",
-      detail: over.length > 0 ? `${over.join(", ")}.` : openTotal === 0 ? "Nothing is open." : `${openTotal} open, all within the limits of ${limits.critical} critical, ${limits.high} high and ${limits.medium} medium.`,
+      detail: `${over.length > 0 ? `${over.join(", ")}.` : openTotal === 0 ? "Nothing is open." : `${openTotal} open, all within the limits.`} Allowed: ${limits.critical} critical, ${limits.high} high, up to ${limits.medium} medium.`,
       state: over.length > 0 ? "fail" : "ok",
     },
   ];
+}
+
+// -----
+// What stands between this commit and a pass, as one sentence the reader can act
+// on. It follows the same three conditions as the checklist, so the two never
+// disagree.
+// -----
+export function verdictNextSteps(verdict: Verdict): string {
+  const { scans, limits, counts, reasons } = verdict;
+  const missing = Math.max(0, scans.required - scans.counted);
+  const steps: string[] = [];
+  if (missing > 0) steps.push(`run ${scanPlural(missing, "more scan", "more scans")} of this commit`);
+  if (reasons.some((reason) => HISTORY_CODES.has(reason.code))) steps.push("scan again so earlier problems get re-checked");
+  const overLimit = (counts.critical > limits.critical ? counts.critical : 0) + (counts.high > limits.high ? counts.high : 0) + (counts.medium > limits.medium ? counts.medium : 0);
+  if (overLimit > 0) steps.push(`fix or accept ${scanPlural(overLimit, "problem", "problems")} over the limits`);
+  if (counts.needsValidation > 0) steps.push(`have a person decide on ${scanPlural(counts.needsValidation, "unrated problem", "unrated problems")}`);
+  if (steps.length === 0) return "Nothing blocks this commit.";
+  return `To pass: ${steps.join(", ")}.`;
 }
 
 const CHECK_ICON = {
@@ -85,77 +179,137 @@ const CHECK_ICON = {
 } as const;
 
 function VerdictChecklist({ verdict }: { verdict: Verdict }) {
+  const checks = verdictChecks(verdict);
+  const unmet = checks.filter((check) => check.state !== "ok");
   return (
-    <div className="grid gap-2">
-      <h3 className="text-sm font-semibold">How this is decided</h3>
-      <p className="text-xs text-muted-foreground">A commit passes when all three are met. Scans are counted per commit, so a new push starts again at zero.</p>
-      <ul className="grid gap-2">
-        {verdictChecks(verdict).map((check) => {
-          const { Icon, className, label } = CHECK_ICON[check.state];
-          return (
-            <li key={check.label} className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-2.5 text-sm">
-              <Icon aria-hidden="true" className={`mt-0.5 size-4 ${className}`} />
-              <span>
-                <span className="font-medium">{check.label}</span>
-                <span className="sr-only"> ({label})</span>
-                <span className="block text-xs text-muted-foreground">{check.detail}</span>
-              </span>
-            </li>
-          );
-        })}
-      </ul>
-    </div>
+    <details className="group rounded-lg border">
+      <summary className="flex cursor-pointer list-none flex-wrap items-center gap-x-2 gap-y-0.5 rounded-lg px-4 py-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
+        <ChevronRight aria-hidden="true" className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-90" />
+        <span className="text-[15px] font-semibold">How this is decided</span>
+        <span className="text-sm text-muted-foreground">
+          {checks.length - unmet.length} of {checks.length} checks met{unmet.length > 0 ? `. Not met: ${unmet.map((check) => check.label.toLowerCase()).join(", ")}.` : "."}
+        </span>
+      </summary>
+      <div className="grid gap-3 border-t px-4 py-3">
+        <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">A commit passes when all three are met. The answer uses every scan of this commit and the decisions your team recorded. A new push starts again at zero.</p>
+        <ul className="grid gap-2.5">
+          {checks.map((check) => {
+            const { Icon, className, label } = CHECK_ICON[check.state];
+            return (
+              <li key={check.label} className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-2.5 text-sm">
+                <Icon aria-hidden="true" className={`mt-0.5 size-4 ${className}`} />
+                <span>
+                  <span className="font-medium">{check.label}</span>
+                  <span className="sr-only"> ({label})</span>
+                  <span className="block max-w-prose text-sm leading-relaxed text-muted-foreground">{check.detail}</span>
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    </details>
   );
 }
 
-function VerdictBody({ verdict }: { verdict: Verdict }) {
+type VerdictBodyProps = { verdict: Verdict; repoId: string; repoUrl?: string; branchOpen?: number; Decision?: DecideFinding };
+
+function VerdictBody({ verdict, repoId, repoUrl, branchOpen, Decision }: VerdictBodyProps) {
   const copy = VERDICT_COPY[verdict.verdict];
-  const { limits, scans } = verdict;
+  const { scans } = verdict;
+  const missing = Math.max(0, scans.required - scans.counted);
+  const needsScan = missing > 0;
+  const { data: list } = useQuery(scansQuery());
+  const last = list?.scans.find((scan) => scan.scanId === scans.ids[0]);
+  const oneOff = branchOpen === undefined ? 0 : Math.max(0, verdict.open.length - branchOpen);
+  const oneOffHint = oneOff === 0 ? "" : ` ${oneOff === 1 ? "1 came from a one-off scan of this commit and is" : `${oneOff} came from a one-off scan of this commit and are`} not in the branch's findings below.`;
   return (
     <>
-      <Alert variant={copy.variant}>
+      <Alert variant={copy.variant} className="[&>svg]:mt-1 [&>svg]:size-5">
         <copy.Icon />
-        <div className="grid gap-1">
-          <AlertDescription className="font-medium">{copy.title}</AlertDescription>
-          <AlertDescription>{copy.note}</AlertDescription>
+        <div className="grid gap-1.5">
+          <AlertDescription className="text-xl font-semibold leading-tight">{copy.title}</AlertDescription>
+          <AlertDescription className="max-w-prose text-foreground">{copy.note}</AlertDescription>
         </div>
       </Alert>
+      {repoUrl && (
+        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 rounded-lg border bg-muted/50 p-4">
+          <div className="grid min-w-0 flex-1 basis-64 gap-1">
+            <p className="text-sm font-medium">{needsScan ? `Next step: scan this commit ${missing === 1 ? "once more" : `${missing} more times`}` : "Want another look at this exact commit?"}</p>
+            <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">Scans exactly {verdict.commit.slice(0, 7)}, even if the branch has moved on. The worst result counts.</p>
+          </div>
+          <ScanNewDialog label="Run another scan of this commit" size="default" variant={needsScan ? "default" : "outline"} repo={repoUrl} startRef={verdict.commit} startOptions={last && { model: last.model === "claude-opus-5-5" ? undefined : last.model, effort: last.effort, skill: last.skill, profile: last.profile }} />
+        </div>
+      )}
       <VerdictChecklist verdict={verdict} />
-      <p className="sr-only">
-        {scans.counted} of {scans.required} required scans counted. Limits: {limits.critical} critical, {limits.high} high, {limits.medium} medium.
-      </p>
-      <FindingRows title="Open" findings={verdict.open} />
-      <FindingRows title="Accepted risk" findings={verdict.accepted} />
-      <FindingRows title="Dismissed" findings={verdict.dismissed} />
-      <p className="border-t pt-3 text-xs text-muted-foreground">
-        <span className="font-medium text-foreground">Advice, not a guarantee.</span> This answer comes from an AI review of the code. It can miss a problem, and a scanned repository can try to steer it. Do not use it as your only release check.
-      </p>
+      <div className="grid gap-6">
+        <FindingRows
+          title={`${scanPlural(verdict.open.length, "problem", "problems")} still open on this commit`}
+          hint={`These count against the commit. Select one to read the impact and the fix, then record your decision.${oneOffHint}`}
+          findings={verdict.open}
+          decide={Decision && repoUrl ? { Control: Decision, repoId, repoUrl } : undefined}
+        />
+        <FindingRows title={scanPlural(verdict.accepted.length, "accepted risk", "accepted risks")} hint="An account admin chose to ship with these until the date shown. After that they block again." findings={verdict.accepted} />
+        <FindingRows
+          title={`${scanPlural(verdict.dismissed.length, "finding", "findings")} dismissed as ${verdict.dismissed.length === 1 ? "a false positive" : "false positives"}`}
+          hint="A person checked these and decided they are not real problems."
+          findings={verdict.dismissed}
+        />
+      </div>
+      <div className="border-t pt-3">
+        <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">
+          <span className="font-medium text-foreground">Advice, not a guarantee.</span> This answer comes from an AI review of the code. It can miss a problem, and a scanned repository can try to steer it. Do not use it as your only release check.
+        </p>
+      </div>
     </>
   );
 }
 
-type ScanVerdictCardProps = { repoId: string; commit: string; found?: number; scope?: "scan" | "branch" };
+type ScanVerdictCardProps = { repoId: string; commit: string; repoUrl?: string; found?: number; scope?: "scan" | "branch"; branchOpen?: number; Decision?: DecideFinding };
 
-export function ScanVerdictCard({ repoId, commit, found, scope = "scan" }: ScanVerdictCardProps) {
-  const { data, isPending, error } = useQuery(verdictQuery(repoId, commit));
+const CHIP_CLASS = "inline-flex min-h-6 items-center gap-1.5 rounded-md border bg-background px-2 py-0.5 text-sm";
+
+function CommitChip({ commit, repoUrl }: { commit: string; repoUrl?: string }) {
   const short = commit.slice(0, 7);
+  const label = (
+    <>
+      <span className="text-muted-foreground">Commit</span>
+      <span className="font-mono">{short}</span>
+    </>
+  );
+  if (!repoUrl) return <span className={CHIP_CLASS} title="The exact commit this answer is for">{label}</span>;
+  return (
+    <a
+      href={`${repoUrl.replace(/\.git$/, "").replace(/\/$/, "")}/commit/${commit}`}
+      target="_blank"
+      rel="noreferrer"
+      title="The exact commit this answer is for. Open it on GitHub."
+      aria-label={`Open commit ${short} on GitHub`}
+      className={`${CHIP_CLASS} transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
+    >
+      {label}
+      <ExternalLink aria-hidden="true" className="size-3 text-muted-foreground" />
+    </a>
+  );
+}
+
+export function ScanVerdictCard({ repoId, commit, repoUrl, found, scope = "scan", branchOpen, Decision }: ScanVerdictCardProps) {
+  const { data, isPending, error } = useQuery(verdictQuery(repoId, commit));
+  const nextSteps = data && verdictNextSteps(data);
 
   return (
     <Card>
-      <CardHeader className="flex-row flex-wrap items-center justify-between gap-3">
+      <CardHeader className="flex-row flex-wrap items-center justify-between gap-3 pb-6">
         <div className="grid gap-1.5">
-          <CardTitle>
-            Can commit <span className="font-mono">{short}</span> ship?
-          </CardTitle>
-          <p className="text-xs text-muted-foreground">
-            {scope === "branch" ? `The newest commit Elise read on this branch.` : `The answer belongs to the commit, not to this scan.`} It is decided from every scan of {short} and the decisions people recorded, and a different commit has its own answer.
-          </p>
-          {found === 0 && data && data.open.length > 0 && <p className="text-xs text-muted-foreground">This scan found nothing. The open problems below come from other scans of the same commit.</p>}
+          <CardTitle className="text-lg">Ready to ship?</CardTitle>
+          {nextSteps && <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">{nextSteps}</p>}
+          {scope === "scan" && <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">The answer belongs to the commit, not to this scan.</p>}
+          {found === 0 && data && data.open.length > 0 && <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">This scan found nothing. The open problems below come from other scans of the same commit.</p>}
         </div>
-        {data && <Badge variant="outline">{VERDICT_COPY[data.verdict].title}</Badge>}
+        <CommitChip commit={commit} repoUrl={repoUrl} />
       </CardHeader>
       <CardContent className="grid gap-4">
-        {isPending ? <Skeleton className="h-16" /> : error ? <p className="text-sm text-destructive">We could not load the verdict: {error.message}. Refresh to try again.</p> : <VerdictBody verdict={data} />}
+        {isPending ? <Skeleton className="h-16" /> : error ? <p className="text-sm text-destructive">We could not load the verdict: {error.message}. Refresh to try again.</p> : <VerdictBody verdict={data} repoId={repoId} repoUrl={repoUrl} branchOpen={branchOpen} Decision={Decision} />}
       </CardContent>
     </Card>
   );

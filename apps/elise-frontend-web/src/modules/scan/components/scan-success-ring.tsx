@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
+import { cn } from "#/lib/utils";
 
 const RADIUS = 52;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
@@ -16,7 +17,7 @@ export function ScanSuccessRing({ succeeded, failed, rate }: ScanSuccessRingProp
     <Card className="flex flex-col">
       <CardHeader>
         <CardTitle>Success rate</CardTitle>
-        <p className="text-xs text-muted-foreground">Finished scans that completed</p>
+        <p className="text-sm leading-relaxed text-muted-foreground">Finished scans that completed.</p>
       </CardHeader>
       <CardContent className="flex flex-1 flex-col items-center justify-center gap-5">
         <div className="relative size-40">
@@ -31,7 +32,7 @@ export function ScanSuccessRing({ succeeded, failed, rate }: ScanSuccessRingProp
                 strokeWidth="12"
                 strokeLinecap="round"
                 strokeDasharray={`${filled} ${CIRCUMFERENCE}`}
-                className="stroke-status-success/75 transition-[stroke-dasharray] duration-700"
+                className="stroke-primary/80 transition-[stroke-dasharray] duration-700"
               />
             )}
           </svg>
@@ -40,14 +41,14 @@ export function ScanSuccessRing({ succeeded, failed, rate }: ScanSuccessRingProp
             {rate !== null && <span className="mt-1 text-xs text-muted-foreground">percent</span>}
           </div>
         </div>
-        <dl className="grid w-full grid-cols-2 gap-3 text-sm">
-          <div className="rounded-lg bg-status-success-soft px-3 py-2">
-            <dt className="text-xs text-status-success">Succeeded</dt>
-            <dd className="mt-0.5 text-lg font-semibold tabular-nums">{succeeded}</dd>
+        <dl className="grid w-full grid-cols-2 gap-6 border-t pt-5 text-sm">
+          <div className="grid gap-1">
+            <dt className="text-muted-foreground">Succeeded</dt>
+            <dd className="text-xl font-semibold tabular-nums">{succeeded}</dd>
           </div>
-          <div className="rounded-lg bg-status-danger-soft px-3 py-2">
-            <dt className="text-xs text-status-danger">Failed</dt>
-            <dd className="mt-0.5 text-lg font-semibold tabular-nums">{failed}</dd>
+          <div className="grid gap-1">
+            <dt className="text-muted-foreground">Failed</dt>
+            <dd className={cn("text-xl font-semibold tabular-nums", failed > 0 && "text-status-danger")}>{failed}</dd>
           </div>
         </dl>
       </CardContent>
