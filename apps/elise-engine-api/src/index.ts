@@ -34,6 +34,8 @@ export const buildApp = (deps: AppDeps = realAppDeps) => {
   app.use("*", async (c, next) => {
     c.set("deps", deps);
     await next();
+    c.header("strict-transport-security", "max-age=31536000");
+    c.header("x-content-type-options", "nosniff");
   });
 
   // -----
