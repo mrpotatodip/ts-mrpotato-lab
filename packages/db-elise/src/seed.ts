@@ -9,7 +9,7 @@ import { ensureTenantRoles, findTenantRole } from "./tenant-roles";
 // who can sign in. Safe to run more than once.
 // -----
 const DEMO = {
-  name: "Elise Demo",
+  name: "EliseLAB Demo",
   slug: "demo",
   timezone: "UTC",
 };

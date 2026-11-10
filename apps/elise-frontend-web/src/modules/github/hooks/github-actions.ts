@@ -27,7 +27,7 @@ export function useGithubActions() {
   const disconnect = useMutation({
     mutationFn: (id: string) => disconnectGithub({ data: { id } }),
     onSuccess: async (install) => {
-      toast.success(`${install.accountLogin} is disconnected. Remove Elise in your GitHub settings too, to take its access away there.`);
+      toast.success(`${install.accountLogin} is disconnected. Remove EliseLAB in your GitHub settings too, to take its access away there.`);
       await queryClient.invalidateQueries({ queryKey: githubKeys.all });
     },
     onError: (error) => toast.error(`We couldn't disconnect it. ${error.message}`),

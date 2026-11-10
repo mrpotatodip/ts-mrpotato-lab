@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Elise: a pnpm workspace. A Worker clones a public GitHub repo into a Cloudflare sandbox, runs a Claude Code security audit, keeps the report in R2 and records scans in Neon.
+EliseLAB: a pnpm workspace. A Worker clones a public GitHub repo into a Cloudflare sandbox, runs a Claude Code security audit, keeps the report in R2 and records scans in Neon.
 
 ## Map
 

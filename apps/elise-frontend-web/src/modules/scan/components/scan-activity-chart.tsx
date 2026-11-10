@@ -58,7 +58,7 @@ export function ScanActivityChart({ days }: ScanActivityChartProps) {
                     <TooltipTrigger
                       aria-label={`${day.label}: ${day.total} ${plural(day.total)}`}
                       className={cn(
-                        "group flex w-full flex-col-reverse justify-start overflow-hidden rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                        "group flex min-h-6 w-full flex-col-reverse justify-start overflow-hidden rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                         day.total === 0 && "h-6",
                       )}
                       style={day.total === 0 ? undefined : { height: `${(day.total / peak) * 100}%` }}

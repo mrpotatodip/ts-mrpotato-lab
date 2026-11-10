@@ -4,7 +4,7 @@ import { partyPersons } from "./party";
 import { tenants } from "./tenant";
 
 // -----
-// One row per install of the Elise GitHub App that an
+// One row per install of the EliseLAB GitHub App that an
 // Account connected. It holds IDs and a status, never a
 // token: the Worker makes a short-lived token from the
 // App's private key at the moment it needs one. An

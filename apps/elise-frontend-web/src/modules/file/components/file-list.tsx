@@ -1,11 +1,13 @@
 import { Suspense, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate, useSearch } from "@tanstack/react-router";
+import { useTable } from "@tanstack/react-table";
 import { FileText, Search } from "lucide-react";
 import { Button } from "#/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
+import { DataTable } from "#/components/ui/data-table";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "#/components/ui/empty";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "#/components/ui/table";
+import { dataTableColumns, dataTableFeatures } from "#/lib/data-table";
 import { repoName } from "#/modules/repo";
 import { ScanRepoLink, ScanStatusBadge, ScanTime, scanBytes } from "#/modules/scan";
 import { ShellListCount } from "#/modules/shell";
@@ -32,6 +34,65 @@ const rowKey = (file: FileEntry) => `${file.scanId}/${file.name}`;
 const downloadLabel = (file: FileEntry) =>
   `${FILE_LABELS[file.name].label} of ${repoName(file.repo)} on ${file.branch ?? "the default branch"}, saved ${file.createdAt.slice(0, 19).replace("T", " ")} UTC, scan ${file.scanId.slice(-6)}`;
 
+const column = dataTableColumns<FileEntry>();
+
+const columns = column.columns([
+  column.display({
+    id: "file",
+    header: "File",
+    meta: { head: "whitespace-nowrap px-3 sm:px-5", cell: "whitespace-nowrap px-3 sm:px-5" },
+    cell: ({ row }) => (
+      <>
+        <span className="block font-medium">{FILE_LABELS[row.original.name].label}</span>
+        <span className="block text-xs text-muted-foreground">{row.original.name}</span>
+      </>
+    ),
+  }),
+  column.display({
+    id: "repository",
+    header: "Repository",
+    meta: { head: "whitespace-nowrap px-3 sm:px-5", cell: "min-w-36 max-w-[18rem] px-3 sm:min-w-44 sm:px-5" },
+    cell: ({ row }) => (
+      <>
+        <ScanRepoLink scanId={row.original.scanId} repo={row.original.repo} />
+        <span className="mt-0.5 block text-xs text-muted-foreground md:hidden">
+          {row.original.branch ?? "Default branch"} · <ScanTime value={row.original.createdAt} utc /> UTC
+        </span>
+      </>
+    ),
+  }),
+  column.display({
+    id: "branch",
+    header: "Branch",
+    meta: { head: "hidden whitespace-nowrap md:table-cell", cell: "hidden min-w-48 break-words text-muted-foreground md:table-cell" },
+    cell: ({ row }) => row.original.branch ?? "Default branch",
+  }),
+  column.display({
+    id: "status",
+    header: "Scan status",
+    meta: { head: "hidden whitespace-nowrap lg:table-cell", cell: "hidden whitespace-nowrap lg:table-cell" },
+    cell: ({ row }) => <ScanStatusBadge status={row.original.status} />,
+  }),
+  column.display({
+    id: "size",
+    header: "Size",
+    meta: { head: "hidden whitespace-nowrap text-right lg:table-cell", cell: "hidden whitespace-nowrap text-right tabular-nums text-muted-foreground lg:table-cell" },
+    cell: ({ row }) => scanBytes(row.original.sizeBytes),
+  }),
+  column.display({
+    id: "saved",
+    header: "Saved (UTC)",
+    meta: { head: "hidden whitespace-nowrap md:table-cell", cell: "hidden whitespace-nowrap md:table-cell" },
+    cell: ({ row }) => <ScanTime value={row.original.createdAt} utc />,
+  }),
+  column.display({
+    id: "download",
+    header: () => <span className="sr-only">Download</span>,
+    meta: { head: "px-3 text-right sm:px-5", cell: "whitespace-nowrap px-3 text-right sm:px-5" },
+    cell: ({ row }) => <FileDownloadButton scanId={row.original.scanId} name={row.original.name} description={downloadLabel(row.original)} />,
+  }),
+]);
+
 function FileListView({ filters, onChange }: FileListViewProps) {
   const { data } = useSuspenseFiles(filters);
   const [older, setOlder] = useState<readonly FileEntry[]>([]);
@@ -49,6 +110,7 @@ function FileListView({ filters, onChange }: FileListViewProps) {
   const nextCursor = olderCursor === undefined ? data.nextCursor : olderCursor;
   const firstKeys = new Set(data.files.map(rowKey));
   const files = [...data.files, ...older.filter((file) => !firstKeys.has(rowKey(file)))];
+  const table = useTable({ features: dataTableFeatures, columns, data: files, getRowId: rowKey });
 
   return (
     <Card>
@@ -74,48 +136,7 @@ function FileListView({ filters, onChange }: FileListViewProps) {
             )}
           </Empty>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="whitespace-nowrap px-3 sm:px-5">File</TableHead>
-                <TableHead className="whitespace-nowrap px-3 sm:px-5">Repository</TableHead>
-                <TableHead className="hidden whitespace-nowrap md:table-cell">Branch</TableHead>
-                <TableHead className="hidden whitespace-nowrap lg:table-cell">Scan status</TableHead>
-                <TableHead className="hidden whitespace-nowrap text-right lg:table-cell">Size</TableHead>
-                <TableHead className="hidden whitespace-nowrap md:table-cell">Saved (UTC)</TableHead>
-                <TableHead className="px-3 text-right sm:px-5">
-                  <span className="sr-only">Download</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {files.map((file) => (
-                <TableRow key={rowKey(file)}>
-                  <TableCell className="whitespace-nowrap px-3 sm:px-5">
-                    <span className="block font-medium">{FILE_LABELS[file.name].label}</span>
-                    <span className="block text-xs text-muted-foreground">{file.name}</span>
-                  </TableCell>
-                  <TableCell className="min-w-36 max-w-[18rem] px-3 sm:min-w-44 sm:px-5">
-                    <ScanRepoLink scanId={file.scanId} repo={file.repo} />
-                    <span className="mt-0.5 block text-xs text-muted-foreground md:hidden">
-                      {file.branch ?? "Default branch"} · <ScanTime value={file.createdAt} utc /> UTC
-                    </span>
-                  </TableCell>
-                  <TableCell className="hidden min-w-48 break-words text-muted-foreground md:table-cell">{file.branch ?? "Default branch"}</TableCell>
-                  <TableCell className="hidden whitespace-nowrap lg:table-cell">
-                    <ScanStatusBadge status={file.status} />
-                  </TableCell>
-                  <TableCell className="hidden whitespace-nowrap text-right tabular-nums text-muted-foreground lg:table-cell">{scanBytes(file.sizeBytes)}</TableCell>
-                  <TableCell className="hidden whitespace-nowrap md:table-cell">
-                    <ScanTime value={file.createdAt} utc />
-                  </TableCell>
-                  <TableCell className="whitespace-nowrap px-3 text-right sm:px-5">
-                    <FileDownloadButton scanId={file.scanId} name={file.name} description={downloadLabel(file)} />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <DataTable table={table} />
         )}
         {nextCursor && (
           <div className="flex flex-col items-center gap-2 border-t p-4">

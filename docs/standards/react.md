@@ -202,7 +202,16 @@ Put business logic in `utils/` so it can be tested without rendering (`nextProje
 
 **5.4 `[House]` Forms use TanStack Form with a Zod schema from `schemas/`.** Don't hand-roll `useState` per field.
 
-**5.5 `[House]` Icons come from `lucide-react`.**
+- Put the schema in `validators.onSubmit` of `useForm` (zod 4 is a Standard Schema, so there is no resolver). A field shows its message after the first submit, and it clears when the person types. Give the schema the messages the person reads, as the form fields' schemas in `modules/team/schemas` do; the contract schema stays the one the server function validates.
+- A field is `form.Field` with `fieldAria(field, id, helpId)` on the input and `<FieldError id message={fieldMessage(field)} />` under it (`lib/form-field.ts`, `components/ui/field-error.tsx`). Put `noValidate` on the `<form>`, so the browser's own bubbles don't replace the inline errors, and submit with `form.handleSubmit()`.
+- A failure from the server is a toast; a bad field is an inline error. Submit with `useMutation`, and take `isPending` from it.
+- A form that only filters a list and keeps its state in the URL (`file-filters.tsx`) is not a form to migrate: its search params are its state.
+
+**5.4a `[House]` Tables use TanStack Table v9 through `DataTable`.** Don't write `<Table><TableRow>…` by hand in a feature.
+
+- Define the columns at module scope with `dataTableColumns<Row>()` (`lib/data-table.ts`) and render them with `<DataTable table={table} />` (`components/ui/data-table.tsx`), which draws the dashboard's `Table` primitive. A column's classes go in `meta` (`head`, `cell`; `decorative` hides a column from screen readers). A cell is a render function, so it can't close over component state: put what it needs in the row (a `selected` flag, an `open` callback, the repo ID).
+- Call `useTable` before any early return. Keep `features` and `columns` at module scope, and give each row a stable `getRowId`: a duplicate ID drops a row.
+- The tables have no client sorting, filtering or paging: the engine does those and the URL (or a cursor) holds the choice. Add the sorting or selection feature to `dataTableFeatures` only when a table needs it.
 
 ---
 

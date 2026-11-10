@@ -24,7 +24,7 @@ export function GithubCallback({ search }: GithubCallbackProps) {
     return (
       <Alert variant="warning">
         <AlertDescription>
-          This page is where GitHub sends you after you install Elise. It did not get what it needs. Start again from{" "}
+          This page is where GitHub sends you after you install EliseLAB. It did not get what it needs. Start again from{" "}
           <Link to="/connections" className="font-medium underline underline-offset-2">
             Connections
           </Link>
@@ -38,7 +38,7 @@ export function GithubCallback({ search }: GithubCallbackProps) {
     <Card className="max-w-xl">
       <CardHeader>
         <CardTitle>Finish connecting GitHub</CardTitle>
-        <p className="text-sm leading-relaxed text-muted-foreground">GitHub installed Elise. One step is left before Elise can read your private repositories.</p>
+        <p className="text-sm leading-relaxed text-muted-foreground">GitHub installed EliseLAB. One step is left before EliseLAB can read your private repositories.</p>
       </CardHeader>
       <CardContent className="grid gap-4">
         {/* oxlint-disable-next-line jsx-a11y/label-has-associated-control */}

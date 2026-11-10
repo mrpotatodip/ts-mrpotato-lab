@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { useTable } from "@tanstack/react-table";
 import { ChevronRight, ShieldCheck } from "lucide-react";
 import { Badge } from "#/components/ui/badge";
+import { DataTable } from "#/components/ui/data-table";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "#/components/ui/empty";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "#/components/ui/table";
+import { dataTableColumns, dataTableFeatures } from "#/lib/data-table";
 import { cn } from "#/lib/utils";
 import { SCAN_FINDING_STATE_COPY } from "../constants";
 import { scanFindingsQuery } from "../hooks";
@@ -16,7 +18,52 @@ import { ScanSeverityBadge } from "./scan-severity-badge";
 
 const RANK = new Map<string | null, number>([...SEVERITIES.map((s, i) => [s, i] as const), [null, SEVERITIES.length]]);
 
-const keyOf = (f: Finding) => `${f.title}-${f.place?.file}-${f.place?.line}`;
+type FindingRow = { finding: Finding; selected: boolean; open: () => void };
+
+const column = dataTableColumns<FindingRow>();
+
+const columns = column.columns([
+  column.display({ id: "severity", header: "Severity", cell: ({ row }) => <ScanSeverityBadge severity={row.original.finding.severity} /> }),
+  column.display({
+    id: "finding",
+    header: "Finding",
+    meta: { head: "w-[42%]" },
+    cell: ({ row }) => {
+      const { finding, open } = row.original;
+      if (!finding.detail) return <span className="font-medium">{finding.title}</span>;
+      return (
+        <button
+          type="button"
+          aria-haspopup="dialog"
+          onClick={open}
+          className="min-h-6 rounded-sm text-left font-medium after:absolute after:inset-0 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          {finding.title}
+        </button>
+      );
+    },
+  }),
+  column.display({
+    id: "where",
+    header: "Where",
+    meta: { cell: "font-mono text-xs text-muted-foreground [overflow-wrap:normal]" },
+    cell: ({ row }) => (row.original.finding.place ? `${row.original.finding.place.file}:${row.original.finding.place.line}` : "-"),
+  }),
+  column.display({
+    id: "status",
+    header: "Status",
+    cell: ({ row }) => {
+      const { state } = row.original.finding;
+      return <Badge variant={state === "confirmed" ? "success" : state === "needs_validation" ? "warning" : "neutral"}>{SCAN_FINDING_STATE_COPY[state].label}</Badge>;
+    },
+  }),
+  column.display({
+    id: "open",
+    header: () => <span className="sr-only">Open</span>,
+    meta: { head: "w-10" },
+    cell: ({ row }) => (row.original.finding.detail ? <ChevronRight aria-hidden="true" className="size-4 text-muted-foreground" /> : null),
+  }),
+]);
 
 function ScanFindingDecisionLink({ repoId }: { repoId: string | undefined }) {
   if (!repoId) return null;
@@ -40,6 +87,9 @@ type ScanFindingsTableProps = { scanId: string; repoId?: string; repoLabel?: str
 export function ScanFindingsTable({ scanId, repoId, repoLabel, commit }: ScanFindingsTableProps) {
   const { data } = useSuspenseQuery(scanFindingsQuery(scanId));
   const [selected, setSelected] = useState<number | undefined>();
+  const sorted = data.toSorted((a, b) => (RANK.get(a.severity) ?? 0) - (RANK.get(b.severity) ?? 0));
+  const rows = sorted.map((finding, index) => ({ finding, selected: index === selected, open: () => setSelected(index) }));
+  const table = useTable({ features: dataTableFeatures, columns, data: rows, getRowId: (_, index) => String(index) });
 
   if (data.length === 0) {
     return (
@@ -55,8 +105,6 @@ export function ScanFindingsTable({ scanId, repoId, repoLabel, commit }: ScanFin
     );
   }
 
-  const sorted = data.toSorted((a, b) => (RANK.get(a.severity) ?? 0) - (RANK.get(b.severity) ?? 0));
-
   const actionable = sorted.filter((f) => f.state !== "rejected");
 
   return (
@@ -66,47 +114,7 @@ export function ScanFindingsTable({ scanId, repoId, repoLabel, commit }: ScanFin
           <ScanFindingCopy text={scanFindingsPrompt(sorted, { repo: repoLabel, commit })} label={`Copy ${actionable.length === 1 ? "finding" : `all ${actionable.length} findings`} for coding agent`} />
         </div>
       )}
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Severity</TableHead>
-            <TableHead className="w-[42%]">Finding</TableHead>
-            <TableHead>Where</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead className="w-10">
-              <span className="sr-only">Open</span>
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {sorted.map((f, index) => (
-            <TableRow key={keyOf(f)} className={cn("relative", index === selected && "bg-accent")}>
-              <TableCell>
-                <ScanSeverityBadge severity={f.severity} />
-              </TableCell>
-              <TableCell>
-                {f.detail ? (
-                  <button
-                    type="button"
-                    aria-haspopup="dialog"
-                    onClick={() => setSelected(index)}
-                    className="min-h-6 rounded-sm text-left font-medium after:absolute after:inset-0 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  >
-                    {f.title}
-                  </button>
-                ) : (
-                  <span className="font-medium">{f.title}</span>
-                )}
-              </TableCell>
-              <TableCell className="font-mono text-xs text-muted-foreground [overflow-wrap:normal]">{f.place ? `${f.place.file}:${f.place.line}` : "-"}</TableCell>
-              <TableCell>
-                <Badge variant={f.state === "confirmed" ? "success" : f.state === "needs_validation" ? "warning" : "neutral"}>{SCAN_FINDING_STATE_COPY[f.state].label}</Badge>
-              </TableCell>
-              <TableCell>{f.detail && <ChevronRight aria-hidden="true" className="size-4 text-muted-foreground" />}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+      <DataTable table={table} rowProps={(row) => ({ className: cn("relative", row.original.selected && "bg-accent") })} />
       <ScanFindingSheet
         findings={sorted}
         selected={selected}

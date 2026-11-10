@@ -32,7 +32,7 @@ export function ScanRunDetails({ scan }: { scan: ScanStatus }) {
               <ChevronUp aria-hidden="true" className="size-4 shrink-0 rotate-180 text-muted-foreground transition-transform group-data-[panel-open]:rotate-0" />
             </CollapsibleTrigger>
           </CardTitle>
-          <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">The kind of review, the model and the effort this scan ran with.</p>
+          <p className="max-w-copy text-sm leading-relaxed text-muted-foreground">The kind of review, the model and the effort this scan ran with.</p>
         </CardHeader>
         <CollapsiblePanel>
           <CardContent>

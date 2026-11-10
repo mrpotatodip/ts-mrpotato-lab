@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useForm } from "@tanstack/react-form";
 import { useMutation, useQueryClient, useSuspenseQueries } from "@tanstack/react-query";
 import { Pencil, Users, X } from "lucide-react";
 import { toast } from "sonner";
@@ -6,15 +7,65 @@ import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "#/components/ui/empty";
+import { FieldError } from "#/components/ui/field-error";
 import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#/components/ui/select";
+import { fieldAria, fieldMessage } from "#/lib/form-field";
 import { addGroupMember, createGroup, deleteGroup, removeGroupMember, renameGroup } from "../api";
 import { groupsQuery, teamKeys, teamQuery } from "../hooks";
 import { TeamConfirmDialog } from "./team-confirm-dialog";
-import { CreateGroupInputSchema, type Group, type TeamMember } from "../schemas";
+import { GroupNameDetailsSchema, type Group, type TeamMember } from "../schemas";
 
 const failure = (what: string) => (error: Error) => toast.error(`We couldn't ${what}. ${error.message}`);
+
+type GroupRenameFormProps = {
+  group: Group;
+  pending: boolean;
+  onSave: (name: string) => void;
+  onCancel: () => void;
+};
+
+function GroupRenameForm({ group, pending, onSave, onCancel }: GroupRenameFormProps) {
+  const inputId = `rename-${group.id}`;
+  const form = useForm({
+    defaultValues: { name: group.name },
+    validators: { onSubmit: GroupNameDetailsSchema },
+    onSubmit: ({ value }) => onSave(value.name.trim()),
+  });
+
+  return (
+    <form
+      noValidate
+      onSubmit={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        void form.handleSubmit();
+      }}
+      className="grid gap-1"
+    >
+      <form.Field name="name">
+        {(field) => (
+          <>
+            <div className="flex items-center gap-2">
+              <Label htmlFor={inputId} className="sr-only">
+                New name for {group.name}
+              </Label>
+              <Input id={inputId} name={field.name} autoComplete="off" value={field.state.value} onBlur={field.handleBlur} onChange={(event) => field.handleChange(event.target.value)} className="h-8 w-56" {...fieldAria(field, inputId)} />
+              <Button type="submit" size="sm" disabled={pending}>
+                {pending ? "Saving" : "Save"}
+              </Button>
+              <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
+                Cancel
+              </Button>
+            </div>
+            <FieldError id={inputId} message={fieldMessage(field)} />
+          </>
+        )}
+      </form.Field>
+    </form>
+  );
+}
 
 function GroupRow({ group, members }: { group: Group; members: readonly TeamMember[] }) {
   const queryClient = useQueryClient();
@@ -31,7 +82,6 @@ function GroupRow({ group, members }: { group: Group; members: readonly TeamMemb
     onError: failure("remove that person"),
   });
   const [renaming, setRenaming] = useState(false);
-  const [draft, setDraft] = useState(group.name);
   const rename = useMutation({
     mutationFn: (name: string) => renameGroup({ data: { groupId: group.id, name } }),
     onSuccess: async () => {
@@ -40,11 +90,6 @@ function GroupRow({ group, members }: { group: Group; members: readonly TeamMemb
     },
     onError: failure("rename the group"),
   });
-  const submitRename = (event: React.FormEvent) => {
-    event.preventDefault();
-    const parsed = CreateGroupInputSchema.safeParse({ name: draft });
-    if (parsed.success) rename.mutate(parsed.data.name);
-  };
   const drop = useMutation({
     mutationFn: () => deleteGroup({ data: { groupId: group.id } }),
     onSuccess: refresh,
@@ -58,26 +103,7 @@ function GroupRow({ group, members }: { group: Group; members: readonly TeamMemb
     <li className="grid gap-3 py-4 first:pt-0 last:pb-0">
       <div className="flex items-center justify-between gap-3">
         {renaming ? (
-          <form onSubmit={submitRename} className="flex items-center gap-2">
-            <Label htmlFor={`rename-${group.id}`} className="sr-only">
-              New name for {group.name}
-            </Label>
-            <Input id={`rename-${group.id}`} name="group-rename" autoComplete="off" value={draft} onChange={(event) => setDraft(event.target.value)} className="h-8 w-56" />
-            <Button type="submit" size="sm" disabled={rename.isPending || draft.trim() === ""}>
-              {rename.isPending ? "Saving" : "Save"}
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setRenaming(false);
-                setDraft(group.name);
-              }}
-            >
-              Cancel
-            </Button>
-          </form>
+          <GroupRenameForm group={group} pending={rename.isPending} onSave={(name) => rename.mutate(name)} onCancel={() => setRenaming(false)} />
         ) : (
           <span className="flex items-baseline gap-2">
             <span className="font-medium">{group.name}</span>
@@ -139,30 +165,52 @@ function GroupRow({ group, members }: { group: Group; members: readonly TeamMemb
   );
 }
 
-export function TeamGroupsCard() {
-  const [{ data: groups }, { data: team }] = useSuspenseQueries({ queries: [groupsQuery(), teamQuery()] });
-  const [name, setName] = useState("");
-  const [nameError, setNameError] = useState<string | null>(null);
+function GroupCreateForm() {
   const queryClient = useQueryClient();
-
   const create = useMutation({
     mutationFn: (input: { name: string }) => createGroup({ data: input }),
     onSuccess: async () => {
-      setName("");
+      form.reset();
       await queryClient.invalidateQueries({ queryKey: teamKeys.groups() });
     },
     onError: (error) => toast.error(`We couldn't create the group. ${error.message}`),
   });
+  const form = useForm({
+    defaultValues: { name: "" },
+    validators: { onSubmit: GroupNameDetailsSchema },
+    onSubmit: ({ value }) => create.mutate({ name: value.name.trim() }),
+  });
 
-  const submit = (event: React.FormEvent) => {
-    event.preventDefault();
-    const parsed = CreateGroupInputSchema.safeParse({ name });
-    if (!parsed.success) {
-      setNameError("Give the group a name before you create it.");
-      return;
-    }
-    create.mutate(parsed.data);
-  };
+  return (
+    <form
+      noValidate
+      onSubmit={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        void form.handleSubmit();
+      }}
+      className="grid gap-2"
+    >
+      <form.Field name="name">
+        {(field) => (
+          <>
+            <Label htmlFor="group-name">What should the new group be called?</Label>
+            <div className="flex gap-2">
+              <Input id="group-name" name={field.name} autoComplete="off" placeholder="Security reviewers" value={field.state.value} onBlur={field.handleBlur} onChange={(event) => field.handleChange(event.target.value)} className="h-9" {...fieldAria(field, "group-name")} />
+              <Button type="submit" variant="outline" size="sm" disabled={create.isPending}>
+                {create.isPending ? "Creating" : "Create group"}
+              </Button>
+            </div>
+            <FieldError id="group-name" message={fieldMessage(field)} />
+          </>
+        )}
+      </form.Field>
+    </form>
+  );
+}
+
+export function TeamGroupsCard() {
+  const [{ data: groups }, { data: team }] = useSuspenseQueries({ queries: [groupsQuery(), teamQuery()] });
 
   return (
     <Card>
@@ -170,33 +218,7 @@ export function TeamGroupsCard() {
         <CardTitle>Groups</CardTitle>
       </CardHeader>
       <CardContent className="grid gap-5">
-        <form onSubmit={submit} className="grid gap-2">
-          <Label htmlFor="group-name">What should the new group be called?</Label>
-          <div className="flex gap-2">
-            <Input
-              id="group-name"
-              name="group-name"
-              autoComplete="off"
-              placeholder="Security reviewers"
-              value={name}
-              aria-invalid={nameError ? true : undefined}
-              aria-describedby={nameError ? "group-name-error" : undefined}
-              onChange={(event) => {
-                setNameError(null);
-                setName(event.target.value);
-              }}
-              className="h-9"
-            />
-            <Button type="submit" variant="outline" size="sm" disabled={create.isPending}>
-              {create.isPending ? "Creating" : "Create group"}
-            </Button>
-          </div>
-          {nameError && (
-            <p id="group-name-error" role="alert" className="text-xs text-status-danger">
-              {nameError}
-            </p>
-          )}
-        </form>
+        <GroupCreateForm />
         {groups.length === 0 ? (
           <Empty className="py-8">
             <EmptyHeader>

@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import { useTable } from "@tanstack/react-table";
 import { ChevronRight, ScanSearch, Search } from "lucide-react";
 import { Button } from "#/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
+import { DataTable } from "#/components/ui/data-table";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "#/components/ui/empty";
 import { Tabs, TabsList, TabsTrigger } from "#/components/ui/tabs";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "#/components/ui/table";
+import { dataTableColumns, dataTableFeatures } from "#/lib/data-table";
 import { ShellFilterBar, ShellListCount, ShellSearchField } from "#/modules/shell";
 import { fetchScans } from "../api";
 import { SCAN_MODEL_NAMES, SCAN_SKILL_OPTIONS } from "../constants";
@@ -54,6 +56,47 @@ function FindingsCell({ scan }: { scan: ScanStatus }) {
   );
 }
 
+const column = dataTableColumns<ScanStatus>();
+
+const columns = column.columns([
+  column.display({
+    id: "repository",
+    header: "Repository",
+    meta: { cell: "max-w-[18rem]" },
+    cell: ({ row }) => (
+      <>
+        <ScanRepoLink scanId={row.original.scanId} repo={row.original.repo} isPrivate={row.original.isPrivate} stretch />
+        <ScanOrigin scan={row.original} />
+      </>
+    ),
+  }),
+  column.display({ id: "status", header: "Status", cell: ({ row }) => <ScanStatusBadge status={row.original.status} /> }),
+  column.display({ id: "findings", header: "Findings", cell: ({ row }) => <FindingsCell scan={row.original} /> }),
+  column.display({
+    id: "review",
+    header: "Review",
+    cell: ({ row }) => (
+      <>
+        <span className="block text-sm">{labelOf(SCAN_SKILL_OPTIONS, row.original.skill)}</span>
+        <span className="block text-xs text-muted-foreground">{labelOf(SCAN_MODEL_NAMES, row.original.model)}</span>
+      </>
+    ),
+  }),
+  column.display({
+    id: "cost",
+    header: "Cost",
+    meta: { head: "text-right", cell: "text-right tabular-nums text-muted-foreground" },
+    cell: ({ row }) => (row.original.usage ? scanCost(row.original.usage.costUsd) : "-"),
+  }),
+  column.display({ id: "started", header: "Started", cell: ({ row }) => <ScanTime value={row.original.createdAt} /> }),
+  column.display({
+    id: "open",
+    header: () => <span className="sr-only">Open</span>,
+    meta: { head: "w-10" },
+    cell: () => <ChevronRight aria-hidden="true" className="size-4 text-muted-foreground" />,
+  }),
+]);
+
 export function ScanList() {
   const { data } = useSuspenseQuery(scansQuery());
   const [filter, setFilter] = useState<Filter>("all");
@@ -75,6 +118,7 @@ export function ScanList() {
   const query = search.trim().toLowerCase();
   const visible = all.filter((scan) => matches(filter, scan.status) && (query === "" || [scan.repo, scan.branch, scan.commitSha].some((field) => (field ?? "").toLowerCase().includes(query))));
   const count = (value: Filter) => all.filter((scan) => matches(value, scan.status)).length;
+  const table = useTable({ features: dataTableFeatures, columns, data: visible, getRowId: (scan) => scan.scanId });
 
   return (
     <Card>
@@ -142,48 +186,7 @@ export function ScanList() {
               </EmptyContent>
             </Empty>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Repository</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Findings</TableHead>
-                  <TableHead>Review</TableHead>
-                  <TableHead className="text-right">Cost</TableHead>
-                  <TableHead>Started</TableHead>
-                  <TableHead className="w-10">
-                    <span className="sr-only">Open</span>
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {visible.map((scan) => (
-                  <TableRow key={scan.scanId} className="relative">
-                    <TableCell className="max-w-[18rem]">
-                      <ScanRepoLink scanId={scan.scanId} repo={scan.repo} isPrivate={scan.isPrivate} stretch />
-                      <ScanOrigin scan={scan} />
-                    </TableCell>
-                    <TableCell>
-                      <ScanStatusBadge status={scan.status} />
-                    </TableCell>
-                    <TableCell>
-                      <FindingsCell scan={scan} />
-                    </TableCell>
-                    <TableCell>
-                      <span className="block text-sm">{labelOf(SCAN_SKILL_OPTIONS, scan.skill)}</span>
-                      <span className="block text-xs text-muted-foreground">{labelOf(SCAN_MODEL_NAMES, scan.model)}</span>
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums text-muted-foreground">{scan.usage ? scanCost(scan.usage.costUsd) : "-"}</TableCell>
-                    <TableCell>
-                      <ScanTime value={scan.createdAt} />
-                    </TableCell>
-                    <TableCell>
-                      <ChevronRight aria-hidden="true" className="size-4 text-muted-foreground" />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <DataTable table={table} rowProps={() => ({ className: "relative" })} />
           )}
           {nextCursor && (
             <div className="flex flex-col items-center gap-2 border-t p-4">

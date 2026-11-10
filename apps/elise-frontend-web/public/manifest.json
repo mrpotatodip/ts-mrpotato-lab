@@ -1,8 +1,8 @@
 {
   "id": "/",
-  "name": "Elise",
-  "short_name": "Elise",
-  "description": "Elise runs an AI security review on a public GitHub repository.",
+  "name": "EliseLAB",
+  "short_name": "EliseLAB",
+  "description": "EliseLAB runs an AI security review on a public GitHub repository.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

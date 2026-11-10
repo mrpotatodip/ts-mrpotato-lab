@@ -1,7 +1,7 @@
 import { useCallback, useSyncExternalStore } from "react";
 import { SKY_THEMES, THEME_SKIES, skyUrl } from "../constants";
 
-export const THEMES = ["default", "midnight", "daylight", "moonlight"] as const;
+export const THEMES = ["default", "midnight", "daylight", "greenfields", "moonlight"] as const;
 export type Theme = (typeof THEMES)[number];
 
 export const isDarkTheme = (theme: Theme) => theme === "midnight" || theme === "moonlight";
@@ -45,7 +45,7 @@ const skyLists = Object.fromEntries(SKY_THEMES.map((name) => [name, THEME_SKIES[
 
 const skyInit = `var L=${JSON.stringify(skyLists)},d=document.documentElement;Object.keys(L).forEach(function(k){var s=L[k],i=Math.floor(Math.random()*s.length);d.setAttribute("data-sky-"+k,String(i));d.style.setProperty("--"+k+"-sky","url("+s[i]+")");s.forEach(function(u){new Image().src=u})});`;
 
-export const themeInitScript = `try{var t=localStorage.getItem(${JSON.stringify(THEME_STORAGE_KEY)});if(t==="daylight"||t==="moonlight"||t==="midnight")document.documentElement.dataset.theme=t}catch(e){}try{${skyInit}}catch(e){}`;
+export const themeInitScript = `try{var t=localStorage.getItem(${JSON.stringify(THEME_STORAGE_KEY)});if(t==="daylight"||t==="greenfields"||t==="moonlight"||t==="midnight")document.documentElement.dataset.theme=t}catch(e){}try{${skyInit}}catch(e){}`;
 
 const apply = (theme: Theme) => {
   if (theme === "default") delete document.documentElement.dataset.theme;

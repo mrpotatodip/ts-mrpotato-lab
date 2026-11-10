@@ -82,7 +82,7 @@ function ScanStatusLine({ scan }: { scan: ScanStatus }) {
   const commit = scan.commitSha?.slice(0, 7);
 
   return (
-    <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+    <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm leading-relaxed text-muted-foreground">
       <ScanStatusBadge status={scan.status} />
       <span>
         Started <ScanTime value={scan.createdAt} />

@@ -25,7 +25,7 @@ describe("renderInviteEmail", () => {
   it("names the inviter and account in the subject and gives the expiry in UTC", () => {
     const { subject, text } = renderInviteEmail(mail);
 
-    expect(subject).toBe('Ada "the admin" & co invited you to Acme <script> on Elise');
+    expect(subject).toBe('Ada "the admin" & co invited you to Acme <script> on EliseLAB');
     expect(text).toContain("expires on November 15, 2026 (UTC)");
   });
 });

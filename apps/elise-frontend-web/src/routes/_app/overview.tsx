@@ -7,7 +7,7 @@ import { overviewQuery, ScanOverview, scansQuery } from "#/modules/scan";
 import { usageQuery } from "#/modules/usage";
 
 export const Route = createFileRoute("/_app/overview")({
-  head: () => ({ meta: [{ title: "Overview · Elise" }] }),
+  head: () => ({ meta: [{ title: "Overview · EliseLAB" }] }),
   loader: ({ context }) =>
     Promise.all([
       context.queryClient.query({ ...overviewQuery(), staleTime: "static" }),

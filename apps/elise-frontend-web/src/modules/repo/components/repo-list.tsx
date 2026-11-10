@@ -59,7 +59,7 @@ export function RepoList() {
         <CardHeader className="flex-row flex-wrap items-center justify-between gap-3">
           <div className="grid gap-1.5">
             <CardTitle>By repository</CardTitle>
-            <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">Sorted by what needs attention first: findings that came back, then the most severe.</p>
+            <p className="max-w-copy text-sm leading-relaxed text-muted-foreground">Sorted by what needs attention first: findings that came back, then the most severe.</p>
           </div>
           <div className="flex items-center gap-4">
             <ShellListCount shown={visible.length} total={sorted.length} noun="repository" plural="repositories" />

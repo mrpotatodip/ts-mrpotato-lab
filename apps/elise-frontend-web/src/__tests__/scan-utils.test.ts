@@ -135,7 +135,7 @@ describe("scanFindingPrompt", () => {
     const low = { ...finding, title: "Verbose errors", severity: "low" as const };
     const rejected = { ...finding, title: "False alarm", state: "rejected" as const };
     const text = scanFindingsPrompt([low, rejected, finding], { repo: "o/n", commit: "abcdef1234" });
-    expect(text).toContain("Fix these 2 security findings from an Elise audit in o/n at commit abcdef1");
+    expect(text).toContain("Fix these 2 security findings from an EliseLAB audit in o/n at commit abcdef1");
     expect(text.indexOf("SQL injection")).toBeLessThan(text.indexOf("Verbose errors"));
     expect(text).not.toContain("False alarm");
   });

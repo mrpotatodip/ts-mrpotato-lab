@@ -8,6 +8,7 @@
 
 export const THEME_SKIES = {
   daylight: ["bg-daylight-1.jpeg", "bg-daylight-2.jpeg", "bg-daylight-3.jpeg"],
+  greenfields: ["bg-greenfields-1.jpeg", "bg-greenfields-2.jpeg", "bg-greenfields-3.jpeg"],
   moonlight: ["bg-moonlight-1.jpeg", "bg-moonlight-2.jpeg", "bg-moonlight-3.jpeg"],
 } as const;
 

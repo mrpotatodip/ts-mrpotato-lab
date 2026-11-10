@@ -30,7 +30,7 @@ const joined = (lines: readonly (string | null)[]) => lines.filter((line): line 
 // dashboard: where it is, what is wrong, the evidence and the suggested fix.
 // -----
 export function scanFindingPrompt(finding: Finding): string {
-  return joined([`Fix this security finding from an Elise audit.`, "", ...findingLines(finding, "#", "##"), CHECK_FIRST]);
+  return joined([`Fix this security finding from an EliseLAB audit.`, "", ...findingLines(finding, "#", "##"), CHECK_FIRST]);
 }
 
 type ScanFindingsPromptContext = { repo?: string; commit?: string };
@@ -43,7 +43,7 @@ export function scanFindingsPrompt(findings: readonly Finding[], context: ScanFi
   const todo = findings.filter((finding) => finding.state !== "rejected").toSorted((a, b) => (RANK.get(a.severity) ?? 0) - (RANK.get(b.severity) ?? 0));
   const target = context.repo ? ` in ${context.repo}${context.commit ? ` at commit ${context.commit.slice(0, 7)}` : ""}` : "";
   return joined([
-    `Fix these ${todo.length} security findings from an Elise audit${target}, most severe first.`,
+    `Fix these ${todo.length} security findings from an EliseLAB audit${target}, most severe first.`,
     "",
     ...todo.flatMap((finding) => [...findingLines(finding, "##", "###"), "---", ""]),
     `${CHECK_FIRST} Work through them in order and keep each fix separate.`,

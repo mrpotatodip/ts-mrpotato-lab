@@ -110,7 +110,7 @@ export function ScanDiffCard({ scanId }: { scanId: string }) {
       <CardHeader className="flex-row flex-wrap items-center justify-between gap-3">
         <div className="grid gap-1.5">
           <CardTitle>What changed since the previous scan</CardTitle>
-          <p className="text-xs text-muted-foreground">{data.previousScanId === null ? "This is the first scan of the repository. Later scans will show what is new, fixed or still open." : summaryLine(data)}</p>
+          <p className="max-w-copy text-sm leading-relaxed text-muted-foreground">{data.previousScanId === null ? "This is the first scan of the repository. Later scans will show what is new, fixed or still open." : summaryLine(data)}</p>
         </div>
         {data.previousScanId !== null && (
           <Link

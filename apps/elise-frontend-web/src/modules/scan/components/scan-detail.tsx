@@ -124,6 +124,7 @@ export function ScanDetail({ scanId, Decision }: ScanDetailProps) {
         <ScanNewDialog
           label={scan.branch ? "Scan this branch again" : "Scan again"}
           size="default"
+          variant="outline"
           repo={scan.repo}
           startBranch={scan.branch ?? undefined}
           startRef={scan.branch ? undefined : (scan.ref ?? undefined)}
@@ -146,8 +147,8 @@ export function ScanDetail({ scanId, Decision }: ScanDetailProps) {
             <Card>
               <CardHeader className="gap-1.5">
                 <CardTitle>No history to compare with</CardTitle>
-                <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">
-                  {scan.untrackedReason ? `This scan has no History: ${scan.untrackedReason}` : scan.ref ? `Elise does not track ${scan.ref}, so this scan has no earlier scans to compare with.` : "This scan has no earlier scans to compare with."}
+                <p className="max-w-copy text-sm leading-relaxed text-muted-foreground">
+                  {scan.untrackedReason ? `This scan has no History: ${scan.untrackedReason}` : scan.ref ? `EliseLAB does not track ${scan.ref}, so this scan has no earlier scans to compare with.` : "This scan has no earlier scans to compare with."}
                 </p>
               </CardHeader>
             </Card>
@@ -156,7 +157,7 @@ export function ScanDetail({ scanId, Decision }: ScanDetailProps) {
             <Card>
               <CardHeader className="gap-1.5">
                 <CardTitle>Findings</CardTitle>
-                <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">{findingsDescription(scan)}</p>
+                <p className="max-w-copy text-sm leading-relaxed text-muted-foreground">{findingsDescription(scan)}</p>
               </CardHeader>
               <CardContent className="overflow-hidden p-0">
                 <Suspense fallback={<Skeleton className="m-5 h-24" />}>
@@ -177,7 +178,7 @@ export function ScanDetail({ scanId, Decision }: ScanDetailProps) {
             <CardHeader className="gap-3">
               <div className="grid gap-1.5">
                 <CardTitle>Files</CardTitle>
-                <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">What the scan saved. REPORT.md is the written summary; findings.json is the same findings as data.</p>
+                <p className="max-w-copy text-sm leading-relaxed text-muted-foreground">What the scan saved. REPORT.md is the written summary; findings.json is the same findings as data.</p>
               </div>
               <TabsList aria-label="Report files">
                 {files.map((item) => (

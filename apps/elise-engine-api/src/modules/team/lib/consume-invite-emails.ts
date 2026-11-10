@@ -6,7 +6,7 @@ import type { InviteEmail } from "#/modules/team/types";
 import type { Bindings } from "#/types/variables";
 
 const RETRY_BASE_SECONDS = 30;
-const SENDER_NAME = "Elise";
+const SENDER_NAME = "EliseLAB";
 
 // -----
 // Queue consumer: one email for each message. A

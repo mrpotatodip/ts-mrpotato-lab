@@ -12,7 +12,7 @@ export const connectGithubDoc = describeRoute({
   security: SERVICE_SECURITY,
   summary: "Start connecting GitHub",
   description: routeText({
-    context: "An account admin connects the Elise GitHub App to read private repos. This gives the address to send the browser to.",
+    context: "An account admin connects the EliseLAB GitHub App to read private repos. This gives the address to send the browser to.",
     steps: [
       "The Worker checks the session and that the login is `tenant_admin` in the account.",
       "The Worker asks GitHub for the App's name, so the address needs no extra setting.",
@@ -76,7 +76,7 @@ export const disconnectGithubInstallationDoc = describeRoute({
   summary: "Disconnect a GitHub install",
   description: routeText({
     context:
-      "An account admin stops Elise using an install. This cannot take access away on GitHub: only an uninstall there does that. Past scans and reports stay.",
+      "An account admin stops EliseLAB using an install. This cannot take access away on GitHub: only an uninstall there does that. Past scans and reports stay.",
     steps: [
       "The Worker checks the session and that the login is `tenant_admin` in the account.",
       "The Worker marks the install `removed` and writes an audit row. An install of another account answers 404. Disconnecting twice is harmless.",
@@ -112,7 +112,7 @@ export const listGithubReposDoc = describeRoute({
   security: SERVICE_SECURITY,
   summary: "List the repos the connected installs can read",
   description: routeText({
-    context: "The repo picker. It shows what Elise can read, so people do not have to type a URL.",
+    context: "The repo picker. It shows what EliseLAB can read, so people do not have to type a URL.",
     steps: [
       "The Worker reads the account's active installs.",
       "For each it makes a short-lived token and asks GitHub for the first 100 repos. An install GitHub will not answer for is left out, and the rest still show.",

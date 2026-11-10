@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, Moon, MoonStar, Palette, Sun, type LucideIcon } from "lucide-react";
+import { Check, Leaf, Moon, MoonStar, Palette, Sun, type LucideIcon } from "lucide-react";
 import { Button } from "#/components/ui/button";
 import { Dialog, DialogBody, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "#/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "#/components/ui/tooltip";
@@ -14,11 +14,13 @@ const THEME_COPY = {
   default: { label: "Default", note: "Soft gray, light", Icon: Palette, page: "#f1f2f4", card: "#fcfcfd", ink: "#23262b" },
   midnight: { label: "Midnight", note: "Soft gray, dark", Icon: MoonStar, page: "#17191d", card: "#25282e", ink: "#eceef1" },
   daylight: { label: "Daylight", note: "Bright, glass over a sky", Icon: Sun, page: "#cfe3f7", card: "#ffffff", ink: "#1a1d21" },
+  greenfields: { label: "Greenfields", note: "Bright, glass over green fields", Icon: Leaf, page: "#dcefd9", card: "#ffffff", ink: "#16231a" },
   moonlight: { label: "Moonlight", note: "Dark, glass over a night sky", Icon: Moon, page: "#1c2340", card: "#2b3350", ink: "#eceef1" },
 } satisfies Record<Theme, { label: string; note: string; Icon: LucideIcon; page: string; card: string; ink: string }>;
 
 type ShellThemeSwitchProps = {
   collapsed?: boolean;
+  tooltipSide?: "top" | "right" | "bottom" | "left";
 };
 
 // -----
@@ -26,7 +28,7 @@ type ShellThemeSwitchProps = {
 // tile, so the list can grow without crowding the footer. Picking a tile
 // applies the theme at once and closes the dialog.
 // -----
-export function ShellThemeSwitch({ collapsed = false }: ShellThemeSwitchProps) {
+export function ShellThemeSwitch({ collapsed = false, tooltipSide = "right" }: ShellThemeSwitchProps) {
   const { theme, setTheme } = useTheme();
   const [open, setOpen] = useState(false);
   const { Icon, label } = THEME_COPY[theme];
@@ -40,7 +42,7 @@ export function ShellThemeSwitch({ collapsed = false }: ShellThemeSwitchProps) {
       >
         <Icon strokeWidth={1.5} />
       </TooltipTrigger>
-      <TooltipContent side="right">
+      <TooltipContent side={tooltipSide}>
         Theme: {label}
         <span className="block text-muted-foreground">Click to change</span>
       </TooltipContent>
@@ -67,7 +69,7 @@ export function ShellThemeSwitch({ collapsed = false }: ShellThemeSwitchProps) {
       <DialogContent className="max-w-[34rem]">
         <DialogHeader>
           <DialogTitle>Theme</DialogTitle>
-          <DialogDescription>Pick how the dashboard looks. It is saved in this browser.</DialogDescription>
+          <DialogDescription>Pick how EliseLAB looks. It is saved in this browser.</DialogDescription>
         </DialogHeader>
         <DialogBody>
           <fieldset className="m-0 grid min-w-0 gap-3 border-0 p-0 sm:grid-cols-2">

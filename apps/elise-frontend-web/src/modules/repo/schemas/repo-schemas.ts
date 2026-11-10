@@ -25,9 +25,28 @@ const BranchNameSchema = z.string().superRefine((name, ctx) => {
   if (error) ctx.addIssue({ code: "custom", message: error });
 });
 
+const REPO_URL_MESSAGE = "That doesn't look like a GitHub repository link. Use the form https://github.com/owner/name.";
+
 export const AddRepoInputSchema = z.object({
-  repo: z.string().regex(REPO_URL_PATTERN, "That doesn't look like a GitHub repository link. Use the form https://github.com/owner/name."),
+  repo: z.string().regex(REPO_URL_PATTERN, REPO_URL_MESSAGE),
   branches: z.array(BranchNameSchema).max(REPO_BRANCH_LIMIT).optional(),
+});
+
+// -----
+// The add dialog's fields. A branch row left empty is ignored, so it
+// is the only name that is not checked.
+// -----
+const BranchRowSchema = z.object({
+  id: z.string(),
+  name: z.string().superRefine((name, ctx) => {
+    const error = name === "" ? null : branchNameError(name);
+    if (error) ctx.addIssue({ code: "custom", message: error });
+  }),
+});
+
+export const AddRepoDetailsSchema = z.object({
+  repo: z.string().trim().regex(REPO_URL_PATTERN, REPO_URL_MESSAGE),
+  branches: z.array(BranchRowSchema).max(REPO_BRANCH_LIMIT),
 });
 
 

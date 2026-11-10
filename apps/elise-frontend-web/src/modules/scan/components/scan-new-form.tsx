@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { useForm, useStore } from "@tanstack/react-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { ChevronDown, GitBranch } from "lucide-react";
@@ -6,10 +7,12 @@ import { toast } from "sonner";
 import { Button } from "#/components/ui/button";
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "#/components/ui/collapsible";
 import { DialogBody, DialogClose, DialogFooter } from "#/components/ui/dialog";
+import { FieldError } from "#/components/ui/field-error";
 import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
 import { RadioCard, RadioGroup } from "#/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#/components/ui/select";
+import { fieldAria, fieldMessage } from "#/lib/form-field";
 import { cn } from "#/lib/utils";
 import { githubReposQuery, type GithubRepo } from "#/modules/github";
 import { usageQuery, usageUsd } from "#/modules/usage";
@@ -99,8 +102,29 @@ type ScanNewFormProps = {
   startOptions?: Partial<Pick<CreateScanInput, "model" | "effort" | "skill" | "profile">>;
 };
 
+// -----
+// The plan is the repository and branch the person chose plus the form's
+// own values, so the validator runs on the plan, not on the raw fields.
+// A branch problem goes under the branch field; any other goes under the
+// repository field, where the person is already looking.
+// -----
+const planErrors = (plan: CreateScanInput) => {
+  const parsed = CreateScanInputSchema.safeParse(plan);
+  if (parsed.success) return undefined;
+  const refIssue = parsed.error.issues.find((issue) => issue.path[0] === "ref");
+  const repoIssue = parsed.error.issues.find((issue) => issue.path[0] !== "ref");
+  return { fields: { ...(repoIssue && { repo: repoIssue.message }), ...(refIssue && { ref: refIssue.message }) } };
+};
+
 export function ScanNewForm({ onDone, repo, startBranch, startRef, startOptions }: ScanNewFormProps) {
-  const [values, setValues] = useState<CreateScanInput>({ ...INITIAL, ...startOptions, ref: startRef });
+  const initial: CreateScanInput = { ...INITIAL, ...startOptions, ref: startRef };
+  const form = useForm({
+    defaultValues: initial,
+    validators: { onSubmit: () => planErrors(plan) },
+    onSubmit: () => start.mutate(CreateScanInputSchema.parse(plan)),
+    onSubmitInvalid: () => repoInput.current?.focus(),
+  });
+  const values = useStore(form.store, (state) => state.values);
   const [picked, setPicked] = useState<string | null>(null);
   const repoInput = useRef<HTMLInputElement>(null);
   const { data: list } = useQuery(scansQuery());
@@ -127,7 +151,6 @@ export function ScanNewForm({ onDone, repo, startBranch, startRef, startOptions 
   const privateRef = privateBranch === OTHER_BRANCH ? values.ref : privateBranch === DEFAULT_BRANCH ? undefined : privateBranch;
   const plan: CreateScanInput = isPrivate ? { ...values, repo: privatePicked?.url ?? "", ref: privateRef } : { ...values, repo: typing ? values.repo : choice, ref };
   const freeBranch = typing || branchPick === OTHER_BRANCH;
-  const [repoError, setRepoError] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
@@ -142,26 +165,18 @@ export function ScanNewForm({ onDone, repo, startBranch, startRef, startOptions 
     onError: (error) => toast.error(`We couldn't start the audit. ${error.message}`),
   });
 
-  const set = <K extends keyof CreateScanInput>(key: K, value: CreateScanInput[K]) => {
-    if (key === "repo") setRepoError(null);
-    setValues((current) => ({ ...current, [key]: value }));
-  };
-
-  const submit = (event: React.FormEvent) => {
-    event.preventDefault();
-    const parsed = CreateScanInputSchema.safeParse(plan);
-    if (!parsed.success) {
-      setRepoError(parsed.error.issues[0]?.message ?? "Check the repository link and try again.");
-      repoInput.current?.focus();
-      return;
-    }
-    start.mutate(parsed.data);
-  };
-
   const summary = scanPlanSummary(plan);
 
   return (
-    <form onSubmit={submit} className="flex min-h-0 flex-1 flex-col">
+    <form
+      noValidate
+      onSubmit={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        void form.handleSubmit();
+      }}
+      className="flex min-h-0 flex-1 flex-col"
+    >
       <DialogBody className="grid content-start gap-6">
         <div className="grid gap-2">
           <span id="source-label" className="text-sm font-medium leading-none">
@@ -188,10 +203,10 @@ export function ScanNewForm({ onDone, repo, startBranch, startRef, startOptions 
               onRepo={(next) => {
                 setPrivateRepo(next);
                 setPrivateBranch(DEFAULT_BRANCH);
-                set("ref", undefined);
+                form.setFieldValue("ref", undefined);
               }}
               onBranchPick={setPrivateBranch}
-              onTypedRef={(next) => set("ref", next)}
+              onTypedRef={(next) => form.setFieldValue("ref", next)}
             />
             {privateRunning && privatePicked && (
               <output className="block rounded-md border border-status-warning/25 bg-status-warning-soft px-3 py-2 text-sm text-status-warning">
@@ -209,7 +224,7 @@ export function ScanNewForm({ onDone, repo, startBranch, startRef, startOptions 
                 items={[...known.map((item) => ({ value: item.url, label: item.label })), ...(chosen === undefined && !typing ? [{ value: choice, label: scanRepoLabel(choice) }] : []), { value: OTHER_REPO, label: "A different repository" }]}
                 onValueChange={(next) => {
                   if (next) {
-                    setRepoError(null);
+                    form.setFieldMeta("repo", (meta) => ({ ...meta, errorMap: {} }));
                     setBranchPick(DEFAULT_BRANCH);
                     setPicked(next);
                   }
@@ -242,30 +257,34 @@ export function ScanNewForm({ onDone, repo, startBranch, startRef, startOptions 
               <Label htmlFor="repo" className={known.length > 0 ? "mt-2" : undefined}>
                 {known.length > 0 ? "Link to the GitHub repository" : "Which repository should we audit?"}
               </Label>
-              <div className="relative">
-                <GitBranch className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  id="repo"
-                  ref={repoInput}
-                  className="pl-9"
-                  placeholder="https://github.com/owner/name"
-                  autoComplete="off"
-                  value={values.repo}
-                  onChange={(e) => set("repo", e.target.value)}
-                  aria-invalid={repoError ? true : undefined}
-                  aria-describedby={repoError ? "repo-error" : "repo-help"}
-                  required
-                />
-              </div>
-              {repoError ? (
-                <p id="repo-error" role="alert" className="text-sm text-destructive">
-                  {repoError}
-                </p>
-              ) : (
-                <p id="repo-help" className="text-xs text-muted-foreground">
-                  {SCAN_PUBLIC_HELP}
-                </p>
-              )}
+              <form.Field name="repo">
+                {(field) => (
+                  <>
+                    <div className="relative">
+                      <GitBranch className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        id="repo"
+                        ref={repoInput}
+                        name={field.name}
+                        className="pl-9"
+                        placeholder="https://github.com/owner/name"
+                        autoComplete="off"
+                        value={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChange={(event) => field.handleChange(event.target.value)}
+                        {...fieldAria(field, "repo", "repo-help")}
+                      />
+                    </div>
+                    {fieldMessage(field) ? (
+                      <FieldError id="repo" message={fieldMessage(field)} />
+                    ) : (
+                      <p id="repo-help" className="text-xs text-muted-foreground">
+                        {SCAN_PUBLIC_HELP}
+                      </p>
+                    )}
+                  </>
+                )}
+              </form.Field>
             </>
           )}
           {!typing && chosen !== undefined && (
@@ -317,8 +336,30 @@ export function ScanNewForm({ onDone, repo, startBranch, startRef, startOptions 
               <Label htmlFor="ref" className={typing ? "mt-2" : undefined}>
                 {typing ? "Which branch should we audit? (optional)" : "Branch name or commit"}
               </Label>
-              <Input id="ref" className="font-mono" autoComplete="off" placeholder="Leave empty for the default branch" value={values.ref ?? ""} onChange={(e) => set("ref", e.target.value === "" ? undefined : e.target.value)} />
-              <p className="text-xs text-muted-foreground">Capital letters count. A branch, tag or commit of the repository.</p>
+              <form.Field name="ref">
+                {(field) => (
+                  <>
+                    <Input
+                      id="ref"
+                      name={field.name}
+                      className="font-mono"
+                      autoComplete="off"
+                      placeholder="Leave empty for the default branch"
+                      value={field.state.value ?? ""}
+                      onBlur={field.handleBlur}
+                      onChange={(event) => field.handleChange(event.target.value === "" ? undefined : event.target.value)}
+                      {...fieldAria(field, "ref", "ref-help")}
+                    />
+                    {fieldMessage(field) ? (
+                      <FieldError id="ref" message={fieldMessage(field)} />
+                    ) : (
+                      <p id="ref-help" className="text-xs text-muted-foreground">
+                        Capital letters count. A branch, tag or commit of the repository.
+                      </p>
+                    )}
+                  </>
+                )}
+              </form.Field>
             </>
           )}
           {!typing && chosen?.running && (
@@ -333,7 +374,7 @@ export function ScanNewForm({ onDone, repo, startBranch, startRef, startOptions 
           <span id="skill-label" className="text-sm font-medium leading-none">
             How thorough should the review be?
           </span>
-          <RadioGroup aria-labelledby="skill-label" value={values.skill} onValueChange={(next) => set("skill", SCAN_SKILL_OPTIONS.find((o) => o.value === next)?.value ?? "lite")} className="grid-cols-2">
+          <RadioGroup aria-labelledby="skill-label" value={values.skill} onValueChange={(next) => form.setFieldValue("skill", SCAN_SKILL_OPTIONS.find((o) => o.value === next)?.value ?? "lite")} className="grid-cols-2">
             {SCAN_SKILL_OPTIONS.map((option) => (
               <RadioCard key={option.value} value={option.value} title={option.label} description={option.description} />
             ))}
@@ -348,7 +389,7 @@ export function ScanNewForm({ onDone, repo, startBranch, startRef, startOptions 
             <RadioGroup
               aria-labelledby="profile-label"
               value={values.profile}
-              onValueChange={(next) => set("profile", SCAN_PROFILE_OPTIONS.find((o) => o.value === next)?.value ?? "standard")}
+              onValueChange={(next) => form.setFieldValue("profile", SCAN_PROFILE_OPTIONS.find((o) => o.value === next)?.value ?? "standard")}
               className="grid-cols-3"
             >
               {SCAN_PROFILE_OPTIONS.map((option) => (
@@ -368,11 +409,11 @@ export function ScanNewForm({ onDone, repo, startBranch, startRef, startOptions 
             <div className="grid grid-cols-2 items-start gap-4 pt-4">
               <div className="grid gap-2">
                 <Label htmlFor="model">Which Claude model should run the audit?</Label>
-                <OptionSelect id="model" options={SCAN_MODEL_OPTIONS} value={values.model} onPick={(v) => set("model", v)} />
+                <OptionSelect id="model" options={SCAN_MODEL_OPTIONS} value={values.model} onPick={(v) => form.setFieldValue("model", v)} />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="effort">How much effort should it put in?</Label>
-                <OptionSelect id="effort" options={SCAN_EFFORT_OPTIONS} value={values.effort} onPick={(v) => set("effort", v)} />
+                <OptionSelect id="effort" options={SCAN_EFFORT_OPTIONS} value={values.effort} onPick={(v) => form.setFieldValue("effort", v)} />
                 <p className="text-xs text-muted-foreground">More effort can find more issues, but takes longer and costs more.</p>
               </div>
             </div>

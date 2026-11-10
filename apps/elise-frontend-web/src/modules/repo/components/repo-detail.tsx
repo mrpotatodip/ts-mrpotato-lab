@@ -1,17 +1,19 @@
-import { Suspense, useState } from "react";
+import { Suspense, useState, type ComponentProps } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQueryClient, useSuspenseInfiniteQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useTable } from "@tanstack/react-table";
 import { ChevronRight, CircleAlert, ExternalLink, GitBranch, Search, ShieldCheck, Undo2 } from "lucide-react";
 import { Alert, AlertDescription } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
+import { DataTable } from "#/components/ui/data-table";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "#/components/ui/empty";
 import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#/components/ui/select";
 import { Skeleton } from "#/components/ui/skeleton";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "#/components/ui/table";
 import { Tooltip, TooltipContent, TooltipTrigger } from "#/components/ui/tooltip";
+import { dataTableColumns, dataTableFeatures } from "#/lib/data-table";
 import { cn } from "#/lib/utils";
 import { GithubPrivateBadge } from "#/modules/github";
 import { ShellPageHeader } from "#/modules/shell";
@@ -58,7 +60,7 @@ const firstFilledFilter = (findings: readonly RepoFinding[]): FindingFilter =>
 function ScanLink({ scanId, history }: { scanId: string; history: readonly ScanStatus[] }) {
   const scan = history.find((item) => item.scanId === scanId);
   return (
-    <Link to="/scans/$scanId" params={{ scanId }} className="rounded-sm underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+    <Link to="/scans/$scanId" params={{ scanId }} className="inline-flex min-h-6 items-center rounded-sm underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
       {scan ? <ScanTime value={scan.createdAt} /> : "Open the scan"}
     </Link>
   );
@@ -92,6 +94,134 @@ function RepoFindingFacts({ finding, history }: { finding: RepoFinding; history:
   );
 }
 
+type FindingRow = {
+  finding: RepoFinding;
+  selected: boolean;
+  open: () => void;
+  repoId: string;
+  fixedOn: string | null;
+  onSaved: ComponentProps<typeof FindingTriageSelect>["onSaved"];
+};
+
+const findingColumn = dataTableColumns<FindingRow>();
+
+const severityColumn = findingColumn.display({
+  id: "severity",
+  header: "Severity",
+  meta: { head: "whitespace-nowrap" },
+  cell: ({ row }) => <ScanSeverityBadge severity={row.original.finding.severity} />,
+});
+
+const titleColumn = findingColumn.display({
+  id: "finding",
+  header: "Finding",
+  meta: { head: "w-[36%]" },
+  cell: ({ row }) => (
+    <>
+      <button
+        type="button"
+        aria-haspopup="dialog"
+        onClick={row.original.open}
+        className="rounded-sm text-left font-medium after:absolute after:inset-0 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        {row.original.finding.title}
+      </button>
+      {row.original.finding.unchecked && <p className="mt-1 text-sm leading-relaxed text-muted-foreground">Not re-checked in the latest scan</p>}
+    </>
+  ),
+});
+
+const statusColumn = findingColumn.display({
+  id: "status",
+  header: "Status",
+  cell: ({ row }) => <FindingStatusBadge state={row.original.finding.state} triage={row.original.finding.triage} />,
+});
+
+const whereColumn = findingColumn.display({
+  id: "where",
+  header: "Where",
+  meta: { cell: "max-w-[18rem]" },
+  cell: ({ row }) => <FindingLocation file={row.original.finding.file} line={row.original.finding.line} />,
+});
+
+const decisionColumn = findingColumn.display({
+  id: "decision",
+  header: "Your decision",
+  meta: { cell: "relative z-10" },
+  cell: ({ row }) => {
+    const { finding, repoId, fixedOn, onSaved } = row.original;
+    return (
+      <span className="grid justify-items-start gap-1.5">
+        {finding.state !== "fixed_by_code" && <FindingTriageSelect finding={finding} also={[repoKeys.detail(repoId)]} onSaved={onSaved} />}
+        <FindingDecisionNote state={finding.state} triage={finding.triage} fixedOn={fixedOn} />
+      </span>
+    );
+  },
+});
+
+const openColumn = findingColumn.display({
+  id: "open",
+  header: () => <span className="sr-only">Open</span>,
+  meta: { head: "w-10" },
+  cell: () => <ChevronRight aria-hidden="true" className="size-4 text-muted-foreground" />,
+});
+
+const findingColumnsWithStatus = findingColumn.columns([severityColumn, titleColumn, statusColumn, whereColumn, decisionColumn, openColumn]);
+const findingColumnsWithoutStatus = findingColumn.columns([severityColumn, titleColumn, whereColumn, decisionColumn, openColumn]);
+
+type RecentScanRow = ScanStatus & { oneOff: boolean };
+
+const scanColumn = dataTableColumns<RecentScanRow>();
+
+const recentScanColumns = scanColumn.columns([
+  scanColumn.display({
+    id: "started",
+    header: "Started",
+    cell: ({ row }) => (
+      <Link to="/scans/$scanId" params={{ scanId: row.original.scanId }} className="after:absolute after:inset-0 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+        <ScanTime value={row.original.createdAt} />
+      </Link>
+    ),
+  }),
+  scanColumn.display({ id: "status", header: "Status", cell: ({ row }) => <ScanStatusBadge status={row.original.status} /> }),
+  scanColumn.display({
+    id: "commit",
+    header: "Commit",
+    meta: { cell: "font-mono text-xs text-muted-foreground" },
+    cell: ({ row }) => (
+      <>
+        {row.original.commitSha ? row.original.commitSha.slice(0, 7) : "-"}
+        {row.original.oneOff && <span className="ml-2 font-sans" title="A one-off scan of this commit. Its findings count toward the commit's answer but are not added to the branch's findings.">one-off scan</span>}
+      </>
+    ),
+  }),
+  scanColumn.display({
+    id: "findings",
+    header: "Findings",
+    cell: ({ row }) => {
+      const scan = row.original;
+      if (scan.summary) {
+        return (
+          <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span className="font-medium tabular-nums">{scanPlural(scan.summary.total, "finding", "findings")}</span>
+            <ScanSeverityDots counts={scan.summary.severity} />
+            {unratedOf(scan.summary) > 0 && <span className="text-xs text-muted-foreground">{unratedOf(scan.summary)} unrated</span>}
+            {scan.summary.new > 0 && <span className="text-xs text-muted-foreground">{scan.summary.new} new</span>}
+          </span>
+        );
+      }
+      if (scan.status === "failed") return <span className="text-sm text-status-danger">{scanFailure(scan.error).title}</span>;
+      return <span className="text-muted-foreground">{scan.status === "succeeded" ? "Not recorded" : "No report"}</span>;
+    },
+  }),
+  scanColumn.display({
+    id: "open",
+    header: () => <span className="sr-only">Open</span>,
+    meta: { head: "w-10" },
+    cell: () => <ChevronRight aria-hidden="true" className="size-4 text-muted-foreground" />,
+  }),
+]);
+
 function RepoFindings({ repoId, branch, history }: { repoId: string; branch: string; history: readonly ScanStatus[] }) {
   const queryClient = useQueryClient();
   const findingsOptions = repoFindingsQuery(repoId, { branch });
@@ -110,13 +240,15 @@ function RepoFindings({ repoId, branch, history }: { repoId: string; branch: str
   const findings = query === "" ? inGroup : inGroup.filter((f) => [f.title, f.file ?? "", f.class].some((text) => text.toLowerCase().includes(query)));
   const selectedFinding = selected === undefined ? undefined : findings[selected];
   const showStatus = filter === "action" || filter === "all";
+  const rows = findings.map((finding, index) => ({ finding, selected: index === selected, open: () => setSelected(index), repoId, fixedOn: fixedOnOf(finding, history), onSaved: decided }));
+  const table = useTable({ features: dataTableFeatures, columns: showStatus ? findingColumnsWithStatus : findingColumnsWithoutStatus, data: rows, getRowId: (row) => row.finding.id });
 
   return (
     <Card>
       <CardHeader className="flex-row flex-wrap items-center justify-between gap-3 pb-7">
         <div className="grid max-w-xl gap-1.5">
           <CardTitle>Findings history</CardTitle>
-          <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">
+          <p className="max-w-copy text-sm leading-relaxed text-muted-foreground">
             {FILTER_COPY[filter].note}
             {findings.length > 0 ? (filter === "action" ? " Select a row for the impact, evidence and fix, and record your decision." : " Select a row to read the impact, evidence and fix.") : ""}
           </p>
@@ -170,57 +302,7 @@ function RepoFindings({ repoId, branch, history }: { repoId: string; branch: str
             </EmptyContent>
           </Empty>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="whitespace-nowrap">Severity</TableHead>
-                <TableHead className="w-[36%]">Finding</TableHead>
-                {showStatus && <TableHead>Status</TableHead>}
-                <TableHead>Where</TableHead>
-                <TableHead>Your decision</TableHead>
-                <TableHead className="w-10">
-                  <span className="sr-only">Open</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {findings.map((finding, index) => (
-                <TableRow key={finding.id} className={cn("relative", index === selected && "bg-accent")}>
-                  <TableCell>
-                    <ScanSeverityBadge severity={finding.severity} />
-                  </TableCell>
-                  <TableCell>
-                    <button
-                      type="button"
-                      aria-haspopup="dialog"
-                      onClick={() => setSelected(index)}
-                      className="rounded-sm text-left font-medium after:absolute after:inset-0 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    >
-                      {finding.title}
-                    </button>
-                    {finding.unchecked && <p className="mt-1 text-sm leading-relaxed text-muted-foreground">Not re-checked in the latest scan</p>}
-                  </TableCell>
-                  {showStatus && (
-                    <TableCell>
-                      <FindingStatusBadge state={finding.state} triage={finding.triage} />
-                    </TableCell>
-                  )}
-                  <TableCell className="max-w-[18rem]">
-                    <FindingLocation file={finding.file} line={finding.line} />
-                  </TableCell>
-                  <TableCell className="relative z-10">
-                    <span className="grid justify-items-start gap-1.5">
-                      {finding.state !== "fixed_by_code" && <FindingTriageSelect finding={finding} also={[repoKeys.detail(repoId)]} onSaved={decided} />}
-                      <FindingDecisionNote state={finding.state} triage={finding.triage} fixedOn={fixedOnOf(finding, history)} />
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <ChevronRight aria-hidden="true" className="size-4 text-muted-foreground" />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <DataTable table={table} rowProps={(row) => ({ className: cn("relative", row.original.selected && "bg-accent") })} />
         )}
         {hasNextPage && (
           <div className="flex justify-center border-t p-3">
@@ -276,6 +358,8 @@ export function RepoDetail({ repoId, branchId }: { repoId: string; branchId?: st
   const olderScans = branchScans.length - recentScans.length;
   const newestScan = branchScans[0];
   const github = repo.url.replace(/\.git$/, "").replace(/\/$/, "");
+  const recentRows = recentScans.map((scan) => ({ ...scan, oneOff: Boolean(current && !scan.branchId && scan.commitSha) }));
+  const recentTable = useTable({ features: dataTableFeatures, columns: recentScanColumns, data: recentRows, getRowId: (scan) => scan.scanId });
 
   return (
     <>
@@ -306,7 +390,7 @@ export function RepoDetail({ repoId, branchId }: { repoId: string; branchId?: st
               </div>
             )}
             {current ? (
-              <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+              <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm leading-relaxed text-muted-foreground">
                 {newestScan ? (
                   <>
                     <ScanStatusBadge status={newestScan.status} />
@@ -393,59 +477,12 @@ export function RepoDetail({ repoId, branchId }: { repoId: string; branchId?: st
       <Card>
         <CardHeader className="gap-1.5 pb-7">
           <CardTitle>Recent scans</CardTitle>
-          <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">
+          <p className="max-w-copy text-sm leading-relaxed text-muted-foreground">
             The latest {current ? "scans of this branch" : "scans of this repository"}. Open one for its report and what changed.
           </p>
         </CardHeader>
         <CardContent className="overflow-hidden p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Started</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Commit</TableHead>
-                <TableHead>Findings</TableHead>
-                <TableHead className="w-10">
-                  <span className="sr-only">Open</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {recentScans.map((scan) => (
-                <TableRow key={scan.scanId} className="relative">
-                  <TableCell>
-                    <Link to="/scans/$scanId" params={{ scanId: scan.scanId }} className="after:absolute after:inset-0 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                      <ScanTime value={scan.createdAt} />
-                    </Link>
-                  </TableCell>
-                  <TableCell>
-                    <ScanStatusBadge status={scan.status} />
-                  </TableCell>
-                  <TableCell className="font-mono text-xs text-muted-foreground">
-                    {scan.commitSha ? scan.commitSha.slice(0, 7) : "-"}
-                    {current && !scan.branchId && scan.commitSha && <span className="ml-2 font-sans" title="A one-off scan of this commit. Its findings count toward the commit's answer but are not added to the branch's findings.">one-off scan</span>}
-                  </TableCell>
-                  <TableCell>
-                    {scan.summary ? (
-                      <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                        <span className="font-medium tabular-nums">{scanPlural(scan.summary.total, "finding", "findings")}</span>
-                        <ScanSeverityDots counts={scan.summary.severity} />
-                        {unratedOf(scan.summary) > 0 && <span className="text-xs text-muted-foreground">{unratedOf(scan.summary)} unrated</span>}
-                        {scan.summary.new > 0 && <span className="text-xs text-muted-foreground">{scan.summary.new} new</span>}
-                      </span>
-                    ) : scan.status === "failed" ? (
-                      <span className="text-sm text-status-danger">{scanFailure(scan.error).title}</span>
-                    ) : (
-                      <span className="text-muted-foreground">{scan.status === "succeeded" ? "Not recorded" : "No report"}</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <ChevronRight aria-hidden="true" className="size-4 text-muted-foreground" />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <DataTable table={recentTable} rowProps={() => ({ className: "relative" })} />
           {(olderScans > 0 || otherScans > 0) && (
             <p className="border-t px-6 py-3 text-sm leading-relaxed text-muted-foreground">
               {olderScans > 0 && `${scanPlural(olderScans, "older scan", "older scans")} of this ${current ? "branch" : "repository"}. `}

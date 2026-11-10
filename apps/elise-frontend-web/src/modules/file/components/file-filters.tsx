@@ -9,7 +9,7 @@ import { Tabs, TabsList, TabsTrigger } from "#/components/ui/tabs";
 import { repoName } from "#/modules/repo";
 import { scanRepoBranchesQuery, scanReposQuery } from "#/modules/scan";
 import { ShellFilterBar, ShellSearchField } from "#/modules/shell";
-import { FILE_ALL_HINT, FILE_LABELS, FILE_TIME_HINT } from "../constants";
+import { FILE_LABELS, FILE_TIME_HINT } from "../constants";
 import { FILE_LISTED_NAMES, type FileCount, type FilesSearch } from "../schemas";
 
 const ALL = "all";
@@ -83,8 +83,9 @@ export function FileFilters({ filters, counts, showClear, onChange }: FileFilter
           ))}
         </TabsList>
       </Tabs>
-      <p className="text-sm text-muted-foreground">
-        {filters.name ? FILE_LABELS[filters.name].hint : FILE_ALL_HINT} {FILE_TIME_HINT}
+      <p className="max-w-copy text-sm leading-relaxed text-muted-foreground">
+        {filters.name ? `${FILE_LABELS[filters.name].hint}. ` : ""}
+        {FILE_TIME_HINT}
       </p>
 
       <div className="flex flex-wrap items-end gap-3">

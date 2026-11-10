@@ -11,7 +11,7 @@ How `GET /repos/:repoId/verdict?commit=<sha>` decides in `apps/elise-engine-api`
 
 ## When it passes
 
-- **At least 2 succeeded `lite` Scans of the commit.** One look can miss a problem and the agent differs from run to run. A Scan of a ref counts, because the Verdict is about the commit, not the branch. Fewer than 2 is `cannot_tell`, with "N of 2" as the reason. The caller starts the next Scan: Elise spends no tokens unasked.
+- **At least 2 succeeded `lite` Scans of the commit.** One look can miss a problem and the agent differs from run to run. A Scan of a ref counts, because the Verdict is about the commit, not the branch. Fewer than 2 is `cannot_tell`, with "N of 2" as the reason. The caller starts the next Scan: EliseLAB spends no tokens unasked.
 - **Findings are merged, never averaged.** A problem that any Scan of the commit found is open, at the worst severity any Scan gave it. A second Scan can only make the Verdict stricter. A single `not_found` in the History does not cancel a Finding that another Scan of the same commit saw.
 - **Every Prior finding was checked.** In each of the 2 newest Scans, `priors_unchecked` is 0 and `priors_given` is below 50. At 50 the agent was asked about only the worst 50, so the Verdict cannot tell. Older Scans are not asked: a Scan that ran out of budget must not block a commit that two good Scans have since cleared.
 - **Within the limit.** 0 critical, 0 high, at most 3 medium. A problem still `needs_validation` blocks until a person decides it. Low and informational never block. One fixed default for every account; per-account limits wait until someone needs them.
@@ -28,6 +28,6 @@ How `GET /repos/:repoId/verdict?commit=<sha>` decides in `apps/elise-engine-api`
 
 ## Not built
 
-- A CI step or GitHub check. Elise has no GitHub App, so a CI step needs its own design once someone names the pipeline.
+- A CI step or GitHub check. EliseLAB has no GitHub App, so a CI step needs its own design once someone names the pipeline.
 - Queuing the second Scan by itself.
 - A third Scan. Raise the minimum (`VERDICT_MIN_SCANS`) only if real Scans show the second one still finds new problems.

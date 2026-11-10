@@ -67,7 +67,7 @@ export function RepoAttentionList({ repos }: { repos: readonly Repo[] }) {
       <CardHeader className="flex-row items-start justify-between gap-3">
         <div className="grid gap-1.5">
           <CardTitle>Where to look first</CardTitle>
-          <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">Every repository, the most urgent first.</p>
+          <p className="max-w-copy text-sm leading-relaxed text-muted-foreground">Every repository, the most urgent first.</p>
         </div>
         <Link to="/repos" className={ALL_LINK}>
           All repositories
@@ -91,7 +91,7 @@ export function RepoAttentionList({ repos }: { repos: readonly Repo[] }) {
         {more > 0 && <p className="text-sm text-muted-foreground">{scanPlural(more, "more repository", "more repositories")}, ranked lower.</p>}
         {more === 0 && (
           <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-5">
-            <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">Track another repository to see it here.</p>
+            <p className="max-w-copy text-sm leading-relaxed text-muted-foreground">Track another repository to see it here.</p>
             <RepoAddDialog />
           </div>
         )}

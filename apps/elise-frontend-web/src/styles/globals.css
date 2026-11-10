@@ -1,6 +1,16 @@
 @import "tailwindcss";
 @import "sonner/dist/styles.css";
 
+/* -----
+   DESIGN.md asks for at most about 65 characters a line. Tailwind's max-w-prose
+   is 65ch, the width of 65 zeros, which fits 71 to 80 letters of this font.
+   Redefining max-w-prose does not work (the built-in wins), so reading text
+   uses max-w-copy: 52ch measures at 64 characters or fewer.
+   ----- */
+@utility max-w-copy {
+  max-width: 52ch;
+}
+
 :root {
   color-scheme: light;
   --background: oklch(0.958 0.004 258);
@@ -111,6 +121,36 @@
 }
 
 /* -----
+   Greenfields: Daylight's brightness and glass on a warm green ramp (hue 150)
+   under a picture of fields. Status, severity and mark colours stay Default's.
+   ----- */
+:root[data-theme="greenfields"] {
+  /* --greenfields-sky is set by themeInitScript to the random pick; the url
+     after it is only the no-JavaScript fallback. */
+  --sky: var(--greenfields-sky, url("/theme-bgs/bg-greenfields-1.jpeg"));
+  --bg-color: oklch(0.99 0.008 150);
+  --background: oklch(0.985 0.006 150 / 0.12);
+  --foreground: oklch(0.17 0.02 150);
+  --sidebar: oklch(0.99 0.006 150 / 0.42);
+  --card: oklch(1 0.004 150 / 0.74);
+  --card-foreground: oklch(0.2 0.02 150);
+  --popover: oklch(1 0.004 150 / 0.9);
+  --popover-foreground: oklch(0.2 0.02 150);
+  --primary: oklch(0.32 0.07 150);
+  --primary-ink: oklch(0.34 0.07 150);
+  --secondary: oklch(0.935 0.012 150);
+  --secondary-foreground: oklch(0.26 0.04 150);
+  --muted: oklch(0.965 0.008 150 / 0.45);
+  --muted-foreground: oklch(0.36 0.025 150);
+  --accent: oklch(0.3 0.06 150 / 0.08);
+  --accent-foreground: oklch(0.2 0.04 150);
+  --border: oklch(0.2 0.04 150 / 0.15);
+  --input: oklch(0.2 0.04 150 / 0.28);
+  --ring: oklch(0.38 0.07 150 / 0.6);
+  --selection: oklch(0.4 0.08 150 / 0.2);
+}
+
+/* -----
    Moonlight: a dark theme on the same cool ramp (hue 258). Surfaces get
    lighter as they come forward, as in light. The primary action flips to
    near-white with dark text. Status and severity inks are light so they
@@ -209,6 +249,7 @@
    the page and the surfaces above it blur what is under them.
    ----- */
 :root[data-theme="daylight"],
+:root[data-theme="greenfields"],
 :root[data-theme="moonlight"] {
   background-color: var(--bg-color);
 }
@@ -221,6 +262,7 @@
    modules/shell/constants/theme-skies.ts, not here.
    ----- */
 :root[data-theme="daylight"]::before,
+:root[data-theme="greenfields"]::before,
 :root[data-theme="moonlight"]::before {
   content: "";
   position: fixed;
@@ -252,10 +294,17 @@
      no veil over it: the page header's text halo keeps the text readable. */
   top: 2.5rem;
 }
+/* Sign in, sign up and invite pages have no top bar, so the sky starts at the
+   top instead of leaving an empty dark strip above it. They mark themselves
+   with data-public-page (ShellPublicThemeSwitch). */
+:root[data-theme="moonlight"]:has([data-public-page])::before {
+  top: 0;
+}
 /* Page titles and their description sit straight on the sky, with no glass
    behind them. A soft dark halo and a brighter description keep them
    readable over bright clouds in Moonlight. */
-:root[data-theme="daylight"] [data-slot="page-header"] {
+:root[data-theme="daylight"] [data-slot="page-header"],
+:root[data-theme="greenfields"] [data-slot="page-header"] {
   text-shadow: 0 0 14px oklch(1 0 0 / 0.9), 0 0 3px oklch(1 0 0 / 0.7);
 }
 :root[data-theme="moonlight"] [data-slot="page-header"] {
@@ -269,6 +318,7 @@
    into a near-opaque one. In both glass themes the inner one is clear, so
    the whole card is one pane of glass. */
 :root[data-theme="daylight"] .bg-card .bg-card,
+:root[data-theme="greenfields"] .bg-card .bg-card,
 :root[data-theme="moonlight"] .bg-card .bg-card {
   background-color: transparent;
   -webkit-backdrop-filter: none;
@@ -278,10 +328,12 @@
    dialog body is a second layer, so it is clear. Menus and tooltips keep the
    stronger popover fill so they stay legible over page text. */
 :root[data-theme="daylight"] :is([data-slot="dialog-content"], [data-slot="sheet-content"]),
+:root[data-theme="greenfields"] :is([data-slot="dialog-content"], [data-slot="sheet-content"]),
 :root[data-theme="moonlight"] :is([data-slot="dialog-content"], [data-slot="sheet-content"]) {
   background-color: var(--card);
 }
 :root[data-theme="daylight"] :is([data-slot="dialog-content"], [data-slot="sheet-content"]) .bg-popover,
+:root[data-theme="greenfields"] :is([data-slot="dialog-content"], [data-slot="sheet-content"]) .bg-popover,
 :root[data-theme="moonlight"] :is([data-slot="dialog-content"], [data-slot="sheet-content"]) .bg-popover {
   background-color: transparent;
   -webkit-backdrop-filter: none;
@@ -291,15 +343,18 @@
    header fill behind it. A clear body hides nothing, so the header fill would
    show through below the header. Here they meet edge to edge instead. */
 :root[data-theme="daylight"] :is([data-slot="card-header"], [data-slot="dialog-header"]),
+:root[data-theme="greenfields"] :is([data-slot="card-header"], [data-slot="dialog-header"]),
 :root[data-theme="moonlight"] :is([data-slot="card-header"], [data-slot="dialog-header"]) {
   padding-bottom: 1rem;
 }
 :root[data-theme="daylight"] :is([data-slot="card-content"], [data-slot="dialog-body"]),
+:root[data-theme="greenfields"] :is([data-slot="card-content"], [data-slot="dialog-body"]),
 :root[data-theme="moonlight"] :is([data-slot="card-content"], [data-slot="dialog-body"]) {
   margin-top: 0;
   border-radius: 0;
 }
 :root[data-theme="daylight"] :is(.bg-sidebar, .bg-card, .bg-popover),
+:root[data-theme="greenfields"] :is(.bg-sidebar, .bg-card, .bg-popover),
 :root[data-theme="moonlight"] :is(.bg-sidebar, .bg-card, .bg-popover) {
   -webkit-backdrop-filter: blur(10px) saturate(1.4);
   backdrop-filter: blur(10px) saturate(1.4);
@@ -307,6 +362,7 @@
 /* Dialogs and sheets float over the page, so they blur more than the cards.
    This sits after the shared rule above, which has the same specificity. */
 :root[data-theme="daylight"] :is([data-slot="dialog-content"], [data-slot="sheet-content"]),
+:root[data-theme="greenfields"] :is([data-slot="dialog-content"], [data-slot="sheet-content"]),
 :root[data-theme="moonlight"] :is([data-slot="dialog-content"], [data-slot="sheet-content"]) {
   -webkit-backdrop-filter: blur(32px) saturate(1.5);
   backdrop-filter: blur(32px) saturate(1.5);

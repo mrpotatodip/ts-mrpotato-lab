@@ -1,11 +1,13 @@
 import { useId, useState, type ComponentType } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTable } from "@tanstack/react-table";
 import { ChevronRight, ChevronUp, CircleCheck, CircleDashed, CircleHelp, CircleX, ExternalLink, OctagonX } from "lucide-react";
 import { cn } from "#/lib/utils";
+import { dataTableColumns, dataTableFeatures } from "#/lib/data-table";
 import { Alert, AlertDescription } from "#/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
+import { DataTable } from "#/components/ui/data-table";
 import { Skeleton } from "#/components/ui/skeleton";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "#/components/ui/table";
 import { scansQuery, verdictQuery } from "../hooks";
 import type { Finding, Verdict, VerdictFinding } from "../schemas";
 import { ScanFindingSheet } from "./scan-finding-sheet";
@@ -44,6 +46,71 @@ const sheetFinding = (finding: VerdictFinding): Finding => ({
   detail: { class: finding.class, actor: null, impact: finding.impact ?? null, evidence: finding.evidence ?? null, fix: finding.fix ?? null, needs: finding.needs ?? null, triage: null },
 });
 
+type VerdictFindingRow = {
+  finding: FindingRowsProps["findings"][number];
+  decide: FindingRowsProps["decide"];
+  open: () => void;
+};
+
+const column = dataTableColumns<VerdictFindingRow>();
+
+const baseColumns = [
+  column.display({
+    id: "severity",
+    header: "Severity",
+    meta: { head: "w-32 whitespace-nowrap", cell: "align-top" },
+    cell: ({ row }) => <ScanSeverityBadge severity={row.original.finding.severity} />,
+  }),
+  column.display({
+    id: "finding",
+    header: "Finding",
+    meta: { cell: "whitespace-normal align-top font-medium" },
+    cell: ({ row }) => {
+      const { finding, decide, open } = row.original;
+      return (
+        <>
+          {decide ? (
+            <button type="button" aria-haspopup="dialog" onClick={open} className="min-h-6 rounded-sm text-left hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              {finding.title}
+            </button>
+          ) : (
+            finding.title
+          )}
+          {finding.impact && <span className="mt-1 line-clamp-2 text-sm font-normal leading-relaxed text-muted-foreground" title={finding.impact}>{finding.impact}</span>}
+          {finding.note && <span className="mt-1 block text-sm font-normal leading-relaxed text-muted-foreground">Accepted until {finding.acceptedUntil?.slice(0, 10)}: {finding.note}</span>}
+        </>
+      );
+    },
+  }),
+  column.display({
+    id: "where",
+    header: "Where",
+    meta: { head: "w-[36%]", cell: "whitespace-normal align-top font-mono text-xs text-muted-foreground [overflow-wrap:anywhere]" },
+    cell: ({ row }) => {
+      const { file, line } = row.original.finding;
+      return file ? `${file}${line ? `:${line}` : ""}` : "-";
+    },
+  }),
+];
+
+const decidingColumns = column.columns([
+  ...baseColumns,
+  column.display({
+    id: "decision",
+    header: "Your decision",
+    meta: { head: "w-56", cell: "align-top" },
+    cell: ({ row }) => {
+      const { finding, decide } = row.original;
+      return decide ? <decide.Control repoId={decide.repoId} repoUrl={decide.repoUrl} finding={finding} /> : null;
+    },
+  }),
+]);
+
+const readOnlyColumns = column.columns([
+  ...baseColumns,
+  column.display({ id: "decision", header: () => null, meta: { head: "w-56", decorative: true }, cell: () => null }),
+]);
+
 // -----
 // A collapsed list is for a screen that already lists the same problems itself (the
 // scan report has its own findings table): the list starts closed, with the
@@ -53,6 +120,8 @@ function FindingRows({ title, hint, findings, decide, collapsed = false }: Findi
   const [selected, setSelected] = useState<number | undefined>();
   const [open, setOpen] = useState(!collapsed);
   const headingId = useId();
+  const rows = findings.map((finding, index) => ({ finding, decide, open: () => setSelected(index) }));
+  const table = useTable({ features: dataTableFeatures, columns: decide ? decidingColumns : readOnlyColumns, data: rows, getRowId: (row) => row.finding.fingerprint });
   if (findings.length === 0) return null;
   const selectedFinding = selected === undefined ? undefined : findings[selected];
   return (
@@ -73,56 +142,11 @@ function FindingRows({ title, hint, findings, decide, collapsed = false }: Findi
             title
           )}
         </h3>
-        <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">{collapsed && !open ? "These count against the commit. Open the list to read each problem and record your decision." : hint}</p>
+        <p className="max-w-copy text-sm leading-relaxed text-muted-foreground">{collapsed && !open ? "These count against the commit. Open the list to read each problem and record your decision." : hint}</p>
       </div>
       {open && (
       <div className="overflow-hidden rounded-lg border">
-        <Table className="table-fixed" aria-labelledby={headingId}>
-          <colgroup>
-            <col className="w-32" />
-            <col />
-            <col className="w-[36%]" />
-            <col className="w-56" />
-          </colgroup>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="whitespace-nowrap">Severity</TableHead>
-              <TableHead>Finding</TableHead>
-              <TableHead>Where</TableHead>
-              {decide ? <TableHead>Your decision</TableHead> : <TableHead aria-hidden="true" />}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {findings.map((finding, index) => (
-              <TableRow key={finding.fingerprint} className={decide ? undefined : "hover:bg-transparent"}>
-                <TableCell className="align-top">
-                  <ScanSeverityBadge severity={finding.severity} />
-                </TableCell>
-                <TableCell className="whitespace-normal align-top font-medium">
-                  {decide ? (
-                    <button type="button" aria-haspopup="dialog" onClick={() => setSelected(index)} className="min-h-6 rounded-sm text-left hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                      {finding.title}
-                    </button>
-                  ) : (
-                    finding.title
-                  )}
-                  {finding.impact && <span className="mt-1 line-clamp-2 text-sm font-normal leading-relaxed text-muted-foreground" title={finding.impact}>{finding.impact}</span>}
-                  {finding.note && <span className="mt-1 block text-sm font-normal leading-relaxed text-muted-foreground">Accepted until {finding.acceptedUntil?.slice(0, 10)}: {finding.note}</span>}
-                </TableCell>
-                <TableCell className="whitespace-normal align-top font-mono text-xs text-muted-foreground [overflow-wrap:anywhere]">
-                  {finding.file ? `${finding.file}${finding.line ? `:${finding.line}` : ""}` : "-"}
-                </TableCell>
-                {decide ? (
-                  <TableCell className="align-top">
-                    <decide.Control repoId={decide.repoId} repoUrl={decide.repoUrl} finding={finding} />
-                  </TableCell>
-                ) : (
-                  <TableCell aria-hidden="true" />
-                )}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <DataTable table={table} tableProps={{ className: "table-fixed", "aria-labelledby": headingId }} rowProps={() => ({ className: decide ? undefined : "hover:bg-transparent" })} />
       </div>
       )}
       {decide && (
@@ -214,12 +238,12 @@ function VerdictChecklist({ verdict }: { verdict: Verdict }) {
       <summary className="flex cursor-pointer list-none flex-wrap items-center gap-x-2 gap-y-0.5 rounded-lg px-4 py-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
         <ChevronRight aria-hidden="true" className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-90" />
         <span className="text-[15px] font-semibold">How this is decided</span>
-        <span className="text-sm text-muted-foreground">
+        <span className="max-w-copy text-sm leading-relaxed text-muted-foreground">
           {checks.length - unmet.length} of {checks.length} checks met{unmet.length > 0 ? `. Not met: ${unmet.map((check) => check.label.toLowerCase()).join(", ")}.` : "."}
         </span>
       </summary>
       <div className="grid gap-3 border-t px-4 py-3">
-        <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">A commit passes when all three are met. The answer uses every scan of this commit and the decisions your team recorded. A new push starts again at zero.</p>
+        <p className="max-w-copy text-sm leading-relaxed text-muted-foreground">A commit passes when all three are met. The answer uses every scan of this commit and the decisions your team recorded. A new push starts again at zero.</p>
         <ul className="grid gap-2.5">
           {checks.map((check) => {
             const { Icon, className, label } = CHECK_ICON[check.state];
@@ -229,7 +253,7 @@ function VerdictChecklist({ verdict }: { verdict: Verdict }) {
                 <span>
                   <span className="font-medium">{check.label}</span>
                   <span className="sr-only"> ({label})</span>
-                  <span className="block max-w-prose text-sm leading-relaxed text-muted-foreground">{check.detail}</span>
+                  <span className="block max-w-copy text-sm leading-relaxed text-muted-foreground">{check.detail}</span>
                 </span>
               </li>
             );
@@ -257,14 +281,14 @@ function VerdictBody({ verdict, repoId, repoUrl, branchOpen, Decision, compactFi
         <copy.Icon />
         <div className="grid gap-1.5">
           <AlertDescription className="text-xl font-semibold leading-tight">{copy.title}</AlertDescription>
-          <AlertDescription className="max-w-prose text-foreground">{copy.note}</AlertDescription>
+          <AlertDescription className="max-w-copy text-foreground">{copy.note}</AlertDescription>
         </div>
       </Alert>
       {repoUrl && (
         <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 rounded-lg border bg-muted/50 p-4">
           <div className="grid min-w-0 flex-1 basis-64 gap-1">
             <p className="text-sm font-medium">{needsScan ? `Next step: scan this commit ${missing === 1 ? "once more" : `${missing} more times`}` : "Want another look at this exact commit?"}</p>
-            <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">Scans exactly {verdict.commit.slice(0, 7)}, even if the branch has moved on. The worst result counts.</p>
+            <p className="max-w-copy text-sm leading-relaxed text-muted-foreground">Scans exactly {verdict.commit.slice(0, 7)}, even if the branch has moved on. The worst result counts.</p>
           </div>
           <div className="flex flex-wrap items-start gap-3">
             {needsScan && last && <ScanVerdictRun repoId={repoId} repoUrl={repoUrl} commit={verdict.commit} last={last} />}
@@ -296,7 +320,7 @@ function VerdictBody({ verdict, repoId, repoUrl, branchOpen, Decision, compactFi
         />
       </div>
       <div className="border-t pt-3">
-        <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">
+        <p className="max-w-copy text-sm leading-relaxed text-muted-foreground">
           <span className="font-medium text-foreground">Advice, not a guarantee.</span> This answer comes from an AI review of the code. It can miss a problem, and a scanned repository can try to steer it. Do not use it as your only release check.
         </p>
       </div>
@@ -341,9 +365,9 @@ export function ScanVerdictCard({ repoId, commit, repoUrl, found, scope = "scan"
       <CardHeader className="flex-row flex-wrap items-center justify-between gap-3 pb-6">
         <div className="grid gap-1.5">
           <CardTitle>Ready to ship?</CardTitle>
-          {nextSteps && <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">{nextSteps}</p>}
-          {scope === "scan" && <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">The answer belongs to the commit, not to this scan.</p>}
-          {found === 0 && data && data.open.length > 0 && <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">This scan found nothing. The open problems below come from other scans of the same commit.</p>}
+          {nextSteps && <p className="max-w-copy text-sm leading-relaxed text-muted-foreground">{nextSteps}</p>}
+          {scope === "scan" && <p className="max-w-copy text-sm leading-relaxed text-muted-foreground">The answer belongs to the commit, not to this scan.</p>}
+          {found === 0 && data && data.open.length > 0 && <p className="max-w-copy text-sm leading-relaxed text-muted-foreground">This scan found nothing. The open problems below come from other scans of the same commit.</p>}
         </div>
         <CommitChip commit={commit} repoUrl={repoUrl} />
       </CardHeader>

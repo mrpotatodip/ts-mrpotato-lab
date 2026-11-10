@@ -1,4 +1,4 @@
-# Elise Engine API Glossary
+# EliseLAB Engine API Glossary
 
 The words used by the scan service: a Worker that clones a GitHub repo (public, or private through an Install) into a sandbox, runs an AI security review, and keeps the report. Use these words in route text, tickets and lessons.
 
@@ -114,7 +114,7 @@ The short list of hosts the container may reach: `github.com` (only the read ste
 _Avoid_: Whitelist
 
 **Install**:
-One installation of the Elise GitHub App on a GitHub account, connected to one Account by a `tenant_admin` (`tenant_github_installations`). It holds IDs and a status, never a token. Its status is `active`, `suspended` or `removed`, as the last check saw it. The dashboard calls it a connection ("Connections").
+One installation of the EliseLAB GitHub App on a GitHub account, connected to one Account by a `tenant_admin` (`tenant_github_installations`). It holds IDs and a status, never a token. Its status is `active`, `suspended` or `removed`, as the last check saw it. The dashboard calls it a connection ("Connections").
 _Avoid_: Integration, token, GitHub login
 
 **Private Scan**:

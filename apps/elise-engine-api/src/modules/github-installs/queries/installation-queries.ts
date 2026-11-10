@@ -151,7 +151,7 @@ export const saveInstallationCheckEffect = (db: DbConnectType, tenantId: string,
   }).pipe(Effect.asVoid);
 
 // -----
-// An admin stops Elise using an install. The row stays, so the scans
+// An admin stops EliseLAB using an install. The row stays, so the scans
 // that used it keep their link, and the audit trail says who did it.
 // Disconnecting twice is harmless. It cannot take access away on
 // GitHub: only an uninstall there does that.

@@ -1,5 +1,7 @@
+import { useQuery } from "@tanstack/react-query";
 import { Card } from "#/components/ui/card";
 import { ShellStatCell } from "#/modules/shell";
+import { scanDiffQuery } from "../hooks";
 import { SEVERITIES, type ScanStatus } from "../schemas";
 import { scanCost, scanDuration, scanPlural, scanTokens } from "../utils";
 
@@ -9,6 +11,8 @@ import { scanCost, scanDuration, scanPlural, scanTokens } from "../utils";
 // -----
 export function ScanSummary({ scan }: { scan: ScanStatus }) {
   const { summary, usage } = scan;
+  const comparable = Boolean(scan.branchId) && scan.skill === "lite";
+  const { data: diff } = useQuery({ ...scanDiffQuery(scan.scanId), enabled: comparable && Boolean(summary) });
   if (!summary && !usage) return null;
 
   const severityParts = summary ? SEVERITIES.filter((s) => summary.severity[s] > 0).map((s) => `${summary.severity[s]} ${s}`) : [];
@@ -31,7 +35,15 @@ export function ScanSummary({ scan }: { scan: ScanStatus }) {
               value={summary.needsValidation}
               note={summary.needsValidation > 0 ? `${scanPlural(summary.needsValidation, "finding is", "findings are")} likely but unverified. Check by hand before acting.` : "Every finding was verified by the agent."}
             />
-            <ShellStatCell label="New since last scan" value={summary.new} note={`${summary.carried} carried over from earlier scans and seen again. The rest of this page shows what changed.`} />
+            {comparable && (diff === undefined || diff.previousScanId !== null) ? (
+              <ShellStatCell
+                label="New since last scan"
+                value={diff === undefined ? "-" : summary.new}
+                note={diff === undefined ? "Comparing with the last scan…" : `${summary.carried} carried over from earlier scans and seen again. The rest of this page shows what changed.`}
+              />
+            ) : (
+              <ShellStatCell label="Earlier scans" value="None" note={scan.branchId ? "This is the first scan of this branch, so there is nothing to compare with yet." : "A one-off scan has no history to compare with."} />
+            )}
           </>
         )}
         {usage && (

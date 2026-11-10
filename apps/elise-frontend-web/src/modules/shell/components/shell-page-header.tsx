@@ -21,7 +21,7 @@ export function ShellPageHeader({ title, description, badges, below, children }:
             <h1 className="text-[26px] font-semibold leading-none tracking-tight">{title}</h1>
             {badges}
           </div>
-          {description && <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">{description}</p>}
+          {description && <p className="max-w-copy text-sm leading-relaxed text-muted-foreground">{description}</p>}
         </div>
         {children && <div className="flex flex-wrap items-center gap-3">{children}</div>}
       </div>

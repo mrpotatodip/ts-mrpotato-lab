@@ -38,7 +38,7 @@ export function ShellRouteNotFound() {
   return (
     <div className="mx-auto mt-16 grid max-w-sm gap-3 text-center">
       <h1 className="text-lg font-semibold">Page not found</h1>
-      <p className="text-sm text-muted-foreground">That address does not match anything in Elise.</p>
+      <p className="text-sm text-muted-foreground">That address does not match anything in EliseLAB.</p>
       <Link to="/overview" className={buttonVariants({ variant: "outline", size: "sm", className: "justify-self-center" })}>
         Back to overview
       </Link>

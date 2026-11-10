@@ -5,7 +5,7 @@ import { RepoList, reposQuery } from "#/modules/repo";
 import { ShellPageHeader } from "#/modules/shell";
 
 export const Route = createFileRoute("/_app/repos/")({
-  head: () => ({ meta: [{ title: "Repositories · Elise" }] }),
+  head: () => ({ meta: [{ title: "Repositories · EliseLAB" }] }),
   loader: ({ context }) => context.queryClient.query({ ...reposQuery(), staleTime: "static" }),
   component: ReposPage,
 });

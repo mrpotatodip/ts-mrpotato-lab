@@ -18,7 +18,7 @@ export const requireOpenApiEnabled = createMiddleware<AppEnv>(async (c, next) =>
 type OpenApiOptions = NonNullable<Parameters<typeof openAPIRouteHandler>[1]>;
 
 export const openApiDocument: OpenApiOptions["documentation"] = {
-  info: { title: "Elise Engine API", version, description: OPENAPI_DESCRIPTION },
+  info: { title: "EliseLAB Engine API", version, description: OPENAPI_DESCRIPTION },
   tags: [{ name: "scans", description: "Start a security scan of a public repo, then read its status and report." }],
   components: {
     securitySchemes: {
