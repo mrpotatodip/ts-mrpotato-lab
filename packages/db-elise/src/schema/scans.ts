@@ -21,6 +21,7 @@ import {
   FINDING_STATUS_VALUES,
   FINDING_TRIAGE_STATUS_VALUES,
   REPO_FINDING_STATE_VALUES,
+  SCAN_KEY_SOURCE_VALUES,
   SCAN_STATE_VALUES,
   SCAN_STEP_VALUES,
   type FindingOriginValue,
@@ -28,6 +29,7 @@ import {
   type FindingStatusValue,
   type FindingTriageStatusValue,
   type RepoFindingStateValue,
+  type ScanKeySourceValue,
   type ScanStateValue,
   type ScanStepValue,
 } from "@repo/contracts/elise";
@@ -131,6 +133,8 @@ export const scans = pgTable(
     profile: text("profile").notNull(),
     budget: integer("budget"),
     maxBudgetUsd: numeric("max_budget_usd", { precision: 10, scale: 2 }).notNull(),
+    // Which Anthropic key paid. A scan from before this column was the platform's.
+    keySource: text("key_source").$type<ScanKeySourceValue>().notNull().default("platform"),
     error: text("error"),
     inputTokens: bigint("input_tokens", { mode: "number" }),
     outputTokens: bigint("output_tokens", { mode: "number" }),
@@ -147,6 +151,7 @@ export const scans = pgTable(
   (t) => ({
     chkStatus: check("scans_status", sql`${t.status} in (${inList(SCAN_STATE_VALUES)})`),
     chkStep: check("scans_step", sql`${t.step} is null or ${t.step} in (${inList(SCAN_STEP_VALUES)})`),
+    chkKeySource: check("scans_key_source", sql`${t.keySource} in (${inList(SCAN_KEY_SOURCE_VALUES)})`),
     uqIdTenant: unique("uq_scans_id_tenant").on(t.id, t.tenantId),
     idxTenantCreated: index("idx_scans_tenant_created_at").on(t.tenantId, t.createdAt),
     fkRepoTenant: foreignKey({

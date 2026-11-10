@@ -498,6 +498,13 @@
       "when": 1794345832786,
       "tag": "0070_workspace_watcher",
       "breakpoints": true
+    },
+    {
+      "idx": 71,
+      "version": "7",
+      "when": 1794352021172,
+      "tag": "0071_plans_and_subscriptions",
+      "breakpoints": true
     }
   ]
 }

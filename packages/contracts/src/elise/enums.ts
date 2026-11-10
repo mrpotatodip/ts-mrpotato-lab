@@ -49,12 +49,29 @@ export const FINDING_ORIGIN_VALUES = ["new", "carried"] as const;
 export const REPO_FINDING_STATE_VALUES = ["open", "fixed_by_code", "regressed"] as const;
 export const FINDING_TRIAGE_STATUS_VALUES = ["open", "fixed", "false_positive", "accepted_risk"] as const;
 
+// -----
+// Which Anthropic key paid for a scan: the platform's, or the one
+// the Account brought. Twin of the CHECK on scans.key_source.
+// -----
+export const SCAN_KEY_SOURCE_VALUES = ["platform", "account"] as const;
+
+// -----
+// Subscriptions. Twins of the CHECKs on tenant_subscriptions. status
+// follows Stripe's own words. source says who made the row: a Stripe
+// subscription, or a grant by the operator that Stripe does not know.
+// -----
+export const SUBSCRIPTION_STATUS_VALUES = ["active", "past_due", "canceled", "unpaid", "incomplete"] as const;
+export const SUBSCRIPTION_SOURCE_VALUES = ["stripe", "grant"] as const;
+
 export type ScanStateValue = (typeof SCAN_STATE_VALUES)[number];
 export type FindingOriginValue = (typeof FINDING_ORIGIN_VALUES)[number];
 export type RepoFindingStateValue = (typeof REPO_FINDING_STATE_VALUES)[number];
 export type FindingStatusValue = (typeof FINDING_STATUS_VALUES)[number];
 export type FindingSeverityValue = (typeof FINDING_SEVERITY_VALUES)[number];
 export type FindingTriageStatusValue = (typeof FINDING_TRIAGE_STATUS_VALUES)[number];
+export type ScanKeySourceValue = (typeof SCAN_KEY_SOURCE_VALUES)[number];
+export type SubscriptionStatusValue = (typeof SUBSCRIPTION_STATUS_VALUES)[number];
+export type SubscriptionSourceValue = (typeof SUBSCRIPTION_SOURCE_VALUES)[number];
 
 // -----
 // Where a running scan is: cloning the repo, the agent
