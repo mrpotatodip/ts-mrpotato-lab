@@ -11,6 +11,7 @@ import { noGithubAccess } from "./no-github-access";
 let ledger = memoryScanRepo();
 let signedInUser: string | undefined;
 let userHoldsRole = false;
+let userIsWatcher = false;
 
 const app = buildApp({
   scanRepo: () => ledger.repo,
@@ -18,7 +19,7 @@ const app = buildApp({
   monthSpend: async () => ({ spentUsd: 0, scans: 0, tokens: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }, budgetOverrideUsd: null, budgetAllowanceUsd: null }),
   sessionUserId: async () => signedInUser,
   userHasAccount: async () => userHoldsRole,
-  userHasPower: async () => userHoldsRole,
+  userHasPower: async (_c, _userId, _accountId, power) => userHoldsRole && (!userIsWatcher || power === "company:summary:read"),
   enqueueInviteEmail: async () => undefined,
 }).app;
 
@@ -26,9 +27,10 @@ beforeEach(() => {
   ledger = memoryScanRepo();
   signedInUser = undefined;
   userHoldsRole = false;
+  userIsWatcher = false;
 });
 
-const REPO = "https://github.com/octocat/Hello-World";
+const REPO ="https://github.com/octocat/Hello-World";
 const ACCOUNT = "0b8c1d2e-3f4a-4b5c-8d6e-7f8091a2b3c4";
 const OTHER = "5d1f0c9a-2b3e-4f60-9a71-8b92c3d4e5f6";
 const auth = { authorization: `Bearer ${TEST_TOKEN}`, "x-account-id": ACCOUNT };
@@ -286,6 +288,61 @@ describe("signed-in session", () => {
     const res = await call(env, "/me");
 
     expect(res.status).toBe(401);
+  });
+});
+
+describe("watcher session", () => {
+  const session = { authorization: "Bearer session-token", "x-account-id": ACCOUNT, "content-type": "application/json" };
+
+  const asWatcher = () => {
+    signedInUser = "user-1";
+    userHoldsRole = true;
+    userIsWatcher = true;
+  };
+
+  it.each([
+    { method: "GET", path: "/scans" },
+    { method: "GET", path: "/usage" },
+    { method: "GET", path: "/files" },
+    { method: "GET", path: "/findings" },
+    { method: "GET", path: "/github/installations" },
+    { method: "GET", path: `/repos/${REPO_ID}` },
+    { method: "GET", path: `/repos/${REPO_ID}/verdict` },
+    { method: "POST", path: "/scans" },
+    { method: "POST", path: "/repos" },
+    { method: "POST", path: `/repos/${REPO_ID}/branches` },
+    { method: "PUT", path: "/findings/triage" },
+  ])("refuses a watcher on $method $path", async ({ method, path }) => {
+    const { env } = fakeBindings();
+    asWatcher();
+    const res = await call(env, path, { method, headers: session, body: method === "GET" ? undefined : "{}" });
+
+    expect(res.status).toBe(403);
+  });
+
+  it("does not stop a watcher at the repository list", async () => {
+    const { env } = fakeBindings();
+    asWatcher();
+    const res = await call(env, "/repos", { headers: session });
+
+    expect(res.status).not.toBe(403);
+  });
+
+  it("does not stop a watcher at a repository's findings", async () => {
+    const { env } = fakeBindings();
+    asWatcher();
+    const res = await call(env, `/repos/${REPO_ID}/findings`, { headers: session });
+
+    expect(res.status).not.toBe(403);
+  });
+
+  it("still lets a member with the Dashboard Power start from the same routes", async () => {
+    const { env } = fakeBindings();
+    signedInUser = "user-1";
+    userHoldsRole = true;
+    const res = await call(env, "/scans", { headers: session });
+
+    expect(res.status).toBe(200);
   });
 });
 

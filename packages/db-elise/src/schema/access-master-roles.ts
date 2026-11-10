@@ -48,6 +48,7 @@ export const DEFAULT_MASTER_ROLES = [
   { key: "tenant_admin", label: "Tenant admin", scope: "tenant", enabled: true, isSystem: true, canBeBound: false },
   { key: "workspace_admin", label: "Workspace admin", scope: "tenant", enabled: true, isSystem: false, canBeBound: true },
   { key: "workspace_member", label: "Workspace member", scope: "tenant", enabled: true, isSystem: false, canBeBound: true },
+  { key: "workspace_watcher", label: "Watcher", scope: "tenant", enabled: true, isSystem: false, canBeBound: true },
   { key: "superuser", label: "Superuser", scope: "platform", enabled: true, isSystem: true, canBeBound: false },
 ] as const;
 

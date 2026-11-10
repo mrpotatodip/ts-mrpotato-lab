@@ -8,7 +8,7 @@ import { userHasPowerEffect } from "#/modules/me/queries";
 let test: TestDb;
 let tenantId: string;
 
-const ROLES = ["tenant_admin", "workspace_admin", "workspace_member"] as const;
+const ROLES = ["tenant_admin", "workspace_admin", "workspace_member", "workspace_watcher"] as const;
 
 // -----
 // One login per role in one account. The Powers come from the rows the
@@ -52,6 +52,17 @@ describe("userHasPowerEffect", () => {
     ["workspace_member", "company:github:installations:create", false],
     ["workspace_member", "company:findings:accepted_risk:update", false],
     ["workspace_member", "company:assistant:threads:create", true],
+    ["tenant_admin", "company:dashboard:read", true],
+    ["workspace_admin", "company:dashboard:read", true],
+    ["workspace_member", "company:dashboard:read", true],
+    ["workspace_watcher", "company:dashboard:read", false],
+    ["tenant_admin", "company:summary:read", true],
+    ["workspace_admin", "company:summary:read", true],
+    ["workspace_member", "company:summary:read", true],
+    ["workspace_watcher", "company:summary:read", true],
+    ["workspace_watcher", "company:team:members:read", false],
+    ["workspace_watcher", "company:findings:accepted_risk:update", false],
+    ["workspace_watcher", "company:assistant:threads:create", false],
   ])("%s holding %s is %s", async (userId, power, expected) => {
     expect(await has(userId, power)).toBe(expected);
   });

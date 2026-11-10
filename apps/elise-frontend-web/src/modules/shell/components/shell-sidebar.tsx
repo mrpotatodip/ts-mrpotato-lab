@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { ChevronUp, FileText, FolderGit2, LayoutDashboard, PanelLeftClose, PanelLeftOpen, Plug, ScanSearch, Settings, Sparkles, Users } from "lucide-react";
+import { ChevronUp, ClipboardCheck, FileText, FolderGit2, LayoutDashboard, PanelLeftClose, PanelLeftOpen, Plug, ScanSearch, Settings, Sparkles, Users } from "lucide-react";
 import { Avatar, AvatarFallback } from "#/components/ui/avatar";
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
@@ -39,6 +39,7 @@ type ShellSidebarProps = {
   repoCount: number;
   showTeam: boolean;
   showSettings: boolean;
+  showDashboard: boolean;
   collapsed: boolean;
   canToggle: boolean;
   onToggle: () => void;
@@ -62,7 +63,7 @@ function Hint({ label, collapsed, children }: { label: string; collapsed: boolea
   );
 }
 
-export function ShellSidebar({ accountName, userName, email, scanCount, running, repos, repoCount, showTeam, showSettings, collapsed, canToggle, onToggle }: ShellSidebarProps) {
+export function ShellSidebar({ accountName, userName, email, scanCount, running, repos, repoCount, showTeam, showSettings, showDashboard, collapsed, canToggle, onToggle }: ShellSidebarProps) {
   const { open: reposOpen, setOpen: setReposOpen } = useSidebarReposOpen();
   const scansLabel = running > 0 ? `Scans, ${running} in progress` : "Scans";
   const hasRepoChildren = repoCount >= 2;
@@ -74,7 +75,7 @@ export function ShellSidebar({ accountName, userName, email, scanCount, running,
   return (
     <aside className={cn("sticky top-0 flex h-svh flex-col gap-6 overflow-y-auto overflow-x-hidden border-r bg-sidebar pb-4 pt-6", collapsed ? "px-2.5" : "px-3")}>
       <div className={cn("flex items-center", collapsed ? "flex-col gap-3" : "justify-between pl-2 pr-1")}>
-        <Link to="/overview" aria-label={collapsed ? "EliseLAB overview" : undefined} className="rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+        <Link to={showDashboard ? "/overview" : "/summary"} aria-label={collapsed ? "EliseLAB home" : undefined} className="rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
           {collapsed ? <span className="text-xl font-semibold tracking-tight">E</span> : <ShellBrand />}
         </Link>
         {canToggle && (
@@ -90,76 +91,91 @@ export function ShellSidebar({ accountName, userName, email, scanCount, running,
       </div>
 
       <nav aria-label="Main" className="grid grid-cols-[minmax(0,1fr)] gap-1">
-        <Hint label="Overview" collapsed={collapsed}>
-          <Link to="/overview" aria-label="Overview" className={cn(ROW, collapsed && "justify-center px-0")} activeProps={ACTIVE}>
-            <LayoutDashboard className={ICON} strokeWidth={1.5} />
-            {!collapsed && "Overview"}
-          </Link>
-        </Hint>
-
-        {collapsed || !hasRepoChildren ? (
-          <Hint label="Repositories" collapsed={collapsed}>
-            <Link to="/repos" aria-label="Repositories" className={cn(ROW, collapsed && "justify-center px-0")} activeProps={ACTIVE}>
-              <FolderGit2 className={ICON} strokeWidth={1.5} />
-              {!collapsed && "Repositories"}
+        {showDashboard && (
+          <Hint label="Overview" collapsed={collapsed}>
+            <Link to="/overview" aria-label="Overview" className={cn(ROW, collapsed && "justify-center px-0")} activeProps={ACTIVE}>
+              <LayoutDashboard className={ICON} strokeWidth={1.5} />
+              {!collapsed && "Overview"}
             </Link>
           </Hint>
-        ) : (
-          <Collapsible open={reposOpen} onOpenChange={setReposOpen}>
-            <div className="relative">
-              <Link to="/repos" activeOptions={{ exact: true }} className={cn(ROW, "pr-10")} activeProps={ACTIVE}>
-                <FolderGit2 className={ICON} strokeWidth={1.5} />
-                Repositories
-              </Link>
-              <CollapsibleTrigger aria-label={reposOpen ? "Hide recent repositories" : "Show recent repositories"} className={TOGGLE}>
-                <ChevronUp className={CHEVRON} strokeWidth={1.5} />
-              </CollapsibleTrigger>
-            </div>
-            <CollapsiblePanel>
-              <ShellRepoTree repos={repos} />
-            </CollapsiblePanel>
-          </Collapsible>
         )}
 
-        <Hint label={scansLabel} collapsed={collapsed}>
-          <Link to="/scans" aria-label={collapsed ? scansLabel : undefined} className={cn(ROW, collapsed && "justify-center px-0")} activeProps={ACTIVE}>
-            <ScanSearch className={ICON} strokeWidth={1.5} />
-            {collapsed ? (
-              running > 0 && <span aria-hidden="true" className="absolute right-2.5 top-2 size-2 animate-pulse rounded-full bg-mark-info" />
+        <Hint label="Summary" collapsed={collapsed}>
+          <Link to="/summary" aria-label="Summary" className={cn(ROW, collapsed && "justify-center px-0")} activeProps={ACTIVE}>
+            <ClipboardCheck className={ICON} strokeWidth={1.5} />
+            {!collapsed && "Summary"}
+          </Link>
+        </Hint>
+
+        {showDashboard && (
+          <>
+            {collapsed || !hasRepoChildren ? (
+              <Hint label="Repositories" collapsed={collapsed}>
+                <Link to="/repos" aria-label="Repositories" className={cn(ROW, collapsed && "justify-center px-0")} activeProps={ACTIVE}>
+                  <FolderGit2 className={ICON} strokeWidth={1.5} />
+                  {!collapsed && "Repositories"}
+                </Link>
+              </Hint>
             ) : (
-              <>
-                <span className="flex-1">Scans</span>
-                {running > 0 && (
+              <Collapsible open={reposOpen} onOpenChange={setReposOpen}>
+                <div className="relative">
+                  <Link to="/repos" activeOptions={{ exact: true }} className={cn(ROW, "pr-10")} activeProps={ACTIVE}>
+                    <FolderGit2 className={ICON} strokeWidth={1.5} />
+                    Repositories
+                  </Link>
+                  <CollapsibleTrigger aria-label={reposOpen ? "Hide recent repositories" : "Show recent repositories"} className={TOGGLE}>
+                    <ChevronUp className={CHEVRON} strokeWidth={1.5} />
+                  </CollapsibleTrigger>
+                </div>
+                <CollapsiblePanel>
+                  <ShellRepoTree repos={repos} />
+                </CollapsiblePanel>
+              </Collapsible>
+            )}
+
+            <Hint label={scansLabel} collapsed={collapsed}>
+              <Link to="/scans" aria-label={collapsed ? scansLabel : undefined} className={cn(ROW, collapsed && "justify-center px-0")} activeProps={ACTIVE}>
+                <ScanSearch className={ICON} strokeWidth={1.5} />
+                {collapsed ? (
+                  running > 0 && <span aria-hidden="true" className="absolute right-2.5 top-2 size-2 animate-pulse rounded-full bg-mark-info" />
+                ) : (
                   <>
-                    <span aria-hidden="true" className="size-2 animate-pulse rounded-full bg-mark-info" />
-                    <span className="sr-only">{running} in progress</span>
+                    <span className="flex-1">Scans</span>
+                    {running > 0 && (
+                      <>
+                        <span aria-hidden="true" className="size-2 animate-pulse rounded-full bg-mark-info" />
+                        <span className="sr-only">{running} in progress</span>
+                      </>
+                    )}
+                    {scanCount > 0 && (
+                      <Badge variant="secondary" className="h-5 min-w-5 justify-center px-1.5 tabular-nums">
+                        {scanCount}
+                      </Badge>
+                    )}
                   </>
                 )}
-                {scanCount > 0 && (
-                  <Badge variant="secondary" className="h-5 min-w-5 justify-center px-1.5 tabular-nums">
-                    {scanCount}
-                  </Badge>
-                )}
-              </>
-            )}
-          </Link>
-        </Hint>
+              </Link>
+            </Hint>
 
-        <Hint label="Files" collapsed={collapsed}>
-          <Link to="/files" aria-label="Files" className={cn(ROW, collapsed && "justify-center px-0")} activeProps={ACTIVE}>
-            <FileText className={ICON} strokeWidth={1.5} />
-            {!collapsed && "Files"}
-          </Link>
-        </Hint>
+            <Hint label="Files" collapsed={collapsed}>
+              <Link to="/files" aria-label="Files" className={cn(ROW, collapsed && "justify-center px-0")} activeProps={ACTIVE}>
+                <FileText className={ICON} strokeWidth={1.5} />
+                {!collapsed && "Files"}
+              </Link>
+            </Hint>
+          </>
+        )}
       </nav>
 
-      <nav aria-label="Account" className="grid grid-cols-[minmax(0,1fr)] gap-1 border-t pt-3">
-        <Hint label="Connections" collapsed={collapsed}>
-          <Link to="/connections" aria-label="Connections" className={cn(ROW, collapsed && "justify-center px-0", onConnectFlow && ACTIVE.className)} activeProps={ACTIVE}>
-            <Plug className={ICON} strokeWidth={1.5} />
-            {!collapsed && "Connections"}
-          </Link>
-        </Hint>
+      <nav aria-label="Account" className="grid grid-cols-[minmax(0,1fr)] gap-1 border-t pt-3 empty:hidden">
+        {showDashboard && (
+          <Hint label="Connections" collapsed={collapsed}>
+            <Link to="/connections" aria-label="Connections" className={cn(ROW, collapsed && "justify-center px-0", onConnectFlow && ACTIVE.className)} activeProps={ACTIVE}>
+              <Plug className={ICON} strokeWidth={1.5} />
+              {!collapsed && "Connections"}
+            </Link>
+          </Hint>
+        )}
 
         {showTeam && (
           <Hint label="Team" collapsed={collapsed}>
@@ -180,7 +196,7 @@ export function ShellSidebar({ accountName, userName, email, scanCount, running,
         )}
       </nav>
 
-      {empty && !collapsed && (
+      {empty && !collapsed && showDashboard && (
         <Link
           to="/scans"
           className="mx-1 grid gap-1 rounded-xl border border-dashed border-input p-4 text-sm transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"

@@ -20,6 +20,8 @@ export const ACCESS_CATALOGUE = [
     key: "company",
     label: "Company",
     children: [
+      { key: "dashboard", label: "Dashboard", actions: ["read"] },
+      { key: "summary", label: "Summary", actions: ["read"] },
       {
         key: "team",
         label: "Team",
@@ -138,6 +140,13 @@ export const isAccessPower = (value: string): value is AccessPower => ACCESS_POW
 
 export const hasAccessPower = (grants: readonly string[], power: AccessPower): boolean => grants.includes(power);
 
+// -----
+// A Watcher holds the Summary Power and not the Dashboard Power. Both
+// are needed, so an engine that does not grant the Summary Power yet
+// (before its migration) restricts nobody.
+// -----
+export const isWatcher = (grants: readonly string[]): boolean => hasAccessPower(grants, "company:summary:read") && !hasAccessPower(grants, "company:dashboard:read");
+
 const powerAction = (power: string): string => power.slice(power.lastIndexOf(":") + 1);
 
 export const canEditAccount = (powers: readonly string[]): boolean =>
@@ -180,5 +189,6 @@ export const ACCESS_ROLE_GRANTS = {
   tenant_admin: TENANT_POWERS,
   workspace_admin: WORKSPACE_ADMIN_POWERS,
   workspace_member: [...WORKSPACE_MEMBER_READS, ...WORKSPACE_MEMBER_EXTRA],
+  workspace_watcher: ["company:summary:read"],
   superuser: PLATFORM_POWERS,
 } as const;

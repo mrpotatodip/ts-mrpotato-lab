@@ -2,7 +2,7 @@ import { defineConfig, type OxlintOverride } from "oxlint";
 
 // -----
 // Modules import in one direction only: shell and usage at the bottom, then scan,
-// then finding, then repo. A lower module that imports a higher one makes a cycle,
+// then finding, then repo, then summary. A lower module that imports a higher one makes a cycle,
 // so the file that needs both (a route) composes them and passes the parts down.
 // -----
 const forbidModules = (files: string, modules: readonly string[], message: string): OxlintOverride => ({
@@ -23,10 +23,10 @@ export default defineConfig({
     { name: "anti-slop", specifier: "./tools/oxlint/anti-slop/index.ts" },
   ],
   overrides: [
-    forbidModules("src/modules/shell/**", ["scan", "repo", "finding", "team", "usage"], "The shell is the frame every screen sits in, so it cannot import a screen's module. Take what it needs as props."),
-    forbidModules("src/modules/scan/**", ["repo", "finding", "team"], "The scan module sits below repo and finding. Take their parts as props or slots from the route that composes them."),
-    forbidModules("src/modules/usage/**", ["scan", "repo", "finding", "team"], "The usage module sits below the screens that show it."),
-    forbidModules("src/modules/finding/**", ["repo"], "The finding module sits below repo."),
+    forbidModules("src/modules/shell/**", ["scan", "repo", "finding", "team", "usage", "summary"], "The shell is the frame every screen sits in, so it cannot import a screen's module. Take what it needs as props."),
+    forbidModules("src/modules/scan/**", ["repo", "finding", "team", "summary"], "The scan module sits below repo and finding. Take their parts as props or slots from the route that composes them."),
+    forbidModules("src/modules/usage/**", ["scan", "repo", "finding", "team", "summary"], "The usage module sits below the screens that show it."),
+    forbidModules("src/modules/finding/**", ["repo", "summary"], "The finding module sits below repo."),
     {
       files: ["**/__tests__/**"],
       rules: {

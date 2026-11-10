@@ -3,7 +3,7 @@ import { ArrowUpRight, ChevronRight, CircleCheck } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { ScanSeverityDots, scanPlural } from "#/modules/scan";
 import type { Repo } from "../schemas";
-import { repoAttention, repoName } from "../utils";
+import { rankRepos, repoName } from "../utils";
 import { RepoAddDialog } from "./repo-add-dialog";
 
 const SHOWN = 5;
@@ -58,7 +58,7 @@ function RowBody({ repo }: { repo: Repo }) {
 }
 
 export function RepoAttentionList({ repos }: { repos: readonly Repo[] }) {
-  const ranked = repos.toSorted((a, b) => repoAttention(b) - repoAttention(a) || b.open.total - a.open.total || (b.lastScanAt ?? "").localeCompare(a.lastScanAt ?? ""));
+  const ranked = rankRepos(repos);
   const shown = ranked.slice(0, SHOWN);
   const more = ranked.length - shown.length;
 

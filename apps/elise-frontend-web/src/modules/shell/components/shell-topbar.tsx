@@ -38,6 +38,7 @@ const crumbs = (pathname: string, names: RouteNames | null): Crumb[] => {
   if (pathname.startsWith("/connections")) return [{ label: "Connections" }];
   if (pathname.startsWith("/team")) return [{ label: "Team" }];
   if (pathname.startsWith("/settings")) return [{ label: "Settings" }];
+  if (pathname.startsWith("/summary")) return [{ label: "Summary" }];
   return [{ label: "Overview" }];
 };
 

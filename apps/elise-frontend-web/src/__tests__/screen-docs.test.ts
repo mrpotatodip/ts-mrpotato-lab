@@ -12,6 +12,7 @@ const DOC = readFileSync(join(import.meta.dirname, "..", "..", "DESIGN-SCREENS.m
 // -----
 const SCREEN_WORD = {
   overview: "Overview",
+  summary: "Summary",
   scans: "Scan report",
   repos: "Repositories",
   files: "Files",
