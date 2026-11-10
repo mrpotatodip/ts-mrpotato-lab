@@ -6,7 +6,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const DEPLOYED = "https://elise-engine-api.mochi-project.workers.dev";
+const DEPLOYED = "https://api.eliselab.com";
 
 function devVars() {
   try {

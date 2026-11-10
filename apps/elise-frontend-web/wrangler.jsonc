@@ -7,5 +7,6 @@
   "observability": {
     "enabled": true,
   },
-  "vars": { "ELISE_ENGINE_URL": "https://elise-engine-api.mochi-project.workers.dev" },
+  "routes": [{ "pattern": "app.eliselab.com", "custom_domain": true }],
+  "vars": { "ELISE_ENGINE_URL": "https://api.eliselab.com" },
 }

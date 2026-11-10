@@ -18,7 +18,7 @@ Claude Code in the sandbox image is `linux/amd64`. On Apple Silicon, Docker (Col
 1. Free space: `df -h /System/Volumes/Data` (the disk filling was the trigger).
 2. `colima delete --force && colima start --cpu 2 --memory 4 --disk 100`. Pass the settings: a plain `colima start` after a delete uses 2 GiB of memory. The delete removes every local image and container (there are no volumes), so it needs a person's approval.
 3. Deploy again. The image is rebuilt from nothing.
-4. Check: `curl -s -o /dev/null -w "%{http_code}" https://elise-engine-api.mochi-project.workers.dev/me` prints 401.
+4. Check: `curl -s -o /dev/null -w "%{http_code}" https://api.eliselab.com/me` prints 401.
 
 ## A migration and a deploy that depend on each other
 
