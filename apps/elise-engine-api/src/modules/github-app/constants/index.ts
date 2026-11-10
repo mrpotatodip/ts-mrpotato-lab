@@ -3,6 +3,8 @@ export const GITHUB_API_VERSION = "2022-11-28";
 export const GITHUB_OAUTH_TOKEN_URL = "https://github.com/login/oauth/access_token";
 export const GITHUB_USER_INSTALLATIONS_MAX_PAGES = 5;
 export const GITHUB_BRANCHES_PER_PAGE = 100;
+export const GITHUB_REPOS_PER_PAGE = 100;
+export const GITHUB_INSTALLATION_REPOS_MAX_PAGES = 10;
 
 // -----
 // The App JWT. GitHub allows at most 10 minutes. iat starts

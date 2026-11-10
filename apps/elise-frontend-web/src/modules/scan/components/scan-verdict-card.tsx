@@ -10,6 +10,7 @@ import { scansQuery, verdictQuery } from "../hooks";
 import type { Finding, Verdict, VerdictFinding } from "../schemas";
 import { ScanFindingSheet } from "./scan-finding-sheet";
 import { ScanNewDialog } from "./scan-new-dialog";
+import { ScanVerdictRun } from "./scan-verdict-run";
 import { scanPlural } from "../utils";
 import { ScanSeverityBadge } from "./scan-severity-badge";
 
@@ -265,7 +266,17 @@ function VerdictBody({ verdict, repoId, repoUrl, branchOpen, Decision, compactFi
             <p className="text-sm font-medium">{needsScan ? `Next step: scan this commit ${missing === 1 ? "once more" : `${missing} more times`}` : "Want another look at this exact commit?"}</p>
             <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">Scans exactly {verdict.commit.slice(0, 7)}, even if the branch has moved on. The worst result counts.</p>
           </div>
-          <ScanNewDialog label="Run another scan of this commit" size="default" variant={needsScan ? "default" : "outline"} repo={repoUrl} startRef={verdict.commit} startOptions={last && { model: last.model === "claude-opus-5-5" ? undefined : last.model, effort: last.effort, skill: last.skill, profile: last.profile }} />
+          <div className="flex flex-wrap items-start gap-3">
+            {needsScan && last && <ScanVerdictRun repoId={repoId} repoUrl={repoUrl} commit={verdict.commit} last={last} />}
+            <ScanNewDialog
+              label={needsScan && last ? "Choose options" : "Run another scan of this commit"}
+              size="default"
+              variant={needsScan && !last ? "default" : "outline"}
+              repo={repoUrl}
+              startRef={verdict.commit}
+              startOptions={last && { model: last.model === "claude-opus-5-5" ? undefined : last.model, effort: last.effort, skill: last.skill, profile: last.profile }}
+            />
+          </div>
         </div>
       )}
       <VerdictChecklist verdict={verdict} />
