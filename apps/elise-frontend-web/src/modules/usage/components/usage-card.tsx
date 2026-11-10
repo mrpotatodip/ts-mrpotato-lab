@@ -1,37 +1,21 @@
-import { useState } from "react";
-import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
-import { useRouteContext } from "@tanstack/react-router";
-import { Pencil } from "lucide-react";
-import { toast } from "sonner";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { Link, useRouteContext } from "@tanstack/react-router";
+import { Settings } from "lucide-react";
 import { hasAccessPower } from "@repo/contracts/elise";
-import { Button } from "#/components/ui/button";
+import { buttonVariants } from "#/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Progress } from "#/components/ui/progress";
 import { cn } from "#/lib/utils";
-import { updateUsageBudget } from "../api";
-import { usageKeys, usageQuery } from "../hooks";
-import { usageBudgetFloorUsd, usageCommittedPercent, usageMonthLabel, usageTokens, usageUsd } from "../utils";
-import { UsageBudgetForm } from "./usage-budget-form";
+import { usageQuery } from "../hooks";
+import { usageCommittedPercent, usageMonthLabel, usageTokens, usageUsd } from "../utils";
 
 export function UsageCard() {
   const { data } = useSuspenseQuery(usageQuery());
   const { user } = useRouteContext({ from: "/_app" });
-  const queryClient = useQueryClient();
-  const [editing, setEditing] = useState(false);
-  const canEdit = hasAccessPower(user?.powers ?? [], "company:usage:budget:update");
+  const canManage = hasAccessPower(user?.powers ?? [], "company:usage:budget:update");
   const percent = usageCommittedPercent(data.budgetUsd, data.spentUsd, data.reservedUsd);
   const tight = percent >= 90;
   const tokenTotal = data.tokens.input + data.tokens.output + data.tokens.cacheRead + data.tokens.cacheWrite;
-
-  const save = useMutation({
-    mutationFn: (monthlyBudgetUsd: number) => updateUsageBudget({ data: { monthlyBudgetUsd } }),
-    onSuccess: (usage) => {
-      queryClient.setQueryData(usageKeys.month(), usage);
-      setEditing(false);
-      toast.success(`Monthly budget is now ${usageUsd(usage.budgetUsd)}.`);
-    },
-    onError: (error: Error) => toast.error(`We couldn't change the budget. ${error.message}`),
-  });
 
   return (
     <Card>
@@ -44,22 +28,11 @@ export function UsageCard() {
           <p className="text-[28px] font-semibold leading-none tracking-tight tabular-nums">{usageUsd(data.spentUsd)}</p>
           <p className="text-sm text-muted-foreground tabular-nums">of {usageUsd(data.budgetUsd)}</p>
         </div>
-        {editing ? (
-          <UsageBudgetForm
-            budgetUsd={data.budgetUsd}
-            floorUsd={usageBudgetFloorUsd(data.spentUsd, data.reservedUsd)}
-            allowanceUsd={data.allowanceUsd}
-            pending={save.isPending}
-            onSave={(budgetUsd) => save.mutate(budgetUsd)}
-            onCancel={() => setEditing(false)}
-          />
-        ) : (
-          canEdit && (
-            <Button type="button" variant="outline" size="sm" className="justify-self-start" onClick={() => setEditing(true)}>
-              <Pencil aria-hidden="true" />
-              Change budget
-            </Button>
-          )
+        {canManage && (
+          <Link to="/settings" className={buttonVariants({ variant: "outline", size: "sm", className: "justify-self-start" })}>
+            <Settings aria-hidden="true" />
+            Manage budget
+          </Link>
         )}
         <Progress value={percent} aria-label="Share of the monthly budget spent or held by running scans" indicatorClassName={cn("bg-primary/80", tight && "bg-mark-danger")} />
         <dl className="grid gap-3 border-t pt-5 text-sm">
