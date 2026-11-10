@@ -13,3 +13,25 @@ export const usageMonthLabel = (month: string) => {
 
 export const usageCommittedPercent = (budgetUsd: number, spentUsd: number, reservedUsd: number) =>
   budgetUsd <= 0 ? 100 : Math.min(100, Math.round(((spentUsd + reservedUsd) / budgetUsd) * 100));
+
+// -----
+// The least an admin may set: what the month has already spent
+// or holds for running scans, rounded up to the cent.
+// -----
+export const usageBudgetFloorUsd = (spentUsd: number, reservedUsd: number) => Math.ceil((spentUsd + reservedUsd) * 100) / 100;
+
+const DOLLARS = /^\d{1,7}(\.\d{1,2})?$/;
+
+// -----
+// The same two rules the engine enforces, so the form says so
+// before it sends. allowanceUsd is missing until the engine that
+// reports it is live; the engine still refuses a value above it.
+// -----
+export const usageBudgetError = (input: string, floorUsd: number, allowanceUsd: number | undefined): string | undefined => {
+  const text = input.trim();
+  if (!DOLLARS.test(text)) return "Enter a dollar amount, like 25 or 25.50.";
+  const value = Number(text);
+  if (value < floorUsd) return `At least ${usageUsd(floorUsd)}: this month has already spent or holds that much.`;
+  if (allowanceUsd !== undefined && value > allowanceUsd) return `At most ${usageUsd(allowanceUsd)}, the most this account may set.`;
+  return undefined;
+};
