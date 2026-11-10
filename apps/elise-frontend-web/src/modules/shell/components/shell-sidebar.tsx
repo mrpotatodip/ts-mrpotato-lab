@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { ChevronUp, FileText, FolderGit2, LayoutDashboard, PanelLeftClose, PanelLeftOpen, Plug, ScanSearch, Sparkles, Users } from "lucide-react";
+import { ChevronUp, FileText, FolderGit2, LayoutDashboard, PanelLeftClose, PanelLeftOpen, Plug, ScanSearch, Settings, Sparkles, Users } from "lucide-react";
 import { Avatar, AvatarFallback } from "#/components/ui/avatar";
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
@@ -38,6 +38,7 @@ type ShellSidebarProps = {
   repos: readonly ShellRepo[];
   repoCount: number;
   showTeam: boolean;
+  showSettings: boolean;
   collapsed: boolean;
   canToggle: boolean;
   onToggle: () => void;
@@ -61,7 +62,7 @@ function Hint({ label, collapsed, children }: { label: string; collapsed: boolea
   );
 }
 
-export function ShellSidebar({ accountName, userName, email, scanCount, running, repos, repoCount, showTeam, collapsed, canToggle, onToggle }: ShellSidebarProps) {
+export function ShellSidebar({ accountName, userName, email, scanCount, running, repos, repoCount, showTeam, showSettings, collapsed, canToggle, onToggle }: ShellSidebarProps) {
   const { open: reposOpen, setOpen: setReposOpen } = useSidebarReposOpen();
   const scansLabel = running > 0 ? `Scans, ${running} in progress` : "Scans";
   const hasRepoChildren = repoCount >= 2;
@@ -165,6 +166,15 @@ export function ShellSidebar({ accountName, userName, email, scanCount, running,
             <Link to="/team" aria-label="Team" className={cn(ROW, collapsed && "justify-center px-0")} activeProps={ACTIVE}>
               <Users className={ICON} strokeWidth={1.5} />
               {!collapsed && "Team"}
+            </Link>
+          </Hint>
+        )}
+
+        {showSettings && (
+          <Hint label="Settings" collapsed={collapsed}>
+            <Link to="/settings" aria-label="Settings" className={cn(ROW, collapsed && "justify-center px-0")} activeProps={ACTIVE}>
+              <Settings className={ICON} strokeWidth={1.5} />
+              {!collapsed && "Settings"}
             </Link>
           </Hint>
         )}

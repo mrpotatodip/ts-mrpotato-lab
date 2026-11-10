@@ -16,6 +16,7 @@ const SCREEN_WORD = {
   repos: "Repositories",
   files: "Files",
   team: "Team",
+  settings: "Settings",
   connections: "Connections",
   github: "GitHub",
 } as const;

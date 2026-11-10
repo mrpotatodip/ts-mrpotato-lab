@@ -1,5 +1,24 @@
 import { describe, expect, it } from "vitest";
-import { usageBudgetError, usageBudgetFloorUsd } from "#/modules/usage/utils/usage-format";
+import { usageBudgetError, usageBudgetFloorUsd, usageBudgetLabel, usageChangedAt } from "#/modules/usage/utils/usage-format";
+
+describe("usageBudgetLabel", () => {
+  it.each([
+    [null, "the default"],
+    [30, "$30.00"],
+  ])("writes %s as %s", (value, expected) => {
+    expect(usageBudgetLabel(value)).toBe(expected);
+  });
+});
+
+describe("usageChangedAt", () => {
+  it("writes the moment in UTC", () => {
+    expect(usageChangedAt("2026-11-11T09:40:00.000Z")).toBe("Nov 11, 2026, 09:40 UTC");
+  });
+
+  it("gives back text that is not a date", () => {
+    expect(usageChangedAt("not a date")).toBe("not a date");
+  });
+});
 
 describe("usageBudgetFloorUsd", () => {
   it("rounds what the month has committed up to the cent", () => {

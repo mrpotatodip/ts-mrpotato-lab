@@ -1,9 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { engineJson, jsonPost } from "#/lib/engine-client";
 import { engineAuth } from "#/modules/auth/server/session";
-import { UpdateUsageBudgetBodySchema, UsageSchema } from "../schemas";
+import { UpdateUsageBudgetBodySchema, UsageBudgetChangesSchema, UsageSchema } from "../schemas";
 
 export const fetchUsage = createServerFn({ method: "GET" }).handler(async () => engineJson(UsageSchema, "/usage", {}, await engineAuth()));
+
+export const fetchBudgetChanges = createServerFn({ method: "GET" }).handler(async () => engineJson(UsageBudgetChangesSchema, "/usage/budget/changes", {}, await engineAuth()));
 
 export const updateUsageBudget = createServerFn({ method: "POST" })
   .validator(UpdateUsageBudgetBodySchema)

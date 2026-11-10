@@ -16,6 +16,7 @@ import { Route as SignupRouteImport } from './routes/signup'
 import { Route as AppConnectionsRouteImport } from './routes/_app/connections'
 import { Route as AppFilesRouteImport } from './routes/_app/files'
 import { Route as AppOverviewRouteImport } from './routes/_app/overview'
+import { Route as AppSettingsRouteImport } from './routes/_app/settings'
 import { Route as AppTeamRouteImport } from './routes/_app/team'
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as AppGithubCallbackRouteImport } from './routes/_app/github.callback'
@@ -57,6 +58,11 @@ const AppFilesRoute = AppFilesRouteImport.update({
 const AppOverviewRoute = AppOverviewRouteImport.update({
   id: '/overview',
   path: '/overview',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppSettingsRoute = AppSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => AppRouteRoute,
 } as any)
 const AppTeamRoute = AppTeamRouteImport.update({
@@ -108,6 +114,7 @@ export interface FileRoutesByFullPath {
   '/connections': typeof AppConnectionsRoute
   '/files': typeof AppFilesRoute
   '/overview': typeof AppOverviewRoute
+  '/settings': typeof AppSettingsRoute
   '/team': typeof AppTeamRoute
   '/invite/$token': typeof InviteTokenRoute
   '/github/callback': typeof AppGithubCallbackRoute
@@ -124,6 +131,7 @@ export interface FileRoutesByTo {
   '/connections': typeof AppConnectionsRoute
   '/files': typeof AppFilesRoute
   '/overview': typeof AppOverviewRoute
+  '/settings': typeof AppSettingsRoute
   '/team': typeof AppTeamRoute
   '/invite/$token': typeof InviteTokenRoute
   '/github/callback': typeof AppGithubCallbackRoute
@@ -142,6 +150,7 @@ export interface FileRoutesById {
   '/_app/connections': typeof AppConnectionsRoute
   '/_app/files': typeof AppFilesRoute
   '/_app/overview': typeof AppOverviewRoute
+  '/_app/settings': typeof AppSettingsRoute
   '/_app/team': typeof AppTeamRoute
   '/invite/$token': typeof InviteTokenRoute
   '/_app/github/callback': typeof AppGithubCallbackRoute
@@ -160,6 +169,7 @@ export interface FileRouteTypes {
     | '/connections'
     | '/files'
     | '/overview'
+    | '/settings'
     | '/team'
     | '/invite/$token'
     | '/github/callback'
@@ -176,6 +186,7 @@ export interface FileRouteTypes {
     | '/connections'
     | '/files'
     | '/overview'
+    | '/settings'
     | '/team'
     | '/invite/$token'
     | '/github/callback'
@@ -193,6 +204,7 @@ export interface FileRouteTypes {
     | '/_app/connections'
     | '/_app/files'
     | '/_app/overview'
+    | '/_app/settings'
     | '/_app/team'
     | '/invite/$token'
     | '/_app/github/callback'
@@ -262,6 +274,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppOverviewRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/_app/settings': {
+      id: '/_app/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AppSettingsRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
     '/_app/team': {
       id: '/_app/team'
       path: '/team'
@@ -325,6 +344,7 @@ interface AppRouteRouteChildren {
   AppConnectionsRoute: typeof AppConnectionsRoute
   AppFilesRoute: typeof AppFilesRoute
   AppOverviewRoute: typeof AppOverviewRoute
+  AppSettingsRoute: typeof AppSettingsRoute
   AppTeamRoute: typeof AppTeamRoute
   AppGithubCallbackRoute: typeof AppGithubCallbackRoute
   AppReposRepoIdRoute: typeof AppReposRepoIdRoute
@@ -338,6 +358,7 @@ const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppConnectionsRoute: AppConnectionsRoute,
   AppFilesRoute: AppFilesRoute,
   AppOverviewRoute: AppOverviewRoute,
+  AppSettingsRoute: AppSettingsRoute,
   AppTeamRoute: AppTeamRoute,
   AppGithubCallbackRoute: AppGithubCallbackRoute,
   AppReposRepoIdRoute: AppReposRepoIdRoute,

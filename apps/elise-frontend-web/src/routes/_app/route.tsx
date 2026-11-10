@@ -28,6 +28,7 @@ function AppLayout() {
       repos={repos}
       repoCount={repoCount}
       showTeam={hasAccessPower(user?.powers ?? [], "company:team:members:read")}
+      showSettings={hasAccessPower(user?.powers ?? [], "company:usage:budget:update")}
       actions={<ScanNewDialog variant={pageHasOwnScanButton ? "outline" : "default"} />}
     >
       <Outlet />

@@ -4,6 +4,19 @@ const MONTH = new Intl.DateTimeFormat("en", { month: "long", year: "numeric", ti
 
 export const usageUsd = (value: number) => USD.format(value);
 
+const CHANGED_AT = new Intl.DateTimeFormat("en", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "UTC" });
+
+export const usageChangedAt = (iso: string) => {
+  const date = new Date(iso);
+  return Number.isNaN(date.getTime()) ? iso : `${CHANGED_AT.format(date)} UTC`;
+};
+
+// -----
+// null is the platform default, which is what an account is on
+// until an admin sets its own budget.
+// -----
+export const usageBudgetLabel = (value: number | null) => (value === null ? "the default" : usageUsd(value));
+
 export const usageTokens = (value: number) => COMPACT.format(value);
 
 export const usageMonthLabel = (month: string) => {
