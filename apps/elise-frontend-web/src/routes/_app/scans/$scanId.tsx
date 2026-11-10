@@ -1,9 +1,8 @@
 import { Suspense } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
-import { Skeleton } from "#/components/ui/skeleton";
 import { RepoVerdictDecision } from "#/modules/repo";
-import { prefetchScanReport, ScanDetail, scanQuery, scanRepoName } from "#/modules/scan";
+import { prefetchScanReport, ScanDetail, ScanDetailSkeleton, scanQuery, scanRepoName } from "#/modules/scan";
 
 export const Route = createFileRoute("/_app/scans/$scanId")({
   loader: async ({ context, params }) => {
@@ -24,7 +23,7 @@ function ScanPage() {
         <ArrowLeft className="size-3.5" />
         All scans
       </Link>
-      <Suspense fallback={<Skeleton className="h-64 w-full" />}>
+      <Suspense fallback={<ScanDetailSkeleton />}>
         <ScanDetail scanId={scanId} Decision={RepoVerdictDecision} />
       </Suspense>
     </>

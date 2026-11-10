@@ -3,7 +3,7 @@ import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { FileText, LoaderCircle, OctagonX } from "lucide-react";
 import { Alert, AlertDescription } from "#/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
-import { Skeleton } from "#/components/ui/skeleton";
+import { SkeletonBar } from "#/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "#/components/ui/tabs";
 import { GithubPrivateBadge } from "#/modules/github";
 import { ShellPageHeader } from "#/modules/shell";
@@ -13,6 +13,7 @@ import type { ScanStatus } from "../schemas";
 import { scanBytes, scanCost, scanFailure, scanPlural, scanRepoName } from "../utils";
 import { ScanBranchScans } from "./scan-branch-scans";
 import { ScanChangeAlerts } from "./scan-change-alerts";
+import { ScanDiffSkeleton, ScanFindingsTableSkeleton } from "./scan-detail-skeleton";
 import { ScanDiffCard } from "./scan-diff-card";
 import { ScanFindingsTable } from "./scan-findings-table";
 import { ScanHeaderMeta } from "./scan-header-meta";
@@ -26,7 +27,7 @@ const DEFAULT_FILE = "REPORT.md";
 function ScanFileViewer({ scanId, file }: { scanId: string; file: string }) {
   const { data, isPending, error } = useQuery(scanFileQuery(scanId, file));
 
-  if (isPending) return <Skeleton className="m-5 h-64" />;
+  if (isPending) return <SkeletonBar className="m-5 h-64" />;
   if (error) {
     return error.message === "File not found" ? (
       <p className="p-5 text-sm leading-relaxed text-muted-foreground">
@@ -139,7 +140,7 @@ export function ScanDetail({ scanId, Decision }: ScanDetailProps) {
           {scan.skill === "lite" && scan.commitSha && <ScanVerdictCard repoId={scan.repoId} commit={scan.commitSha} repoUrl={scan.repo} found={scan.summary?.total ?? 0} Decision={Decision} compactFindings={showFindings} />}
           {scan.skill === "lite" && scan.branchId && <ScanChangeAlerts scanId={scanId} />}
           {scan.skill === "lite" && scan.branchId && (
-            <Suspense fallback={<Skeleton className="h-24 w-full" />}>
+            <Suspense fallback={<ScanDiffSkeleton />}>
               <ScanDiffCard scanId={scanId} />
             </Suspense>
           )}
@@ -160,7 +161,7 @@ export function ScanDetail({ scanId, Decision }: ScanDetailProps) {
                 <p className="max-w-copy text-sm leading-relaxed text-muted-foreground">{findingsDescription(scan)}</p>
               </CardHeader>
               <CardContent className="overflow-hidden p-0">
-                <Suspense fallback={<Skeleton className="m-5 h-24" />}>
+                <Suspense fallback={<ScanFindingsTableSkeleton />}>
                   <ScanFindingsTable scanId={scanId} repoId={scan.repoId} repoLabel={owner ? `${owner}/${name}` : name} commit={scan.commitSha ?? undefined} />
                 </Suspense>
               </CardContent>

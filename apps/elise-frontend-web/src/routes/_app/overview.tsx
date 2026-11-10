@@ -1,9 +1,8 @@
 import { Suspense } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { Skeleton } from "#/components/ui/skeleton";
 import { RepoAttentionList, RepoSummaryStrip, reposQuery } from "#/modules/repo";
-import { overviewQuery, ScanOverview, scansQuery } from "#/modules/scan";
+import { overviewQuery, ScanOverview, ScanOverviewSkeleton, scansQuery } from "#/modules/scan";
 import { usageQuery } from "#/modules/usage";
 
 export const Route = createFileRoute("/_app/overview")({
@@ -25,7 +24,7 @@ function OverviewWithRepos() {
 
 function OverviewPage() {
   return (
-    <Suspense fallback={<Skeleton className="h-64 w-full" />}>
+    <Suspense fallback={<ScanOverviewSkeleton />}>
       <OverviewWithRepos />
     </Suspense>
   );

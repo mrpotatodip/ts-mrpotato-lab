@@ -1,8 +1,7 @@
 import { Suspense } from "react";
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { Skeleton } from "#/components/ui/skeleton";
 import { noop } from "@tanstack/react-query";
-import { RepoDetail, repoFindingsQuery, repoName, repoQuery } from "#/modules/repo";
+import { RepoDetail, RepoDetailSkeleton, repoFindingsQuery, repoName, repoQuery } from "#/modules/repo";
 import { verdictQuery } from "#/modules/scan";
 
 export const Route = createFileRoute("/_app/repos/$repoId_/branches/$branchId")({
@@ -24,7 +23,7 @@ export const Route = createFileRoute("/_app/repos/$repoId_/branches/$branchId")(
 function BranchPage() {
   const { repoId, branchId } = Route.useParams();
   return (
-    <Suspense fallback={<Skeleton className="h-64 w-full" />}>
+    <Suspense fallback={<RepoDetailSkeleton />}>
       <RepoDetail repoId={repoId} branchId={branchId} />
     </Suspense>
   );

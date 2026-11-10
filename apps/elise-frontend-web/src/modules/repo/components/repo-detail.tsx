@@ -11,7 +11,6 @@ import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTi
 import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#/components/ui/select";
-import { Skeleton } from "#/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "#/components/ui/tooltip";
 import { dataTableColumns, dataTableFeatures } from "#/lib/data-table";
 import { cn } from "#/lib/utils";
@@ -23,6 +22,7 @@ import { repoFindingsQuery, repoKeys, repoQuery } from "../hooks";
 import type { RepoFinding } from "../schemas";
 import { repoName } from "../utils";
 import { RepoBranchSwitch } from "./repo-branch-switch";
+import { RepoFindingsSkeleton } from "./repo-detail-skeleton";
 import { RepoVerdictDecision } from "./repo-verdict-decision";
 
 const RECENT_SCAN_COUNT = 3;
@@ -455,7 +455,7 @@ export function RepoDetail({ repoId, branchId }: { repoId: string; branchId?: st
       )}
 
       {current ? (
-        <Suspense key={current.name} fallback={<Skeleton className="h-56 w-full" />}>
+        <Suspense key={current.name} fallback={<RepoFindingsSkeleton />}>
           <RepoFindings repoId={repoId} branch={current.name} history={repo.history} />
         </Suspense>
       ) : (

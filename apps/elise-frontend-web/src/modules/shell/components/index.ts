@@ -3,6 +3,7 @@ export * from "./shell-filter-bar";
 export * from "./shell-frame";
 export * from "./shell-list-count";
 export * from "./shell-page-header";
+export * from "./shell-page-header-skeleton";
 export * from "./shell-logo";
 export * from "./shell-public-brand";
 export * from "./shell-public-theme-switch";

@@ -1,8 +1,7 @@
 import { Suspense } from "react";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { z } from "zod";
-import { Skeleton } from "#/components/ui/skeleton";
-import { inviteQuery, TeamInviteAccept, TeamInviteInvalid } from "#/modules/team";
+import { inviteQuery, TeamInviteAccept, TeamInviteInvalid, TeamInviteSkeleton } from "#/modules/team";
 
 const FailureStatusSchema = z.object({ status: z.number() });
 
@@ -34,7 +33,7 @@ function InvitePage() {
   const { token } = Route.useParams();
   const { user } = Route.useRouteContext();
   return (
-    <Suspense fallback={<Skeleton className="mx-auto mt-24 h-64 w-full max-w-md" />}>
+    <Suspense fallback={<TeamInviteSkeleton />}>
       <TeamInviteAccept token={token} signedIn={user !== null} />
     </Suspense>
   );

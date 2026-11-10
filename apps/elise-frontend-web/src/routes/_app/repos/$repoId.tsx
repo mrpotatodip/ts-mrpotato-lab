@@ -1,8 +1,7 @@
 import { Suspense } from "react";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { z } from "zod";
-import { Skeleton } from "#/components/ui/skeleton";
-import { RepoDetail, repoName, repoQuery } from "#/modules/repo";
+import { RepoDetail, RepoDetailSkeleton, repoName, repoQuery } from "#/modules/repo";
 
 const SearchSchema = z.object({ branch: z.string().min(1).optional() }).catch({});
 
@@ -33,7 +32,7 @@ export const Route = createFileRoute("/_app/repos/$repoId")({
 function RepoPage() {
   const { repoId } = Route.useParams();
   return (
-    <Suspense fallback={<Skeleton className="h-64 w-full" />}>
+    <Suspense fallback={<RepoDetailSkeleton />}>
       <RepoDetail repoId={repoId} />
     </Suspense>
   );
