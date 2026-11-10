@@ -38,7 +38,7 @@ const fakeStep = (names: string[]): WorkflowStep => {
   return { do: run, sleep: async (name: string) => void names.push(name) } as never;
 };
 
-const setup = (options: { priors?: PriorFinding[]; recordFails?: ScanState; agent?: "succeeded" | "failed" } = {}) => {
+const setup = (options: { priors?: PriorFinding[]; recordFails?: ScanState; agent?: "succeeded" | "failed"; pollThrows?: boolean } = {}) => {
   const names: string[] = [];
   const calls: string[] = [];
   const ledger = memoryScanRepo();
@@ -53,7 +53,10 @@ const setup = (options: { priors?: PriorFinding[]; recordFails?: ScanState; agen
       return { commitSha: "abc123", branch: ref && /^v\d/.test(ref) ? null : (ref ?? "main") };
     },
     launchAgent: async (_options, priors) => void launches.push(priors),
-    pollAgent: async () => (options.agent === "failed" ? { state: "failed", error: "claude exited 1" } : { state: "succeeded" }),
+    pollAgent: async () => {
+      if (options.pollThrows) throw new Error("sandbox unreachable");
+      return options.agent === "failed" ? { state: "failed", error: "claude exited 1" } : { state: "succeeded" };
+    },
     agentLogTail: async () => "log",
     readUsage: async () => usage,
     readFiles: async () => ({ "REPORT.md": "# report", "findings.json": "[]" }),
@@ -164,6 +167,15 @@ describe("runScan", () => {
 
     expect(ledger.rows.get("scan-1")).toMatchObject({ status: "failed", error: "claude exited 1" });
     expect(names).not.toContain("record-scan-succeeded");
+  });
+
+  it("keeps the spend of a scan whose polling threw after the agent started", async () => {
+    const { names, ledger, deps } = setup({ pollThrows: true });
+    await queue(ledger, params());
+
+    await expect(runScan(deps, params(), fakeStep(names))).rejects.toThrow("sandbox unreachable");
+
+    expect(ledger.rows.get("scan-1")).toMatchObject({ status: "failed", error: "sandbox unreachable", usage });
   });
 
   it("does not let a scan that a newer request closed come back to life", async () => {

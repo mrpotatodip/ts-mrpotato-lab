@@ -4,7 +4,7 @@ Where the numbers come from, and how to check them.
 
 - The `Outbound` proxy meters every `/v1/messages` call: it reads the `usage` of each response, prices it with `SCAN_SANDBOX_MODEL_PRICES` and adds it to the scan's meter in the `ScanSandbox` Durable Object. It refuses new calls once the meter reaches the scan's `maxBudgetUsd`, and caps `max_tokens`. `readUsage` records the meter's tokens and cost; only turns and duration still come from the agent's report in `agent.log` (`parseAgentUsage`), which code in the container can rewrite.
 - Token counts are the model API's own counts. `cost_usd` is our estimate at the list prices in `constants/index.ts`, not an invoice; keep the table current when a model's price changes. A model missing from the table is priced like the dearest one. Haiku uses its rate above 100K prompt tokens, so it may overcount. A call in flight when the cap is reached still finishes, so a scan can pass its cap by those calls.
-- A scan that times out, or fails before the agent starts, has no usage (null). It still counts against the budget through its reserved cap while it runs.
+- A scan that times out, or whose agent or polling fails, still records the meter's usage: the workflow reads it before it writes the failed row, and before cleanup destroys the meter. A scan that fails before the agent starts has nothing metered, so its usage is null. A scan counts against the budget through its reserved cap while it runs, and through its recorded cost after.
 
 ## Check the estimate
 

@@ -112,6 +112,12 @@ export const runScan = async (deps: ScanRunDeps, params: ScanParams, step: Workf
     return { ok: true };
   } catch (cause) {
     const error = cause instanceof Error ? cause.message : String(cause);
+    // -----
+    // A step that threw after the agent started leaves the meter
+    // unread: read it now, before cleanup destroys it, so the
+    // scan's spend still counts against the month.
+    // -----
+    if (usage === null) await readUsage();
     try {
       await mark("status-failed", { status: "failed", error, usage });
     } catch {
