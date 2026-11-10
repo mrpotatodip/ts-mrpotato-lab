@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "#/components/ui/tabs";
 import { GithubPrivateBadge } from "#/modules/github";
 import { ShellPageHeader } from "#/modules/shell";
 import { SCAN_STEP_COPY } from "../constants";
-import { scanFileQuery, scanQuery, useRefreshOnFinish, useScanLinkMode } from "../hooks";
+import { scanFileQuery, scanQuery, useRefreshOnFinish } from "../hooks";
 import type { ScanStatus } from "../schemas";
 import { scanBytes, scanCost, scanFailure, scanPlural, scanRepoName } from "../utils";
 import { ScanBranchScans } from "./scan-branch-scans";
@@ -102,7 +102,6 @@ export function ScanDetail({ scanId, Decision }: ScanDetailProps) {
   const { data: scan } = useSuspenseQuery(scanQuery(scanId));
   useRefreshOnFinish(scan.status);
   const [picked, setPicked] = useState(DEFAULT_FILE);
-  const live = useScanLinkMode() === "live";
   const files = scan.files ?? [];
   const file = files.includes(picked) ? picked : (files[0] ?? DEFAULT_FILE);
   const { owner, name } = scanRepoName(scan.repo, scan.scanId);
@@ -136,14 +135,14 @@ export function ScanDetail({ scanId, Decision }: ScanDetailProps) {
       {succeeded && (
         <>
           <ScanSummary scan={scan} />
-          {live && scan.skill === "lite" && scan.commitSha && <ScanVerdictCard repoId={scan.repoId} commit={scan.commitSha} repoUrl={scan.repo} found={scan.summary?.total ?? 0} Decision={Decision} compactFindings={showFindings} />}
-          {scan.skill === "lite" && (!live || scan.branchId) && <ScanChangeAlerts scanId={scanId} />}
-          {scan.skill === "lite" && (!live || scan.branchId) && (
+          {scan.skill === "lite" && scan.commitSha && <ScanVerdictCard repoId={scan.repoId} commit={scan.commitSha} repoUrl={scan.repo} found={scan.summary?.total ?? 0} Decision={Decision} compactFindings={showFindings} />}
+          {scan.skill === "lite" && scan.branchId && <ScanChangeAlerts scanId={scanId} />}
+          {scan.skill === "lite" && scan.branchId && (
             <Suspense fallback={<Skeleton className="h-24 w-full" />}>
               <ScanDiffCard scanId={scanId} />
             </Suspense>
           )}
-          {scan.skill === "lite" && live && !scan.branchId && (
+          {scan.skill === "lite" && !scan.branchId && (
             <Card>
               <CardHeader className="gap-1.5">
                 <CardTitle>No history to compare with</CardTitle>
@@ -161,7 +160,7 @@ export function ScanDetail({ scanId, Decision }: ScanDetailProps) {
               </CardHeader>
               <CardContent className="overflow-hidden p-0">
                 <Suspense fallback={<Skeleton className="m-5 h-24" />}>
-                  <ScanFindingsTable scanId={scanId} repoId={live ? scan.repoId : undefined} repoLabel={owner ? `${owner}/${name}` : name} commit={scan.commitSha ?? undefined} />
+                  <ScanFindingsTable scanId={scanId} repoId={scan.repoId} repoLabel={owner ? `${owner}/${name}` : name} commit={scan.commitSha ?? undefined} />
                 </Suspense>
               </CardContent>
             </Card>

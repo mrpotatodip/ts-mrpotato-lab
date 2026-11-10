@@ -4,7 +4,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { authUser, ensureTenantRoles, findTenantRole, partyRoles, tenantGroupMembers, tenantGroups, tenantTeamInvites } from "@repo/db-elise";
 import { TENANT_ADMIN_ROLE_KEY } from "@repo/contracts/elise";
 import { openTestDb, seedTenant, type TestDb } from "#/__tests__/test-db";
-import { acceptInviteEffect, createInviteEffect, listTeamEffect, previewInviteEffect, revokeInviteEffect } from "#/modules/team/queries";
+import { acceptInviteEffect, createInviteEffect, inviteEmailContextEffect, listTeamEffect, previewInviteEffect, revokeInviteEffect } from "#/modules/team/queries";
 import type { NewInvite } from "#/modules/team/types";
 
 let test: TestDb;
@@ -91,6 +91,13 @@ describe("createInviteEffect", () => {
 
     expect(await fail(accept(first.tokenHash))).toMatchObject({ _tag: "Forbidden" });
     expect(await run(accept(second.tokenHash))).toEqual({ tenantId });
+  });
+});
+
+describe("inviteEmailContextEffect", () => {
+  it("gives the account name and the inviter's name, and falls back when either is missing", async () => {
+    expect(await run(inviteEmailContextEffect(test.pool, tenantId, adminUserId))).toEqual({ accountName: "acme", inviterName: "Ada Rossi" });
+    expect(await run(inviteEmailContextEffect(test.pool, crypto.randomUUID(), "nobody"))).toEqual({ accountName: "your team", inviterName: "A teammate" });
   });
 });
 

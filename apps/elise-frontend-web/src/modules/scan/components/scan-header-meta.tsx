@@ -1,7 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { ChevronRight, ExternalLink, FolderGit2, GitBranch } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "#/components/ui/tooltip";
-import { useScanLinkMode } from "../hooks";
 import type { ScanStatus } from "../schemas";
 import { scanDuration } from "../utils";
 import { ScanStatusBadge } from "./scan-status-badge";
@@ -24,7 +23,6 @@ const githubUrl = (repo: string) => repo.replace(/\.git$/, "").replace(/\/$/, ""
 // repository's history instead.
 // -----
 function ScanBranchRow({ scan }: { scan: ScanStatus }) {
-  const live = useScanLinkMode() === "live";
   const label = scan.branch ?? scan.ref;
 
   if (!label && !scan.commitSha) return null;
@@ -36,12 +34,10 @@ function ScanBranchRow({ scan }: { scan: ScanStatus }) {
           <GitBranch aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
           One-off scan
         </span>
-        {live && (
-          <Link to="/repos/$repoId" params={{ repoId: scan.repoId }} className={TEXT_LINK}>
-            <FolderGit2 aria-hidden="true" className="size-3.5" />
-            Repository history
-          </Link>
-        )}
+        <Link to="/repos/$repoId" params={{ repoId: scan.repoId }} className={TEXT_LINK}>
+          <FolderGit2 aria-hidden="true" className="size-3.5" />
+          Repository history
+        </Link>
       </div>
     );
   }
@@ -57,7 +53,7 @@ function ScanBranchRow({ scan }: { scan: ScanStatus }) {
 
   return (
     <div className="flex min-w-0 items-center gap-2">
-      {live && scan.branchId ? (
+      {scan.branchId ? (
         <Link to="/repos/$repoId/branches/$branchId" params={{ repoId: scan.repoId, branchId: scan.branchId }} className={CHIP_LINK} title="Open this branch's history">
           {chip}
           <ChevronRight aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />

@@ -27,7 +27,6 @@ function AppLayout() {
       running={running}
       repos={repos}
       repoCount={repoCount}
-      mode="live"
       showTeam={user?.role === TENANT_ADMIN_ROLE_KEY}
       actions={<ScanNewDialog variant={pageHasOwnScanButton ? "outline" : "default"} />}
     >

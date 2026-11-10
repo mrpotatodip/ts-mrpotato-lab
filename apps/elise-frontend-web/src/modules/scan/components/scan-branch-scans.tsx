@@ -4,7 +4,7 @@ import { ChevronRight } from "lucide-react";
 import { Badge } from "#/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "#/components/ui/table";
-import { scanRepoBranchesQuery, useScanLinkMode } from "../hooks";
+import { scanRepoBranchesQuery } from "../hooks";
 import type { ScanStatus } from "../schemas";
 import { scanBranchScans, scanFailure, scanPlural } from "../utils";
 import { ScanSeverityDots } from "./scan-severity-dots";
@@ -18,14 +18,13 @@ const SHOWN = 5;
 // page's "Recent scans", so a person can step from one scan to the next
 // without going back to the branch. The current scan is marked and is not a
 // link. It shows nothing for a one-off scan (no branch), for a branch with no
-// other scan, in the demo screens, and while it loads: a card that may never
+// other scan, and while it loads: a card that may never
 // appear must not reserve space, or the page jumps when it goes away.
 // -----
 export function ScanBranchScans({ scan }: { scan: ScanStatus }) {
-  const live = useScanLinkMode() === "live";
-  const { data, isPending } = useQuery({ ...scanRepoBranchesQuery(scan.repoId), enabled: live && Boolean(scan.branchId) });
+  const { data, isPending } = useQuery({ ...scanRepoBranchesQuery(scan.repoId), enabled: Boolean(scan.branchId) });
 
-  if (!live || !scan.branchId) return null;
+  if (!scan.branchId) return null;
   if (isPending || !data) return null;
 
   const { scans, more } = scanBranchScans(data.history, scan, SHOWN);

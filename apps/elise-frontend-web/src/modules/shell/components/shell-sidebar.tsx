@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { ChevronUp, FileText, FlaskConical, FolderGit2, LayoutDashboard, PanelLeftClose, PanelLeftOpen, Plug, ScanSearch, Sparkles, Users } from "lucide-react";
+import { ChevronUp, FileText, FolderGit2, LayoutDashboard, PanelLeftClose, PanelLeftOpen, Plug, ScanSearch, Sparkles, Users } from "lucide-react";
 import { Avatar, AvatarFallback } from "#/components/ui/avatar";
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
@@ -24,7 +24,6 @@ export type ShellRepo = {
 const ROW =
   "relative flex h-10 items-center gap-3 rounded-lg px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 const ACTIVE = { className: "bg-accent text-foreground" };
-const SECTION = "px-3 pb-1 text-xs font-medium uppercase tracking-wider text-muted-foreground";
 const ICON = "size-[18px] shrink-0";
 const CHEVRON = "size-4 rotate-180 transition-transform group-data-[panel-open]:rotate-0";
 const TOGGLE =
@@ -38,7 +37,6 @@ type ShellSidebarProps = {
   running: number;
   repos: readonly ShellRepo[];
   repoCount: number;
-  mode: "live" | "demo";
   showTeam: boolean;
   collapsed: boolean;
   canToggle: boolean;
@@ -63,7 +61,7 @@ function Hint({ label, collapsed, children }: { label: string; collapsed: boolea
   );
 }
 
-export function ShellSidebar({ accountName, userName, email, scanCount, running, repos, repoCount, mode, showTeam, collapsed, canToggle, onToggle }: ShellSidebarProps) {
+export function ShellSidebar({ accountName, userName, email, scanCount, running, repos, repoCount, showTeam, collapsed, canToggle, onToggle }: ShellSidebarProps) {
   const { open: reposOpen, setOpen: setReposOpen } = useSidebarReposOpen();
   const scansLabel = running > 0 ? `Scans, ${running} in progress` : "Scans";
   const hasRepoChildren = repoCount >= 2;
@@ -117,7 +115,7 @@ export function ShellSidebar({ accountName, userName, email, scanCount, running,
               </CollapsibleTrigger>
             </div>
             <CollapsiblePanel>
-              <ShellRepoTree repos={repos} mode={mode} />
+              <ShellRepoTree repos={repos} />
             </CollapsiblePanel>
           </Collapsible>
         )}
@@ -183,18 +181,6 @@ export function ShellSidebar({ accountName, userName, email, scanCount, running,
           </span>
           <span className="text-xs text-muted-foreground">Paste a public GitHub repository to get a report.</span>
         </Link>
-      )}
-
-      {import.meta.env.DEV && (
-        <nav aria-label="Preview" className="grid grid-cols-[minmax(0,1fr)] gap-1">
-          {!collapsed && <p className={SECTION}>Preview</p>}
-          <Hint label="Demo screens" collapsed={collapsed}>
-            <Link to="/prototype" aria-label="Demo screens" className={cn(ROW, collapsed && "justify-center px-0")} activeProps={ACTIVE}>
-              <FlaskConical className={ICON} strokeWidth={1.5} />
-              {!collapsed && "Demo screens"}
-            </Link>
-          </Hint>
-        </nav>
       )}
 
       <div className="mt-auto grid gap-3">

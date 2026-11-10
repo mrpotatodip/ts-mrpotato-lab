@@ -18,7 +18,13 @@ app.post("/invites", createTeamInviteDoc, requireTenantManager, zValidator("head
   const data = await withPool(
     c.env.DATABASE_URL,
     (promise) => c.executionCtx.waitUntil(promise),
-    (db) => runEffect(createInviteSvc(db, accountId, userId, body)),
+    (db) =>
+      runEffect(
+        createInviteSvc(db, accountId, userId, body, {
+          dashboardUrl: c.env.DASHBOARD_URL,
+          enqueue: (mail) => c.get("deps").enqueueInviteEmail(c.env, mail),
+        }),
+      ),
   );
   return c.json({ data, error: null }, 201);
 });

@@ -19,6 +19,24 @@ export type NewInvite = {
   expiresAt: Date;
 };
 
+// -----
+// One invite email, as it waits in the queue.
+// The link holds the one-time token.
+// -----
+export type InviteEmail = {
+  to: string;
+  accountName: string;
+  inviterName: string;
+  roleLabel: string;
+  link: string;
+  expiresAt: string;
+};
+
+export type InviteMailer = {
+  dashboardUrl: string;
+  enqueue: (mail: InviteEmail) => Promise<void>;
+};
+
 export type AcceptInvite = {
   tokenHash: string;
   now: Date;

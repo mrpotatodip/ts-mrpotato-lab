@@ -19,6 +19,7 @@ const app = buildApp({
   sessionUserId: async () => signedInUser,
   userHasAccount: async () => userHoldsRole,
   userManagesAccount: async () => userHoldsRole,
+  enqueueInviteEmail: async () => undefined,
 }).app;
 
 beforeEach(() => {

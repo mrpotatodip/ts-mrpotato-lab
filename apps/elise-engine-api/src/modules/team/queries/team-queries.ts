@@ -254,6 +254,27 @@ export const createInviteEffect = (db: PoolDbType, invite: NewInvite): Effect.Ef
   });
 
 // -----
+// The two names an invite email shows: the
+// account, and the admin who made the invite.
+// -----
+export const inviteEmailContextEffect = (
+  db: PoolDbType,
+  tenantId: string,
+  actorUserId: string,
+): Effect.Effect<{ accountName: string; inviterName: string }, DbError> =>
+  Effect.gen(function* () {
+    const [tenant] = yield* Effect.tryPromise({
+      try: () => db.select({ name: tenants.name }).from(tenants).where(eq(tenants.id, tenantId)),
+      catch: toDbError,
+    });
+    const [actor] = yield* Effect.tryPromise({
+      try: () => db.select({ name: authUser.name }).from(authUser).where(eq(authUser.id, actorUserId)),
+      catch: toDbError,
+    });
+    return { accountName: tenant?.name ?? "your team", inviterName: actor?.name ?? "A teammate" };
+  });
+
+// -----
 // Revoke a pending invite of this Tenant. An
 // accepted, revoked or unknown one is NotFound.
 // -----

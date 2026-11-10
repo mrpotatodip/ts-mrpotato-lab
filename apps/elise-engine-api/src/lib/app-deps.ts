@@ -27,4 +27,7 @@ export const realAppDeps: AppDeps = {
   sessionUserId,
   userHasAccount: (c, userId, accountId) => runEffect(userHasAccountEffect(dbConnect(c.env.DATABASE_URL), userId, accountId)),
   userManagesAccount: (c, userId, accountId) => runEffect(userManagesAccountEffect(dbConnect(c.env.DATABASE_URL), userId, accountId)),
+  enqueueInviteEmail: async (env, mail) => {
+    await env.INVITE_EMAIL_QUEUE.send(mail, { contentType: "json" });
+  },
 };

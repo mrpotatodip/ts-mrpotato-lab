@@ -4,7 +4,7 @@ import { Plus } from "lucide-react";
 import { Button } from "#/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "#/components/ui/dialog";
 import { Skeleton } from "#/components/ui/skeleton";
-import { scanReposQuery, useScanLinkMode } from "../hooks";
+import { scanReposQuery } from "../hooks";
 
 const loadScanNewForm = () => import("./scan-new-form");
 const ScanNewForm = lazy(() => loadScanNewForm().then((module) => ({ default: module.ScanNewForm })));
@@ -21,7 +21,6 @@ type ScanNewDialogProps = {
 
 export function ScanNewDialog({ label = "New scan", size = "sm", variant = "default", repo, startBranch, startRef, startOptions }: ScanNewDialogProps) {
   const [open, setOpen] = useState(false);
-  const preview = useScanLinkMode() === "demo";
   const queryClient = useQueryClient();
 
   // -----
@@ -30,7 +29,7 @@ export function ScanNewDialog({ label = "New scan", size = "sm", variant = "defa
   // -----
   const warm = () => {
     void loadScanNewForm();
-    if (!preview) void queryClient.query(scanReposQuery()).catch(noop);
+    void queryClient.query(scanReposQuery()).catch(noop);
   };
 
   return (
@@ -45,7 +44,7 @@ export function ScanNewDialog({ label = "New scan", size = "sm", variant = "defa
           <DialogDescription>Pick a repository you already scan, or add a new one. We'll clone it, review the code for security issues, and save a report to your account.</DialogDescription>
         </DialogHeader>
         <Suspense fallback={<Skeleton className="h-72 w-full" />}>
-          <ScanNewForm preview={preview} repo={repo} startBranch={startBranch} startRef={startRef} startOptions={startOptions} onDone={() => setOpen(false)} />
+          <ScanNewForm repo={repo} startBranch={startBranch} startRef={startRef} startOptions={startOptions} onDone={() => setOpen(false)} />
         </Suspense>
       </DialogContent>
     </Dialog>

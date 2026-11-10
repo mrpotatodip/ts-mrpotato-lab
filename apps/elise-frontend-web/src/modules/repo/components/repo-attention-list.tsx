@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowUpRight, ChevronRight, CircleCheck } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
-import { ScanSeverityDots, scanPlural, useScanLinkMode } from "#/modules/scan";
+import { ScanSeverityDots, scanPlural } from "#/modules/scan";
 import type { Repo } from "../schemas";
 import { repoAttention, repoName } from "../utils";
 import { RepoAddDialog } from "./repo-add-dialog";
@@ -58,7 +58,6 @@ function RowBody({ repo }: { repo: Repo }) {
 }
 
 export function RepoAttentionList({ repos }: { repos: readonly Repo[] }) {
-  const demo = useScanLinkMode() === "demo";
   const ranked = repos.toSorted((a, b) => repoAttention(b) - repoAttention(a) || b.open.total - a.open.total || (b.lastScanAt ?? "").localeCompare(a.lastScanAt ?? ""));
   const shown = ranked.slice(0, SHOWN);
   const more = ranked.length - shown.length;
@@ -70,17 +69,10 @@ export function RepoAttentionList({ repos }: { repos: readonly Repo[] }) {
           <CardTitle>Where to look first</CardTitle>
           <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">Every repository, the most urgent first.</p>
         </div>
-        {demo ? (
-          <Link to="/prototype/scans" className={ALL_LINK}>
-            All scans
-            <ArrowUpRight aria-hidden="true" className="size-3.5" />
-          </Link>
-        ) : (
-          <Link to="/repos" className={ALL_LINK}>
-            All repositories
-            <ArrowUpRight aria-hidden="true" className="size-3.5" />
-          </Link>
-        )}
+        <Link to="/repos" className={ALL_LINK}>
+          All repositories
+          <ArrowUpRight aria-hidden="true" className="size-3.5" />
+        </Link>
       </CardHeader>
       <CardContent className="flex flex-1 flex-col gap-3">
         {shown.length === 0 ? (
@@ -89,21 +81,15 @@ export function RepoAttentionList({ repos }: { repos: readonly Repo[] }) {
           <ul className="-mx-2 grid">
             {shown.map((repo) => (
               <li key={repo.id}>
-                {demo ? (
-                  <Link to="/prototype/scans" className={ROW}>
-                    <RowBody repo={repo} />
-                  </Link>
-                ) : (
-                  <Link to="/repos/$repoId" params={{ repoId: repo.id }} className={ROW}>
-                    <RowBody repo={repo} />
-                  </Link>
-                )}
+                <Link to="/repos/$repoId" params={{ repoId: repo.id }} className={ROW}>
+                  <RowBody repo={repo} />
+                </Link>
               </li>
             ))}
           </ul>
         )}
         {more > 0 && <p className="text-sm text-muted-foreground">{scanPlural(more, "more repository", "more repositories")}, ranked lower.</p>}
-        {more === 0 && !demo && (
+        {more === 0 && (
           <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-5">
             <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">Track another repository to see it here.</p>
             <RepoAddDialog />

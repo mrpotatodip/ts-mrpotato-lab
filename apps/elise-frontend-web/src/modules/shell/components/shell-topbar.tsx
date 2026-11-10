@@ -26,7 +26,6 @@ const scanCrumbs = (names: RouteNames | null): Crumb[] => {
 };
 
 const crumbs = (pathname: string, names: RouteNames | null): Crumb[] => {
-  if (pathname.startsWith("/prototype")) return [{ label: "Demo screens" }];
   if (pathname.startsWith("/scans/")) return scanCrumbs(names);
   if (pathname.startsWith("/scans")) return [{ label: "Scans" }];
   if (pathname.startsWith("/repos/") && pathname.includes("/branches/")) {

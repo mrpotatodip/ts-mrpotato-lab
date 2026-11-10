@@ -150,7 +150,7 @@ Everyone who holds a Role in an Account, plus the invites still waiting. A `tena
 _Avoid_: Members list (when you mean the whole Team), Group
 
 **Team invite**:
-An email, a Role and a one-time link that lets one person join an Account. The Worker sends no email: the admin shares the link. Only the hash of its token is stored. It lasts 7 days, works once, and a new invite for the same email replaces the old one. It can never give `tenant_admin`.
+An email, a Role and a one-time link that lets one person join an Account. The Worker emails the link through a queue (`INVITE_EMAIL_QUEUE`, then Cloudflare Email Service), and the create answer also holds the token so the admin can share the link by hand. Only the hash of its token is stored. It lasts 7 days, works once, and a new invite for the same email replaces the old one. It can never give `tenant_admin`.
 _Avoid_: Invitation, invite code (an invite code starts a whole new Account: `platform_invite_codes`)
 
 **Group**:

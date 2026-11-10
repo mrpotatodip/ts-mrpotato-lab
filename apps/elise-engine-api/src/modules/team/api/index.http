@@ -16,7 +16,7 @@ x-account-id: {{account}}
 
 ###
 
-# Invite someone. The answer holds the one-time token: build the link from it and share it yourself.
+# Invite someone. The Worker queues the email; the answer also holds the one-time token, in case it does not arrive.
 POST {{baseUrl}}/team/invites
 Authorization: Bearer <session-token>
 x-account-id: {{account}}

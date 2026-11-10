@@ -6,32 +6,70 @@ import {
   type AcceptTeamInviteBody,
   type CreatedTeamInvite,
   type CreateTeamInviteBody,
+  type TeamInvite,
   type TeamInvitePreview,
   type TeamList,
   type TeamRoles,
 } from "@repo/contracts/elise";
 import type { DbConnectType, PoolDbType } from "#/lib/db-connection";
-import type { DbError, Forbidden } from "#/lib/effect-query";
+import { ExternalError, type DbError, type Forbidden } from "#/lib/effect-query";
+import { errorChainForLog } from "#/lib/redact-log";
 import { generateInviteToken, hashInviteToken } from "#/modules/team/lib";
 import {
   acceptInviteEffect,
   createInviteEffect,
+  inviteEmailContextEffect,
   listAssignableRolesEffect,
   listTeamEffect,
   previewInviteEffect,
   revokeInviteEffect,
 } from "#/modules/team/queries";
-import type { TeamFailure } from "#/modules/team/types";
+import type { InviteMailer, TeamFailure } from "#/modules/team/types";
 
 export const listTeamSvc = (db: DbConnectType, accountId: string): Effect.Effect<TeamList, DbError> => listTeamEffect(db, accountId, new Date());
 
 export const listTeamRolesSvc = (db: DbConnectType, accountId: string): Effect.Effect<TeamRoles, DbError> => listAssignableRolesEffect(db, accountId);
 
 // -----
-// The token is made here and returned once. Only
-// its hash reaches the database.
+// Queue the email for a saved invite. The invite
+// and its link already exist, so a failure here
+// is logged and never fails the request: the admin
+// still has the link to send by hand.
 // -----
-export const createInviteSvc = (db: PoolDbType, accountId: string, userId: string, body: CreateTeamInviteBody): Effect.Effect<CreatedTeamInvite, TeamFailure> =>
+const queueInviteEmail = (db: PoolDbType, accountId: string, userId: string, mailer: InviteMailer, invite: TeamInvite, token: string) =>
+  Effect.gen(function* () {
+    const { accountName, inviterName } = yield* inviteEmailContextEffect(db, accountId, userId);
+    yield* Effect.tryPromise({
+      try: () =>
+        mailer.enqueue({
+          to: invite.email,
+          accountName,
+          inviterName,
+          roleLabel: invite.roleLabel,
+          link: `${mailer.dashboardUrl.replace(/\/$/, "")}/invite/${encodeURIComponent(token)}`,
+          expiresAt: invite.expiresAt,
+        }),
+      catch: (cause) => new ExternalError({ cause }),
+    });
+  }).pipe(
+    Effect.catchTags({
+      DbError: (error) => Effect.sync(() => console.error("Invite email not queued", errorChainForLog(error))),
+      ExternalError: (error) => Effect.sync(() => console.error("Invite email not queued", errorChainForLog(error))),
+    }),
+  );
+
+// -----
+// The token is made here and returned once. Only
+// its hash reaches the database. Once the invite
+// is saved, its email is queued.
+// -----
+export const createInviteSvc = (
+  db: PoolDbType,
+  accountId: string,
+  userId: string,
+  body: CreateTeamInviteBody,
+  mailer: InviteMailer,
+): Effect.Effect<CreatedTeamInvite, TeamFailure> =>
   Effect.gen(function* () {
     const token = generateInviteToken();
     const tokenHash = yield* Effect.promise(() => hashInviteToken(token));
@@ -46,6 +84,7 @@ export const createInviteSvc = (db: PoolDbType, accountId: string, userId: strin
       now,
       expiresAt: new Date(now.getTime() + TEAM_INVITE_TTL_MS),
     });
+    yield* queueInviteEmail(db, accountId, userId, mailer, invite, token);
     return { token, invite };
   });
 

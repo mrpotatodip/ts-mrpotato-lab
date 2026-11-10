@@ -10,7 +10,9 @@ import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
 import { RadioCard, RadioGroup } from "#/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#/components/ui/select";
+import { cn } from "#/lib/utils";
 import { githubReposQuery, type GithubRepo } from "#/modules/github";
+import { usageQuery, usageUsd } from "#/modules/usage";
 import {
   SCAN_DEFAULT_BRANCH,
   SCAN_EFFORT_OPTIONS,
@@ -90,7 +92,6 @@ const LAST_SCAN_NOTE = {
 } as const;
 
 type ScanNewFormProps = {
-  preview: boolean;
   onDone: () => void;
   repo?: string;
   startBranch?: string;
@@ -98,20 +99,22 @@ type ScanNewFormProps = {
   startOptions?: Partial<Pick<CreateScanInput, "model" | "effort" | "skill" | "profile">>;
 };
 
-export function ScanNewForm({ preview, onDone, repo, startBranch, startRef, startOptions }: ScanNewFormProps) {
+export function ScanNewForm({ onDone, repo, startBranch, startRef, startOptions }: ScanNewFormProps) {
   const [values, setValues] = useState<CreateScanInput>({ ...INITIAL, ...startOptions, ref: startRef });
   const [picked, setPicked] = useState<string | null>(null);
   const repoInput = useRef<HTMLInputElement>(null);
   const { data: list } = useQuery(scansQuery());
-  const { data: repoList } = useQuery({ ...scanReposQuery(), enabled: !preview });
+  const { data: usage } = useQuery(usageQuery());
+  const budgetSpent = usage !== undefined && usage.remainingUsd <= 0;
+  const { data: repoList } = useQuery(scanReposQuery());
   const everyKnown = repoList ? scanRepoChoices(repoList.repos, list?.scans ?? []) : scanKnownRepos(list?.scans ?? []);
   const known = everyKnown.filter((item) => !item.isPrivate);
   const [userSource, setUserSource] = useState<ScanSource | null>(null);
   const [privateRepo, setPrivateRepo] = useState<GithubRepo | undefined>(undefined);
   const [privateBranch, setPrivateBranch] = useState(startRef ? OTHER_BRANCH : (startBranch ?? DEFAULT_BRANCH));
-  const { data: connected } = useQuery({ ...githubReposQuery(), enabled: !preview && repo !== undefined });
+  const { data: connected } = useQuery({ ...githubReposQuery(), enabled: repo !== undefined });
   const connectedMatch = repo === undefined ? undefined : connected?.find((item) => item.url.toLowerCase() === repo.replace(/(\.git)?\/?$/, "").toLowerCase());
-  const source: ScanSource = preview ? "public" : (userSource ?? (connectedMatch?.private ? "private" : "public"));
+  const source: ScanSource = userSource ?? (connectedMatch?.private ? "private" : "public");
   const isPrivate = source === "private";
   const privatePicked = isPrivate ? (privateRepo ?? connectedMatch) : undefined;
   const privateRunning = privatePicked === undefined ? false : everyKnown.find((item) => item.url.toLowerCase() === privatePicked.url.toLowerCase())?.running === true;
@@ -119,7 +122,7 @@ export function ScanNewForm({ preview, onDone, repo, startBranch, startRef, star
   const chosen = known.find((item) => item.url === choice);
   const typing = choice === OTHER_REPO || (chosen === undefined && repo === undefined);
   const [branchPick, setBranchPick] = useState(startRef ? OTHER_BRANCH : (startBranch ?? DEFAULT_BRANCH));
-  const { data: detail } = useQuery({ ...scanRepoBranchesQuery(chosen?.repoId ?? ""), enabled: !preview && !typing && chosen !== undefined });
+  const { data: detail } = useQuery({ ...scanRepoBranchesQuery(chosen?.repoId ?? ""), enabled: !typing && chosen !== undefined });
   const ref = typing || branchPick === OTHER_BRANCH ? values.ref : branchPick === DEFAULT_BRANCH ? undefined : branchPick;
   const privateRef = privateBranch === OTHER_BRANCH ? values.ref : privateBranch === DEFAULT_BRANCH ? undefined : privateBranch;
   const plan: CreateScanInput = isPrivate ? { ...values, repo: privatePicked?.url ?? "", ref: privateRef } : { ...values, repo: typing ? values.repo : choice, ref };
@@ -152,11 +155,6 @@ export function ScanNewForm({ preview, onDone, repo, startBranch, startRef, star
       repoInput.current?.focus();
       return;
     }
-    if (preview) {
-      toast.info("This is a demo, so no audit was started.");
-      onDone();
-      return;
-    }
     start.mutate(parsed.data);
   };
 
@@ -165,23 +163,21 @@ export function ScanNewForm({ preview, onDone, repo, startBranch, startRef, star
   return (
     <form onSubmit={submit} className="flex min-h-0 flex-1 flex-col">
       <DialogBody className="grid content-start gap-6">
-        {!preview && (
-          <div className="grid gap-2">
-            <span id="source-label" className="text-sm font-medium leading-none">
-              Is the repository public or private?
-            </span>
-            <RadioGroup
-              aria-labelledby="source-label"
-              value={source}
-              onValueChange={(next) => setUserSource(SCAN_SOURCE_OPTIONS.find((option) => option.value === next)?.value ?? "public")}
-              className="grid-cols-2"
-            >
-              {SCAN_SOURCE_OPTIONS.map((option) => (
-                <RadioCard key={option.value} value={option.value} title={option.label} description={option.description} />
-              ))}
-            </RadioGroup>
-          </div>
-        )}
+        <div className="grid gap-2">
+          <span id="source-label" className="text-sm font-medium leading-none">
+            Is the repository public or private?
+          </span>
+          <RadioGroup
+            aria-labelledby="source-label"
+            value={source}
+            onValueChange={(next) => setUserSource(SCAN_SOURCE_OPTIONS.find((option) => option.value === next)?.value ?? "public")}
+            className="grid-cols-2"
+          >
+            {SCAN_SOURCE_OPTIONS.map((option) => (
+              <RadioCard key={option.value} value={option.value} title={option.label} description={option.description} />
+            ))}
+          </RadioGroup>
+        </div>
 
         {isPrivate ? (
           <>
@@ -272,7 +268,7 @@ export function ScanNewForm({ preview, onDone, repo, startBranch, startRef, star
               )}
             </>
           )}
-          {!typing && chosen !== undefined && !preview && (
+          {!typing && chosen !== undefined && (
             <>
               <Label htmlFor="branch-pick" className="mt-2">
                 Which branch should we audit?
@@ -389,9 +385,15 @@ export function ScanNewForm({ preview, onDone, repo, startBranch, startRef, star
           {summary ?? <span className="text-muted-foreground">{isPrivate ? "Choose a repository and we'll summarise what is about to run." : "Add a repository link and we'll summarise what is about to run."}</span>}
         </p>
         <div className="flex items-center justify-end gap-3">
-          <p className="mr-auto text-xs text-muted-foreground">Each audit stops at a spend limit, and your account has a monthly budget.</p>
+          <p className={cn("mr-auto text-xs", budgetSpent ? "text-status-danger" : "text-muted-foreground")} role={budgetSpent ? "alert" : undefined}>
+            {usage === undefined
+              ? "Each audit stops at a spend limit, and your account has a monthly budget."
+              : budgetSpent
+                ? "This month's budget is used up or held by running scans, so no new audit can start. It resets on the 1st (UTC)."
+                : `${usageUsd(usage.remainingUsd)} of this month's budget is left. Each audit stops at its own spend limit.`}
+          </p>
           <DialogClose render={<Button type="button" variant="outline" />}>Cancel</DialogClose>
-          <Button type="submit" disabled={start.isPending || (isPrivate ? privatePicked === undefined || privateRunning : !typing && chosen?.running === true)}>
+          <Button type="submit" disabled={start.isPending || budgetSpent || (isPrivate ? privatePicked === undefined || privateRunning : !typing && chosen?.running === true)}>
             {start.isPending ? "Starting…" : "Start audit"}
           </Button>
         </div>

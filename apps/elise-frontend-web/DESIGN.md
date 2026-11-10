@@ -42,7 +42,7 @@ All tokens are CSS variables in `src/styles/globals.css` (`:root`), mapped to Ta
 
 ## Layout
 
-`routes/_app/route.tsx` and `routes/prototype/route.tsx` both render `ShellFrame` from the `shell` module (`src/modules/shell/`): the sidebar, the topbar and the `main` landmark. They differ only in where the sidebar data comes from.
+`routes/_app/route.tsx` renders `ShellFrame` from the `shell` module (`src/modules/shell/`): the sidebar, the topbar and the `main` landmark.
 
 - **Sidebar** (`ShellSidebar`, 16.5rem, or a 4.75rem icon rail when collapsed): sticky, full height, and deliberately small. It is for going places, not for reading status, so it stays calm and short.
   - **Two groups, no headings**: the work (Overview, Repositories, Scans, Files) and, under a hairline, the account (Connections, and Team for admins only). Each is its own `nav` landmark (`Main`, `Account`), so a screen reader announces the split, and the gap between them is the hairline plus 12px of padding, not extra margin on any one row. Repositories comes before Scans because the data runs repository, branch, scan. Connections is for everyone, because members need to read why a private repository cannot be scanned; only its connect and disconnect buttons are for admins. While `/github/callback` is open, Connections is the active item, although the URL is not under it. A section label appears only where it separates something (a dev-only Preview group); a heading over a single item with the same name is noise.
@@ -95,15 +95,8 @@ All tokens are CSS variables in `src/styles/globals.css` (`:root`), mapped to Ta
 - **Loading**: `Skeleton` inside `Suspense`. **Refresh** shows a spinning icon while any query is fetching.
 - **Rule** Cache is cleared on sign-out (`queryClient.clear()`), because route loaders read the cache first.
 
-## Demo screens
+## Text and spacing
 
-`/prototype` (dev only; production answers 404) previews the dashboard with a busy account, so layouts can be judged before real data exists. Nothing on it is saved or sent.
-
-- **Pages**: `/prototype/overview` and `/prototype/scans`, which reuse the real `ScanOverview` and `ScanList`, plus `/prototype/scans/$scanId` for reports. The index lists five featured reports: running, queued, clean, failed, and a 16-finding full audit with a long report.
-- **Data**: about 40 deterministic scans (every status, skill, model, effort, a very long repository name) generated in `modules/scan/prototypes/scan-prototype-data.ts`. The overview figures are computed from those scans, so the screens agree with each other.
-- **Isolation**: the routes sit under their own `QueryClientProvider` whose cache is seeded in memory and never refetches, so demo data cannot leak into the real pages. Links inside the demo stay in the demo (`useScanLinkMode`). The new-scan form is not shown, so no real scan can be started from a demo.
-- **Rule** When a new component is added, check it on the demo screens before real data exists. The demo has already caught wrapping badges.
-- **Rule** Delete `modules/scan/prototypes/` and `routes/prototype/` once real data makes them redundant, per `docs/standards/react.md` 1.6.
 - **Rule** Reading text (a hint, an explanation, an impact line) is 14px or larger, has a line height of 1.5 or more, and runs at most about 65 characters per line (`max-w-prose`). 12px is for labels, table headers, badges, timestamps and file paths.
 - **Rule** A link or control is at least 24px tall (`min-h-6`), a button or select at least 32px. Space follows one scale: 6px from a heading to its hint, 12px from a hint to its object, 24px between groups, 32px between cards. Measure it with `measure.js` in the `chrome-review` skill, and do not judge it by eye.
 

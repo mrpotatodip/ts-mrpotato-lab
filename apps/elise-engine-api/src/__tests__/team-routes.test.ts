@@ -15,6 +15,7 @@ const app = buildApp({
   sessionUserId: async () => signedInUser,
   userHasAccount: async () => true,
   userManagesAccount: async () => managesAccount,
+  enqueueInviteEmail: async () => undefined,
 }).app;
 
 const ACCOUNT = "0b8c1d2e-3f4a-4b5c-8d6e-7f8091a2b3c4";

@@ -19,9 +19,11 @@ import reposRoutes from "#/modules/repos";
 import scansRoutes from "#/modules/scans";
 import signUpRoutes from "#/modules/sign-up";
 import teamRoutes from "#/modules/team";
+import { consumeInviteEmails } from "#/modules/team/lib";
+import type { InviteEmail } from "#/modules/team/types";
 import usageRoutes from "#/modules/usage";
 import verdictRoutes from "#/modules/verdict";
-import type { AppEnv, AppDeps } from "#/types/variables";
+import type { AppEnv, AppDeps, Bindings } from "#/types/variables";
 
 export { Outbound, ScanSandbox } from "#/modules/scan-sandbox";
 export { ScanWorkflow } from "#/modules/scan-workflow";
@@ -97,6 +99,9 @@ export const buildApp = (deps: AppDeps = realAppDeps) => {
   return { app, routes };
 };
 
-export default { fetch: buildApp().app.fetch };
+export default {
+  fetch: buildApp().app.fetch,
+  queue: (batch: MessageBatch<InviteEmail>, env: Bindings) => consumeInviteEmails(batch, env),
+};
 
 export type AppType = ReturnType<typeof buildApp>["routes"];

@@ -14,7 +14,6 @@ const ACTIVE = { className: "bg-accent text-foreground" };
 
 type ShellRepoTreeProps = {
   repos: readonly ShellRepo[];
-  mode: "live" | "demo";
 };
 
 // -----
@@ -132,39 +131,27 @@ function RepoBranches({ repoId, branches, currentId }: { repoId: string; branche
   );
 }
 
-export function ShellRepoTree({ repos, mode }: ShellRepoTreeProps) {
+export function ShellRepoTree({ repos }: ShellRepoTreeProps) {
   const sharedNames = new Set(repos.map((repo) => repo.name).filter((name, index, names) => names.indexOf(name) !== index));
   const names = useRouteNames();
 
   return (
     <ul aria-label="Recently scanned repositories" className="ml-[1.4rem] mt-0.5 grid grid-cols-[minmax(0,1fr)] pb-1">
       {repos.map((repo, index) => {
-        const active = mode === "live" && names?.repoId === repo.id && names.branches && names.branches.length > 0 ? names.branches : null;
+        const active = names?.repoId === repo.id && names.branches && names.branches.length > 0 ? names.branches : null;
         return (
           <li key={repo.id} className={cn(ITEM, index < repos.length - 1 && ITEM_LINE)}>
-            {mode === "demo" ? (
-              <Link to="/prototype/scans" className={LINK}>
-                <RepoBody repo={repo} showOwner={sharedNames.has(repo.name)} />
-              </Link>
-            ) : (
-              <Link to="/repos/$repoId" params={{ repoId: repo.id }} className={LINK} activeProps={active ? { className: "text-foreground" } : ACTIVE}>
-                <RepoBody repo={repo} showOwner={sharedNames.has(repo.name)} />
-              </Link>
-            )}
+            <Link to="/repos/$repoId" params={{ repoId: repo.id }} className={LINK} activeProps={active ? { className: "text-foreground" } : ACTIVE}>
+              <RepoBody repo={repo} showOwner={sharedNames.has(repo.name)} />
+            </Link>
             {active && <RepoBranches repoId={repo.id} branches={active} currentId={names?.branchId} />}
           </li>
         );
       })}
       <li className="relative min-w-0 pl-[1.35rem]">
-        {mode === "demo" ? (
-          <Link to="/prototype/scans" className={LINK}>
-            View all
-          </Link>
-        ) : (
-          <Link to="/repos" className={LINK}>
-            View all repositories
-          </Link>
-        )}
+        <Link to="/repos" className={LINK}>
+          View all repositories
+        </Link>
       </li>
     </ul>
   );

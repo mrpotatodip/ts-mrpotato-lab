@@ -62,11 +62,12 @@ export function TeamInviteDialog() {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Invite someone</DialogTitle>
-          <DialogDescription>They get a one-time link. Send it to them yourself: it is shown only once.</DialogDescription>
+          <DialogDescription>We email them a one-time link. You also get a copy, shown only once, in case the email does not arrive.</DialogDescription>
         </DialogHeader>
         {link ? (
           <>
             <DialogBody className="grid gap-2">
+              <p className="text-sm">We are emailing {email.trim()}. Check the spam folder if it does not arrive, or send them this link yourself.</p>
               <Label htmlFor="invite-link">Invite link</Label>
               <Input id="invite-link" readOnly value={link} onFocus={(event) => event.target.select()} />
             </DialogBody>
@@ -123,7 +124,7 @@ export function TeamInviteDialog() {
             </DialogBody>
             <DialogFooter>
               <p className="mr-auto text-xs text-muted-foreground">
-                {email.trim() === "" || role === "" ? "You get a link to send them." : `You're about to invite ${email.trim()} as ${roles.find((r) => r.key === role)?.label}. You get a link to send them.`}
+                {email.trim() === "" || role === "" ? "We email them the link." : `You're about to invite ${email.trim()} as ${roles.find((r) => r.key === role)?.label}. We email them the link.`}
               </p>
               <Button type="submit" disabled={invite.isPending}>
                 {invite.isPending ? "Creating" : "Create invite"}

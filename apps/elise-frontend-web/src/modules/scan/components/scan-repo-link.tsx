@@ -1,7 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { cn } from "#/lib/utils";
 import { GithubPrivateBadge } from "#/modules/github";
-import { useScanLinkMode } from "../hooks";
 import { scanRepoName } from "../utils";
 
 type ScanRepoLinkProps = {
@@ -17,7 +16,6 @@ const LINK_CLASS =
 const STRETCH = "after:absolute after:inset-0";
 
 export function ScanRepoLink({ scanId, repo, isPrivate, stretch = false }: ScanRepoLinkProps) {
-  const mode = useScanLinkMode();
   const { owner, name } = scanRepoName(repo, scanId);
   const label = (
     <>
@@ -27,13 +25,6 @@ export function ScanRepoLink({ scanId, repo, isPrivate, stretch = false }: ScanR
     </>
   );
 
-  if (mode === "demo") {
-    return (
-      <Link to="/prototype/scans/$scanId" params={{ scanId }} className={cn(LINK_CLASS, stretch && STRETCH)}>
-        {label}
-      </Link>
-    );
-  }
   return (
     <Link to="/scans/$scanId" params={{ scanId }} className={cn(LINK_CLASS, stretch && STRETCH)}>
       {label}

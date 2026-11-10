@@ -24,4 +24,5 @@ Rules in code: `modules/scan-records/utils/plan-history.ts`. How to check the ag
 
 - Invites record who made them (`invited_by` is NOT NULL) and every change writes an Audit trail row with an actor Party. The service token names no one.
 - The dashboard server forwards the user's session for these routes.
+- An invite is emailed through a queue. Creating one saves it, then sends a message to `INVITE_EMAIL_QUEUE`; the consumer in the same Worker sends it with the `EMAIL` binding (Cloudflare Email Service), retrying with a longer wait each time and then parking it in `elise-invite-emails-dlq`. A queue failure never fails the create, because the answer still holds the token for the admin to share by hand. The message holds the link, so the queue holds a live token until it is sent. A resend is a new invite for the same email, which replaces the old one.
 - An invite can never give `tenant_admin`. Roles and Powers are still open, so Groups grant nothing.

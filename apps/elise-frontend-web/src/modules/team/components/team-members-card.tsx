@@ -2,11 +2,13 @@ import { Suspense } from "react";
 import { useMutation, useQueryClient, useSuspenseQueries } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Badge } from "#/components/ui/badge";
+import { Button } from "#/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Skeleton } from "#/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "#/components/ui/table";
-import { revokeTeamInvite } from "../api";
+import { createTeamInvite, revokeTeamInvite } from "../api";
 import { groupsQuery, teamKeys, teamQuery } from "../hooks";
+import type { CreateInviteInput } from "../schemas";
 import { TeamConfirmDialog } from "./team-confirm-dialog";
 import { TeamInviteDialog } from "./team-invite-dialog";
 
@@ -24,6 +26,15 @@ export function TeamMembersCard({ email }: { email: string }) {
       await queryClient.invalidateQueries({ queryKey: teamKeys.members() });
     },
     onError: (error) => toast.error(`We couldn't revoke the invite. ${error.message}`),
+  });
+
+  const resend = useMutation({
+    mutationFn: (input: CreateInviteInput) => createTeamInvite({ data: input }),
+    onSuccess: async (created) => {
+      toast.success(`We emailed a new invite to ${created.invite.email}. The earlier link no longer works.`);
+      await queryClient.invalidateQueries({ queryKey: teamKeys.members() });
+    },
+    onError: (error) => toast.error(`We couldn't send the invite again. ${error.message}`),
   });
 
   return (
@@ -85,9 +96,25 @@ export function TeamMembersCard({ email }: { email: string }) {
                   <Badge variant="outline">{invite.roleLabel}</Badge>
                 </TableCell>
                 <TableCell>
-                  <span className="text-muted-foreground">-</span>
+                  <span className="flex flex-wrap gap-1.5">
+                    {groupNames(invite.groupIds).map((name) => (
+                      <Badge key={name} variant="secondary">
+                        {name}
+                      </Badge>
+                    ))}
+                    {invite.groupIds.length === 0 && <span className="text-muted-foreground">-</span>}
+                  </span>
                 </TableCell>
                 <TableCell className="text-right">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    aria-label={`Send the invite to ${invite.email} again`}
+                    disabled={resend.isPending}
+                    onClick={() => resend.mutate({ email: invite.email, role: invite.role, groupIds: [...invite.groupIds] })}
+                  >
+                    Resend
+                  </Button>
                   <TeamConfirmDialog
                     triggerLabel="Revoke"
                     triggerAriaLabel={`Revoke the invite for ${invite.email}`}

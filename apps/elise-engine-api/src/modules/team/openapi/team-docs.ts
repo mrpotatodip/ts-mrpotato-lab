@@ -51,13 +51,14 @@ export const createTeamInviteDoc = describeRoute({
   summary: "Invite someone to the account",
   description: routeText({
     context:
-      "An account admin invites an email address with a Role, and may put the person in Groups once they accept. The Worker sends no email: the answer holds the one-time token, and the admin shares the link themselves.",
+      "An account admin invites an email address with a Role, and may put the person in Groups once they accept. The Worker queues an email with the one-time link, and the answer also holds the token, so the admin can share the link by hand if the email does not arrive.",
     steps: [
       "The Worker checks the session and that the login is `tenant_admin` in the account.",
       "The Worker checks the Role (not `tenant_admin`) and that every Group belongs to the account.",
       "If the email already holds a Role in the account, the answer is 409.",
       "If a pending invite for the same email exists, the Worker revokes it, so only the newest link works.",
       "The Worker saves the invite for 7 days, keeping only the hash of the token, and writes an audit row.",
+      "The Worker puts the email on the invite queue. A queue failure is logged and never fails the request.",
       "The Worker returns the token once. It cannot be read again.",
     ],
     example: [

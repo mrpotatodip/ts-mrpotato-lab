@@ -25,7 +25,13 @@
     { "name": "TEAM_INVITE_LIMITER", "namespace_id": "1003", "simple": { "limit": 10, "period": 60 } }
   ],
   "r2_buckets": [{ "binding": "REPORTS", "bucket_name": "repo-scan-reports" }],
-  "vars": { "ENVIRONMENT": "production", "MODEL": "claude-sonnet-5-5", "EFFORT": "high", "MAX_BUDGET_USD": "2", "MAX_ACTIVE_SCANS": "3", "MONTHLY_BUDGET_USD": "20", "AUTH_BASE_URL": "https://elise-engine-api.mochi-project.workers.dev", "AUTH_TRUSTED_ORIGINS": "https://elise-engine-api.mochi-project.workers.dev,http://localhost:3000" }
+  // Invite emails: the Worker queues one per invite, the consumer below sends it. The queues must exist before a deploy (wrangler queues create).
+  "send_email": [{ "name": "EMAIL" }],
+  "queues": {
+    "producers": [{ "binding": "INVITE_EMAIL_QUEUE", "queue": "elise-invite-emails" }],
+    "consumers": [{ "queue": "elise-invite-emails", "max_batch_size": 10, "max_batch_timeout": 5, "max_retries": 4, "dead_letter_queue": "elise-invite-emails-dlq" }]
+  },
+  "vars": { "ENVIRONMENT": "production", "MODEL": "claude-sonnet-5-5", "EFFORT": "high", "MAX_BUDGET_USD": "2", "MAX_ACTIVE_SCANS": "3", "MONTHLY_BUDGET_USD": "20", "DASHBOARD_URL": "https://eliselab.com", "INVITE_FROM": "no-reply@hello.eliselab.com", "AUTH_BASE_URL": "https://elise-engine-api.mochi-project.workers.dev", "AUTH_TRUSTED_ORIGINS": "https://elise-engine-api.mochi-project.workers.dev,http://localhost:3000" }
   // MONTHLY_BUDGET_USD is the default monthly spend per account (tenants.monthly_scan_budget_usd overrides it).
   // MAX_BUDGET_USD is the per-scan spend ceiling: requests may lower it, never raise it.
   // Secrets (wrangler secret put / --secrets-file): ANTHROPIC_API_KEY, SCAN_API_TOKEN, DATABASE_URL, AUTH_SECRET
