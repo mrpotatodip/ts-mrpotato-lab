@@ -43,6 +43,7 @@ describe("monthSpendEffect", () => {
       scans: 3,
       tokens: { input: 150, output: 150, cacheRead: 150, cacheWrite: 150 },
       budgetOverrideUsd: null,
+      budgetAllowanceUsd: null,
     });
   });
 

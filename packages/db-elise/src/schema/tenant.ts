@@ -36,6 +36,7 @@ export const tenants = pgTable(
     slug: text("slug").notNull(),
     timezone: text("timezone").notNull(),
     monthlyScanBudgetUsd: numeric("monthly_scan_budget_usd", { precision: 10, scale: 2 }),
+    monthlyScanBudgetAllowanceUsd: numeric("monthly_scan_budget_allowance_usd", { precision: 10, scale: 2 }),
     ...timestamps(),
   },
   (t) => ({

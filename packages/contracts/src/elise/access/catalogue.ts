@@ -40,6 +40,11 @@ export const ACCESS_CATALOGUE = [
         children: [{ key: "accepted_risk", label: "Accepted risk", actions: ["update"] }],
       },
       {
+        key: "usage",
+        label: "Usage",
+        children: [{ key: "budget", label: "Monthly scan budget", actions: ["update"] }],
+      },
+      {
         key: "chats",
         label: "Chats",
         children: [{ key: "threads", label: "Customer thread", actions: ["read"] }],

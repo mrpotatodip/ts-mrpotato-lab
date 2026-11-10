@@ -6,3 +6,13 @@
 GET {{baseUrl}}/usage
 Authorization: Bearer {{token}}
 x-account-id: {{account}}
+
+###
+
+# Set the monthly budget in dollars; null goes back to the default. Needs a session.
+PATCH {{baseUrl}}/usage/budget
+Authorization: Bearer {{token}}
+x-account-id: {{account}}
+Content-Type: application/json
+
+{ "monthlyBudgetUsd": 30 }

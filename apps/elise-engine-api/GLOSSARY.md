@@ -129,6 +129,14 @@ _Avoid_: Env var (an env var is not always secret)
 The most dollars the agent may spend in one scan (`--max-budget-usd`). The ceiling is `MAX_BUDGET_USD`.
 _Avoid_: Limit, quota
 
+**Monthly budget**:
+The dollars an Account may spend on scans in a UTC calendar month: `tenants.monthly_scan_budget_usd`, or `MONTHLY_BUDGET_USD` when unset. An admin with the Power `company:usage:budget:update` sets it. A new scan is refused when spent plus the cap of running scans plus its own cap would pass it.
+_Avoid_: Quota, plan
+
+**Budget allowance**:
+The most an admin may set as the Monthly budget: `tenants.monthly_scan_budget_allowance_usd`, or `MONTHLY_BUDGET_USD` when unset. Only the operator changes it, so an admin cannot raise their own spending.
+_Avoid_: Ceiling (that is the Budget cap's `MAX_BUDGET_USD`), limit
+
 **Effort**:
 How hard the agent thinks: `low`, `medium`, `high`, `xhigh`, or `max`.
 _Avoid_: Quality, depth

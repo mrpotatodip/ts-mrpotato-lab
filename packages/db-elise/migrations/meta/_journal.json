@@ -477,6 +477,13 @@
       "when": 1794302234655,
       "tag": "0067_workspace_admin_powers",
       "breakpoints": true
+    },
+    {
+      "idx": 68,
+      "version": "7",
+      "when": 1794335436482,
+      "tag": "0068_scan_budget_power",
+      "breakpoints": true
     }
   ]
 }

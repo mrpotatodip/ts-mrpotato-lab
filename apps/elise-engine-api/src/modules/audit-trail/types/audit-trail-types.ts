@@ -17,7 +17,8 @@ export type AuditAction =
   | "finding.triage.set"
   | "finding.risk.accepted"
   | "github.install.connected"
-  | "github.install.removed";
+  | "github.install.removed"
+  | "usage.budget.updated";
 
 // -----
 // The facts an audit row may carry about the
@@ -39,6 +40,7 @@ export type AuditDetails = {
   repositorySelection?: string;
   noticeAcceptedAt?: string;
   reconnected?: boolean;
+  monthlyBudgetUsd?: number | null;
 };
 
 // -----

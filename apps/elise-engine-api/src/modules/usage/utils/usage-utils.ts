@@ -17,7 +17,15 @@ export const monthLabelOf = (now: Date): string => now.toISOString().slice(0, 7)
 export const reservedUsdOf = (active: readonly ScanStatus[]): number =>
   active.reduce((total, scan) => total + scan.maxBudgetUsd, 0);
 
-export const budgetUsdOf = (spend: MonthSpend, defaultUsd: string): number => spend.budgetOverrideUsd ?? Number(defaultUsd);
+// -----
+// The most an admin may set: the allowance the operator gave
+// the account, or the platform default when there is none.
+// An allowance also caps a budget set before it was lowered.
+// -----
+export const allowanceUsdOf = (spend: MonthSpend, defaultUsd: string): number => spend.budgetAllowanceUsd ?? Number(defaultUsd);
+
+export const budgetUsdOf = (spend: MonthSpend, defaultUsd: string): number =>
+  Math.min(spend.budgetOverrideUsd ?? Number(defaultUsd), spend.budgetAllowanceUsd ?? Infinity);
 
 const roundCents = (value: number): number => Math.round(value * 10000) / 10000;
 
@@ -26,6 +34,7 @@ export const summarizeUsage = (now: Date, spend: MonthSpend, defaultBudgetUsd: s
   return {
     month: monthLabelOf(now),
     budgetUsd,
+    allowanceUsd: allowanceUsdOf(spend, defaultBudgetUsd),
     spentUsd: roundCents(spend.spentUsd),
     reservedUsd: roundCents(reservedUsd),
     remainingUsd: roundCents(budgetUsd - spend.spentUsd - reservedUsd),

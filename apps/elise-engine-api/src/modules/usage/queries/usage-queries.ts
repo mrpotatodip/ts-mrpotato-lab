@@ -1,8 +1,9 @@
 import { and, eq, gte, sql } from "drizzle-orm";
 import { Effect } from "effect";
 import { scans, tenants } from "@repo/db-elise/schema";
-import type { DbConnectType } from "#/lib/db-connection";
+import type { DbConnectType, PoolDbType } from "#/lib/db-connection";
 import { toDbError, type DbError } from "#/lib/effect-query";
+import { actorPartyOf, insertAuditEntry } from "#/modules/audit-trail";
 import type { MonthSpend } from "#/modules/usage/types";
 
 // -----
@@ -28,7 +29,11 @@ export const monthSpendEffect = (db: DbConnectType, tenantId: string, monthStart
       catch: toDbError,
     });
     const [tenant] = yield* Effect.tryPromise({
-      try: () => db.select({ budget: tenants.monthlyScanBudgetUsd }).from(tenants).where(eq(tenants.id, tenantId)),
+      try: () =>
+        db
+          .select({ budget: tenants.monthlyScanBudgetUsd, allowance: tenants.monthlyScanBudgetAllowanceUsd })
+          .from(tenants)
+          .where(eq(tenants.id, tenantId)),
       catch: toDbError,
     });
     return {
@@ -41,5 +46,33 @@ export const monthSpendEffect = (db: DbConnectType, tenantId: string, monthStart
         cacheWrite: Number(totals.cacheWrite),
       },
       budgetOverrideUsd: tenant?.budget == null ? null : Number(tenant.budget),
+      budgetAllowanceUsd: tenant?.allowance == null ? null : Number(tenant.allowance),
     };
+  });
+
+// -----
+// Set the account's own monthly budget, or null to go back to
+// the platform default. The change and its audit row commit
+// together, so there is no change without a record of who made it.
+// -----
+export const setMonthlyBudgetEffect = (db: PoolDbType, tenantId: string, userId: string, budgetUsd: number | null): Effect.Effect<void, DbError> =>
+  Effect.tryPromise({
+    try: () =>
+      db.transaction(async (tx) => {
+        const actorPartyId = await actorPartyOf(tx, userId);
+        const [before] = await tx.select({ budget: tenants.monthlyScanBudgetUsd }).from(tenants).where(eq(tenants.id, tenantId));
+        await tx
+          .update(tenants)
+          .set({ monthlyScanBudgetUsd: budgetUsd === null ? null : budgetUsd.toFixed(2) })
+          .where(eq(tenants.id, tenantId));
+        await insertAuditEntry(tx, {
+          actorPartyId,
+          action: "usage.budget.updated",
+          subjectId: tenantId,
+          tenantId,
+          before: { monthlyBudgetUsd: before?.budget == null ? null : Number(before.budget) },
+          after: { monthlyBudgetUsd: budgetUsd },
+        });
+      }),
+    catch: toDbError,
   });

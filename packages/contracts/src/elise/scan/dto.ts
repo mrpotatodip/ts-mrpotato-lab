@@ -133,6 +133,7 @@ export type ScanQueued = z.infer<typeof ScanQueuedSchema>;
 export const UsageSchema = z.object({
   month: z.string(),
   budgetUsd: z.number().min(0),
+  allowanceUsd: z.number().min(0).optional(),
   spentUsd: z.number().min(0),
   reservedUsd: z.number().min(0),
   remainingUsd: z.number(),
@@ -143,6 +144,15 @@ export const UsageSchema = z.object({
     cacheRead: z.number().int().min(0),
     cacheWrite: z.number().int().min(0),
   }),
+});
+
+// -----
+// PATCH /usage/budget: the monthly budget an admin sets, in dollars.
+// null goes back to the platform default. allowanceUsd in the usage
+// is the most it may be; only the operator changes that.
+// -----
+export const UpdateUsageBudgetBodySchema = z.object({
+  monthlyBudgetUsd: z.number().min(0).multipleOf(0.01).nullable(),
 });
 
 // -----
@@ -214,6 +224,7 @@ export const FindingTriageBodySchema = z
   });
 
 export type Usage = z.infer<typeof UsageSchema>;
+export type UpdateUsageBudgetBody = z.infer<typeof UpdateUsageBudgetBodySchema>;
 export type FindingTriage = z.infer<typeof FindingTriageSchema>;
 export type Finding = z.infer<typeof FindingSchema>;
 export type FindingList = z.infer<typeof FindingListSchema>;

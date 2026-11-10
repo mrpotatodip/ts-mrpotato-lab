@@ -8,6 +8,7 @@ export type MonthSpend = {
   scans: number;
   tokens: { input: number; output: number; cacheRead: number; cacheWrite: number };
   budgetOverrideUsd: number | null;
+  budgetAllowanceUsd: number | null;
 };
 
 // -----
