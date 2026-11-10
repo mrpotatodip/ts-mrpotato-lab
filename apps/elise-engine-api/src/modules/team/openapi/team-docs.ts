@@ -21,7 +21,7 @@ export const listTeamDoc = describeRoute({
   description: routeText({
     context: "An account admin sees everyone who holds a Role in the account, and the invites that are still waiting.",
     steps: [
-      "The Worker checks the session and that the login is `tenant_admin` in the account named by `x-account-id`.",
+      "The Worker checks the session and that the login's Role in the account named by `x-account-id` holds `company:team:members:read`.",
       "The Worker reads the members with their Role and Groups.",
       "The Worker reads the invites that are not revoked, not accepted and not expired.",
     ],
@@ -37,7 +37,7 @@ export const listTeamRolesDoc = describeRoute({
   description: routeText({
     context: "The invite form needs the Roles it may offer. `tenant_admin` is never on the list: an invite cannot make an admin.",
     steps: [
-      "The Worker checks the session and that the login is `tenant_admin` in the account.",
+      "The Worker checks the session and that the login's Role in the account holds `company:team:members:read`.",
       "The Worker returns the account's enabled Roles except `tenant_admin`.",
     ],
     example: ["List the Roles:", bash(`curl ${EXAMPLE_BASE_URL}/team/roles \\`, SESSION, ACCOUNT)],
@@ -53,7 +53,7 @@ export const createTeamInviteDoc = describeRoute({
     context:
       "An account admin invites an email address with a Role, and may put the person in Groups once they accept. The Worker queues an email with the one-time link, and the answer also holds the token, so the admin can share the link by hand if the email does not arrive.",
     steps: [
-      "The Worker checks the session and that the login is `tenant_admin` in the account.",
+      "The Worker checks the session and that the login's Role in the account holds `company:team:invites:create`.",
       "The Worker checks the Role (not `tenant_admin`) and that every Group belongs to the account.",
       "If the email already holds a Role in the account, the answer is 409.",
       "If a pending invite for the same email exists, the Worker revokes it, so only the newest link works.",
@@ -77,7 +77,7 @@ export const revokeTeamInviteDoc = describeRoute({
   description: routeText({
     context: "An admin cancels an invite that was sent by mistake. The link stops working at once.",
     steps: [
-      "The Worker checks the session and that the login is `tenant_admin` in the account.",
+      "The Worker checks the session and that the login's Role in the account holds `company:team:invites:delete`.",
       "The Worker marks the pending invite revoked and writes an audit row.",
       "An invite that is accepted, already revoked, expired or from another account gets 404.",
     ],

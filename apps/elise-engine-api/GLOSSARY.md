@@ -92,7 +92,7 @@ The answer to "can this commit ship?": `pass`, `fail` or `cannot_tell`. It belon
 _Avoid_: Acceptance rate, score, safe
 
 **Accepted risk**:
-A Finding that a signed-in `tenant_admin` chose to ship with. It has a reason, a name in the Audit trail and an end date of at most 90 days. The Verdict lists it until the end date, and after that it blocks again.
+A Finding that a signed-in `tenant_admin` or `workspace_admin` chose to ship with. It has a reason, a name in the Audit trail and an end date of at most 90 days. The Verdict lists it until the end date, and after that it blocks again.
 _Avoid_: Waiver, exception
 
 **Finding**:
@@ -114,7 +114,7 @@ The short list of hosts the container may reach: `github.com` (only the read ste
 _Avoid_: Whitelist
 
 **Install**:
-One installation of the EliseLAB GitHub App on a GitHub account, connected to one Account by a `tenant_admin` (`tenant_github_installations`). It holds IDs and a status, never a token. Its status is `active`, `suspended` or `removed`, as the last check saw it. The dashboard calls it a connection ("Connections").
+One installation of the EliseLAB GitHub App on a GitHub account, connected to one Account by a `tenant_admin` or `workspace_admin` (`tenant_github_installations`). It holds IDs and a status, never a token. Its status is `active`, `suspended` or `removed`, as the last check saw it. The dashboard calls it a connection ("Connections").
 _Avoid_: Integration, token, GitHub login
 
 **Private Scan**:
@@ -146,7 +146,7 @@ _Avoid_: user, org
 The database row of an Account (`tenants`). It belongs to one Party. Scans, Findings and team invites carry its ID.
 
 **Team**:
-Everyone who holds a Role in an Account, plus the invites still waiting. A `tenant_admin` manages it.
+Everyone who holds a Role in an Account, plus the invites still waiting. A `tenant_admin` or `workspace_admin` manages it (a `workspace_admin` cannot change or remove a member).
 _Avoid_: Members list (when you mean the whole Team), Group
 
 **Team invite**:

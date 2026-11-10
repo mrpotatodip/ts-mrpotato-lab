@@ -3,7 +3,7 @@
 The scan Worker. Terms: `GLOSSARY.md`. Rules: `docs/standards/hono.md`, `docs/standards/effect.md`, `docs/standards/database.md`. Routes are mounted in `src/index.ts`.
 
 - Two ways into `/scans/*` (`src/lib/require-scan-access.ts`): the shared `SCAN_API_TOKEN` plus an `x-account-id` the caller vouches for (the dashboard server), or a signed-in session whose user holds a Role in that account. `/auth`, `/sign-up`, `/me`, `/team` and `/groups` check for themselves.
-- `/team` and `/groups` (`src/lib/require-tenant-manager.ts`), and a Repo's History (priors, `recheck.json`, one active scan per Repo): `docs/adr/0002-repo-history-and-team-management.md` before changing either.
+- `/team` and `/groups` (`src/lib/require-power.ts`: a route asks for a Power from the access catalogue, and the role's grants decide), and a Repo's History (priors, `recheck.json`, one active scan per Repo): `docs/adr/0002-repo-history-and-team-management.md` before changing either.
 - Branches (one History for each, the default as a pointer, the limit of 3, one-off Scans): `docs/adr/0004-repo-branches.md` before changing how a Scan finds its Branch.
 - Private repos (the GitHub App, Installs, the key staying outside the container, `/github/*`): `docs/adr/0005-private-repos-github-app.md` before changing `Outbound` signing, who may connect, or how a Scan picks an Install.
 - The Verdict (`/repos/:repoId/verdict`, accepted risks): `docs/adr/0003-ship-verdict.md` before changing the limits, the scan minimum or who may accept a risk.

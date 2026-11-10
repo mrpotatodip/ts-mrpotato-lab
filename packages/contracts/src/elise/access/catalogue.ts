@@ -26,7 +26,18 @@ export const ACCESS_CATALOGUE = [
         children: [
           { key: "members", label: "Member", actions: ["read", "update", "delete"] },
           { key: "invites", label: "Team invite", actions: ["read", "create", "update", "delete"] },
+          { key: "groups", label: "Group", actions: ["read", "create", "update", "delete"] },
         ],
+      },
+      {
+        key: "github",
+        label: "GitHub",
+        children: [{ key: "installations", label: "GitHub installation", actions: ["create", "delete"] }],
+      },
+      {
+        key: "findings",
+        label: "Findings",
+        children: [{ key: "accepted_risk", label: "Accepted risk", actions: ["update"] }],
       },
       {
         key: "chats",
@@ -133,9 +144,16 @@ export const canEditAccount = (powers: readonly string[]): boolean =>
 const TENANT_POWERS = ACCESS_POWERS.filter((power) => !power.startsWith("platform:"));
 const PLATFORM_POWERS = ACCESS_POWERS.filter((power) => power.startsWith("platform:"));
 const TENANT_READS = TENANT_POWERS.filter((power) => powerAction(power) === "read");
-const TEAM_WRITES = TENANT_POWERS.filter(
-  (power) => power.startsWith("company:team:") && powerAction(power) !== "read",
-);
+
+// -----
+// The owner keeps what changes the people already in the account.
+// A Workspace admin invites and revokes, runs groups, connects
+// GitHub and accepts risk; a Workspace member does none of it
+// and sees no part of Team.
+// -----
+const OWNER_ONLY = ["company:team:members:update", "company:team:members:delete"] as const;
+const WORKSPACE_ADMIN_POWERS = TENANT_POWERS.filter((power) => !OWNER_ONLY.some((owner) => owner === power));
+const WORKSPACE_MEMBER_READS = TENANT_READS.filter((power) => !power.startsWith("company:team:"));
 
 const WORKSPACE_MEMBER_EXTRA = [
   "company:unanswered:questions:dismiss",
@@ -152,7 +170,7 @@ for (const power of WORKSPACE_MEMBER_EXTRA) {
 
 export const ACCESS_ROLE_GRANTS = {
   tenant_admin: TENANT_POWERS,
-  workspace_admin: TENANT_POWERS.filter((power) => !TEAM_WRITES.includes(power)),
-  workspace_member: [...TENANT_READS, ...WORKSPACE_MEMBER_EXTRA],
+  workspace_admin: WORKSPACE_ADMIN_POWERS,
+  workspace_member: [...WORKSPACE_MEMBER_READS, ...WORKSPACE_MEMBER_EXTRA],
   superuser: PLATFORM_POWERS,
 } as const;

@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet, redirect, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ScanNewDialog, scansQuery, scanSidebarItems } from "#/modules/scan";
-import { TENANT_ADMIN_ROLE_KEY } from "#/modules/team";
+import { hasAccessPower } from "@repo/contracts/elise";
 import { ShellFrame } from "#/modules/shell";
 
 export const Route = createFileRoute("/_app")({
@@ -27,7 +27,7 @@ function AppLayout() {
       running={running}
       repos={repos}
       repoCount={repoCount}
-      showTeam={user?.role === TENANT_ADMIN_ROLE_KEY}
+      showTeam={hasAccessPower(user?.powers ?? [], "company:team:members:read")}
       actions={<ScanNewDialog variant={pageHasOwnScanButton ? "outline" : "default"} />}
     >
       <Outlet />

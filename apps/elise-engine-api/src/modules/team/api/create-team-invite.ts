@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { CreateTeamInviteBodySchema } from "@repo/contracts/elise";
 import { withPool } from "#/lib/db-connection";
 import { runEffect } from "#/lib/effect-query";
-import { requireTenantManager, userIdOf } from "#/lib/require-tenant-manager";
+import { requirePower, userIdOf } from "#/lib/require-power";
 import { zValidator } from "#/lib/zod-validator";
 import { AccountHeaderSchema } from "#/modules/scans/schemas";
 import { createInviteSvc } from "#/modules/team/handlers";
@@ -11,7 +11,7 @@ import type { AppEnv } from "#/types/variables";
 
 const app = new Hono<AppEnv>();
 
-app.post("/invites", createTeamInviteDoc, requireTenantManager, zValidator("header", AccountHeaderSchema), zValidator("json", CreateTeamInviteBodySchema), async (c) => {
+app.post("/invites", createTeamInviteDoc, requirePower("company:team:invites:create"), zValidator("header", AccountHeaderSchema), zValidator("json", CreateTeamInviteBodySchema), async (c) => {
   const { "x-account-id": accountId } = c.req.valid("header");
   const body = c.req.valid("json");
   const userId = userIdOf(c);

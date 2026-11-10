@@ -1,1 +1,1 @@
-export type SessionUser = { id: string; email: string; name: string; accountName: string; role: string };
+export type SessionUser = { id: string; email: string; name: string; accountName: string; role: string; powers: string[] };

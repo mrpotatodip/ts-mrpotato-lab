@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { ConnectGithubBodySchema } from "@repo/contracts/elise";
 import { withPool } from "#/lib/db-connection";
 import { runEffect } from "#/lib/effect-query";
-import { requireTenantManager, userIdOf } from "#/lib/require-tenant-manager";
+import { requirePower, userIdOf } from "#/lib/require-power";
 import { zValidator } from "#/lib/zod-validator";
 import { connectGithubSvc } from "#/modules/github-installs/handlers";
 import { githubPortFor } from "#/modules/github-installs/lib";
@@ -12,7 +12,7 @@ import type { AppEnv } from "#/types/variables";
 
 const app = new Hono<AppEnv>();
 
-app.post("/installations", createGithubInstallationDoc, requireTenantManager, zValidator("header", AccountHeaderSchema), zValidator("json", ConnectGithubBodySchema), async (c) => {
+app.post("/installations", createGithubInstallationDoc, requirePower("company:github:installations:create"), zValidator("header", AccountHeaderSchema), zValidator("json", ConnectGithubBodySchema), async (c) => {
   const { "x-account-id": accountId } = c.req.valid("header");
   const body = c.req.valid("json");
   const userId = userIdOf(c);

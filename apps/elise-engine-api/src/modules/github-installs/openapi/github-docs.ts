@@ -14,7 +14,7 @@ export const connectGithubDoc = describeRoute({
   description: routeText({
     context: "An account admin connects the EliseLAB GitHub App to read private repos. This gives the address to send the browser to.",
     steps: [
-      "The Worker checks the session and that the login is `tenant_admin` in the account.",
+      "The Worker checks the session and that the login's Role in the account holds `company:github:installations:create`.",
       "The Worker asks GitHub for the App's name, so the address needs no extra setting.",
       "The Worker signs a state that names the account and the admin, good for 10 minutes.",
       "The Worker returns the install address with the state in it.",
@@ -36,7 +36,7 @@ export const createGithubInstallationDoc = describeRoute({
     context:
       "GitHub sends the browser back with the install, a one-time code and our state. The dashboard passes them here with the notice checkbox. The number in the address proves nothing, so the Worker asks GitHub whether the person behind the code can use that install.",
     steps: [
-      "The Worker checks the session and that the login is `tenant_admin` in the account.",
+      "The Worker checks the session and that the login's Role in the account holds `company:github:installations:create`.",
       "The Worker checks that the state is its own, unexpired, and made for this admin and account. If not, the answer is 403.",
       "The Worker trades the code for a short-lived token that acts as the person, asks GitHub which installs that person can use, and drops the token. If the install is not among them, the answer is 403.",
       "The Worker reads the install from GitHub: its account, the repos it covers, and whether it is suspended.",
@@ -78,7 +78,7 @@ export const disconnectGithubInstallationDoc = describeRoute({
     context:
       "An account admin stops EliseLAB using an install. This cannot take access away on GitHub: only an uninstall there does that. Past scans and reports stay.",
     steps: [
-      "The Worker checks the session and that the login is `tenant_admin` in the account.",
+      "The Worker checks the session and that the login's Role in the account holds `company:github:installations:delete`.",
       "The Worker marks the install `removed` and writes an audit row. An install of another account answers 404. Disconnecting twice is harmless.",
       "From then on no scan of the account signs with this install, and its repos leave the picker. Connecting it again makes it active.",
     ],

@@ -3,7 +3,7 @@ import { createAuth } from "#/lib/auth";
 import { dbConnect } from "#/lib/db-connection";
 import { runEffect } from "#/lib/effect-query";
 import { githubAccessFor, neonInstallationRepo } from "#/modules/github-installs";
-import { userHasAccountEffect, userManagesAccountEffect } from "#/modules/me";
+import { userHasAccountEffect, userHasPowerEffect } from "#/modules/me";
 import { neonScanRepo } from "#/modules/scan-ledger";
 import { monthSpendEffect, monthStartOf } from "#/modules/usage";
 import type { AppEnv, AppDeps } from "#/types/variables";
@@ -26,7 +26,7 @@ export const realAppDeps: AppDeps = {
     env.DATABASE_URL ? runEffect(monthSpendEffect(dbConnect(env.DATABASE_URL), accountId, monthStartOf(new Date()))) : Promise.resolve(noSpend),
   sessionUserId,
   userHasAccount: (c, userId, accountId) => runEffect(userHasAccountEffect(dbConnect(c.env.DATABASE_URL), userId, accountId)),
-  userManagesAccount: (c, userId, accountId) => runEffect(userManagesAccountEffect(dbConnect(c.env.DATABASE_URL), userId, accountId)),
+  userHasPower: (c, userId, accountId, power) => runEffect(userHasPowerEffect(dbConnect(c.env.DATABASE_URL), userId, accountId, power)),
   enqueueInviteEmail: async (env, mail) => {
     await env.INVITE_EMAIL_QUEUE.send(mail, { contentType: "json" });
   },

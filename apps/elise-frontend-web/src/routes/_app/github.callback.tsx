@@ -1,13 +1,13 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { GithubCallback, GithubCallbackSearchSchema } from "#/modules/github";
 import { ShellPageHeader } from "#/modules/shell";
-import { TENANT_ADMIN_ROLE_KEY } from "#/modules/team";
+import { hasAccessPower } from "@repo/contracts/elise";
 
 export const Route = createFileRoute("/_app/github/callback")({
   head: () => ({ meta: [{ title: "Connect GitHub · EliseLAB" }] }),
   validateSearch: GithubCallbackSearchSchema,
   beforeLoad: ({ context }) => {
-    if (context.user?.role !== TENANT_ADMIN_ROLE_KEY) throw redirect({ to: "/connections" });
+    if (!hasAccessPower(context.user?.powers ?? [], "company:github:installations:create")) throw redirect({ to: "/connections" });
   },
   component: GithubCallbackPage,
 });

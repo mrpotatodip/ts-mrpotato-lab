@@ -6,7 +6,7 @@ const SESSION = '  -H "authorization: Bearer $SESSION_TOKEN" \\';
 const ACCOUNT = `  -H "x-account-id: ${EXAMPLE_ACCOUNT_ID}"`;
 const GROUP_ID = "9b2f6c1e-3a4d-4e5f-8a7b-1c2d3e4f5a6b";
 const PARTY_ID = "3f2a9c1e-7b64-4d0a-8e5f-1c2d3e4f5a6b";
-const CHECK = "The Worker checks the session and that the login is `tenant_admin` in the account named by `x-account-id`.";
+const CHECK = "The Worker checks the session and that the login's Role in the account named by `x-account-id` holds the Power for this action: `company:team:groups:` then `read`, `create`, `update` (rename, add or remove a member) or `delete`.";
 
 export const listGroupsDoc = describeRoute({
   tags: ["groups"],

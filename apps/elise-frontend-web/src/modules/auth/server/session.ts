@@ -37,7 +37,7 @@ export async function findSession(): Promise<ServerSession | null> {
     return {
       token,
       accountId: account.id,
-      user: { id: me.user.id, email: me.user.email, name: me.user.name, accountName: account.name, role: account.role },
+      user: { id: me.user.id, email: me.user.email, name: me.user.name, accountName: account.name, role: account.role, powers: account.powers ?? [] },
     };
   } catch (error) {
     if (error instanceof EngineError && error.status === 401) clearSessionToken();

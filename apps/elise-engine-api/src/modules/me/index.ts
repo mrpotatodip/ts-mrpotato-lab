@@ -7,4 +7,4 @@ const app = new Hono<AppEnv>();
 app.route("/", getMeAPI);
 
 export default app;
-export { userHasAccountEffect, userManagesAccountEffect } from "./queries";
+export { userHasAccountEffect, userHasPowerEffect } from "./queries";

@@ -3,7 +3,7 @@ import { useRouteContext } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#/components/ui/select";
-import { TENANT_ADMIN_ROLE_KEY } from "#/modules/team";
+import { hasAccessPower } from "@repo/contracts/elise";
 import { setFindingTriage } from "../api";
 import { FINDING_TRIAGE_OPTIONS } from "../constants";
 import type { Finding, FindingTriage, FindingTriageStatus } from "../schemas";
@@ -26,7 +26,7 @@ const SAVED_COPY = {
 
 export function FindingTriageSelect({ finding, also = [], onSaved }: FindingTriageSelectProps) {
   const { user } = useRouteContext({ from: "/_app" });
-  const canAcceptRisk = user?.role === TENANT_ADMIN_ROLE_KEY;
+  const canAcceptRisk = hasAccessPower(user?.powers ?? [], "company:findings:accepted_risk:update");
   const queryClient = useQueryClient();
   const [accepting, setAccepting] = useState(false);
 

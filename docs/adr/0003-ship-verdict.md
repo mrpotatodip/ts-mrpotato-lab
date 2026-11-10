@@ -20,7 +20,7 @@ How `GET /repos/:repoId/verdict?commit=<sha>` decides in `apps/elise-engine-api`
 
 ## Decisions by a person
 
-- **Accepted risk** needs a signed-in `tenant_admin` (the service token is refused), a reason and 1 to 90 days. The triage row and its Audit trail row are saved in one transaction. A database check forbids `accepted_until` on any other status, and forbids an accepted risk with no reason. `PUT /findings/triage` with any other status cannot set it.
+- **Accepted risk** needs a signed-in login whose Role holds `company:findings:accepted_risk:update` (`tenant_admin` and `workspace_admin`; the service token is refused), a reason and 1 to 90 days. The triage row and its Audit trail row are saved in one transaction. A database check forbids `accepted_until` on any other status, and forbids an accepted risk with no reason. `PUT /findings/triage` with any other status cannot set it.
 - **Expiry blocks again.** The Verdict lists an expired acceptance as open, with the time it ended.
 - **Every decision is audited.** `PUT /findings/triage` with any status saves the decision and an Audit trail row in one transaction (`finding.triage.set`, or `finding.risk.accepted`). The row holds the new decision and the one it replaced. The actor is the signed-in person, or no one when the service token set it.
 - **A false positive is dismissed, shown and audited.** It is listed under `dismissed`, so a Verdict is never silent about what a person removed. Today any caller with scan access can mark one, so a `pass` can be reached that way; the list and the Audit trail make it visible. Restricting it to admins is open.

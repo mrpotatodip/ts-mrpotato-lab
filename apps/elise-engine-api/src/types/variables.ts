@@ -1,4 +1,5 @@
 import type { Context } from "hono";
+import type { AccessPower } from "@repo/contracts/elise";
 import type { GithubAccess } from "#/modules/github-installs";
 import type { ScanRepo } from "#/modules/scan-ledger";
 import type { MonthSpend } from "#/modules/usage";
@@ -45,7 +46,7 @@ export type AppDeps = {
   monthSpend: (env: Bindings, accountId: string) => Promise<MonthSpend>;
   sessionUserId: (c: Context<AppEnv>) => Promise<string | undefined>;
   userHasAccount: (c: Context<AppEnv>, userId: string, accountId: string) => Promise<boolean>;
-  userManagesAccount: (c: Context<AppEnv>, userId: string, accountId: string) => Promise<boolean>;
+  userHasPower: (c: Context<AppEnv>, userId: string, accountId: string, power: AccessPower) => Promise<boolean>;
   enqueueInviteEmail: (env: Bindings, mail: InviteEmail) => Promise<void>;
 };
 

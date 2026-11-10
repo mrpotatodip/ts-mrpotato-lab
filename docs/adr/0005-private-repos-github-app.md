@@ -15,7 +15,7 @@ How a Scan reads a private GitHub repo in `apps/elise-engine-api`. Terms: `apps/
 
 ## Connecting
 
-- Only a `tenant_admin` connects or disconnects. Any member reads the status and the repo list.
+- Only a Role that holds `company:github:installations:create` or `:delete` (`tenant_admin`, `workspace_admin`) connects or disconnects. Any member reads the status and the repo list.
 - **The number in the redirect address proves nothing.** The flow signs a `state` (account, admin, 10 minutes). GitHub returns a one-time `code` because "Request user authorization during installation" is on. The Worker trades it for a token that acts as the person, asks GitHub which Installs that person can use, and drops the token. An Install not on that list is refused. A `state` made for another admin or Account is refused.
 - A required checkbox says code excerpts go to Anthropic. Its time and the admin are in the Audit trail (`github.install.connected`, `github.install.removed`).
 - No webhook. The list of Installs asks GitHub again when a check is over five minutes old, so a removed or suspended Install shows as such. If GitHub cannot answer, the status stays.

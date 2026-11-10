@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { GroupMemberParamSchema } from "@repo/contracts/elise";
 import { withPool } from "#/lib/db-connection";
 import { runEffect } from "#/lib/effect-query";
-import { requireTenantManager, userIdOf } from "#/lib/require-tenant-manager";
+import { requirePower, userIdOf } from "#/lib/require-power";
 import { zValidator } from "#/lib/zod-validator";
 import { addGroupMemberSvc } from "#/modules/groups/handlers";
 import { addGroupMemberDoc } from "#/modules/groups/openapi";
@@ -11,7 +11,7 @@ import type { AppEnv } from "#/types/variables";
 
 const app = new Hono<AppEnv>();
 
-app.put("/:groupId/members/:partyId", addGroupMemberDoc, requireTenantManager, zValidator("header", AccountHeaderSchema), zValidator("param", GroupMemberParamSchema), async (c) => {
+app.put("/:groupId/members/:partyId", addGroupMemberDoc, requirePower("company:team:groups:update"), zValidator("header", AccountHeaderSchema), zValidator("param", GroupMemberParamSchema), async (c) => {
   const { "x-account-id": accountId } = c.req.valid("header");
   const { groupId, partyId } = c.req.valid("param");
   const data = await withPool(

@@ -20,7 +20,7 @@ Rules in code: `modules/scan-records/utils/plan-history.ts`. How to check the ag
 
 ## Managing a team
 
-`/team` and `/groups` need a signed-in `tenant_admin` of the Account. The service token is not accepted.
+`/team` and `/groups` need a signed-in login whose Role holds the route's Power (`company:team:*`). `tenant_admin` and `workspace_admin` hold them; a `workspace_member` holds none. A `workspace_admin` can invite, revoke and run groups, but changing or removing a member stays with the `tenant_admin`. The service token is not accepted.
 
 - Invites record who made them (`invited_by` is NOT NULL) and every change writes an Audit trail row with an actor Party. The service token names no one.
 - The dashboard server forwards the user's session for these routes.

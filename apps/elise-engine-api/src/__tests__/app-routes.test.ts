@@ -18,7 +18,7 @@ const app = buildApp({
   monthSpend: async () => ({ spentUsd: 0, scans: 0, tokens: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }, budgetOverrideUsd: null }),
   sessionUserId: async () => signedInUser,
   userHasAccount: async () => userHoldsRole,
-  userManagesAccount: async () => userHoldsRole,
+  userHasPower: async () => userHoldsRole,
   enqueueInviteEmail: async () => undefined,
 }).app;
 
