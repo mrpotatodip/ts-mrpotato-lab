@@ -13,6 +13,6 @@ export const SCAN_TRIAGE_COPY = {
 
 export const SCAN_FINDING_STATE_COPY = {
   confirmed: { label: "Confirmed", note: "The agent verified this in the code." },
-  needs_validation: { label: "Needs validation", note: "Likely, but a person should check before acting." },
+  needs_validation: { label: "Needs a person", note: "Likely, but a person should check before acting." },
   rejected: { label: "Rejected", note: "Checked and ruled out." },
 } as const;

@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import { Skeleton } from "#/components/ui/skeleton";
+import { RepoVerdictDecision } from "#/modules/repo";
 import { prefetchScanReport, ScanDetail, scanQuery, scanRepoName } from "#/modules/scan";
 
 export const Route = createFileRoute("/_app/scans/$scanId")({
@@ -24,7 +25,7 @@ function ScanPage() {
         All scans
       </Link>
       <Suspense fallback={<Skeleton className="h-64 w-full" />}>
-        <ScanDetail scanId={scanId} />
+        <ScanDetail scanId={scanId} Decision={RepoVerdictDecision} />
       </Suspense>
     </>
   );

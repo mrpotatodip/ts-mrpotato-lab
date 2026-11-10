@@ -17,4 +17,10 @@ export type ScanCheckout = { commitSha: string | null; branch: string | null };
 // -----
 export type MeteredTokens = { inputTokens: number; outputTokens: number; cacheReadTokens: number; cacheWriteTokens: number };
 export type Meter = MeteredTokens & { budgetUsd: number; spentUsd: number };
-export type OutboundProps = { sandboxId: string };
+// -----
+// A private repo the Outbound handler signs for: the install and the
+// repo it may mint a token for, and repo as owner/name in lowercase.
+// Absent for a public clone. It holds IDs, never a token.
+// -----
+export type OutboundGithub = { installationId: number; repoId: number; repo: string };
+export type OutboundProps = { sandboxId: string; github?: OutboundGithub };

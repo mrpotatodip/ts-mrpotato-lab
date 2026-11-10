@@ -19,10 +19,11 @@ pnpm --filter elise-engine-api dev:log       # wrangler dev, output teed to apps
 pnpm dev:stop                                # free ports 8787 and 3100 from stale servers
 node scripts/check-changed.mjs               # the pre-commit check: only the projects with staged changes (`check:apps` runs all nine)
 pnpm --filter <app> run deploy               # live Worker: ask first. `pnpm deploy` is pnpm's own command. Ships the working tree, so it refuses uncommitted edits under the app or `packages/` (`ALLOW_DIRTY_DEPLOY=1` overrides)
-pnpm -s --filter @repo/db-elise db:query "..."  # read-only SQL on the live Neon database; `-s` leaves only the rows in the output
+node scripts/deploy-clean.mjs apps/<app> [ref]  # live Worker: ask first. Deploys a committed ref from a temporary worktree, so the working tree never ships; `--dry` only builds the worktree. Prefer it to the override
+pnpm -s --filter @repo/db-elise db:query "..." [--table]  # read-only SQL on the live Neon database; `-s` leaves only the rows in the output, and `--table` prints one line per row instead of JSON (use it)
 pnpm -s --filter elise-engine-api live:get /repos <accountId>   # GET one route of the app in-process against the live database: read only, no token
 pnpm engine:probe /repos                     # the raw JSON the DEPLOYED Worker sends (`--local` for port 8787); needs its SCAN_API_TOKEN secret in the env
-pnpm scan:run https://github.com/o/n --ref BRANCH   # start a lite scan on the deployed Worker, wait, print status, cost and findings: costs real money, ask first
+pnpm scan:run https://github.com/o/n --ref BRANCH   # start a lite scan on the deployed Worker, wait, print status, cost and findings: costs real money, ask first. Needs the DEPLOYED Worker's SCAN_API_TOKEN in the env: the one in `.dev.vars` is not it, and gives a 401
 pnpm --filter @repo/db-elise db:rehearse     # pending migrations in a rolled-back transaction
 pnpm --filter @repo/db-elise db:migrate      # live Neon database: ask first
 pnpm --filter @repo/db-elise db:exec "..."   # one write statement in a transaction (--dry rolls back): live database, ask first
@@ -33,6 +34,7 @@ NEW_PASSWORD=... pnpm --filter @repo/db-elise db:set-password --email x   # live
 
 - Review rules live in `CODING_STANDARDS.md`; it points to one file per scope under `docs/standards/`.
 - `{ data, error }` is the response envelope: success has `error: null`, failure has `data: null`.
+- Tests: lint enforces what it can (oxlint on `__tests__/`: an assertion in every test, no `console`, skip, focus, duplicate title, conditional `expect` or snapshot). Write a test only for a product rule, a data query, a parser or a bug that came back; one per behavior, `it.each` for inputs. No throwaway test or print scripts: run `pnpm check:apps`. Rules: `docs/standards/general.md` section 2.
 - Request and response shapes both apps use live in `@repo/contracts/elise`: import them, don't redefine them.
 - Is a field or route deployed? Run `pnpm engine:probe <path>`; the dashboard working once proves nothing. Contract changes follow the deploy order in `docs/standards/contracts.md` section 5; read it before any deploy that touches `packages/contracts`.
 - `zod` is pinned to `4.4.3` in the root pnpm overrides, so every package shares one copy.

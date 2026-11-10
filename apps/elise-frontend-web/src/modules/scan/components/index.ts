@@ -15,5 +15,4 @@ export * from "./scan-status-badge";
 export * from "./scan-summary";
 export * from "./scan-time";
 export * from "./scan-verdict-card";
-export * from "./scan-verdict-strip";
 export * from "./scan-success-ring";

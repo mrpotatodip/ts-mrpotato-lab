@@ -13,12 +13,15 @@ import { Skeleton } from "#/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "#/components/ui/table";
 import { Tooltip, TooltipContent, TooltipTrigger } from "#/components/ui/tooltip";
 import { cn } from "#/lib/utils";
+import { GithubPrivateBadge } from "#/modules/github";
+import { ShellPageHeader } from "#/modules/shell";
 import { FindingDecisionNote, FindingLocation, FindingStatusBadge, FindingStatusBanner, FindingTriageSelect, findingGroup } from "#/modules/finding";
-import { ScanFindingSheet, ScanNewDialog, ScanSeverityBadge, ScanSeverityDots, ScanStatusBadge, ScanTime, ScanVerdictCard, fromRecorded, scanKeys, scanFailure, scanPlural, type DecideFindingProps, type ScanStatus } from "#/modules/scan";
+import { ScanFindingSheet, ScanNewDialog, ScanSeverityBadge, ScanSeverityDots, ScanStatusBadge, ScanTime, ScanVerdictCard, fromRecorded, scanFailure, scanPlural, type ScanStatus } from "#/modules/scan";
 import { repoFindingsQuery, repoKeys, repoQuery } from "../hooks";
 import type { RepoFinding } from "../schemas";
 import { repoName } from "../utils";
 import { RepoBranchSwitch } from "./repo-branch-switch";
+import { RepoVerdictDecision } from "./repo-verdict-decision";
 
 const RECENT_SCAN_COUNT = 3;
 
@@ -112,7 +115,7 @@ function RepoFindings({ repoId, branch, history }: { repoId: string; branch: str
     <Card>
       <CardHeader className="flex-row flex-wrap items-center justify-between gap-3 pb-7">
         <div className="grid max-w-xl gap-1.5">
-          <CardTitle className="text-lg">Findings history</CardTitle>
+          <CardTitle>Findings history</CardTitle>
           <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">
             {FILTER_COPY[filter].note}
             {findings.length > 0 ? (filter === "action" ? " Select a row for the impact, evidence and fix, and record your decision." : " Select a row to read the impact, evidence and fix.") : ""}
@@ -124,7 +127,7 @@ function RepoFindings({ repoId, branch, history }: { repoId: string; branch: str
               Search this repository's findings by title, file or type
             </Label>
             <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input id="repo-finding-search" name="search" type="search" autoComplete="off" placeholder="Search findings" value={search} onChange={(event) => setSearch(event.target.value)} className="h-9 pl-9" />
+            <Input id="repo-finding-search" name="search" type="search" autoComplete="off" placeholder="Search findings" value={search} onChange={(event) => setSearch(event.target.value)} className="pl-9" />
           </div>
           <Select value={filter} items={filterItems} onValueChange={(next) => setFilter(asFilter(next))}>
             <SelectTrigger aria-label="Show findings" className="h-9 w-64">
@@ -249,10 +252,6 @@ function RepoFindings({ repoId, branch, history }: { repoId: string; branch: str
   );
 }
 
-function VerdictDecision({ repoId, repoUrl, finding }: DecideFindingProps) {
-  return <FindingTriageSelect finding={{ repo: repoUrl, fingerprint: finding.fingerprint, title: finding.title, triage: null }} also={[repoKeys.detail(repoId), scanKeys.all]} />;
-}
-
 type FactProps ={ label: string; children: React.ReactNode };
 
 function Fact({ label, children }: FactProps) {
@@ -280,10 +279,11 @@ export function RepoDetail({ repoId, branchId }: { repoId: string; branchId?: st
 
   return (
     <>
-      <div className="grid gap-3">
-        <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
-          <div className="grid min-w-0 gap-3">
-            <h1 className="text-[26px] font-semibold leading-tight tracking-tight">{repoName(repo.url)}</h1>
+      <ShellPageHeader
+        title={repoName(repo.url)}
+        badges={<GithubPrivateBadge isPrivate={repo.isPrivate} />}
+        below={
+          <div className="grid gap-3">
             {current && (
               <div className="flex min-w-0 items-center gap-2">
                 <RepoBranchSwitch repoId={repoId} branches={repo.branches} current={current} />
@@ -305,54 +305,53 @@ export function RepoDetail({ repoId, branchId }: { repoId: string; branchId?: st
                 </Tooltip>
               </div>
             )}
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
-            {!current && (
-              <a
-                href={github}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex min-h-6 items-center gap-1.5 rounded-sm text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                <ExternalLink aria-hidden="true" className="size-3.5" />
-                Open on GitHub
-              </a>
-            )}
-            <ScanNewDialog label={current ? "Scan this branch" : "Scan"} size="default" repo={repo.url} startBranch={current?.name} />
-          </div>
-        </div>
-        {current ? (
-          <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
-            {newestScan ? (
-              <>
-                <ScanStatusBadge status={newestScan.status} />
-                <span>
-                  Last scan <ScanTime value={newestScan.createdAt} />
-                </span>
-              </>
+            {current ? (
+              <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+                {newestScan ? (
+                  <>
+                    <ScanStatusBadge status={newestScan.status} />
+                    <span>
+                      Last scan <ScanTime value={newestScan.createdAt} />
+                    </span>
+                  </>
+                ) : (
+                  <span>Never scanned</span>
+                )}
+                <span aria-hidden="true">·</span>
+                <span>{scanPlural(branchScans.length, "scan", "scans")} of this branch</span>
+              </p>
             ) : (
-              <span>Never scanned</span>
+              <dl className="grid grid-cols-2 gap-x-8 gap-y-4 sm:grid-cols-3">
+                <Fact label="Scans">{repo.scans}</Fact>
+                <Fact label="Latest scan">
+                  <span className="flex flex-wrap items-center gap-2">
+                    {repo.lastScanStatus && <ScanStatusBadge status={repo.lastScanStatus} />}
+                    <ScanTime value={repo.lastScanAt} />
+                  </span>
+                </Fact>
+                <Fact label="First scanned">
+                  <ScanTime value={oldest?.createdAt} />
+                </Fact>
+              </dl>
             )}
-            <span aria-hidden="true">·</span>
-            <span>{scanPlural(branchScans.length, "scan", "scans")} of this branch</span>
-          </p>
-        ) : (
-          <dl className="grid grid-cols-2 gap-x-8 gap-y-4 sm:grid-cols-3">
-            <Fact label="Scans">{repo.scans}</Fact>
-            <Fact label="Latest scan">
-              <span className="flex flex-wrap items-center gap-2">
-                {repo.lastScanStatus && <ScanStatusBadge status={repo.lastScanStatus} />}
-                <ScanTime value={repo.lastScanAt} />
-              </span>
-            </Fact>
-            <Fact label="First scanned">
-              <ScanTime value={oldest?.createdAt} />
-            </Fact>
-          </dl>
+          </div>
+        }
+      >
+        {!current && (
+          <a
+            href={github}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex min-h-6 items-center gap-1.5 rounded-sm text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <ExternalLink aria-hidden="true" className="size-3.5" />
+            Open on GitHub
+          </a>
         )}
-      </div>
+        <ScanNewDialog label={current ? "Scan this branch" : "Scan"} size="default" repo={repo.url} startBranch={current?.name} />
+      </ShellPageHeader>
 
-      {current?.latestCommit && <ScanVerdictCard repoId={repoId} commit={current.latestCommit} repoUrl={repo.url} scope="branch" branchOpen={open.total} Decision={VerdictDecision} />}
+      {current?.latestCommit && <ScanVerdictCard repoId={repoId} commit={current.latestCommit} repoUrl={repo.url} scope="branch" branchOpen={open.total} Decision={RepoVerdictDecision} />}
 
       {open.regressed > 0 && (
         <Alert variant="destructive">
@@ -393,7 +392,7 @@ export function RepoDetail({ repoId, branchId }: { repoId: string; branchId?: st
 
       <Card>
         <CardHeader className="gap-1.5 pb-7">
-          <CardTitle className="text-lg">Recent scans</CardTitle>
+          <CardTitle>Recent scans</CardTitle>
           <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">
             The latest {current ? "scans of this branch" : "scans of this repository"}. Open one for its report and what changed.
           </p>

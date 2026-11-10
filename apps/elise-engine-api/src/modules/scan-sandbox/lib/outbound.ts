@@ -1,9 +1,10 @@
 import { WorkerEntrypoint } from "cloudflare:workers";
 import { z } from "zod";
 import type { Bindings } from "#/types/variables";
+import { mintRepoToken } from "#/modules/github-app";
 import { SCAN_SANDBOX_MAX_OUTPUT_TOKENS } from "#/modules/scan-sandbox/constants";
 import type { OutboundProps } from "#/modules/scan-sandbox/types";
-import { allowedOutboundTarget, createUsageScanner } from "#/modules/scan-sandbox/utils";
+import { allowedOutboundTarget, createUsageScanner, gitBasicAuth, repoOfGitPath } from "#/modules/scan-sandbox/utils";
 
 const blocked = (reason: string) => new Response(`Blocked: ${reason}`, { status: 403 });
 
@@ -23,11 +24,31 @@ export class Outbound extends WorkerEntrypoint<Bindings, OutboundProps> {
     const url = new URL(request.url);
     const target = allowedOutboundTarget(url, request.method);
     if (target === null) return blocked(`${request.method} ${url.hostname}${url.pathname}`);
-    if (target === "github") return fetch(request);
+    if (target === "github") return this.#github(request, url);
     const headers = new Headers(request.headers);
     headers.set("x-api-key", this.env.ANTHROPIC_API_KEY);
     if (url.pathname !== "/v1/messages") return fetch(new Request(request, { headers }));
     return this.#meteredMessages(request, headers);
+  }
+
+  // -----
+  // The key is added here, outside the container, and only for the repo
+  // this scan was set up for. Any other repo goes through unsigned.
+  // -----
+  async #github(request: Request, url: URL): Promise<Response> {
+    const github = this.ctx.props.github;
+    if (github === undefined || repoOfGitPath(url.pathname) !== github.repo) return fetch(request);
+    const { GITHUB_APP_ID: appId, GITHUB_APP_PRIVATE_KEY: privateKey } = this.env;
+    if (appId === undefined || privateKey === undefined) return blocked("the GitHub App is not set up");
+    try {
+      const token = await mintRepoToken({ appId, privateKey }, github.installationId, github.repoId);
+      const headers = new Headers(request.headers);
+      headers.set("authorization", gitBasicAuth(token));
+      return await fetch(new Request(request, { headers }));
+    } catch (error) {
+      console.error("github token failed", error instanceof Error ? error.message : "unknown");
+      return blocked("GitHub access failed");
+    }
   }
 
   async #meteredMessages(request: Request, headers: Headers): Promise<Response> {

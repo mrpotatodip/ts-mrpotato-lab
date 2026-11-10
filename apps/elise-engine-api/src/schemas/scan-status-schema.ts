@@ -10,6 +10,7 @@ export const ScanStatusSchema = ScanOptionsSchema.extend({
   accountId: z.string().meta({ example: "0b8c1d2e-3f4a-4b5c-8d6e-7f8091a2b3c4" }),
   repo: z.string().meta({ example: "https://github.com/octocat/Hello-World" }),
   repoId: z.uuid().meta({ description: "The repo's record in this account. Every scan of the same repo shares it, however the URL was spelled." }),
+  isPrivate: z.boolean().nullish().meta({ description: "What GitHub said about the repo when the scan was requested. True: private, read through a connected GitHub install. Null: cloned anonymously, so nothing was asked." }),
   commitSha: z.string().nullish().meta({ example: "7fd1a60b01f91b314f59955a4e4d4e80d8edf11d", description: "The commit the scan read. Null until the repo is cloned." }),
   ref: z.string().nullish().meta({ example: "main", description: "The branch, tag or commit the caller asked for. Null means the default branch." }),
   branch: z.string().nullish().meta({ example: "main", description: "The name of the branch the scan read, when it is known. Null for a tag, a commit or a detached HEAD." }),

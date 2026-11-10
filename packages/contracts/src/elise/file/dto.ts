@@ -22,9 +22,17 @@ export const FileSchema = z.object({
   createdAt: z.iso.datetime(),
 });
 
+export const FileCountSchema = z.object({ name: FileNameSchema, count: z.number().int().min(0) });
+
+// -----
+// counts is how many files each type has under every filter except the
+// type itself, so a tab can say what it would show. It is optional so an
+// older engine that does not send it still parses.
+// -----
 export const FileListSchema = z.object({
   files: z.array(FileSchema),
   nextCursor: z.string().nullable(),
+  counts: z.array(FileCountSchema).optional(),
 });
 
 export const FilesQuerySchema = z.object({
@@ -40,5 +48,6 @@ export const FilesQuerySchema = z.object({
 
 export type FileName = z.infer<typeof FileNameSchema>;
 export type FileEntry = z.infer<typeof FileSchema>;
+export type FileCount = z.infer<typeof FileCountSchema>;
 export type FileList = z.infer<typeof FileListSchema>;
 export type FilesQuery = z.infer<typeof FilesQuerySchema>;

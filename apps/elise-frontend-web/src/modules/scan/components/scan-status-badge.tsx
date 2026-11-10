@@ -1,4 +1,3 @@
-import { CircleCheck } from "lucide-react";
 import { Badge } from "#/components/ui/badge";
 import { cn } from "#/lib/utils";
 import type { ScanState } from "../schemas";
@@ -18,19 +17,10 @@ const LABEL = {
 } as const;
 
 // -----
-// A summary list shows the exceptions in colour. A scan that simply succeeded
-// is the normal case, so `quiet` shows it as plain muted text; running, queued
-// and failed keep their pills.
+// Every scan status is a pill on every screen, so a reader can see at a glance
+// that a scan finished. Green means succeeded and nothing else.
 // -----
-export function ScanStatusBadge({ status, quiet = false }: { status: ScanState; quiet?: boolean }) {
-  if (quiet && status === "succeeded") {
-    return (
-      <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-        <CircleCheck aria-hidden="true" className="size-3.5" />
-        {LABEL[status]}
-      </span>
-    );
-  }
+export function ScanStatusBadge({ status }: { status: ScanState }) {
   return (
     <Badge variant={VARIANT[status]}>
       <span className={cn("size-1.5 rounded-full bg-current", status === "running" && "animate-pulse")} />

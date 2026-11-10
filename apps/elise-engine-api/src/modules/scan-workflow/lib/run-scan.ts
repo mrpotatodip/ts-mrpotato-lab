@@ -54,7 +54,8 @@ export const runScan = async (deps: ScanRunDeps, params: ScanParams, step: Workf
   try {
     await mark("status-running", { status: "running", step: "cloning" });
     await step.do("prepare", { retries: SCAN_WORKFLOW_RETRY_ONCE, timeout: SCAN_WORKFLOW_PREPARE_TIMEOUT }, async () => {
-      const checkout = await sandbox.prepare(params.repo, params.ref);
+      const { github } = params;
+      const checkout = await sandbox.prepare(params.repo, params.ref, github && { installationId: github.installationId, repoId: github.repoId, repo: github.repo });
       await runEffect(ledger.mark(params.accountId, params.scanId, checkout));
       return checkout;
     });

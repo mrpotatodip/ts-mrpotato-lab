@@ -41,7 +41,7 @@ function RunningNow({ scans }: { scans: readonly ScanStatus[] }) {
           {scans.map((scan) => (
             <li key={scan.scanId} className="flex items-center justify-between gap-3 rounded-lg px-2 py-2.5 text-sm transition-colors hover:bg-accent">
               <div className="grid min-w-0 gap-0.5">
-                <ScanRepoLink scanId={scan.scanId} repo={scan.repo} />
+                <ScanRepoLink scanId={scan.scanId} repo={scan.repo} isPrivate={scan.isPrivate} />
                 <ScanOrigin scan={scan} />
               </div>
               <div className="grid justify-items-end gap-1">
@@ -111,11 +111,11 @@ export function ScanOverview({ decide, attention }: ScanOverviewProps) {
                 {list.scans.slice(0, RECENT).map((scan) => (
                   <li key={scan.scanId} className="flex min-h-14 items-center justify-between gap-4 rounded-lg px-2 py-2.5 text-sm transition-colors hover:bg-accent">
                     <div className="grid min-w-0 gap-0.5">
-                      <ScanRepoLink scanId={scan.scanId} repo={scan.repo} />
+                      <ScanRepoLink scanId={scan.scanId} repo={scan.repo} isPrivate={scan.isPrivate} />
                       <ScanOrigin scan={scan} />
                     </div>
                     <div className="grid justify-items-end gap-1">
-                      <ScanStatusBadge status={scan.status} quiet />
+                      <ScanStatusBadge status={scan.status} />
                       <span className="text-xs">
                         <ScanTime value={scan.createdAt} />
                       </span>

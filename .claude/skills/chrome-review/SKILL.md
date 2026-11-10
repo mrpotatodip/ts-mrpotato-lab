@@ -41,6 +41,8 @@ Drive a Base UI select (`role=combobox`) with the keyboard: `click` the combobox
 
 Keep output small. Judge a long list from a screenshot and Lighthouse, and take `take_snapshot` only on short pages. Save any screenshot or snapshot with `filePath` inside the repo, in the gitignored `.review/` directory: the tools refuse paths outside the workspace.
 
+Each call has a token price. Read one fact with `evaluate_script` (a text, a size, a count) before taking a snapshot. `wait_for` returns a full snapshot, so call it only when the page is still loading, and take it as the snapshot you needed; do not follow it with `take_snapshot`. Take screenshots as `format: "webp"` with `quality: 60`, at 1280 by 800, and keep full size for a pixel-level question. Save a snapshot to a file and `grep` it instead of reading it whole.
+
 Run every pass; each ends with a finding or an explicit "clean".
 
 - **Look**: `take_screenshot` at desktop, then `resize_page` to phone width and again. Compare against the project's design doc or style guide if one exists. A full-page screenshot draws a sticky sidebar and top bar over the middle of the page: crop one region with `uid`, or take the viewport.

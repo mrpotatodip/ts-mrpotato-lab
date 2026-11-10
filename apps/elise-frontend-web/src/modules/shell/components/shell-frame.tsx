@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { TooltipProvider } from "#/components/ui/tooltip";
 import { useNarrow } from "#/lib/use-hydrated";
 import { cn } from "#/lib/utils";
-import { useSidebarCollapsed } from "../hooks";
+import { useSidebarCollapsed, useSkyRotation } from "../hooks";
 import { ShellSidebar, type ShellRepo } from "./shell-sidebar";
 import { ShellTopbar } from "./shell-topbar";
 
@@ -24,6 +24,7 @@ export function ShellFrame({ accountName, userName, email, scanCount, running, r
   const { collapsed: preferred, toggle: flip } = useSidebarCollapsed();
   const [animate, setAnimate] = useState(false);
   const narrow = useNarrow();
+  useSkyRotation();
   const collapsed = preferred || narrow;
 
   const toggle = useCallback(() => {

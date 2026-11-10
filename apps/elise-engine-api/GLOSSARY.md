@@ -1,6 +1,6 @@
 # Elise Engine API Glossary
 
-The words used by the scan service: a Worker that clones a public GitHub repo into a sandbox, runs an AI security review, and keeps the report. Use these words in route text, tickets and lessons.
+The words used by the scan service: a Worker that clones a GitHub repo (public, or private through an Install) into a sandbox, runs an AI security review, and keeps the report. Use these words in route text, tickets and lessons.
 
 ## Parts
 
@@ -106,12 +106,20 @@ _Avoid_: Async run
 ## Safety and cost
 
 **Outbound handler**:
-Worker code that sees every network request the container makes and decides to block it or pass it on.
+Worker code that sees every network request the container makes and decides to block it or pass it on. It also adds the credentials the container never holds: the Anthropic key, and for a private Repo a one-hour GitHub token for that Scan's own repo (ADR 0005).
 _Avoid_: Proxy, firewall
 
 **Allowlist**:
-The short list of hosts the container may reach: `github.com` and `api.anthropic.com`.
+The short list of hosts the container may reach: `github.com` (only the read steps of git) and `api.anthropic.com`.
 _Avoid_: Whitelist
+
+**Install**:
+One installation of the Elise GitHub App on a GitHub account, connected to one Account by a `tenant_admin` (`tenant_github_installations`). It holds IDs and a status, never a token. Its status is `active`, `suspended` or `removed`, as the last check saw it. The dashboard calls it a connection ("Connections").
+_Avoid_: Integration, token, GitHub login
+
+**Private Scan**:
+A Scan whose Repo GitHub said is private when it was requested (`scans.is_private`), read through an active Install of its own Account. The Repo keeps the last answer for display only.
+_Avoid_: Authenticated scan
 
 **Secret**:
 A value stored in the Worker, not in git, such as `ANTHROPIC_API_KEY` or `SCAN_API_TOKEN`.

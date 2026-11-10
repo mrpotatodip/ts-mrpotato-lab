@@ -29,15 +29,28 @@ const dirty = () => {
   );
 };
 
-const isTracked = (target) => spawnSync("git", ["ls-files", "--error-unmatch", "--", target], { cwd: root, stdio: "ignore" }).status === 0;
+// The directories a command may run in: the hook's cwd, then each `cd` it makes, so a bare file
+// name after `cd apps/x &&` is looked up where the shell will find it.
+const workDirs = (command) => {
+  const dirs = [root];
+  for (const match of command.matchAll(/\bcd\s+(['"]?)([^\s;&|'"]+)\1/g)) {
+    dirs.push(path.resolve(dirs.at(-1), match[2].replace(/^~(?=\/|$)/, os.homedir())));
+  }
+  return dirs;
+};
+
+const isTracked = (target, dirs) =>
+  dirs.some((dir) => fs.existsSync(dir) && spawnSync("git", ["ls-files", "--error-unmatch", "--", target], { cwd: dir, stdio: "ignore" }).status === 0);
 
 // A script that rewrites a tracked file skips the Edit tool's stale-read check, so a change
 // the user or another session made meanwhile is lost. New and untracked files are fine.
+// `-i` may carry a backup suffix (`-i.bak`, `-i''`), so anything may follow it.
 const rewritesTrackedFile = (command) => {
-  const inPlace = /\b(?:sed|perl)\b[^|;&\n]*\s(?:-[A-Za-z]*i[A-Za-z]*|--in-place)(?:\s|=|$)/.test(command);
+  const inPlace = /\b(?:sed|perl)\b[^|;&\n]*\s(?:-[A-Za-z]*i\S*|--in-place)(?:\s|=|$)/.test(command);
   const redirected = [...command.matchAll(/(?:>>?|\btee\s+(?:-a\s+)?)\s*([^\s|;&<>]+)/g)].map((match) => match[1]);
   const words = command.split(/\s+/).map((word) => word.replace(/^['"]|['"]$/g, ""));
-  return (inPlace && words.some(isTracked)) || redirected.some(isTracked);
+  const dirs = workDirs(command);
+  return (inPlace && words.some((word) => isTracked(word, dirs))) || redirected.some((target) => isTracked(target, dirs));
 };
 
 if (input.hook_event_name === "PreToolUse") {

@@ -29,4 +29,6 @@
   // MONTHLY_BUDGET_USD is the default monthly spend per account (tenants.monthly_scan_budget_usd overrides it).
   // MAX_BUDGET_USD is the per-scan spend ceiling: requests may lower it, never raise it.
   // Secrets (wrangler secret put / --secrets-file): ANTHROPIC_API_KEY, SCAN_API_TOKEN, DATABASE_URL, AUTH_SECRET
+  // Optional, for private repos: GITHUB_APP_ID, GITHUB_APP_PRIVATE_KEY (PKCS#8 PEM)
+  // Optional, for Connect GitHub: GITHUB_APP_CLIENT_ID, GITHUB_APP_CLIENT_SECRET
 }

@@ -1,21 +1,8 @@
-import type { ReactNode } from "react";
 import { Card } from "#/components/ui/card";
-import { cn } from "#/lib/utils";
+import { ShellStatCell as Cell } from "#/modules/shell";
 import { ScanSeverityDots, scanPlural } from "#/modules/scan";
 import type { Repo } from "../schemas";
 import { repoTotals } from "../utils";
-
-type CellProps = { label: string; value: number; note: ReactNode; lead?: boolean };
-
-function Cell({ label, value, note, lead }: CellProps) {
-  return (
-    <div className="grid content-start gap-3 p-6">
-      <h2 className="text-sm font-medium text-muted-foreground">{label}</h2>
-      <p className={cn("font-semibold leading-none tracking-tight tabular-nums", lead ? "text-[40px]" : "text-[32px]", value === 0 && "text-muted-foreground")}>{value}</p>
-      <div className="text-sm leading-relaxed text-muted-foreground">{note}</div>
-    </div>
-  );
-}
 
 // -----
 // The same four answers as the repository summary, as one card with one lead

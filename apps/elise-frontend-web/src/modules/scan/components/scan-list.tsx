@@ -4,10 +4,9 @@ import { ChevronRight, ScanSearch, Search } from "lucide-react";
 import { Button } from "#/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "#/components/ui/empty";
-import { Input } from "#/components/ui/input";
-import { Label } from "#/components/ui/label";
 import { Tabs, TabsList, TabsTrigger } from "#/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "#/components/ui/table";
+import { ShellFilterBar, ShellListCount, ShellSearchField } from "#/modules/shell";
 import { fetchScans } from "../api";
 import { SCAN_MODEL_NAMES, SCAN_SKILL_OPTIONS } from "../constants";
 import { scansQuery } from "../hooks";
@@ -76,15 +75,12 @@ export function ScanList() {
   const query = search.trim().toLowerCase();
   const visible = all.filter((scan) => matches(filter, scan.status) && (query === "" || [scan.repo, scan.branch, scan.commitSha].some((field) => (field ?? "").toLowerCase().includes(query))));
   const count = (value: Filter) => all.filter((scan) => matches(value, scan.status)).length;
-  const total = `${all.length}${nextCursor ? "+" : ""}`;
 
   return (
     <Card>
       <CardHeader className="flex-row items-center justify-between">
         <CardTitle>All scans</CardTitle>
-        <span className="text-xs tabular-nums text-muted-foreground">
-          {visible.length === all.length ? `${total} ${all.length === 1 && !nextCursor ? "scan" : "scans"}` : `${visible.length} of ${total} scans`}
-        </span>
+        <ShellListCount shown={visible.length} total={all.length} more={Boolean(nextCursor)} noun="scan" plural="scans" />
       </CardHeader>
       {all.length === 0 ? (
         <CardContent className="overflow-hidden p-0">
@@ -103,7 +99,7 @@ export function ScanList() {
         </CardContent>
       ) : (
         <CardContent className="overflow-hidden p-0">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b px-5 py-3">
+          <ShellFilterBar>
             <Tabs
               value={filter}
               onValueChange={(value) => {
@@ -120,23 +116,8 @@ export function ScanList() {
                 ))}
               </TabsList>
             </Tabs>
-            <div className="relative w-full sm:w-80">
-              <Label htmlFor="scan-search" className="sr-only">
-                Search scans by repository, branch or commit
-              </Label>
-              <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                id="scan-search"
-                name="search"
-                type="search"
-                autoComplete="off"
-                placeholder="Search by repository, branch or commit"
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                className="h-9 pl-9"
-              />
-            </div>
-          </div>
+            <ShellSearchField id="scan-search" name="search" label="Search scans by repository, branch or commit" placeholder="Search by repository, branch or commit" value={search} onChange={(event) => setSearch(event.target.value)} />
+          </ShellFilterBar>
           {visible.length === 0 ? (
             <Empty className="py-12">
               <EmptyHeader>
@@ -179,7 +160,7 @@ export function ScanList() {
                 {visible.map((scan) => (
                   <TableRow key={scan.scanId} className="relative">
                     <TableCell className="max-w-[18rem]">
-                      <ScanRepoLink scanId={scan.scanId} repo={scan.repo} stretch />
+                      <ScanRepoLink scanId={scan.scanId} repo={scan.repo} isPrivate={scan.isPrivate} stretch />
                       <ScanOrigin scan={scan} />
                     </TableCell>
                     <TableCell>
@@ -206,9 +187,9 @@ export function ScanList() {
           )}
           {nextCursor && (
             <div className="flex flex-col items-center gap-2 border-t p-4">
-              {loadMore.isError && <p role="alert" className="text-xs text-status-danger">We could not load older scans. Try again.</p>}
+              {loadMore.isError && <p role="alert" className="text-xs text-status-danger">We could not load more scans. Try again.</p>}
               <Button variant="outline" size="sm" disabled={loadMore.isPending} onClick={() => loadMore.mutate(nextCursor)}>
-                {loadMore.isPending ? "Loading" : "Load older scans"}
+                {loadMore.isPending ? "Loading" : "Load more scans"}
               </Button>
             </div>
           )}

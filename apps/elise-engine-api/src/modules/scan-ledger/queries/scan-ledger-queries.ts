@@ -99,8 +99,12 @@ export const neonScanRepo = (db: DbConnectType): ScanRepo => ({
           profile: params.options.profile,
           budget: params.options.budget ?? null,
           maxBudgetUsd: params.options.maxBudgetUsd.toFixed(2),
+          installationId: params.github?.installationRowId ?? null,
+          githubRepoId: params.github?.repoId ?? null,
+          isPrivate: params.github?.isPrivate ?? null,
           createdAt: new Date(params.createdAt),
         }),
+          ...(params.github ? [db.update(scanRepos).set({ isPrivate: params.github.isPrivate }).where(eq(scanRepos.id, repoId))] : []),
         ]),
       catch: (cause) => (pgErrorCode(cause) === PG_UNIQUE_VIOLATION ? new Conflict({ message: ACTIVE_SCAN_CONFLICT }) : toDbError(cause)),
     }).pipe(

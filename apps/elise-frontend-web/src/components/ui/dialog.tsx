@@ -20,7 +20,7 @@ function DialogContent({ className, children, ...props }: DialogPrimitive.Popup.
     <DialogPrimitive.Portal>
       <DialogPrimitive.Backdrop
         data-slot="dialog-backdrop"
-        className="fixed inset-0 z-50 bg-black/30 backdrop-blur-[2px] transition-opacity duration-200 data-[ending-style]:opacity-0 data-[starting-style]:opacity-0"
+        className="fixed inset-0 z-50 bg-black/30 backdrop-blur-md transition-opacity duration-200 data-[ending-style]:opacity-0 data-[starting-style]:opacity-0"
       />
       <DialogPrimitive.Popup
         data-slot="dialog-content"

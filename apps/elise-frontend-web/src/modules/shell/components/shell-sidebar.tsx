@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import { Link } from "@tanstack/react-router";
-import { ChevronUp, FileText, FlaskConical, FolderGit2, LayoutDashboard, PanelLeftClose, PanelLeftOpen, ScanSearch, Sparkles, Users } from "lucide-react";
+import { Link, useRouterState } from "@tanstack/react-router";
+import { ChevronUp, FileText, FlaskConical, FolderGit2, LayoutDashboard, PanelLeftClose, PanelLeftOpen, Plug, ScanSearch, Sparkles, Users } from "lucide-react";
 import { Avatar, AvatarFallback } from "#/components/ui/avatar";
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
@@ -18,12 +18,13 @@ export type ShellRepo = {
   owner: string;
   name: string;
   status: "queued" | "running" | "succeeded" | "failed";
+  isPrivate?: boolean;
 };
 
 const ROW =
   "relative flex h-10 items-center gap-3 rounded-lg px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 const ACTIVE = { className: "bg-accent text-foreground" };
-const SECTION = "px-3 pb-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground";
+const SECTION = "px-3 pb-1 text-xs font-medium uppercase tracking-wider text-muted-foreground";
 const ICON = "size-[18px] shrink-0";
 const CHEVRON = "size-4 rotate-180 transition-transform group-data-[panel-open]:rotate-0";
 const TOGGLE =
@@ -66,6 +67,7 @@ export function ShellSidebar({ accountName, userName, email, scanCount, running,
   const { open: reposOpen, setOpen: setReposOpen } = useSidebarReposOpen();
   const scansLabel = running > 0 ? `Scans, ${running} in progress` : "Scans";
   const hasRepoChildren = repoCount >= 2;
+  const onConnectFlow = useRouterState({ select: (state) => state.location.pathname.startsWith("/github/") });
   const empty = scanCount === 0;
   const personName = userName || accountName;
   const personDetail = userName ? accountName : email;
@@ -96,6 +98,30 @@ export function ShellSidebar({ accountName, userName, email, scanCount, running,
           </Link>
         </Hint>
 
+        {collapsed || !hasRepoChildren ? (
+          <Hint label="Repositories" collapsed={collapsed}>
+            <Link to="/repos" aria-label="Repositories" className={cn(ROW, collapsed && "justify-center px-0")} activeProps={ACTIVE}>
+              <FolderGit2 className={ICON} strokeWidth={1.5} />
+              {!collapsed && "Repositories"}
+            </Link>
+          </Hint>
+        ) : (
+          <Collapsible open={reposOpen} onOpenChange={setReposOpen}>
+            <div className="relative">
+              <Link to="/repos" activeOptions={{ exact: true }} className={cn(ROW, "pr-10")} activeProps={ACTIVE}>
+                <FolderGit2 className={ICON} strokeWidth={1.5} />
+                Repositories
+              </Link>
+              <CollapsibleTrigger aria-label={reposOpen ? "Hide recent repositories" : "Show recent repositories"} className={TOGGLE}>
+                <ChevronUp className={CHEVRON} strokeWidth={1.5} />
+              </CollapsibleTrigger>
+            </div>
+            <CollapsiblePanel>
+              <ShellRepoTree repos={repos} mode={mode} />
+            </CollapsiblePanel>
+          </Collapsible>
+        )}
+
         <Hint label={scansLabel} collapsed={collapsed}>
           <Link to="/scans" aria-label={collapsed ? scansLabel : undefined} className={cn(ROW, collapsed && "justify-center px-0")} activeProps={ACTIVE}>
             <ScanSearch className={ICON} strokeWidth={1.5} />
@@ -120,34 +146,19 @@ export function ShellSidebar({ accountName, userName, email, scanCount, running,
           </Link>
         </Hint>
 
-        {collapsed || !hasRepoChildren ? (
-          <Hint label="Repositories" collapsed={collapsed}>
-            <Link to="/repos" aria-label="Repositories" className={cn(ROW, collapsed && "justify-center px-0")} activeProps={ACTIVE}>
-              <FolderGit2 className={ICON} strokeWidth={1.5} />
-              {!collapsed && "Repositories"}
-            </Link>
-          </Hint>
-        ) : (
-          <Collapsible open={reposOpen} onOpenChange={setReposOpen} className="mb-2">
-            <div className="relative">
-              <Link to="/repos" activeOptions={{ exact: true }} className={cn(ROW, "pr-10")} activeProps={ACTIVE}>
-                <FolderGit2 className={ICON} strokeWidth={1.5} />
-                Repositories
-              </Link>
-              <CollapsibleTrigger aria-label={reposOpen ? "Hide recent repositories" : "Show recent repositories"} className={TOGGLE}>
-                <ChevronUp className={CHEVRON} strokeWidth={1.5} />
-              </CollapsibleTrigger>
-            </div>
-            <CollapsiblePanel>
-              <ShellRepoTree repos={repos} mode={mode} />
-            </CollapsiblePanel>
-          </Collapsible>
-        )}
-
         <Hint label="Files" collapsed={collapsed}>
           <Link to="/files" aria-label="Files" className={cn(ROW, collapsed && "justify-center px-0")} activeProps={ACTIVE}>
             <FileText className={ICON} strokeWidth={1.5} />
             {!collapsed && "Files"}
+          </Link>
+        </Hint>
+      </nav>
+
+      <nav aria-label="Account" className="grid grid-cols-[minmax(0,1fr)] gap-1 border-t pt-3">
+        <Hint label="Connections" collapsed={collapsed}>
+          <Link to="/connections" aria-label="Connections" className={cn(ROW, collapsed && "justify-center px-0", onConnectFlow && ACTIVE.className)} activeProps={ACTIVE}>
+            <Plug className={ICON} strokeWidth={1.5} />
+            {!collapsed && "Connections"}
           </Link>
         </Hint>
 

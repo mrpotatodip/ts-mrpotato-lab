@@ -122,7 +122,7 @@ function GroupRow({ group, members }: { group: Group; members: readonly TeamMemb
         {inGroup.length === 0 && <span className="text-xs text-muted-foreground">No one yet.</span>}
         {candidates.length > 0 && (
           <Select value="" disabled={add.isPending} items={candidates.map((m) => ({ value: m.partyId, label: m.name }))} onValueChange={(next) => next && add.mutate(next)}>
-            <SelectTrigger aria-label={`Add a person to ${group.name}`} className="h-7 w-36 text-xs">
+            <SelectTrigger aria-label={`Add a person to ${group.name}`} className="w-36">
               <SelectValue placeholder={add.isPending ? "Adding" : "Add a person"} />
             </SelectTrigger>
             <SelectContent>

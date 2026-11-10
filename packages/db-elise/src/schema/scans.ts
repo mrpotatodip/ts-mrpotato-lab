@@ -33,6 +33,7 @@ import {
 } from "@repo/contracts/elise";
 import { parties } from "./party";
 import { tenants } from "./tenant";
+import { tenantGithubInstallations } from "./tenant-github-installations";
 
 const inList = (values: readonly string[]) => sql.raw(values.map((value) => `'${value}'`).join(", "));
 
@@ -50,9 +51,12 @@ export const scanRepos = pgTable(
     tenantId: uuid("tenant_id")
       .notNull()
       .references(() => tenants.id, { onDelete: "cascade" }),
+    provider: text("provider").notNull().default("github"),
     canonical: text("canonical").notNull(),
     url: text("url").notNull(),
     defaultBranch: text("default_branch"),
+    // Last answer GitHub gave at a Scan request. For display only: each Scan keeps its own.
+    isPrivate: boolean("is_private"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => ({
@@ -111,6 +115,10 @@ export const scans = pgTable(
     branch: text("branch"),
     branchId: uuid("branch_id"),
     untrackedReason: text("untracked_reason"),
+    // Set when an install of the Account covered the repo at the request. Null: cloned anonymously.
+    installationId: uuid("installation_id"),
+    githubRepoId: bigint("github_repo_id", { mode: "number" }),
+    isPrivate: boolean("is_private"),
     priorsGiven: integer("priors_given"),
     priorsCarried: integer("priors_carried"),
     priorsClosed: integer("priors_closed"),
@@ -147,6 +155,11 @@ export const scans = pgTable(
       foreignColumns: [scanRepos.id, scanRepos.tenantId],
     }).onDelete("cascade"),
     idxRepoCreated: index("idx_scans_repo_id_created_at").on(t.repoId, t.createdAt),
+    fkInstallationTenant: foreignKey({
+      name: "scans_installation_tenant_fk",
+      columns: [t.installationId, t.tenantId],
+      foreignColumns: [tenantGithubInstallations.id, tenantGithubInstallations.tenantId],
+    }).onDelete("restrict"),
     fkBranchTenant: foreignKey({
       name: "scans_branch_tenant_fk",
       columns: [t.branchId, t.tenantId],

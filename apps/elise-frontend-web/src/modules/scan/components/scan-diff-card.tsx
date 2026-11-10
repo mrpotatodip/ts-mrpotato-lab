@@ -110,7 +110,7 @@ export function ScanDiffCard({ scanId }: { scanId: string }) {
       <CardHeader className="flex-row flex-wrap items-center justify-between gap-3">
         <div className="grid gap-1.5">
           <CardTitle>What changed since the previous scan</CardTitle>
-          <p className="text-xs text-muted-foreground">{data.previousScanId === null ? "No earlier scan of this repository to compare with." : summaryLine(data)}</p>
+          <p className="text-xs text-muted-foreground">{data.previousScanId === null ? "This is the first scan of the repository. Later scans will show what is new, fixed or still open." : summaryLine(data)}</p>
         </div>
         {data.previousScanId !== null && (
           <Link
@@ -122,11 +122,9 @@ export function ScanDiffCard({ scanId }: { scanId: string }) {
           </Link>
         )}
       </CardHeader>
+      {data.previousScanId !== null && (
       <CardContent className="grid grid-cols-[minmax(0,1fr)] gap-4">
-        {data.previousScanId === null ? (
-          <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">This is the first scan of the repository. Later scans will show what is new, fixed or still open.</p>
-        ) : (
-          groups.map((group) => (
+        {groups.map((group) => (
             <Collapsible key={group.key} defaultOpen={group.openByDefault} className={cn("rounded-xl border", TONE[group.tone])}>
               <div className="grid gap-1 px-4 pt-3 pb-3">
                 <h3 className="text-sm font-semibold">
@@ -150,9 +148,9 @@ export function ScanDiffCard({ scanId }: { scanId: string }) {
                 </ul>
               </CollapsiblePanel>
             </Collapsible>
-          ))
-        )}
+        ))}
       </CardContent>
+      )}
     </Card>
   );
 }

@@ -1,8 +1,12 @@
-import { CircleAlert, Coins, GitCompareArrows, ListChecks } from "lucide-react";
-import { ShellStatTile } from "#/modules/shell";
+import { Card } from "#/components/ui/card";
+import { ShellStatCell } from "#/modules/shell";
 import { SEVERITIES, type ScanStatus } from "../schemas";
 import { scanCost, scanDuration, scanPlural, scanTokens } from "../utils";
 
+// -----
+// The same strip as the repository summary: one card, one lead number, no icon
+// chips or tints. The cost cell is there only when usage was recorded.
+// -----
 export function ScanSummary({ scan }: { scan: ScanStatus }) {
   const { summary, usage } = scan;
   if (!summary && !usage) return null;
@@ -12,41 +16,32 @@ export function ScanSummary({ scan }: { scan: ScanStatus }) {
   const tokens = usage ? usage.inputTokens + usage.outputTokens + usage.cacheReadTokens + usage.cacheWriteTokens : 0;
 
   return (
-    <section aria-label="Scan summary" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      {summary && (
-        <>
-          <ShellStatTile
-            label="Findings"
-            value={summary.total}
-            icon={ListChecks}
-            tone="bg-secondary text-foreground"
-            note={summary.total === 0 ? "Nothing was reported. That does not prove the code is safe." : severityParts.length > 0 ? `${severityParts.join(", ")} confirmed.` : "None confirmed yet."}
+    <section aria-label="Scan summary">
+      <Card className="grid divide-y lg:grid-cols-4 lg:divide-x lg:divide-y-0">
+        {summary && (
+          <>
+            <ShellStatCell
+              lead
+              label="Findings"
+              value={summary.total}
+              note={summary.total === 0 ? "Nothing was reported. That does not prove the code is safe." : severityParts.length > 0 ? `${severityParts.join(", ")} confirmed.` : "None confirmed yet."}
+            />
+            <ShellStatCell
+              label="Needs a person"
+              value={summary.needsValidation}
+              note={summary.needsValidation > 0 ? `${scanPlural(summary.needsValidation, "finding is", "findings are")} likely but unverified. Check by hand before acting.` : "Every finding was verified by the agent."}
+            />
+            <ShellStatCell label="New since last scan" value={summary.new} note={`${summary.carried} carried over from earlier scans and seen again. The rest of this page shows what changed.`} />
+          </>
+        )}
+        {usage && (
+          <ShellStatCell
+            label="What it cost"
+            value={scanCost(usage.costUsd)}
+            note={[duration && `Took ${duration}`, tokens > 0 && `${scanTokens(tokens)} tokens`, usage.turns !== null && `${usage.turns} turns`].filter(Boolean).join(", ") + ". Estimated at list price."}
           />
-          <ShellStatTile
-            label="Needs a person"
-            value={summary.needsValidation}
-            icon={CircleAlert}
-            tone={summary.needsValidation > 0 ? "bg-status-warning-soft text-status-warning" : "bg-secondary text-foreground"}
-            note={summary.needsValidation > 0 ? `${scanPlural(summary.needsValidation, "finding is", "findings are")} likely but unverified. Check by hand before acting.` : "Every finding was verified by the agent."}
-          />
-          <ShellStatTile
-            label="New since last scan"
-            value={summary.new}
-            icon={GitCompareArrows}
-            tone="bg-secondary text-foreground"
-            note={`${summary.carried} carried over from earlier scans and seen again. The rest of this page shows what changed.`}
-          />
-        </>
-      )}
-      {usage && (
-        <ShellStatTile
-          label="What it cost"
-          value={scanCost(usage.costUsd)}
-          icon={Coins}
-          tone="bg-secondary text-foreground"
-          note={[duration && `Took ${duration}`, tokens > 0 && `${scanTokens(tokens)} tokens`, usage.turns !== null && `${usage.turns} turns`].filter(Boolean).join(", ") + ". Estimated at list price."}
-        />
-      )}
+        )}
+      </Card>
     </section>
   );
 }

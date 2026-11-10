@@ -27,6 +27,18 @@ export default defineConfig({
     forbidModules("src/modules/scan/**", ["repo", "finding", "team"], "The scan module sits below repo and finding. Take their parts as props or slots from the route that composes them."),
     forbidModules("src/modules/usage/**", ["scan", "repo", "finding", "team"], "The usage module sits below the screens that show it."),
     forbidModules("src/modules/finding/**", ["repo"], "The finding module sits below repo."),
+    {
+      files: ["**/__tests__/**"],
+      rules: {
+        "no-console": "error",
+        "vitest/expect-expect": "error",
+        "vitest/no-conditional-expect": "error",
+        "vitest/no-disabled-tests": "error",
+        "vitest/no-focused-tests": "error",
+        "vitest/no-identical-title": "error",
+        "vitest/no-restricted-matchers": ["error", { toMatchSnapshot: "No snapshot tests (General 2.2).", toMatchInlineSnapshot: "No snapshot tests (General 2.2)." }],
+      },
+    },
   ],
   rules: {
     "react/react-in-jsx-scope": "off",

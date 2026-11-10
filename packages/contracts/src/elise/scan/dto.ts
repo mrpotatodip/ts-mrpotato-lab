@@ -88,6 +88,7 @@ export const ScanStatusSchema = ScanOptionsSchema.extend({
   accountId: z.string(),
   repo: z.string(),
   repoId: z.uuid(),
+  isPrivate: z.boolean().nullish(),
   commitSha: z.string().nullish(),
   ref: z.string().nullish(),
   branch: z.string().nullish(),
@@ -235,11 +236,15 @@ export const RepoOpenSchema = z.object({
 // is not counted twice. The detail has the counts of each.
 // branchNames are the tracked branches, oldest first, so a list
 // can show them without opening each repo.
+// isPrivate is what GitHub said at the last scan request: null when
+// no connected install covered the repo. It is optional so an older
+// engine that does not send it still parses.
 // -----
 export const RepoSchema = z.object({
   id: z.uuid(),
   url: z.string(),
   canonical: z.string(),
+  isPrivate: z.boolean().nullable().optional(),
   defaultBranch: z.string().nullable(),
   branchNames: z.array(z.string()),
   scans: z.number().int().min(0),

@@ -14,7 +14,7 @@ function ReposPage() {
   return (
     <>
       <ShellPageHeader title="Repositories" description="What is still open in each repository you scan, and what changed since the last scan. The ones that need attention come first." />
-      <Suspense fallback={<Skeleton className="h-56 w-full" />}>
+      <Suspense fallback={<Skeleton className="h-64 w-full" />}>
         <RepoList />
       </Suspense>
     </>

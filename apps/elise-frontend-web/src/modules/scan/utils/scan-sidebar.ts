@@ -1,13 +1,14 @@
 import type { ScanState } from "../schemas";
 import { scanRepoName } from "./scan-repo-name";
 
-type ScanSidebarInput = { scanId: string; repoId?: string | null; repo: string | null | undefined; status: ScanState };
+type ScanSidebarInput = { scanId: string; repoId?: string | null; repo: string | null | undefined; status: ScanState; isPrivate?: boolean | null };
 
 export type ScanSidebarRepo = {
   id: string;
   owner: string;
   name: string;
   status: ScanState;
+  isPrivate: boolean;
 };
 
 const REPOS = 5;
@@ -28,7 +29,7 @@ export function scanSidebarItems(scans: readonly ScanSidebarInput[]) {
     const key = scan.repoId ?? scan.repo ?? scan.scanId;
     if (seen.has(key)) continue;
     seen.add(key);
-    repos.push({ id: scan.repoId ?? key, status: scan.status, ...scanRepoName(scan.repo, scan.scanId) });
+    repos.push({ id: scan.repoId ?? key, status: scan.status, isPrivate: scan.isPrivate === true, ...scanRepoName(scan.repo, scan.scanId) });
   }
 
   return { repos: repos.slice(0, REPOS), repoCount: repos.length, running, total: scans.length };

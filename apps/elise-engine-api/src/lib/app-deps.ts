@@ -2,6 +2,7 @@ import type { Context } from "hono";
 import { createAuth } from "#/lib/auth";
 import { dbConnect } from "#/lib/db-connection";
 import { runEffect } from "#/lib/effect-query";
+import { githubAccessFor, neonInstallationRepo } from "#/modules/github-installs";
 import { userHasAccountEffect, userManagesAccountEffect } from "#/modules/me";
 import { neonScanRepo } from "#/modules/scan-ledger";
 import { monthSpendEffect, monthStartOf } from "#/modules/usage";
@@ -20,6 +21,7 @@ const noSpend = { spentUsd: 0, scans: 0, tokens: { input: 0, output: 0, cacheRea
 
 export const realAppDeps: AppDeps = {
   scanRepo: (env) => neonScanRepo(dbConnect(env.DATABASE_URL)),
+  githubAccess: (env, accountId) => githubAccessFor(env, neonInstallationRepo(dbConnect(env.DATABASE_URL)), accountId),
   monthSpend: (env, accountId) =>
     env.DATABASE_URL ? runEffect(monthSpendEffect(dbConnect(env.DATABASE_URL), accountId, monthStartOf(new Date()))) : Promise.resolve(noSpend),
   sessionUserId,

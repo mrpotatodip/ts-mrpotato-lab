@@ -75,6 +75,21 @@ describe("scanSidebarItems", () => {
     expect(total).toBe(4);
   });
 
+  it("marks a repository private from its newest scan, and only when the engine said so", () => {
+    const { repos } = scanSidebarItems([
+      { scanId: "a", repoId: "r1", repo: "https://github.com/acme/closed", status: "succeeded" as const, isPrivate: true },
+      { scanId: "b", repoId: "r2", repo: "https://github.com/acme/open", status: "succeeded" as const, isPrivate: null },
+      { scanId: "c", repoId: "r3", repo: "https://github.com/acme/older", status: "succeeded" as const },
+      { scanId: "d", repoId: "r1", repo: "https://github.com/acme/closed", status: "succeeded" as const, isPrivate: false },
+    ]);
+
+    expect(repos.map((r) => [r.name, r.isPrivate])).toEqual([
+      ["closed", true],
+      ["open", false],
+      ["older", false],
+    ]);
+  });
+
   it("caps the list at five repositories but still counts them all", () => {
     const many = Array.from({ length: 9 }, (_, i) => ({ scanId: `s${i}`, repoId: `r${i}`, repo: `https://github.com/acme/r${i}`, status: "succeeded" as const }));
     const { repos, repoCount } = scanSidebarItems(many);

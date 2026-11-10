@@ -2,6 +2,7 @@ import { Effect } from "effect";
 import { Invalid, RateLimited, toExternalError, type Conflict, type DbError, type ExternalError } from "#/lib/effect-query";
 import { ScanOptionsSchema, type ScanParams } from "#/schemas";
 import { normalizeBranchName } from "#/modules/branches";
+import type { GithubAccess } from "#/modules/github-installs";
 import { newScanId } from "#/modules/scan-store";
 import type { ScanRepo } from "#/modules/scan-ledger";
 import { SCANS_ACTIVE_WINDOW_MS } from "#/modules/scans/constants";
@@ -15,6 +16,7 @@ export const createScanSvc = (
   accountId: string,
   input: CreateScanBody,
   spend: MonthSpend,
+  access?: GithubAccess,
 ): Effect.Effect<ScanQueued, Invalid | RateLimited | Conflict | DbError | ExternalError> =>
   Effect.gen(function* () {
     const ceiling = Number(env.MAX_BUDGET_USD);
@@ -58,7 +60,16 @@ export const createScanSvc = (
     // the clone, which tries it as a branch first.
     // -----
     const ref = input.ref === undefined ? undefined : (normalizeBranchName(input.ref) ?? undefined);
-    const params: ScanParams = { scanId: newScanId(), accountId, repo: record.url, ref, options, createdAt: new Date().toISOString() };
+    const github = access === undefined ? null : yield* access.forRepo(record.url);
+    const params: ScanParams = {
+      scanId: newScanId(),
+      accountId,
+      repo: record.url,
+      ref,
+      github: github ?? undefined,
+      options,
+      createdAt: new Date().toISOString(),
+    };
     yield* repo.create(params, record.id, Date.now() - SCANS_ACTIVE_WINDOW_MS);
     yield* Effect.tryPromise({ try: () => env.SCAN_WORKFLOW.create({ id: params.scanId, params }), catch: toExternalError }).pipe(
       Effect.tapError((error) =>

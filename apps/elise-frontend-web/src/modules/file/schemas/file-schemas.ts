@@ -2,7 +2,7 @@ import { z } from "zod";
 import { FILE_LISTED_NAMES, FileListSchema, FileNameSchema, FilesQuerySchema } from "@repo/contracts/elise";
 
 export { FILE_LISTED_NAMES, FileListSchema, FileNameSchema };
-export type { FileEntry, FileName } from "@repo/contracts/elise";
+export type { FileCount, FileEntry, FileName } from "@repo/contracts/elise";
 
 // -----
 // The filters live in the page URL, so a filtered list can be

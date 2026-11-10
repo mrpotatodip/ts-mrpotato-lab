@@ -28,7 +28,7 @@ import {
   SCAN_SANDBOX_TRUST_ENV,
   SCAN_SANDBOX_WORK_DIR,
 } from "#/modules/scan-sandbox/constants";
-import type { AgentState, Meter, MeteredTokens, OutboundExport, ScanCheckout } from "#/modules/scan-sandbox/types";
+import type { AgentState, Meter, MeteredTokens, OutboundExport, OutboundGithub, ScanCheckout } from "#/modules/scan-sandbox/types";
 import { buildAgentPrompt, buildAgentScript, buildCloneScript, parseAgentUsage, priceUsage } from "#/modules/scan-sandbox/utils";
 
 type SandboxContext = DurableObjectState & { exports: { Outbound: OutboundExport } };
@@ -36,14 +36,14 @@ type SandboxContext = DurableObjectState & { exports: { Outbound: OutboundExport
 export class ScanSandbox extends DurableObject<Bindings> {
   readonly #container: NonNullable<DurableObjectState["container"]>;
   readonly #files: Files;
-  readonly #outbound: Fetcher;
+  readonly #context: SandboxContext;
 
   constructor(ctx: SandboxContext, env: Bindings) {
     super(ctx, env);
     if (!ctx.container) throw new Error("The container binding is not configured");
     this.#container = ctx.container;
     this.#files = new Files(ctx.container);
-    this.#outbound = ctx.exports.Outbound({ props: { sandboxId: ctx.id.toString() } });
+    this.#context = ctx;
   }
 
   // -----
@@ -76,9 +76,9 @@ export class ScanSandbox extends DurableObject<Bindings> {
   // it was fetched as a branch, nothing for a tag or a commit. A second call after a
   // retry finds the marker and returns the same commit.
   // -----
-  async prepare(repoUrl: string, ref?: string): Promise<ScanCheckout> {
+  async prepare(repoUrl: string, ref?: string, github?: OutboundGithub): Promise<ScanCheckout> {
     console.log("scan: starting container");
-    await this.#start();
+    await this.#start(github);
     if ((await this.#readText(SCAN_SANDBOX_CLONED_MARKER)) === null) {
       console.log("scan: cloning", repoUrl, ref ?? "");
       await this.#sh(buildCloneScript(), ref ? [repoUrl, ref] : [repoUrl], SCAN_SANDBOX_CLONE_GUARD_MS);
@@ -168,15 +168,16 @@ export class ScanSandbox extends DurableObject<Bindings> {
     }
   }
 
-  async #start(): Promise<void> {
+  async #start(github?: OutboundGithub): Promise<void> {
     if (this.#container.running) return;
+    const outbound = this.#context.exports.Outbound({ props: { sandboxId: this.#context.id.toString(), github } });
     this.#container.start({
       image: this.#container.images.sandbox,
       instance: SCAN_SANDBOX_INSTANCE_TYPE,
       enableInternet: false,
     });
-    await this.#container.interceptAllOutboundHttp(this.#outbound);
-    await this.#container.interceptOutboundHttps("*", this.#outbound);
+    await this.#container.interceptAllOutboundHttp(outbound);
+    await this.#container.interceptOutboundHttps("*", outbound);
     await this.#container.setInactivityTimeout(SCAN_SANDBOX_INACTIVITY_MS);
   }
 

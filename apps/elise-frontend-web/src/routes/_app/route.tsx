@@ -16,7 +16,7 @@ function AppLayout() {
   const { user } = Route.useRouteContext();
   const { data } = useQuery(scansQuery());
   const { repos, repoCount, running, total } = scanSidebarItems(data?.scans ?? []);
-  const onRepoPage = useRouterState({ select: (state) => state.location.pathname.startsWith("/repos/") });
+  const pageHasOwnScanButton = useRouterState({ select: (state) => state.location.pathname.startsWith("/repos/") || state.location.pathname.startsWith("/scans/") });
 
   return (
     <ShellFrame
@@ -29,7 +29,7 @@ function AppLayout() {
       repoCount={repoCount}
       mode="live"
       showTeam={user?.role === TENANT_ADMIN_ROLE_KEY}
-      actions={<ScanNewDialog variant={onRepoPage ? "outline" : "default"} />}
+      actions={<ScanNewDialog variant={pageHasOwnScanButton ? "outline" : "default"} />}
     >
       <Outlet />
     </ShellFrame>

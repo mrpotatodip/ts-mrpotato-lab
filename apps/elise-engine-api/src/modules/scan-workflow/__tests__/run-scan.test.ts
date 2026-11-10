@@ -6,6 +6,7 @@ import { fakeBindings } from "#/__tests__/fake-bindings";
 import { memoryScanRepo } from "#/__tests__/memory-scan-repo";
 import type { ScanParams, ScanState } from "#/schemas";
 import type { PriorFinding } from "#/modules/scan-records";
+import type { OutboundGithub } from "#/modules/scan-sandbox";
 import { runScan } from "#/modules/scan-workflow/lib";
 import type { SandboxPort } from "#/modules/scan-workflow/types";
 
@@ -44,9 +45,11 @@ const setup = (options: { priors?: PriorFinding[]; recordFails?: ScanState; agen
   const bindings = fakeBindings();
   const launches: PriorFinding[][] = [];
   const prepares: { ref?: string }[] = [];
+  const githubs: (OutboundGithub | undefined)[] = [];
   const sandbox: SandboxPort = {
-    prepare: async (_url, ref) => {
+    prepare: async (_url, ref, github) => {
       prepares.push({ ref });
+      githubs.push(github);
       return { commitSha: "abc123", branch: ref && /^v\d/.test(ref) ? null : (ref ?? "main") };
     },
     launchAgent: async (_options, priors) => void launches.push(priors),
@@ -66,7 +69,7 @@ const setup = (options: { priors?: PriorFinding[]; recordFails?: ScanState; agen
       if (options.recordFails === status) throw new Error("database down");
     },
   };
-  return { names, calls, ledger, bindings, launches, prepares, deps };
+  return { names, calls, ledger, bindings, launches, prepares, githubs, deps };
 };
 
 const queue = async (ledger: ReturnType<typeof memoryScanRepo>, input: ScanParams) => {
@@ -83,6 +86,19 @@ describe("runScan", () => {
     expect(calls).toEqual(["record:succeeded:running", "destroy"]);
     expect(ledger.rows.get("scan-1")).toMatchObject({ status: "succeeded", error: null, usage, commitSha: "abc123" });
     expect(names.indexOf("record-scan-succeeded")).toBeLessThan(names.indexOf("status-succeeded"));
+  });
+
+  it("hands the clone the install and repo to sign for, and nothing else of the install", async () => {
+    const github = { installationRowId: "7c1e4a52-9d3b-4f60-8a71-2b3c4d5e6f70", installationId: 42, repoId: 7, repo: "octocat/hello-world", isPrivate: true };
+    const signed = setup();
+    await queue(signed.ledger, params({ github }));
+    await runScan(signed.deps, params({ github }), fakeStep(signed.names));
+    const open = setup();
+    await queue(open.ledger, params());
+    await runScan(open.deps, params(), fakeStep(open.names));
+
+    expect(signed.githubs).toEqual([{ installationId: 42, repoId: 7, repo: "octocat/hello-world" }]);
+    expect(open.githubs).toEqual([undefined]);
   });
 
   it("saves the branch the clone reported, with the commit", async () => {

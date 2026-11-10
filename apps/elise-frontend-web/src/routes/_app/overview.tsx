@@ -25,7 +25,7 @@ function OverviewWithRepos() {
 
 function OverviewPage() {
   return (
-    <Suspense fallback={<Skeleton className="h-96 w-full" />}>
+    <Suspense fallback={<Skeleton className="h-64 w-full" />}>
       <OverviewWithRepos />
     </Suspense>
   );

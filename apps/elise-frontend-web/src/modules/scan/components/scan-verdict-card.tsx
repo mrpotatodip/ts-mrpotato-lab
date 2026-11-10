@@ -1,6 +1,7 @@
 import { useId, useState, type ComponentType } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronRight, CircleCheck, CircleDashed, CircleHelp, CircleX, ExternalLink, OctagonX } from "lucide-react";
+import { ChevronRight, ChevronUp, CircleCheck, CircleDashed, CircleHelp, CircleX, ExternalLink, OctagonX } from "lucide-react";
+import { cn } from "#/lib/utils";
 import { Alert, AlertDescription } from "#/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Skeleton } from "#/components/ui/skeleton";
@@ -26,7 +27,13 @@ export const VERDICT_COPY = {
 export type DecideFindingProps = { repoId: string; repoUrl: string; finding: VerdictFinding };
 export type DecideFinding = ComponentType<DecideFindingProps>;
 
-type FindingRowsProps = { title: string; hint: string; findings: readonly (VerdictFinding & { note?: string; acceptedUntil?: string })[]; decide?: { Control: DecideFinding; repoId: string; repoUrl: string } };
+type FindingRowsProps = {
+  title: string;
+  hint: string;
+  findings: readonly (VerdictFinding & { note?: string; acceptedUntil?: string })[];
+  decide?: { Control: DecideFinding; repoId: string; repoUrl: string };
+  collapsed?: boolean;
+};
 
 const sheetFinding = (finding: VerdictFinding): Finding => ({
   title: finding.title,
@@ -36,8 +43,14 @@ const sheetFinding = (finding: VerdictFinding): Finding => ({
   detail: { class: finding.class, actor: null, impact: finding.impact ?? null, evidence: finding.evidence ?? null, fix: finding.fix ?? null, needs: finding.needs ?? null, triage: null },
 });
 
-function FindingRows({ title, hint, findings, decide }: FindingRowsProps) {
+// -----
+// A collapsed list is for a screen that already lists the same problems itself (the
+// scan report has its own findings table): the list starts closed, with the
+// count in the heading, and one click opens it to decide.
+// -----
+function FindingRows({ title, hint, findings, decide, collapsed = false }: FindingRowsProps) {
   const [selected, setSelected] = useState<number | undefined>();
+  const [open, setOpen] = useState(!collapsed);
   const headingId = useId();
   if (findings.length === 0) return null;
   const selectedFinding = selected === undefined ? undefined : findings[selected];
@@ -45,10 +58,23 @@ function FindingRows({ title, hint, findings, decide }: FindingRowsProps) {
     <section aria-labelledby={headingId} className="grid gap-3">
       <div className="grid gap-1.5">
         <h3 id={headingId} className="text-[15px] font-semibold">
-          {title}
+          {collapsed ? (
+            <button
+              type="button"
+              aria-expanded={open}
+              onClick={() => setOpen(!open)}
+              className="group flex min-h-8 w-full items-center gap-2 rounded-sm text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              {title}
+              <ChevronUp aria-hidden="true" className={cn("ml-auto size-4 shrink-0 text-muted-foreground transition-transform", !open && "rotate-180")} />
+            </button>
+          ) : (
+            title
+          )}
         </h3>
-        <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">{hint}</p>
+        <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">{collapsed && !open ? "These count against the commit. Open the list to read each problem and record your decision." : hint}</p>
       </div>
+      {open && (
       <div className="overflow-hidden rounded-lg border">
         <Table className="table-fixed" aria-labelledby={headingId}>
           <colgroup>
@@ -73,7 +99,7 @@ function FindingRows({ title, hint, findings, decide }: FindingRowsProps) {
                 </TableCell>
                 <TableCell className="whitespace-normal align-top font-medium">
                   {decide ? (
-                    <button type="button" aria-haspopup="dialog" onClick={() => setSelected(index)} className="rounded-sm text-left hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                    <button type="button" aria-haspopup="dialog" onClick={() => setSelected(index)} className="min-h-6 rounded-sm text-left hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                       {finding.title}
                     </button>
                   ) : (
@@ -97,6 +123,7 @@ function FindingRows({ title, hint, findings, decide }: FindingRowsProps) {
           </TableBody>
         </Table>
       </div>
+      )}
       {decide && (
         <ScanFindingSheet
           findings={findings.map(sheetFinding)}
@@ -167,7 +194,7 @@ export function verdictNextSteps(verdict: Verdict): string {
   if (reasons.some((reason) => HISTORY_CODES.has(reason.code))) steps.push("scan again so earlier problems get re-checked");
   const overLimit = (counts.critical > limits.critical ? counts.critical : 0) + (counts.high > limits.high ? counts.high : 0) + (counts.medium > limits.medium ? counts.medium : 0);
   if (overLimit > 0) steps.push(`fix or accept ${scanPlural(overLimit, "problem", "problems")} over the limits`);
-  if (counts.needsValidation > 0) steps.push(`have a person decide on ${scanPlural(counts.needsValidation, "unrated problem", "unrated problems")}`);
+  if (counts.needsValidation > 0) steps.push(`have a person check ${scanPlural(counts.needsValidation, "problem", "problems")} by hand`);
   if (steps.length === 0) return "Nothing blocks this commit.";
   return `To pass: ${steps.join(", ")}.`;
 }
@@ -212,9 +239,9 @@ function VerdictChecklist({ verdict }: { verdict: Verdict }) {
   );
 }
 
-type VerdictBodyProps = { verdict: Verdict; repoId: string; repoUrl?: string; branchOpen?: number; Decision?: DecideFinding };
+type VerdictBodyProps = { verdict: Verdict; repoId: string; repoUrl?: string; branchOpen?: number; Decision?: DecideFinding; compactFindings?: boolean };
 
-function VerdictBody({ verdict, repoId, repoUrl, branchOpen, Decision }: VerdictBodyProps) {
+function VerdictBody({ verdict, repoId, repoUrl, branchOpen, Decision, compactFindings = false }: VerdictBodyProps) {
   const copy = VERDICT_COPY[verdict.verdict];
   const { scans } = verdict;
   const missing = Math.max(0, scans.required - scans.counted);
@@ -248,6 +275,7 @@ function VerdictBody({ verdict, repoId, repoUrl, branchOpen, Decision }: Verdict
           hint={`These count against the commit. Select one to read the impact and the fix, then record your decision.${oneOffHint}`}
           findings={verdict.open}
           decide={Decision && repoUrl ? { Control: Decision, repoId, repoUrl } : undefined}
+          collapsed={compactFindings}
         />
         <FindingRows title={scanPlural(verdict.accepted.length, "accepted risk", "accepted risks")} hint="An account admin chose to ship with these until the date shown. After that they block again." findings={verdict.accepted} />
         <FindingRows
@@ -265,7 +293,7 @@ function VerdictBody({ verdict, repoId, repoUrl, branchOpen, Decision }: Verdict
   );
 }
 
-type ScanVerdictCardProps = { repoId: string; commit: string; repoUrl?: string; found?: number; scope?: "scan" | "branch"; branchOpen?: number; Decision?: DecideFinding };
+type ScanVerdictCardProps = { repoId: string; commit: string; repoUrl?: string; found?: number; scope?: "scan" | "branch"; branchOpen?: number; Decision?: DecideFinding; compactFindings?: boolean };
 
 const CHIP_CLASS = "inline-flex min-h-6 items-center gap-1.5 rounded-md border bg-background px-2 py-0.5 text-sm";
 
@@ -293,7 +321,7 @@ function CommitChip({ commit, repoUrl }: { commit: string; repoUrl?: string }) {
   );
 }
 
-export function ScanVerdictCard({ repoId, commit, repoUrl, found, scope = "scan", branchOpen, Decision }: ScanVerdictCardProps) {
+export function ScanVerdictCard({ repoId, commit, repoUrl, found, scope = "scan", branchOpen, Decision, compactFindings = false }: ScanVerdictCardProps) {
   const { data, isPending, error } = useQuery(verdictQuery(repoId, commit));
   const nextSteps = data && verdictNextSteps(data);
 
@@ -301,7 +329,7 @@ export function ScanVerdictCard({ repoId, commit, repoUrl, found, scope = "scan"
     <Card>
       <CardHeader className="flex-row flex-wrap items-center justify-between gap-3 pb-6">
         <div className="grid gap-1.5">
-          <CardTitle className="text-lg">Ready to ship?</CardTitle>
+          <CardTitle>Ready to ship?</CardTitle>
           {nextSteps && <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">{nextSteps}</p>}
           {scope === "scan" && <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">The answer belongs to the commit, not to this scan.</p>}
           {found === 0 && data && data.open.length > 0 && <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">This scan found nothing. The open problems below come from other scans of the same commit.</p>}
@@ -309,7 +337,7 @@ export function ScanVerdictCard({ repoId, commit, repoUrl, found, scope = "scan"
         <CommitChip commit={commit} repoUrl={repoUrl} />
       </CardHeader>
       <CardContent className="grid gap-4">
-        {isPending ? <Skeleton className="h-16" /> : error ? <p className="text-sm text-destructive">We could not load the verdict: {error.message}. Refresh to try again.</p> : <VerdictBody verdict={data} repoId={repoId} repoUrl={repoUrl} branchOpen={branchOpen} Decision={Decision} />}
+        {isPending ? <Skeleton className="h-16" /> : error ? <p className="text-sm text-destructive">We could not load the verdict: {error.message}. Refresh to try again.</p> : <VerdictBody verdict={data} repoId={repoId} repoUrl={repoUrl} branchOpen={branchOpen} Decision={Decision} compactFindings={compactFindings} />}
       </CardContent>
     </Card>
   );

@@ -15,3 +15,4 @@ export * from "./admin";
 export * from "./scan";
 export * from "./verdict";
 export * from "./file";
+export * from "./github";

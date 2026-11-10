@@ -158,6 +158,7 @@ export const listReposEffect = (db: DbConnectType, tenantId: string, repoId?: st
         id: repo.id,
         url: repo.url,
         canonical: repo.canonical,
+        isPrivate: repo.isPrivate,
         defaultBranch: repo.defaultBranch,
         branchNames: branches.filter((branch) => branch.repoId === repo.id).map((branch) => branch.name),
         scans: totals.find((row) => row.repoId === repo.id)?.total ?? 0,

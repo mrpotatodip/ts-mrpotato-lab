@@ -6,10 +6,10 @@ import { scanFileQuery } from "#/modules/scan";
 type FileDownloadButtonProps = {
   scanId: string;
   name: string;
-  label: string;
+  description: string;
 };
 
-export function FileDownloadButton({ scanId, name, label }: FileDownloadButtonProps) {
+export function FileDownloadButton({ scanId, name, description }: FileDownloadButtonProps) {
   const queryClient = useQueryClient();
   const download = useMutation({
     mutationFn: () => queryClient.fetchQuery(scanFileQuery(scanId, name)),
@@ -25,13 +25,13 @@ export function FileDownloadButton({ scanId, name, label }: FileDownloadButtonPr
 
   return (
     <span className="inline-flex flex-col items-end gap-1">
-      <Button variant="outline" size="sm" disabled={download.isPending} aria-label={`Download ${label}`} onClick={() => download.mutate()}>
+      <Button variant="outline" size="sm" title="Saves this file to your computer" disabled={download.isPending} aria-label={`Download ${description}`} onClick={() => download.mutate()}>
         <Download aria-hidden="true" />
-        {download.isPending ? "Downloading" : "Download"}
+        <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">{download.isPending ? "Downloading" : "Download"}</span>
       </Button>
       {download.isError && (
         <span role="alert" className="text-xs text-status-danger">
-          Could not download. Try again.
+          Could not download this file. Check your connection and try again.
         </span>
       )}
     </span>

@@ -238,6 +238,10 @@ Put business logic in `utils/` so it can be tested without rendering (`nextProje
 
 **7.6 `[House]` Change a page's layout or flow, change its pattern in `apps/elise-frontend-web/DESIGN-SCREENS.md` in the same PR.** The bullet for that page there says what a person sees and does there; a PR that moves a control, adds a route or changes a list's shape edits that bullet.
 
+**7.7 `[House]` Show a thing another screen already shows with that screen's component and words.** A scan status uses `ScanStatusBadge`, not a second badge. A column for the same data carries the same name on every list ("Status", not "Scan" on one page and "Status" on another), and one concept has one name ("To check by hand", not "Needs checking" beside it). Put the words in the module's `constants/`, and import them from there into the other module.
+
+**7.8 `[House]` Give a label that `sr-only` shows from `sm` up its own `whitespace-nowrap`.** `sm:not-sr-only` resets `white-space`, and the page sets `overflow-wrap: anywhere`, so the word breaks mid-letter ("Down / load"). A test in `__tests__/class-names.test.ts` enforces it.
+
 ---
 
 ## 8. React: TypeScript, lint and tests

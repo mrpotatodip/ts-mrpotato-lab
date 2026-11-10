@@ -26,7 +26,7 @@ const readableTheme = {
   },
 };
 
-export const highlightThemeCss = createThemeCss({ light: readableTheme, dark: githubDarkTheme, darkSelector: ':root[data-theme="moonlight"]' });
+export const highlightThemeCss = createThemeCss({ light: readableTheme, dark: githubDarkTheme, darkSelector: ':root:is([data-theme="moonlight"], [data-theme="midnight"])' });
 
 // -----
 // Splits a code snippet into tokens with a class each (`th-keyword`,

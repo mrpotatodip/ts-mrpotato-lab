@@ -1,6 +1,5 @@
 import { Suspense } from "react";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { Search } from "lucide-react";
 import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
@@ -9,15 +8,27 @@ import { Skeleton } from "#/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "#/components/ui/tabs";
 import { repoName } from "#/modules/repo";
 import { scanRepoBranchesQuery, scanReposQuery } from "#/modules/scan";
-import { FILE_LABELS } from "../constants";
-import { FILE_LISTED_NAMES, type FilesSearch } from "../schemas";
+import { ShellFilterBar, ShellSearchField } from "#/modules/shell";
+import { FILE_ALL_HINT, FILE_LABELS, FILE_TIME_HINT } from "../constants";
+import { FILE_LISTED_NAMES, type FileCount, type FilesSearch } from "../schemas";
 
 const ALL = "all";
 
 type FileFiltersProps = {
   filters: FilesSearch;
+  counts: readonly FileCount[] | undefined;
+  showClear: boolean;
   onChange: (next: FilesSearch) => void;
 };
+
+// -----
+// A tab says how many files it would show. An engine that does not
+// send counts leaves the number out; a type with none is dimmed.
+// -----
+function FileTabCount({ count }: { count: number | undefined }) {
+  if (count === undefined) return null;
+  return <span className={count === 0 ? "tabular-nums opacity-50" : "tabular-nums opacity-80"}>{count}</span>;
+}
 
 type FileBranchSelectProps = {
   repoId: string;
@@ -44,13 +55,14 @@ function FileBranchSelect({ repoId, branch, onPick }: FileBranchSelectProps) {
   );
 }
 
-export function FileFilters({ filters, onChange }: FileFiltersProps) {
+export function FileFilters({ filters, counts, showClear, onChange }: FileFiltersProps) {
   const { data: repoList } = useSuspenseQuery(scanReposQuery());
   const repoItems = [{ value: ALL, label: "All repositories" }, ...repoList.repos.map((repo) => ({ value: repo.id, label: repoName(repo.url) }))];
-  const active = Object.values(filters).some((value) => value !== undefined);
+  const countOf = (name: string) => counts?.find((item) => item.name === name)?.count;
+  const total = counts?.reduce((sum, item) => sum + item.count, 0);
 
   return (
-    <div className="grid gap-3 border-b px-5 py-3">
+    <ShellFilterBar className="grid">
       <Tabs
         value={filters.name ?? ALL}
         onValueChange={(value) => {
@@ -59,14 +71,21 @@ export function FileFilters({ filters, onChange }: FileFiltersProps) {
         }}
       >
         <TabsList aria-label="Filter files by type">
-          <TabsTrigger value={ALL}>All files</TabsTrigger>
+          <TabsTrigger value={ALL}>
+            All files
+            <FileTabCount count={total} />
+          </TabsTrigger>
           {FILE_LISTED_NAMES.map((name) => (
             <TabsTrigger key={name} value={name} title={FILE_LABELS[name].hint}>
               {FILE_LABELS[name].label}
+              <FileTabCount count={countOf(name)} />
             </TabsTrigger>
           ))}
         </TabsList>
       </Tabs>
+      <p className="text-sm text-muted-foreground">
+        {filters.name ? FILE_LABELS[filters.name].hint : FILE_ALL_HINT} {FILE_TIME_HINT}
+      </p>
 
       <div className="flex flex-wrap items-end gap-3">
         <div className="grid gap-1.5">
@@ -104,39 +123,35 @@ export function FileFilters({ filters, onChange }: FileFiltersProps) {
 
         <div className="grid gap-1.5">
           <Label htmlFor="file-from" className="text-xs text-muted-foreground">
-            From
+            From (UTC)
           </Label>
-          <Input id="file-from" type="date" value={filters.from ?? ""} max={filters.to} onChange={(event) => onChange({ ...filters, from: event.target.value || undefined })} className="h-9 w-40" />
+          <Input id="file-from" type="date" value={filters.from ?? ""} max={filters.to} onChange={(event) => onChange({ ...filters, from: event.target.value || undefined })} className="w-40" />
         </div>
         <div className="grid gap-1.5">
           <Label htmlFor="file-to" className="text-xs text-muted-foreground">
-            To
+            To (UTC)
           </Label>
-          <Input id="file-to" type="date" value={filters.to ?? ""} min={filters.from} onChange={(event) => onChange({ ...filters, to: event.target.value || undefined })} className="h-9 w-40" />
+          <Input id="file-to" type="date" value={filters.to ?? ""} min={filters.from} onChange={(event) => onChange({ ...filters, to: event.target.value || undefined })} className="w-40" />
         </div>
 
         <form
           key={filters.q ?? ""}
-          className="relative w-full sm:w-64"
+          className="w-full sm:w-80"
           onSubmit={(event) => {
             event.preventDefault();
             const text = String(new FormData(event.currentTarget).get("q") ?? "").trim();
             onChange({ ...filters, q: text === "" ? undefined : text });
           }}
         >
-          <Label htmlFor="file-search" className="sr-only">
-            Search files by repository
-          </Label>
-          <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input id="file-search" name="q" type="search" autoComplete="off" placeholder="Search by repository, then press Enter" defaultValue={filters.q ?? ""} className="h-9 pl-9" />
+          <ShellSearchField id="file-search" name="q" label="Search files by repository" placeholder="Search repositories, press Enter" defaultValue={filters.q ?? ""} className="sm:w-full" />
         </form>
 
-        {active && (
+        {showClear && (
           <Button variant="ghost" size="sm" onClick={() => onChange({})}>
             Clear filters
           </Button>
         )}
       </div>
-    </div>
+    </ShellFilterBar>
   );
 }

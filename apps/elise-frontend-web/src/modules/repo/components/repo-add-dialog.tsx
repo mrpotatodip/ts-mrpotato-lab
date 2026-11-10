@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { GitBranch, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "#/components/ui/button";
 import { Dialog, DialogBody, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "#/components/ui/dialog";
 import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
+import { GithubRepoPicker } from "#/modules/github";
 import { scanKeys } from "#/modules/scan";
 import { addRepo } from "../api";
 import { repoKeys } from "../hooks";
@@ -55,10 +56,17 @@ function RepoAddForm({ onDone }: RepoAddFormProps) {
   return (
     <form onSubmit={submit} className="flex min-h-0 flex-1 flex-col">
       <DialogBody className="grid content-start gap-6">
+        <GithubRepoPicker onPick={(picked) => { setProblem(null); setUrl(picked); }} />
         <div className="grid gap-2">
           <Label htmlFor="add-repo-url">Link to the GitHub repository</Label>
           <Input id="add-repo-url" autoComplete="off" placeholder="https://github.com/owner/name" value={url} onChange={(event) => { setProblem(null); setUrl(event.target.value); }} required />
-          <p className="text-xs text-muted-foreground">Paste the link to a public GitHub repository. Adding it does not scan it, and nothing is checked on GitHub.</p>
+          <p className="text-xs text-muted-foreground">
+            Paste the link to a public GitHub repository, or to a private one you connected. Adding it does not scan it, and nothing is checked on GitHub. Private repository?{" "}
+            <Link to="/connections" className="font-medium text-foreground underline underline-offset-2">
+              Connect GitHub first
+            </Link>
+            .
+          </p>
         </div>
 
         <fieldset className="grid gap-3">

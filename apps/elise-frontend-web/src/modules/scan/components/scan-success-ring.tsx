@@ -32,7 +32,7 @@ export function ScanSuccessRing({ succeeded, failed, rate }: ScanSuccessRingProp
                 strokeWidth="12"
                 strokeLinecap="round"
                 strokeDasharray={`${filled} ${CIRCUMFERENCE}`}
-                className="stroke-primary/80 transition-[stroke-dasharray] duration-700"
+                className="stroke-mark-success transition-[stroke-dasharray] duration-700"
               />
             )}
           </svg>
@@ -44,7 +44,7 @@ export function ScanSuccessRing({ succeeded, failed, rate }: ScanSuccessRingProp
         <dl className="grid w-full grid-cols-2 gap-6 border-t pt-5 text-sm">
           <div className="grid gap-1">
             <dt className="text-muted-foreground">Succeeded</dt>
-            <dd className="text-xl font-semibold tabular-nums">{succeeded}</dd>
+            <dd className={cn("text-xl font-semibold tabular-nums", succeeded > 0 && "text-status-success")}>{succeeded}</dd>
           </div>
           <div className="grid gap-1">
             <dt className="text-muted-foreground">Failed</dt>

@@ -15,17 +15,39 @@ const sourceFiles = (dir: string): string[] =>
 
 // -----
 // line-clamp sets its own display, so a plain display class in the same string undoes the clamp
-// and the text runs to its full length.
+// and the text runs to its full length. Whole-line comments are dropped first, because a backtick
+// in a comment pairs with one in code and makes the match span unrelated lines. A failure shows
+// the first 120 characters of the match, not all of it.
 // -----
+const withoutLineComments = (source: string) => source.replace(/^[ \t]*\/\/.*$/gm, "");
+
 const clampedAndDisplayed = (source: string) =>
-  [...source.matchAll(LITERAL)]
+  [...withoutLineComments(source).matchAll(LITERAL)]
     .map((match) => match[1] ?? match[2] ?? "")
     .filter((classes) => {
       const tokens = classes.split(/\s+/);
       return tokens.some((token) => /^line-clamp-\d/.test(token)) && tokens.some((token) => DISPLAY.has(token));
+    })
+    .map((classes) => classes.slice(0, 120));
+
+const SR_LITERAL = /"([^"\n]*\b(?:sm|md|lg|xl):not-sr-only[^"\n]*)"|`([^`]*\b(?:sm|md|lg|xl):not-sr-only[^`]*)`/g;
+
+// -----
+// not-sr-only resets white-space to normal from its breakpoint up, and the page breaks words anywhere,
+// so a label shown that way splits mid-word unless the same breakpoint sets whitespace-nowrap again.
+// -----
+const unpinnedSrLabels = (source: string) =>
+  [...source.matchAll(SR_LITERAL)]
+    .map((match) => match[1] ?? match[2] ?? "")
+    .filter((classes) => {
+      const tokens = classes.split(/\s+/);
+      return tokens
+        .map((token) => /^(sm|md|lg|xl):not-sr-only$/.exec(token)?.[1])
+        .filter((breakpoint) => breakpoint !== undefined)
+        .some((breakpoint) => !tokens.includes(`${breakpoint}:whitespace-nowrap`));
     });
 
-const INK_FILL = /\b(?:bg|stroke|fill)-(?:status-(?:success|danger|warning|info|neutral)|severity-(?:critical|high|medium|low|informational))(?:\/(\d+))?(?![\w-])/g;
+const INK_FILL =/\b(?:bg|stroke|fill)-(?:status-(?:success|danger|warning|info|neutral)|severity-(?:critical|high|medium|low|informational))(?:\/(\d+))?(?![\w-])/g;
 const TINT_ALPHA = 30;
 
 // -----
@@ -54,8 +76,26 @@ describe("class names", () => {
     expect(clampedAndDisplayed(readFileSync(file, "utf8"))).toEqual([]);
   });
 
+  it.each(sourceFiles(SRC))("%s pins white-space on a label that sr-only shows from a breakpoint", (file) => {
+    expect(unpinnedSrLabels(readFileSync(file, "utf8"))).toEqual([]);
+  });
+
+  it("catches a shown label that can break mid-word, and lets a pinned one through", () => {
+    expect(unpinnedSrLabels(`<span className="sr-only sm:not-sr-only" />`)).toHaveLength(1);
+    expect(unpinnedSrLabels(`<span className="sr-only whitespace-nowrap sm:not-sr-only" />`)).toHaveLength(1);
+    expect(unpinnedSrLabels(`<span className="sr-only sm:not-sr-only sm:whitespace-nowrap" />`)).toHaveLength(0);
+    expect(unpinnedSrLabels(`<a className="sr-only focus:not-sr-only" />`)).toHaveLength(0);
+  });
+
   it("catches the clamp that a display class cancels", () => {
     expect(clampedAndDisplayed(`<span className="mt-1 line-clamp-2 block text-sm" />`)).toHaveLength(1);
     expect(clampedAndDisplayed(`<span className="mt-1 line-clamp-2 text-sm" />`)).toHaveLength(0);
+  });
+
+  it("is not fooled by a backtick in a comment", () => {
+    const source = ["// the `collapsed` list", `const a = "x";`, "const b = `y ${z} line-clamp-2 block`;"].join("\n");
+
+    expect(clampedAndDisplayed(source)).toHaveLength(1);
+    expect(clampedAndDisplayed(["// a `note`", `<span className="line-clamp-2 text-sm" />`, "const c = `ok`;"].join("\n"))).toHaveLength(0);
   });
 });

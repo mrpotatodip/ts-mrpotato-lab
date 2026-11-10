@@ -14,7 +14,7 @@ function ScansPage() {
   return (
     <>
       <ShellPageHeader title="Scans" description="Every audit you have run, newest first. Open one to read its report." />
-      <Suspense fallback={<Skeleton className="h-56 w-full" />}>
+      <Suspense fallback={<Skeleton className="h-64 w-full" />}>
         <ScanList />
       </Suspense>
     </>

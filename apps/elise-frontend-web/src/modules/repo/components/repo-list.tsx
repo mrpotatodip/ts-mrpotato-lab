@@ -6,9 +6,9 @@ import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "#/components/ui/empty";
-import { Input } from "#/components/ui/input";
-import { Label } from "#/components/ui/label";
+import { GithubPrivateBadge } from "#/modules/github";
 import { ScanNewDialog, ScanStatusBadge, ScanTime } from "#/modules/scan";
+import { ShellFilterBar, ShellListCount, ShellSearchField } from "#/modules/shell";
 import { reposQuery } from "../hooks";
 import { repoAttention, repoName } from "../utils";
 import { RepoAddDialog } from "./repo-add-dialog";
@@ -62,21 +62,15 @@ export function RepoList() {
             <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">Sorted by what needs attention first: findings that came back, then the most severe.</p>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-xs tabular-nums text-muted-foreground">{visible.length === sorted.length ? `${sorted.length} ${sorted.length === 1 ? "repository" : "repositories"}` : `${visible.length} of ${sorted.length}`}</span>
+            <ShellListCount shown={visible.length} total={sorted.length} noun="repository" plural="repositories" />
             <RepoAddDialog />
           </div>
         </CardHeader>
         <CardContent className="overflow-hidden p-0">
           {sorted.length >= SEARCH_FROM && (
-            <div className="border-b px-5 py-3">
-              <div className="relative w-full sm:w-72">
-                <Label htmlFor="repo-search" className="sr-only">
-                  Search repositories and branches by name
-                </Label>
-                <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                <Input id="repo-search" name="search" type="search" autoComplete="off" placeholder="Search by repository or branch" value={search} onChange={(event) => setSearch(event.target.value)} className="h-9 pl-9" />
-              </div>
-            </div>
+            <ShellFilterBar className="justify-end">
+              <ShellSearchField id="repo-search" name="search" label="Search repositories and branches by name" placeholder="Search by repository or branch" value={search} onChange={(event) => setSearch(event.target.value)} />
+            </ShellFilterBar>
           )}
           {visible.length === 0 ? (
             <Empty className="py-12">
@@ -89,7 +83,7 @@ export function RepoList() {
               </EmptyHeader>
               <EmptyContent>
                 <Button variant="outline" onClick={() => setSearch("")}>
-                  Clear search
+                  Clear filters
                 </Button>
               </EmptyContent>
             </Empty>
@@ -100,7 +94,10 @@ export function RepoList() {
                 return (
                   <li key={repo.id}>
                     <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-1 bg-muted/40 px-5 py-3">
-                      <h3 className="font-medium">{repoName(repo.url)}</h3>
+                      <h3 className="flex items-center gap-2 font-medium">
+                        {repoName(repo.url)}
+                        <GithubPrivateBadge isPrivate={repo.isPrivate} />
+                      </h3>
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                         <span className="tabular-nums">{repo.scans} {repo.scans === 1 ? "scan" : "scans"}</span>
                         {repo.lastScanStatus && <ScanStatusBadge status={repo.lastScanStatus} />}

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { GitBranch, LoaderCircle } from "lucide-react";
+import { GitBranch, LoaderCircle, Lock } from "lucide-react";
 import { cn } from "#/lib/utils";
 import { useRouteNames, type SidebarBranch } from "../hooks";
 import type { ShellRepo } from "./shell-sidebar";
@@ -18,9 +18,8 @@ type ShellRepoTreeProps = {
 };
 
 // -----
-// The sidebar stays quiet when things are fine: a repository whose latest
-// scan succeeded has no marker. Only a scan in progress (a spinner) or a
-// failed latest scan (one small red dot) draws the eye.
+// The sidebar shows the latest scan with one small mark: a green dot for
+// succeeded, a red dot for failed, and a spinner while a scan is in progress.
 // -----
 function RepoBody({ repo, showOwner }: { repo: ShellRepo; showOwner: boolean }) {
   const running = repo.status === "running" || repo.status === "queued";
@@ -30,6 +29,12 @@ function RepoBody({ repo, showOwner }: { repo: ShellRepo; showOwner: boolean }) 
         {showOwner && repo.owner && <span className="min-w-0 truncate">{repo.owner}/</span>}
         <span className="max-w-full shrink-0 truncate text-foreground">{repo.name}</span>
       </span>
+      {repo.isPrivate && (
+        <>
+          <Lock aria-hidden="true" className="size-3 shrink-0 text-muted-foreground" strokeWidth={1.5} />
+          <span className="sr-only">Private repository</span>
+        </>
+      )}
       {running && (
         <>
           <LoaderCircle aria-hidden="true" className="size-3.5 shrink-0 animate-spin text-status-info" strokeWidth={1.5} />
@@ -40,6 +45,12 @@ function RepoBody({ repo, showOwner }: { repo: ShellRepo; showOwner: boolean }) 
         <>
           <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-mark-danger" />
           <span className="sr-only">The latest scan failed</span>
+        </>
+      )}
+      {repo.status === "succeeded" && (
+        <>
+          <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-mark-success" />
+          <span className="sr-only">The latest scan succeeded</span>
         </>
       )}
     </>
@@ -99,6 +110,12 @@ function RepoBranches({ repoId, branches, currentId }: { repoId: string; branche
               <>
                 <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-mark-danger" />
                 <span className="sr-only">The latest scan failed</span>
+              </>
+            )}
+            {branch.status === "succeeded" && (
+              <>
+                <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-mark-success" />
+                <span className="sr-only">The latest scan succeeded</span>
               </>
             )}
           </Link>

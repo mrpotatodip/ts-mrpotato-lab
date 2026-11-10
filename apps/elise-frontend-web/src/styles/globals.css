@@ -85,15 +85,17 @@
    white cards, darker text and stronger edges for bright rooms.
    ----- */
 :root[data-theme="daylight"] {
-  /* The sky is the `::before` layer below; the page itself is plain white. */
-  --sky: url("/bg-daylight.jpeg");
+  /* The sky is the `::before` layer below; the page itself is plain white.
+     --daylight-sky is set by themeInitScript to the random pick; the url after
+     it is only the no-JavaScript fallback. */
+  --sky: var(--daylight-sky, url("/theme-bgs/bg-daylight-1.jpeg"));
   --bg-color: oklch(1 0 0);
   --background: oklch(0.985 0.002 258 / 0.12);
   --foreground: oklch(0.15 0.012 258);
-  --sidebar: oklch(0.99 0.002 258 / 0.5);
-  --card: oklch(1 0 0 / 0.58);
+  --sidebar: oklch(0.99 0.002 258 / 0.42);
+  --card: oklch(1 0 0 / 0.74);
   --card-foreground: oklch(0.18 0.012 258);
-  --popover: oklch(1 0 0 / 0.92);
+  --popover: oklch(1 0 0 / 0.9);
   --popover-foreground: oklch(0.18 0.012 258);
   --primary: oklch(0.22 0.012 258);
   --primary-ink: oklch(0.25 0.012 258);
@@ -114,18 +116,20 @@
    near-white with dark text. Status and severity inks are light so they
    read on dark and on their own tinted fills.
    ----- */
-:root[data-theme="moonlight"] {
+:root[data-theme="moonlight"],
+:root[data-theme="midnight"] {
   color-scheme: dark;
   /* The sky is the `::before` layer below; the page is a deep navy that the
-     picture fades into. */
-  --sky: url("/bg-moonlight.jpeg");
+     picture fades into. --moonlight-sky is set by themeInitScript to the
+     random pick; the url after it is only the no-JavaScript fallback. */
+  --sky: var(--moonlight-sky, url("/theme-bgs/bg-moonlight-1.jpeg"));
   --bg-color: oklch(0.17 0.03 268);
   --background: oklch(0.18 0.012 258 / 0.12);
   --foreground: oklch(0.95 0.004 258);
-  --sidebar: oklch(0.15 0.012 258 / 0.4);
-  --card: oklch(0.225 0.013 258 / 0.42);
+  --sidebar: oklch(0.15 0.012 258 / 0.32);
+  --card: oklch(0.225 0.013 258 / 0.68);
   --card-foreground: oklch(0.95 0.004 258);
-  --popover: oklch(0.26 0.014 258 / 0.94);
+  --popover: oklch(0.26 0.014 258 / 0.92);
   --popover-foreground: oklch(0.95 0.004 258);
   --primary: oklch(0.93 0.005 258);
   --primary-foreground: oklch(0.2 0.012 258);
@@ -186,6 +190,21 @@
 }
 
 /* -----
+   Midnight: Default turned dark. It shares Moonlight's dark ink, status and
+   shadow tokens above, but has no sky and no glass: the page and every
+   surface are solid, stepping lighter as they come forward.
+   ----- */
+:root[data-theme="midnight"] {
+  background-color: var(--background);
+  --background: oklch(0.175 0.01 258);
+  --sidebar: oklch(0.145 0.01 258);
+  --card: oklch(0.225 0.012 258);
+  --popover: oklch(0.26 0.013 258);
+  --muted: oklch(0.25 0.012 258);
+  --glow: oklch(0.6 0.04 258 / 0.08);
+}
+
+/* -----
    Glass: only the two image themes set --sky. The picture sits fixed behind
    the page and the surfaces above it blur what is under them.
    ----- */
@@ -194,10 +213,12 @@
   background-color: var(--bg-color);
 }
 /* -----
-   Each sky is a small banner (1500 by 500: public/bg-daylight.jpeg and
-   public/bg-moonlight.jpeg, the second a night grading of the first), shown
-   zoomed to 1.5 times, centred at the top, and its sides and bottom fade
-   into the page colour. Zooming further softens it more.
+   Each sky is a small banner (public/theme-bgs: three bg-daylight-N.jpeg and
+   three bg-moonlight-N.jpeg, all 1778 by 592), centred at the top, and its
+   sides and bottom fade into the page colour. Daylight is zoomed to 1.5 times;
+   Moonlight has its own size below. Zooming further softens it more. Which
+   pictures there are, and how they rotate, is in
+   modules/shell/constants/theme-skies.ts, not here.
    ----- */
 :root[data-theme="daylight"]::before,
 :root[data-theme="moonlight"]::before {
@@ -211,10 +232,25 @@
   transform: translateX(-50%);
   pointer-events: none;
   background: var(--sky) center / 100% 100% no-repeat;
-  -webkit-mask-image: linear-gradient(to right, transparent, #000 14%, #000 86%, transparent), linear-gradient(to bottom, #000 35%, transparent);
+  /* Eased fades (more stops than a straight ramp) so no hard edge shows
+     where the picture meets the page colour. */
+  -webkit-mask-image:
+    linear-gradient(to right, transparent, rgb(0 0 0 / 0.08) 6%, rgb(0 0 0 / 0.3) 13%, rgb(0 0 0 / 0.65) 22%, #000 34%, #000 66%, rgb(0 0 0 / 0.65) 78%, rgb(0 0 0 / 0.3) 87%, rgb(0 0 0 / 0.08) 94%, transparent),
+    linear-gradient(to bottom, #000 10%, rgb(0 0 0 / 0.85) 25%, rgb(0 0 0 / 0.55) 45%, rgb(0 0 0 / 0.25) 65%, rgb(0 0 0 / 0.07) 82%, transparent);
   -webkit-mask-composite: source-in;
-  mask-image: linear-gradient(to right, transparent, #000 14%, #000 86%, transparent), linear-gradient(to bottom, #000 35%, transparent);
+  mask-image:
+    linear-gradient(to right, transparent, rgb(0 0 0 / 0.08) 6%, rgb(0 0 0 / 0.3) 13%, rgb(0 0 0 / 0.65) 22%, #000 34%, #000 66%, rgb(0 0 0 / 0.65) 78%, rgb(0 0 0 / 0.3) 87%, rgb(0 0 0 / 0.08) 94%, transparent),
+    linear-gradient(to bottom, #000 10%, rgb(0 0 0 / 0.85) 25%, rgb(0 0 0 / 0.55) 45%, rgb(0 0 0 / 0.25) 65%, rgb(0 0 0 / 0.07) 82%, transparent);
   mask-composite: intersect;
+}
+/* Moonlight shows its sky at 1.1 times the viewport, capped at 1950px. The
+   pictures are 1778px wide, so this enlarges them only slightly. */
+:root[data-theme="moonlight"]::before {
+  width: min(110%, 1950px);
+  /* Start just under the top of the 3.5rem top bar so it never clips the moon
+     (which then clears the first stat card). The art is left untouched, with
+     no veil over it: the page header's text halo keeps the text readable. */
+  top: 2.5rem;
 }
 /* Page titles and their description sit straight on the sky, with no glass
    behind them. A soft dark halo and a brighter description keep them
@@ -223,7 +259,7 @@
   text-shadow: 0 0 14px oklch(1 0 0 / 0.9), 0 0 3px oklch(1 0 0 / 0.7);
 }
 :root[data-theme="moonlight"] [data-slot="page-header"] {
-  text-shadow: 0 0 14px oklch(0.12 0.03 268 / 0.95), 0 1px 3px oklch(0.1 0.03 268 / 0.85);
+  text-shadow: 0 0 22px oklch(0.12 0.03 268 / 0.9), 0 0 10px oklch(0.12 0.03 268 / 0.95), 0 1px 3px oklch(0.1 0.03 268 / 0.9);
 }
 :root[data-theme="moonlight"] [data-slot="page-header"] .text-muted-foreground,
 :root[data-theme="moonlight"] .text-muted-foreground[data-slot="page-header"] {
@@ -251,17 +287,29 @@
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
+/* The body normally overlaps the header by 1rem and its rounded top hides the
+   header fill behind it. A clear body hides nothing, so the header fill would
+   show through below the header. Here they meet edge to edge instead. */
+:root[data-theme="daylight"] :is([data-slot="card-header"], [data-slot="dialog-header"]),
+:root[data-theme="moonlight"] :is([data-slot="card-header"], [data-slot="dialog-header"]) {
+  padding-bottom: 1rem;
+}
+:root[data-theme="daylight"] :is([data-slot="card-content"], [data-slot="dialog-body"]),
+:root[data-theme="moonlight"] :is([data-slot="card-content"], [data-slot="dialog-body"]) {
+  margin-top: 0;
+  border-radius: 0;
+}
 :root[data-theme="daylight"] :is(.bg-sidebar, .bg-card, .bg-popover),
 :root[data-theme="moonlight"] :is(.bg-sidebar, .bg-card, .bg-popover) {
-  -webkit-backdrop-filter: blur(14px) saturate(1.4);
-  backdrop-filter: blur(14px) saturate(1.4);
+  -webkit-backdrop-filter: blur(10px) saturate(1.4);
+  backdrop-filter: blur(10px) saturate(1.4);
 }
 /* Dialogs and sheets float over the page, so they blur more than the cards.
    This sits after the shared rule above, which has the same specificity. */
 :root[data-theme="daylight"] :is([data-slot="dialog-content"], [data-slot="sheet-content"]),
 :root[data-theme="moonlight"] :is([data-slot="dialog-content"], [data-slot="sheet-content"]) {
-  -webkit-backdrop-filter: blur(48px) saturate(1.5);
-  backdrop-filter: blur(48px) saturate(1.5);
+  -webkit-backdrop-filter: blur(32px) saturate(1.5);
+  backdrop-filter: blur(32px) saturate(1.5);
 }
 
 @theme inline {

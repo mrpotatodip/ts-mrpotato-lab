@@ -13,7 +13,7 @@ export const Route = createFileRoute("/_app/files")({
 function FilesPage() {
   return (
     <>
-      <ShellPageHeader title="Files" description="The reports your scans wrote, newest first. Filter by repository, branch, type or date, then download one." />
+      <ShellPageHeader title="Files" description="The reports your scans wrote, newest first. Download a file, or open its scan to read the findings." />
       <FileList />
     </>
   );

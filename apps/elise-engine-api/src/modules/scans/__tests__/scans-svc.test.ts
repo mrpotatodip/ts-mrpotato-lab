@@ -2,6 +2,8 @@ import { Cause, Effect, Exit } from "effect";
 import { beforeEach, describe, expect, it } from "vitest";
 import { fakeBindings } from "#/__tests__/fake-bindings";
 import { brokenScanRepo, memoryScanRepo } from "#/__tests__/memory-scan-repo";
+import { ExternalError } from "#/lib/effect-query";
+import type { GithubAccess } from "#/modules/github-installs";
 import type { ScanRepo } from "#/modules/scan-ledger";
 import type { MonthSpend } from "#/modules/usage";
 import { createScanSvc, detailScanSvc, readScanFileSvc } from "#/modules/scans/handlers";
@@ -45,6 +47,38 @@ describe("createScanSvc", () => {
 
     expect(scan).toMatchObject({ status: "failed" });
     expect(scan.error).toContain("could not start the workflow");
+  });
+
+  it("starts the workflow with the install GitHub access chose, asked for under the repo's own spelling", async () => {
+    const { env, created } = fakeBindings();
+    const asked: string[] = [];
+    const github = { installationRowId: "7c1e4a52-9d3b-4f60-8a71-2b3c4d5e6f70", installationId: 42, repoId: 7, repo: "octocat/hello-world", isPrivate: true };
+    const access: GithubAccess = { forRepo: (url) => Effect.sync(() => (asked.push(url), github)) };
+
+    await Effect.runPromise(createScanSvc(env, repo, "acme", { repo: "https://github.com/octocat/Hello-World.git" }, NO_SPEND, access));
+
+    expect(asked).toEqual(["https://github.com/octocat/Hello-World"]);
+    expect(created[0]?.params.github).toEqual(github);
+  });
+
+  it("starts the workflow with no install when GitHub access has none", async () => {
+    const { env, created } = fakeBindings();
+    const access: GithubAccess = { forRepo: () => Effect.succeed(null) };
+
+    await Effect.runPromise(createScanSvc(env, repo, "acme", input, NO_SPEND, access));
+
+    expect(created[0]?.params.github).toBeUndefined();
+  });
+
+  it("queues nothing when GitHub access fails", async () => {
+    const { env, created } = fakeBindings();
+    const access: GithubAccess = { forRepo: () => Effect.fail(new ExternalError({ cause: "down" })) };
+
+    const error = await Effect.runPromise(Effect.flip(createScanSvc(env, repo, "acme", input, NO_SPEND, access)));
+
+    expect(error._tag).toBe("ExternalError");
+    expect(created).toHaveLength(0);
+    expect((await Effect.runPromise(repo.list("acme", 10))).scans).toEqual([]);
   });
 
   it("fails with DbError when the ledger is down", async () => {

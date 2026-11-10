@@ -14,12 +14,14 @@ import { Route as AppRouteRouteImport } from './routes/_app/route'
 import { Route as PrototypeRouteRouteImport } from './routes/prototype/route'
 import { Route as SigninRouteImport } from './routes/signin'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as AppConnectionsRouteImport } from './routes/_app/connections'
 import { Route as AppFilesRouteImport } from './routes/_app/files'
 import { Route as AppOverviewRouteImport } from './routes/_app/overview'
 import { Route as AppTeamRouteImport } from './routes/_app/team'
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as PrototypeIndexRouteImport } from './routes/prototype/index'
 import { Route as PrototypeOverviewRouteImport } from './routes/prototype/overview'
+import { Route as AppGithubCallbackRouteImport } from './routes/_app/github.callback'
 import { Route as AppReposIndexRouteImport } from './routes/_app/repos/index'
 import { Route as AppReposRepoIdRouteImport } from './routes/_app/repos/$repoId'
 import { Route as AppScansIndexRouteImport } from './routes/_app/scans/index'
@@ -52,6 +54,11 @@ const SignupRoute = SignupRouteImport.update({
   path: '/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppConnectionsRoute = AppConnectionsRouteImport.update({
+  id: '/connections',
+  path: '/connections',
+  getParentRoute: () => AppRouteRoute,
+} as any)
 const AppFilesRoute = AppFilesRouteImport.update({
   id: '/files',
   path: '/files',
@@ -81,6 +88,11 @@ const PrototypeOverviewRoute = PrototypeOverviewRouteImport.update({
   id: '/overview',
   path: '/overview',
   getParentRoute: () => PrototypeRouteRoute,
+} as any)
+const AppGithubCallbackRoute = AppGithubCallbackRouteImport.update({
+  id: '/github/callback',
+  path: '/github/callback',
+  getParentRoute: () => AppRouteRoute,
 } as any)
 const AppReposIndexRoute = AppReposIndexRouteImport.update({
   id: '/repos/',
@@ -124,12 +136,14 @@ export interface FileRoutesByFullPath {
   '/prototype': typeof PrototypeRouteRouteWithChildren
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
+  '/connections': typeof AppConnectionsRoute
   '/files': typeof AppFilesRoute
   '/overview': typeof AppOverviewRoute
   '/team': typeof AppTeamRoute
   '/invite/$token': typeof InviteTokenRoute
   '/prototype/overview': typeof PrototypeOverviewRoute
   '/prototype/': typeof PrototypeIndexRoute
+  '/github/callback': typeof AppGithubCallbackRoute
   '/repos/$repoId': typeof AppReposRepoIdRoute
   '/scans/$scanId': typeof AppScansScanIdRoute
   '/prototype/scans/$scanId': typeof PrototypeScansScanIdRoute
@@ -142,12 +156,14 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
+  '/connections': typeof AppConnectionsRoute
   '/files': typeof AppFilesRoute
   '/overview': typeof AppOverviewRoute
   '/team': typeof AppTeamRoute
   '/invite/$token': typeof InviteTokenRoute
   '/prototype/overview': typeof PrototypeOverviewRoute
   '/prototype': typeof PrototypeIndexRoute
+  '/github/callback': typeof AppGithubCallbackRoute
   '/repos/$repoId': typeof AppReposRepoIdRoute
   '/scans/$scanId': typeof AppScansScanIdRoute
   '/prototype/scans/$scanId': typeof PrototypeScansScanIdRoute
@@ -163,12 +179,14 @@ export interface FileRoutesById {
   '/prototype': typeof PrototypeRouteRouteWithChildren
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
+  '/_app/connections': typeof AppConnectionsRoute
   '/_app/files': typeof AppFilesRoute
   '/_app/overview': typeof AppOverviewRoute
   '/_app/team': typeof AppTeamRoute
   '/invite/$token': typeof InviteTokenRoute
   '/prototype/overview': typeof PrototypeOverviewRoute
   '/prototype/': typeof PrototypeIndexRoute
+  '/_app/github/callback': typeof AppGithubCallbackRoute
   '/_app/repos/$repoId': typeof AppReposRepoIdRoute
   '/_app/scans/$scanId': typeof AppScansScanIdRoute
   '/prototype/scans/$scanId': typeof PrototypeScansScanIdRoute
@@ -184,12 +202,14 @@ export interface FileRouteTypes {
     | '/prototype'
     | '/signin'
     | '/signup'
+    | '/connections'
     | '/files'
     | '/overview'
     | '/team'
     | '/invite/$token'
     | '/prototype/overview'
     | '/prototype/'
+    | '/github/callback'
     | '/repos/$repoId'
     | '/scans/$scanId'
     | '/prototype/scans/$scanId'
@@ -202,12 +222,14 @@ export interface FileRouteTypes {
     | '/'
     | '/signin'
     | '/signup'
+    | '/connections'
     | '/files'
     | '/overview'
     | '/team'
     | '/invite/$token'
     | '/prototype/overview'
     | '/prototype'
+    | '/github/callback'
     | '/repos/$repoId'
     | '/scans/$scanId'
     | '/prototype/scans/$scanId'
@@ -222,12 +244,14 @@ export interface FileRouteTypes {
     | '/prototype'
     | '/signin'
     | '/signup'
+    | '/_app/connections'
     | '/_app/files'
     | '/_app/overview'
     | '/_app/team'
     | '/invite/$token'
     | '/prototype/overview'
     | '/prototype/'
+    | '/_app/github/callback'
     | '/_app/repos/$repoId'
     | '/_app/scans/$scanId'
     | '/prototype/scans/$scanId'
@@ -283,6 +307,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignupRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/connections': {
+      id: '/_app/connections'
+      path: '/connections'
+      fullPath: '/connections'
+      preLoaderRoute: typeof AppConnectionsRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
     '/_app/files': {
       id: '/_app/files'
       path: '/files'
@@ -324,6 +355,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/prototype/overview'
       preLoaderRoute: typeof PrototypeOverviewRouteImport
       parentRoute: typeof PrototypeRouteRoute
+    }
+    '/_app/github/callback': {
+      id: '/_app/github/callback'
+      path: '/github/callback'
+      fullPath: '/github/callback'
+      preLoaderRoute: typeof AppGithubCallbackRouteImport
+      parentRoute: typeof AppRouteRoute
     }
     '/_app/repos/': {
       id: '/_app/repos/'
@@ -378,9 +416,11 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppRouteRouteChildren {
+  AppConnectionsRoute: typeof AppConnectionsRoute
   AppFilesRoute: typeof AppFilesRoute
   AppOverviewRoute: typeof AppOverviewRoute
   AppTeamRoute: typeof AppTeamRoute
+  AppGithubCallbackRoute: typeof AppGithubCallbackRoute
   AppReposRepoIdRoute: typeof AppReposRepoIdRoute
   AppScansScanIdRoute: typeof AppScansScanIdRoute
   AppReposIndexRoute: typeof AppReposIndexRoute
@@ -389,9 +429,11 @@ interface AppRouteRouteChildren {
 }
 
 const AppRouteRouteChildren: AppRouteRouteChildren = {
+  AppConnectionsRoute: AppConnectionsRoute,
   AppFilesRoute: AppFilesRoute,
   AppOverviewRoute: AppOverviewRoute,
   AppTeamRoute: AppTeamRoute,
+  AppGithubCallbackRoute: AppGithubCallbackRoute,
   AppReposRepoIdRoute: AppReposRepoIdRoute,
   AppScansScanIdRoute: AppScansScanIdRoute,
   AppReposIndexRoute: AppReposIndexRoute,

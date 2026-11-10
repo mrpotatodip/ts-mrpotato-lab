@@ -1,4 +1,5 @@
 import type { Context } from "hono";
+import type { GithubAccess } from "#/modules/github-installs";
 import type { ScanRepo } from "#/modules/scan-ledger";
 import type { MonthSpend } from "#/modules/usage";
 import type { ScanSandbox } from "#/modules/scan-sandbox";
@@ -15,6 +16,10 @@ export type Bindings = {
   SCAN_API_TOKEN: string;
   DATABASE_URL: string;
   AUTH_SECRET: string;
+  GITHUB_APP_ID?: string;
+  GITHUB_APP_PRIVATE_KEY?: string;
+  GITHUB_APP_CLIENT_ID?: string;
+  GITHUB_APP_CLIENT_SECRET?: string;
   AUTH_BASE_URL: string;
   AUTH_TRUSTED_ORIGINS: string;
   SIGN_UP_LIMITER?: RateLimit;
@@ -31,6 +36,7 @@ export type Bindings = {
 // -----
 export type AppDeps = {
   scanRepo: (env: Bindings) => ScanRepo;
+  githubAccess: (env: Bindings, accountId: string) => GithubAccess;
   monthSpend: (env: Bindings, accountId: string) => Promise<MonthSpend>;
   sessionUserId: (c: Context<AppEnv>) => Promise<string | undefined>;
   userHasAccount: (c: Context<AppEnv>, userId: string, accountId: string) => Promise<boolean>;

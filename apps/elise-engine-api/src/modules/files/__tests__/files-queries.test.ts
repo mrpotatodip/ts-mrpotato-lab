@@ -4,7 +4,7 @@ import { scanFiles, scans } from "@repo/db-elise/schema";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { openTestDb, scanValues, seedRepo, seedTenant, type TestDb } from "#/__tests__/test-db";
 import { listFilesSvc } from "#/modules/files/handlers";
-import { listFilesEffect } from "#/modules/files/queries";
+import { countFilesEffect, listFilesEffect } from "#/modules/files/queries";
 import { scanKey } from "#/modules/scan-store";
 
 let test: TestDb;
@@ -94,7 +94,38 @@ describe("listFilesEffect", () => {
   });
 });
 
+describe("countFilesEffect", () => {
+  const counts = async (tenant: string, overrides: Partial<FilesQuery> = {}) =>
+    Object.fromEntries((await Effect.runPromise(countFilesEffect(test.http, tenant, query(overrides)))).map(({ name, count }) => [name, count]));
+
+  it("counts each listed type, with 0 for a type that has no files", async () => {
+    expect(await counts(tenantId)).toEqual({ "REPORT.md": 3, "FINDINGS-DETAIL.md": 0, "NEEDS-VALIDATION.md": 1 });
+  });
+
+  it("ignores the type filter, so every tab keeps its own count", async () => {
+    expect(await counts(tenantId, { name: "NEEDS-VALIDATION.md" })).toEqual(await counts(tenantId));
+  });
+
+  it("follows the other filters", async () => {
+    expect(await counts(tenantId, { repoId: apiRepoId })).toEqual({ "REPORT.md": 1, "FINDINGS-DETAIL.md": 0, "NEEDS-VALIDATION.md": 0 });
+  });
+
+  it("counts only the account's own files", async () => {
+    expect(await counts(otherTenantId)).toEqual({ "REPORT.md": 1, "FINDINGS-DETAIL.md": 0, "NEEDS-VALIDATION.md": 0 });
+  });
+});
+
 describe("listFilesSvc", () => {
+  it("sends the counts with the page", async () => {
+    const page = await Effect.runPromise(listFilesSvc(test.http, tenantId, query({ name: "REPORT.md" })));
+
+    expect(page.counts).toEqual([
+      { name: "REPORT.md", count: 3 },
+      { name: "FINDINGS-DETAIL.md", count: 0 },
+      { name: "NEEDS-VALIDATION.md", count: 1 },
+    ]);
+  });
+
   it("pages with an offset cursor and ends with null", async () => {
     const first = await Effect.runPromise(listFilesSvc(test.http, tenantId, query({ limit: 3 })));
     const second = await Effect.runPromise(listFilesSvc(test.http, tenantId, query({ limit: 3, cursor: first.nextCursor ?? undefined })));

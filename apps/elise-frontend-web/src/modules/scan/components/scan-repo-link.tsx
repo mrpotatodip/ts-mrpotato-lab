@@ -1,11 +1,13 @@
 import { Link } from "@tanstack/react-router";
 import { cn } from "#/lib/utils";
+import { GithubPrivateBadge } from "#/modules/github";
 import { useScanLinkMode } from "../hooks";
 import { scanRepoName } from "../utils";
 
 type ScanRepoLinkProps = {
   scanId: string;
   repo: string | null | undefined;
+  isPrivate?: boolean | null;
   stretch?: boolean;
 };
 
@@ -14,13 +16,14 @@ const LINK_CLASS =
 
 const STRETCH = "after:absolute after:inset-0";
 
-export function ScanRepoLink({ scanId, repo, stretch = false }: ScanRepoLinkProps) {
+export function ScanRepoLink({ scanId, repo, isPrivate, stretch = false }: ScanRepoLinkProps) {
   const mode = useScanLinkMode();
   const { owner, name } = scanRepoName(repo, scanId);
   const label = (
     <>
       {owner && <span className={cn("truncate text-muted-foreground group-hover/link:text-foreground")}>{owner}/</span>}
       <span className="truncate">{name}</span>
+      <GithubPrivateBadge isPrivate={isPrivate} compact />
     </>
   );
 

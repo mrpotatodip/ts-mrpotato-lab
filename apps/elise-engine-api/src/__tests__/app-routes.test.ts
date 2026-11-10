@@ -6,6 +6,7 @@ import { buildApp } from "#/index";
 import type { Bindings } from "#/types/variables";
 import { fakeBindings, TEST_TOKEN, testExecutionContext } from "./fake-bindings";
 import { memoryScanRepo } from "./memory-scan-repo";
+import { noGithubAccess } from "./no-github-access";
 
 let ledger = memoryScanRepo();
 let signedInUser: string | undefined;
@@ -13,6 +14,7 @@ let userHoldsRole = false;
 
 const app = buildApp({
   scanRepo: () => ledger.repo,
+  githubAccess: noGithubAccess,
   monthSpend: async () => ({ spentUsd: 0, scans: 0, tokens: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }, budgetOverrideUsd: null }),
   sessionUserId: async () => signedInUser,
   userHasAccount: async () => userHoldsRole,

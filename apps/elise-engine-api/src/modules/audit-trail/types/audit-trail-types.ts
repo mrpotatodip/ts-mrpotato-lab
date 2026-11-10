@@ -15,7 +15,9 @@ export type AuditAction =
   | "group.member.added"
   | "group.member.removed"
   | "finding.triage.set"
-  | "finding.risk.accepted";
+  | "finding.risk.accepted"
+  | "github.install.connected"
+  | "github.install.removed";
 
 // -----
 // The facts an audit row may carry about the
@@ -32,6 +34,11 @@ export type AuditDetails = {
   status?: string;
   note?: string | null;
   acceptedUntil?: string | null;
+  installationId?: number;
+  accountLogin?: string;
+  repositorySelection?: string;
+  noticeAcceptedAt?: string;
+  reconnected?: boolean;
 };
 
 // -----

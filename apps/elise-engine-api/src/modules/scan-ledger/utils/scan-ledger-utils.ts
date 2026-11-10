@@ -15,6 +15,7 @@ export const scanRowToStatus = (row: ScanRow, artifacts: ScanArtifact[], summary
   accountId: row.tenantId,
   repo: row.repo,
   repoId: row.repoId,
+  isPrivate: row.isPrivate,
   commitSha: row.commitSha,
   ref: row.ref,
   branch: row.branch,
