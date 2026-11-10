@@ -1,0 +1,1 @@
+export const USAGE_BUDGET_CHANGES_LIMIT = 20;

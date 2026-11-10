@@ -47,6 +47,7 @@ describe("GET /openapi.json", () => {
       "GET /team/invites/{token}",
       "GET /team/roles",
       "GET /usage",
+      "GET /usage/budget/changes",
       "PATCH /groups/{groupId}",
       "PATCH /usage/budget",
       "POST /github/connect",

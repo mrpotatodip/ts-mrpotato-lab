@@ -156,6 +156,20 @@ export const UpdateUsageBudgetBodySchema = z.object({
 });
 
 // -----
+// GET /usage/budget/changes: the last budget changes, newest first.
+// fromUsd and toUsd are null when the account was on the default.
+// by is null when the login behind the change is gone.
+// -----
+export const UsageBudgetChangeSchema = z.object({
+  at: z.string(),
+  by: z.string().nullable(),
+  fromUsd: z.number().min(0).nullable(),
+  toUsd: z.number().min(0).nullable(),
+});
+
+export const UsageBudgetChangesSchema = z.array(UsageBudgetChangeSchema);
+
+// -----
 // GET /findings and PUT /findings/triage
 // -----
 export const FindingTriageSchema = z.object({
@@ -225,6 +239,7 @@ export const FindingTriageBodySchema = z
 
 export type Usage = z.infer<typeof UsageSchema>;
 export type UpdateUsageBudgetBody = z.infer<typeof UpdateUsageBudgetBodySchema>;
+export type UsageBudgetChange = z.infer<typeof UsageBudgetChangeSchema>;
 export type FindingTriage = z.infer<typeof FindingTriageSchema>;
 export type Finding = z.infer<typeof FindingSchema>;
 export type FindingList = z.infer<typeof FindingListSchema>;

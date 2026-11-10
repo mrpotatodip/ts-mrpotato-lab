@@ -16,3 +16,10 @@ x-account-id: {{account}}
 Content-Type: application/json
 
 { "monthlyBudgetUsd": 30 }
+
+###
+
+# The last budget changes, newest first. Needs a session.
+GET {{baseUrl}}/usage/budget/changes
+Authorization: Bearer {{token}}
+x-account-id: {{account}}
