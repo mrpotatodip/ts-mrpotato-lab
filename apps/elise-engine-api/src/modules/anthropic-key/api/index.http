@@ -1,0 +1,25 @@
+@baseUrl = http://localhost:8787
+@token = <service-token-or-session-token>
+@account = <tenant-uuid>
+
+# Which key the account's scans use: the platform's or its own.
+GET {{baseUrl}}/usage/anthropic-key
+Authorization: Bearer {{token}}
+x-account-id: {{account}}
+
+###
+
+# Bring your own key. Needs a session.
+PUT {{baseUrl}}/usage/anthropic-key
+Authorization: Bearer {{token}}
+x-account-id: {{account}}
+Content-Type: application/json
+
+{ "apiKey": "sk-ant-api03-..." }
+
+###
+
+# Go back to the platform key. Needs a session.
+DELETE {{baseUrl}}/usage/anthropic-key
+Authorization: Bearer {{token}}
+x-account-id: {{account}}

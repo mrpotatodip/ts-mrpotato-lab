@@ -1,6 +1,7 @@
 import { WorkerEntrypoint } from "cloudflare:workers";
 import { z } from "zod";
 import type { Bindings } from "#/types/variables";
+import { ANTHROPIC_KEY_UNREADABLE, openKey } from "#/modules/anthropic-key";
 import { mintRepoToken } from "#/modules/github-app";
 import { SCAN_SANDBOX_MAX_OUTPUT_TOKENS } from "#/modules/scan-sandbox/constants";
 import type { OutboundProps } from "#/modules/scan-sandbox/types";
@@ -25,10 +26,24 @@ export class Outbound extends WorkerEntrypoint<Bindings, OutboundProps> {
     const target = allowedOutboundTarget(url, request.method);
     if (target === null) return blocked(`${request.method} ${url.hostname}${url.pathname}`);
     if (target === "github") return this.#github(request, url);
+    const apiKey = await this.#anthropicKey();
+    if (apiKey === null) return blocked(ANTHROPIC_KEY_UNREADABLE);
     const headers = new Headers(request.headers);
-    headers.set("x-api-key", this.env.ANTHROPIC_API_KEY);
+    headers.set("x-api-key", apiKey);
     if (url.pathname !== "/v1/messages") return fetch(new Request(request, { headers }));
     return this.#meteredMessages(request, headers);
+  }
+
+  // -----
+  // The platform's key, unless the account brought its own. A key
+  // that will not open is never swapped for the platform's: the
+  // account chose to pay for its scans, so the scan stops.
+  // -----
+  async #anthropicKey(): Promise<string | null> {
+    const own = this.ctx.props.anthropicKey;
+    if (own === undefined) return this.env.ANTHROPIC_API_KEY;
+    const { KEY_ENCRYPTION_SECRET: secret } = this.env;
+    return secret === undefined ? null : openKey(secret, own.accountId, own.sealed);
   }
 
   // -----

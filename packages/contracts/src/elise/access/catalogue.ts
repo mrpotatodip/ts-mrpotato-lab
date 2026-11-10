@@ -42,7 +42,10 @@ export const ACCESS_CATALOGUE = [
       {
         key: "usage",
         label: "Usage",
-        children: [{ key: "budget", label: "Monthly scan budget", actions: ["update"] }],
+        children: [
+          { key: "budget", label: "Monthly scan budget", actions: ["update"] },
+          { key: "anthropic_key", label: "Anthropic API key", actions: ["update"] },
+        ],
       },
       {
         key: "chats",

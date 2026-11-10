@@ -15,6 +15,7 @@ export type Bindings = {
   MAX_ACTIVE_SCANS: string;
   MONTHLY_BUDGET_USD: string;
   ANTHROPIC_API_KEY: string;
+  KEY_ENCRYPTION_SECRET?: string;
   SCAN_API_TOKEN: string;
   DATABASE_URL: string;
   AUTH_SECRET: string;

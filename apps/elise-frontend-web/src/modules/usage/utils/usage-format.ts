@@ -33,6 +33,18 @@ export const usageCommittedPercent = (budgetUsd: number, spentUsd: number, reser
 // -----
 export const usageBudgetFloorUsd = (spentUsd: number, reservedUsd: number) => Math.ceil((spentUsd + reservedUsd) * 100) / 100;
 
+// -----
+// What the engine checks before it asks Anthropic: an API key
+// starts with sk-ant- and is not a few characters long. Whether
+// Anthropic accepts it only the engine can say.
+// -----
+export const anthropicKeyError = (input: string): string | undefined => {
+  const text = input.trim();
+  if (!text.startsWith("sk-ant-")) return "An Anthropic API key starts with sk-ant-.";
+  if (text.length < 20 || text.length > 300) return "That does not look like a full API key. Copy the whole key.";
+  return undefined;
+};
+
 const DOLLARS = /^\d{1,7}(\.\d{1,2})?$/;
 
 // -----

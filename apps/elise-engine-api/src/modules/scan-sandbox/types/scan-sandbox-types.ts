@@ -23,4 +23,10 @@ export type Meter = MeteredTokens & { budgetUsd: number; spentUsd: number };
 // Absent for a public clone. It holds IDs, never a token.
 // -----
 export type OutboundGithub = { installationId: number; repoId: number; repo: string };
-export type OutboundProps = { sandboxId: string; github?: OutboundGithub };
+// -----
+// The Anthropic key an account brought, still sealed (encrypted):
+// Outbound opens it at the moment of a model call. Absent for an
+// account on the platform key.
+// -----
+export type OutboundAnthropicKey = { accountId: string; sealed: string };
+export type OutboundProps = { sandboxId: string; github?: OutboundGithub; anthropicKey?: OutboundAnthropicKey };

@@ -9,6 +9,7 @@ export * from "./chat-bot";
 export * from "./chat-bot-durable-stream";
 export * from "./platform-invite-codes";
 export * from "./tenant-team-invites";
+export * from "./tenant-anthropic-keys";
 export * from "./tenant-github-installations";
 export * from "./tenant-groups";
 export * from "./scans";

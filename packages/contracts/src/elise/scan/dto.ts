@@ -170,6 +170,21 @@ export const UsageBudgetChangeSchema = z.object({
 export const UsageBudgetChangesSchema = z.array(UsageBudgetChangeSchema);
 
 // -----
+// /usage/anthropic-key: the Anthropic key an account's scans use.
+// source "platform" is the default; "account" is a key the account
+// brought. The key itself is never returned, only its last four.
+// -----
+export const AnthropicKeySchema = z.object({
+  source: z.enum(["platform", "account"]),
+  lastFour: z.string().length(4).nullable(),
+  updatedAt: z.string().nullable(),
+});
+
+export const SetAnthropicKeyBodySchema = z.object({
+  apiKey: z.string().trim().min(20).max(300).startsWith("sk-ant-"),
+});
+
+// -----
 // GET /findings and PUT /findings/triage
 // -----
 export const FindingTriageSchema = z.object({
@@ -239,6 +254,8 @@ export const FindingTriageBodySchema = z
 
 export type Usage = z.infer<typeof UsageSchema>;
 export type UpdateUsageBudgetBody = z.infer<typeof UpdateUsageBudgetBodySchema>;
+export type AnthropicKey = z.infer<typeof AnthropicKeySchema>;
+export type SetAnthropicKeyBody = z.infer<typeof SetAnthropicKeyBodySchema>;
 export type UsageBudgetChange = z.infer<typeof UsageBudgetChangeSchema>;
 export type FindingTriage = z.infer<typeof FindingTriageSchema>;
 export type Finding = z.infer<typeof FindingSchema>;

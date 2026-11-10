@@ -28,7 +28,7 @@ import {
   SCAN_SANDBOX_TRUST_ENV,
   SCAN_SANDBOX_WORK_DIR,
 } from "#/modules/scan-sandbox/constants";
-import type { AgentState, Meter, MeteredTokens, OutboundExport, OutboundGithub, ScanCheckout } from "#/modules/scan-sandbox/types";
+import type { AgentState, Meter, MeteredTokens, OutboundAnthropicKey, OutboundExport, OutboundGithub, ScanCheckout } from "#/modules/scan-sandbox/types";
 import { buildAgentPrompt, buildAgentScript, buildCloneScript, parseAgentUsage, priceUsage } from "#/modules/scan-sandbox/utils";
 
 type SandboxContext = DurableObjectState & { exports: { Outbound: OutboundExport } };
@@ -76,9 +76,9 @@ export class ScanSandbox extends DurableObject<Bindings> {
   // it was fetched as a branch, nothing for a tag or a commit. A second call after a
   // retry finds the marker and returns the same commit.
   // -----
-  async prepare(repoUrl: string, ref?: string, github?: OutboundGithub): Promise<ScanCheckout> {
+  async prepare(repoUrl: string, ref?: string, github?: OutboundGithub, anthropicKey?: OutboundAnthropicKey): Promise<ScanCheckout> {
     console.log("scan: starting container");
-    await this.#start(github);
+    await this.#start(github, anthropicKey);
     if ((await this.#readText(SCAN_SANDBOX_CLONED_MARKER)) === null) {
       console.log("scan: cloning", repoUrl, ref ?? "");
       await this.#sh(buildCloneScript(), ref ? [repoUrl, ref] : [repoUrl], SCAN_SANDBOX_CLONE_GUARD_MS);
@@ -168,9 +168,9 @@ export class ScanSandbox extends DurableObject<Bindings> {
     }
   }
 
-  async #start(github?: OutboundGithub): Promise<void> {
+  async #start(github?: OutboundGithub, anthropicKey?: OutboundAnthropicKey): Promise<void> {
     if (this.#container.running) return;
-    const outbound = this.#context.exports.Outbound({ props: { sandboxId: this.#context.id.toString(), github } });
+    const outbound = this.#context.exports.Outbound({ props: { sandboxId: this.#context.id.toString(), github, anthropicKey } });
     this.#container.start({
       image: this.#container.images.sandbox,
       instance: SCAN_SANDBOX_INSTANCE_TYPE,

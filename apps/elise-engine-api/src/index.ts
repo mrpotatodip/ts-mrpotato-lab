@@ -21,6 +21,7 @@ import signUpRoutes from "#/modules/sign-up";
 import teamRoutes from "#/modules/team";
 import { consumeInviteEmails } from "#/modules/team/lib";
 import type { InviteEmail } from "#/modules/team/types";
+import anthropicKeyRoutes from "#/modules/anthropic-key";
 import usageRoutes from "#/modules/usage";
 import verdictRoutes from "#/modules/verdict";
 import type { AppEnv, AppDeps, Bindings } from "#/types/variables";
@@ -74,7 +75,7 @@ export const buildApp = (deps: AppDeps = realAppDeps) => {
     return c.json({ data: null, error: { code: "INTERNAL_ERROR", message: "Internal server error" } }, 500);
   });
 
-  const routes = app.route("/scans", scansRoutes).route("/auth", authRoutes).route("/sign-up", signUpRoutes).route("/me", meRoutes).route("/usage", usageRoutes).route("/findings", findingsRoutes).route("/files", filesRoutes).route("/github", githubRoutes).route("/team", teamRoutes).route("/groups", groupsRoutes).route("/repos", reposRoutes).route("/repos", verdictRoutes);
+  const routes = app.route("/scans", scansRoutes).route("/auth", authRoutes).route("/sign-up", signUpRoutes).route("/me", meRoutes).route("/usage", usageRoutes).route("/usage/anthropic-key", anthropicKeyRoutes).route("/findings", findingsRoutes).route("/files", filesRoutes).route("/github", githubRoutes).route("/team", teamRoutes).route("/groups", groupsRoutes).route("/repos", reposRoutes).route("/repos", verdictRoutes);
 
   // -----
   // The OpenAPI spec, for developers only.

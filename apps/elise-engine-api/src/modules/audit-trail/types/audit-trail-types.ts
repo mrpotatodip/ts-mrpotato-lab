@@ -18,7 +18,9 @@ export type AuditAction =
   | "finding.risk.accepted"
   | "github.install.connected"
   | "github.install.removed"
-  | "usage.budget.updated";
+  | "usage.budget.updated"
+  | "anthropic.key.set"
+  | "anthropic.key.removed";
 
 // -----
 // The facts an audit row may carry about the
@@ -41,6 +43,7 @@ export type AuditDetails = {
   noticeAcceptedAt?: string;
   reconnected?: boolean;
   monthlyBudgetUsd?: number | null;
+  lastFour?: string;
 };
 
 // -----

@@ -1,6 +1,8 @@
 ENVIRONMENT=development
 SCAN_API_TOKEN=
 ANTHROPIC_API_KEY=
+# Optional: lets an account save its own Anthropic key. Any long random string.
+KEY_ENCRYPTION_SECRET=
 DATABASE_URL=
 AUTH_SECRET=
 # Private repos only. The key is PKCS#8 PEM: openssl pkcs8 -topk8 -nocrypt -in app.pem

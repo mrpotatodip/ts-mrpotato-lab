@@ -1,11 +1,18 @@
 import { queryOptions } from "@tanstack/react-query";
-import { fetchBudgetChanges, fetchUsage } from "../api";
+import { fetchAnthropicKey, fetchBudgetChanges, fetchUsage } from "../api";
 
 export const usageKeys = {
   all: ["usage"] as const,
   month: () => [...usageKeys.all, "month"] as const,
   changes: () => [...usageKeys.all, "changes"] as const,
+  anthropicKey: () => [...usageKeys.all, "anthropic-key"] as const,
 };
+
+export const anthropicKeyQuery = () =>
+  queryOptions({
+    queryKey: usageKeys.anthropicKey(),
+    queryFn: () => fetchAnthropicKey(),
+  });
 
 export const budgetChangesQuery = () =>
   queryOptions({

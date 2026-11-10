@@ -2,6 +2,7 @@ import { WorkflowEntrypoint, type WorkflowEvent, type WorkflowStep } from "cloud
 import { runEffect } from "#/lib/effect-query";
 import { dbConnect, type DbConnectType } from "#/lib/db-connection";
 import type { ScanParams } from "#/schemas";
+import { findSealedKeyEffect } from "#/modules/anthropic-key";
 import { findBranchEffect, findBranchesAtTipEffect, isCommitId } from "#/modules/branches";
 import { neonScanRepo } from "#/modules/scan-ledger";
 import { listPriorsEffect, recordScanSvc, SCAN_RECORDS_PRIOR_LIMIT, type PriorFinding } from "#/modules/scan-records";
@@ -42,6 +43,7 @@ export class ScanWorkflow extends WorkflowEntrypoint<Bindings, ScanParams> {
         ledger: neonScanRepo(dbConnect(this.env.DATABASE_URL)),
         reports: this.env.REPORTS,
         readPriors: (params) => priorsOf(this.env, params),
+        sealedKeyFor: (accountId) => runEffect(findSealedKeyEffect(dbConnect(this.env.DATABASE_URL), accountId)),
         recordScan: (params, status, error, usage) => runEffect(recordScanSvc(this.env, params, status, error, usage)),
       },
       event.payload,

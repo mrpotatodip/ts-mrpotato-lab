@@ -28,6 +28,7 @@ describe("GET /openapi.json", () => {
       "DELETE /groups/{groupId}",
       "DELETE /groups/{groupId}/members/{partyId}",
       "DELETE /team/invites/{inviteId}",
+      "DELETE /usage/anthropic-key",
       "GET /files",
       "GET /findings",
       "GET /github/branches",
@@ -47,6 +48,7 @@ describe("GET /openapi.json", () => {
       "GET /team/invites/{token}",
       "GET /team/roles",
       "GET /usage",
+      "GET /usage/anthropic-key",
       "GET /usage/budget/changes",
       "PATCH /groups/{groupId}",
       "PATCH /usage/budget",
@@ -61,6 +63,7 @@ describe("GET /openapi.json", () => {
       "POST /team/invites/{token}/accept",
       "PUT /findings/triage",
       "PUT /groups/{groupId}/members/{partyId}",
+      "PUT /usage/anthropic-key",
     ]);
   });
 

@@ -6,7 +6,7 @@ import { fakeBindings } from "#/__tests__/fake-bindings";
 import { memoryScanRepo } from "#/__tests__/memory-scan-repo";
 import type { ScanParams, ScanState } from "#/schemas";
 import type { PriorFinding } from "#/modules/scan-records";
-import type { OutboundGithub } from "#/modules/scan-sandbox";
+import type { OutboundAnthropicKey, OutboundGithub } from "#/modules/scan-sandbox";
 import { runScan } from "#/modules/scan-workflow/lib";
 import type { SandboxPort } from "#/modules/scan-workflow/types";
 
@@ -38,7 +38,7 @@ const fakeStep = (names: string[]): WorkflowStep => {
   return { do: run, sleep: async (name: string) => void names.push(name) } as never;
 };
 
-const setup = (options: { priors?: PriorFinding[]; recordFails?: ScanState; agent?: "succeeded" | "failed"; pollThrows?: boolean } = {}) => {
+const setup = (options: { priors?: PriorFinding[]; recordFails?: ScanState; agent?: "succeeded" | "failed"; pollThrows?: boolean; sealedKey?: string } = {}) => {
   const names: string[] = [];
   const calls: string[] = [];
   const ledger = memoryScanRepo();
@@ -46,10 +46,12 @@ const setup = (options: { priors?: PriorFinding[]; recordFails?: ScanState; agen
   const launches: PriorFinding[][] = [];
   const prepares: { ref?: string }[] = [];
   const githubs: (OutboundGithub | undefined)[] = [];
+  const anthropicKeys: (OutboundAnthropicKey | undefined)[] = [];
   const sandbox: SandboxPort = {
-    prepare: async (_url, ref, github) => {
+    prepare: async (_url, ref, github, anthropicKey) => {
       prepares.push({ ref });
       githubs.push(github);
+      anthropicKeys.push(anthropicKey);
       return { commitSha: "abc123", branch: ref && /^v\d/.test(ref) ? null : (ref ?? "main") };
     },
     launchAgent: async (_options, priors) => void launches.push(priors),
@@ -67,12 +69,13 @@ const setup = (options: { priors?: PriorFinding[]; recordFails?: ScanState; agen
     ledger: ledger.repo,
     reports: bindings.env.REPORTS,
     readPriors: async () => options.priors ?? [],
+    sealedKeyFor: async () => options.sealedKey ?? null,
     recordScan: async (_params: ScanParams, status: ScanState) => {
       calls.push(`record:${status}:${ledger.rows.get("scan-1")?.status}`);
       if (options.recordFails === status) throw new Error("database down");
     },
   };
-  return { names, calls, ledger, bindings, launches, prepares, githubs, deps };
+  return { names, calls, ledger, bindings, launches, prepares, githubs, anthropicKeys, deps };
 };
 
 const queue = async (ledger: ReturnType<typeof memoryScanRepo>, input: ScanParams) => {
@@ -102,6 +105,18 @@ describe("runScan", () => {
 
     expect(signed.githubs).toEqual([{ installationId: 42, repoId: 7, repo: "octocat/hello-world" }]);
     expect(open.githubs).toEqual([undefined]);
+  });
+
+  it("hands the sandbox the account's sealed Anthropic key, and nothing for an account on the platform key", async () => {
+    const own = setup({ sealedKey: "iv.ciphertext" });
+    await queue(own.ledger, params());
+    await runScan(own.deps, params(), fakeStep(own.names));
+    const platform = setup();
+    await queue(platform.ledger, params());
+    await runScan(platform.deps, params(), fakeStep(platform.names));
+
+    expect(own.anthropicKeys).toEqual([{ accountId: ACCOUNT, sealed: "iv.ciphertext" }]);
+    expect(platform.anthropicKeys).toEqual([undefined]);
   });
 
   it("saves the branch the clone reported, with the commit", async () => {

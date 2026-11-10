@@ -55,7 +55,18 @@ export const runScan = async (deps: ScanRunDeps, params: ScanParams, step: Workf
     await mark("status-running", { status: "running", step: "cloning" });
     await step.do("prepare", { retries: SCAN_WORKFLOW_RETRY_ONCE, timeout: SCAN_WORKFLOW_PREPARE_TIMEOUT }, async () => {
       const { github } = params;
-      const checkout = await sandbox.prepare(params.repo, params.ref, github && { installationId: github.installationId, repoId: github.repoId, repo: github.repo });
+      // -----
+      // Read inside the step, so the sealed key is never kept in the
+      // Workflow's saved state, and a key set or removed before a
+      // retry is the one the retry uses.
+      // -----
+      const sealed = await deps.sealedKeyFor(params.accountId);
+      const checkout = await sandbox.prepare(
+        params.repo,
+        params.ref,
+        github && { installationId: github.installationId, repoId: github.repoId, repo: github.repo },
+        sealed === null ? undefined : { accountId: params.accountId, sealed },
+      );
       await runEffect(ledger.mark(params.accountId, params.scanId, checkout));
       return checkout;
     });

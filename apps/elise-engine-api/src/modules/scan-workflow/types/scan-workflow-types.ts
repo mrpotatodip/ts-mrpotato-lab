@@ -3,14 +3,14 @@ import type { ScanFiles } from "#/lib/scan-file-types";
 import type { ScanOptions, ScanParams, ScanState } from "#/schemas";
 import type { ScanRepo } from "#/modules/scan-ledger";
 import type { PriorFinding } from "#/modules/scan-records";
-import type { AgentState, OutboundGithub, ScanCheckout } from "#/modules/scan-sandbox";
+import type { AgentState, OutboundAnthropicKey, OutboundGithub, ScanCheckout } from "#/modules/scan-sandbox";
 
 // -----
 // The sandbox as the Workflow uses it. Its Durable Object
 // stub fits, and a test can stand in a fake.
 // -----
 export type SandboxPort = {
-  prepare: (repoUrl: string, ref?: string, github?: OutboundGithub) => Promise<ScanCheckout>;
+  prepare: (repoUrl: string, ref?: string, github?: OutboundGithub, anthropicKey?: OutboundAnthropicKey) => Promise<ScanCheckout>;
   launchAgent: (options: ScanOptions, priors: PriorFinding[]) => Promise<void>;
   pollAgent: () => Promise<AgentState>;
   agentLogTail: () => Promise<string>;
@@ -29,6 +29,7 @@ export type ScanRunDeps = {
   ledger: ScanRepo;
   reports: R2Bucket;
   readPriors: (params: ScanParams) => Promise<PriorFinding[]>;
+  sealedKeyFor: (accountId: string) => Promise<string | null>;
   recordScan: (params: ScanParams, status: ScanState, error: string | null, usage: ScanUsage | null) => Promise<void>;
 };
 
