@@ -170,6 +170,22 @@ export const UsageBudgetChangeSchema = z.object({
 export const UsageBudgetChangesSchema = z.array(UsageBudgetChangeSchema);
 
 // -----
+// GET /usage/changes: every recent change to the account's scan
+// settings, newest first: the budget, and the Anthropic key being
+// set or removed. A key change carries its last four characters,
+// never the key. by is null when the login behind it is gone.
+// -----
+const SettingsChangeBase = { at: z.string(), by: z.string().nullable() };
+
+export const SettingsChangeSchema = z.discriminatedUnion("kind", [
+  z.object({ ...SettingsChangeBase, kind: z.literal("budget"), fromUsd: z.number().min(0).nullable(), toUsd: z.number().min(0).nullable() }),
+  z.object({ ...SettingsChangeBase, kind: z.literal("anthropic_key_set"), lastFour: z.string().nullable() }),
+  z.object({ ...SettingsChangeBase, kind: z.literal("anthropic_key_removed"), lastFour: z.string().nullable() }),
+]);
+
+export const SettingsChangesSchema = z.array(SettingsChangeSchema);
+
+// -----
 // /usage/anthropic-key: the Anthropic key an account's scans use.
 // source "platform" is the default; "account" is a key the account
 // brought. The key itself is never returned, only its last four.
@@ -257,6 +273,7 @@ export type UpdateUsageBudgetBody = z.infer<typeof UpdateUsageBudgetBodySchema>;
 export type AnthropicKey = z.infer<typeof AnthropicKeySchema>;
 export type SetAnthropicKeyBody = z.infer<typeof SetAnthropicKeyBodySchema>;
 export type UsageBudgetChange = z.infer<typeof UsageBudgetChangeSchema>;
+export type SettingsChange = z.infer<typeof SettingsChangeSchema>;
 export type FindingTriage = z.infer<typeof FindingTriageSchema>;
 export type Finding = z.infer<typeof FindingSchema>;
 export type FindingList = z.infer<typeof FindingListSchema>;

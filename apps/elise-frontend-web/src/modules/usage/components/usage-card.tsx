@@ -29,7 +29,7 @@ export function UsageCard() {
           <p className="text-sm text-muted-foreground tabular-nums">of {usageUsd(data.budgetUsd)}</p>
         </div>
         {canManage && (
-          <Link to="/settings" className={buttonVariants({ variant: "outline", size: "sm", className: "justify-self-start" })}>
+          <Link to="/settings/budget" className={buttonVariants({ variant: "outline", size: "sm", className: "justify-self-start" })}>
             <Settings aria-hidden="true" />
             Manage budget
           </Link>

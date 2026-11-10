@@ -25,6 +25,10 @@ import { Route as AppReposIndexRouteImport } from './routes/_app/repos/index'
 import { Route as AppReposRepoIdRouteImport } from './routes/_app/repos/$repoId'
 import { Route as AppScansIndexRouteImport } from './routes/_app/scans/index'
 import { Route as AppScansScanIdRouteImport } from './routes/_app/scans/$scanId'
+import { Route as AppSettingsIndexRouteImport } from './routes/_app/settings.index'
+import { Route as AppSettingsBudgetRouteImport } from './routes/_app/settings.budget'
+import { Route as AppSettingsHistoryRouteImport } from './routes/_app/settings.history'
+import { Route as AppSettingsProvidersRouteImport } from './routes/_app/settings.providers'
 import { Route as AppReposRepoIdBranchesBranchIdRouteImport } from './routes/_app/repos/$repoId_.branches.$branchId'
 
 const IndexRoute = IndexRouteImport.update({
@@ -106,6 +110,26 @@ const AppScansScanIdRoute = AppScansScanIdRouteImport.update({
   path: '/scans/$scanId',
   getParentRoute: () => AppRouteRoute,
 } as any)
+const AppSettingsIndexRoute = AppSettingsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppSettingsRoute,
+} as any)
+const AppSettingsBudgetRoute = AppSettingsBudgetRouteImport.update({
+  id: '/budget',
+  path: '/budget',
+  getParentRoute: () => AppSettingsRoute,
+} as any)
+const AppSettingsHistoryRoute = AppSettingsHistoryRouteImport.update({
+  id: '/history',
+  path: '/history',
+  getParentRoute: () => AppSettingsRoute,
+} as any)
+const AppSettingsProvidersRoute = AppSettingsProvidersRouteImport.update({
+  id: '/providers',
+  path: '/providers',
+  getParentRoute: () => AppSettingsRoute,
+} as any)
 const AppReposRepoIdBranchesBranchIdRoute =
   AppReposRepoIdBranchesBranchIdRouteImport.update({
     id: '/repos/$repoId_/branches/$branchId',
@@ -120,15 +144,19 @@ export interface FileRoutesByFullPath {
   '/connections': typeof AppConnectionsRoute
   '/files': typeof AppFilesRoute
   '/overview': typeof AppOverviewRoute
-  '/settings': typeof AppSettingsRoute
+  '/settings': typeof AppSettingsRouteWithChildren
   '/summary': typeof AppSummaryRoute
   '/team': typeof AppTeamRoute
   '/invite/$token': typeof InviteTokenRoute
   '/github/callback': typeof AppGithubCallbackRoute
   '/repos/$repoId': typeof AppReposRepoIdRoute
   '/scans/$scanId': typeof AppScansScanIdRoute
+  '/settings/budget': typeof AppSettingsBudgetRoute
+  '/settings/history': typeof AppSettingsHistoryRoute
+  '/settings/providers': typeof AppSettingsProvidersRoute
   '/repos/': typeof AppReposIndexRoute
   '/scans/': typeof AppScansIndexRoute
+  '/settings/': typeof AppSettingsIndexRoute
   '/repos/$repoId/branches/$branchId': typeof AppReposRepoIdBranchesBranchIdRoute
 }
 export interface FileRoutesByTo {
@@ -138,15 +166,18 @@ export interface FileRoutesByTo {
   '/connections': typeof AppConnectionsRoute
   '/files': typeof AppFilesRoute
   '/overview': typeof AppOverviewRoute
-  '/settings': typeof AppSettingsRoute
   '/summary': typeof AppSummaryRoute
   '/team': typeof AppTeamRoute
   '/invite/$token': typeof InviteTokenRoute
   '/github/callback': typeof AppGithubCallbackRoute
   '/repos/$repoId': typeof AppReposRepoIdRoute
   '/scans/$scanId': typeof AppScansScanIdRoute
+  '/settings/budget': typeof AppSettingsBudgetRoute
+  '/settings/history': typeof AppSettingsHistoryRoute
+  '/settings/providers': typeof AppSettingsProvidersRoute
   '/repos': typeof AppReposIndexRoute
   '/scans': typeof AppScansIndexRoute
+  '/settings': typeof AppSettingsIndexRoute
   '/repos/$repoId/branches/$branchId': typeof AppReposRepoIdBranchesBranchIdRoute
 }
 export interface FileRoutesById {
@@ -158,15 +189,19 @@ export interface FileRoutesById {
   '/_app/connections': typeof AppConnectionsRoute
   '/_app/files': typeof AppFilesRoute
   '/_app/overview': typeof AppOverviewRoute
-  '/_app/settings': typeof AppSettingsRoute
+  '/_app/settings': typeof AppSettingsRouteWithChildren
   '/_app/summary': typeof AppSummaryRoute
   '/_app/team': typeof AppTeamRoute
   '/invite/$token': typeof InviteTokenRoute
   '/_app/github/callback': typeof AppGithubCallbackRoute
   '/_app/repos/$repoId': typeof AppReposRepoIdRoute
   '/_app/scans/$scanId': typeof AppScansScanIdRoute
+  '/_app/settings/budget': typeof AppSettingsBudgetRoute
+  '/_app/settings/history': typeof AppSettingsHistoryRoute
+  '/_app/settings/providers': typeof AppSettingsProvidersRoute
   '/_app/repos/': typeof AppReposIndexRoute
   '/_app/scans/': typeof AppScansIndexRoute
+  '/_app/settings/': typeof AppSettingsIndexRoute
   '/_app/repos/$repoId_/branches/$branchId': typeof AppReposRepoIdBranchesBranchIdRoute
 }
 export interface FileRouteTypes {
@@ -185,8 +220,12 @@ export interface FileRouteTypes {
     | '/github/callback'
     | '/repos/$repoId'
     | '/scans/$scanId'
+    | '/settings/budget'
+    | '/settings/history'
+    | '/settings/providers'
     | '/repos/'
     | '/scans/'
+    | '/settings/'
     | '/repos/$repoId/branches/$branchId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -196,15 +235,18 @@ export interface FileRouteTypes {
     | '/connections'
     | '/files'
     | '/overview'
-    | '/settings'
     | '/summary'
     | '/team'
     | '/invite/$token'
     | '/github/callback'
     | '/repos/$repoId'
     | '/scans/$scanId'
+    | '/settings/budget'
+    | '/settings/history'
+    | '/settings/providers'
     | '/repos'
     | '/scans'
+    | '/settings'
     | '/repos/$repoId/branches/$branchId'
   id:
     | '__root__'
@@ -222,8 +264,12 @@ export interface FileRouteTypes {
     | '/_app/github/callback'
     | '/_app/repos/$repoId'
     | '/_app/scans/$scanId'
+    | '/_app/settings/budget'
+    | '/_app/settings/history'
+    | '/_app/settings/providers'
     | '/_app/repos/'
     | '/_app/scans/'
+    | '/_app/settings/'
     | '/_app/repos/$repoId_/branches/$branchId'
   fileRoutesById: FileRoutesById
 }
@@ -349,6 +395,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppScansScanIdRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/_app/settings/': {
+      id: '/_app/settings/'
+      path: '/'
+      fullPath: '/settings/'
+      preLoaderRoute: typeof AppSettingsIndexRouteImport
+      parentRoute: typeof AppSettingsRoute
+    }
+    '/_app/settings/budget': {
+      id: '/_app/settings/budget'
+      path: '/budget'
+      fullPath: '/settings/budget'
+      preLoaderRoute: typeof AppSettingsBudgetRouteImport
+      parentRoute: typeof AppSettingsRoute
+    }
+    '/_app/settings/history': {
+      id: '/_app/settings/history'
+      path: '/history'
+      fullPath: '/settings/history'
+      preLoaderRoute: typeof AppSettingsHistoryRouteImport
+      parentRoute: typeof AppSettingsRoute
+    }
+    '/_app/settings/providers': {
+      id: '/_app/settings/providers'
+      path: '/providers'
+      fullPath: '/settings/providers'
+      preLoaderRoute: typeof AppSettingsProvidersRouteImport
+      parentRoute: typeof AppSettingsRoute
+    }
     '/_app/repos/$repoId_/branches/$branchId': {
       id: '/_app/repos/$repoId_/branches/$branchId'
       path: '/repos/$repoId/branches/$branchId'
@@ -359,11 +433,29 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AppSettingsRouteChildren {
+  AppSettingsBudgetRoute: typeof AppSettingsBudgetRoute
+  AppSettingsHistoryRoute: typeof AppSettingsHistoryRoute
+  AppSettingsProvidersRoute: typeof AppSettingsProvidersRoute
+  AppSettingsIndexRoute: typeof AppSettingsIndexRoute
+}
+
+const AppSettingsRouteChildren: AppSettingsRouteChildren = {
+  AppSettingsBudgetRoute: AppSettingsBudgetRoute,
+  AppSettingsHistoryRoute: AppSettingsHistoryRoute,
+  AppSettingsProvidersRoute: AppSettingsProvidersRoute,
+  AppSettingsIndexRoute: AppSettingsIndexRoute,
+}
+
+const AppSettingsRouteWithChildren = AppSettingsRoute._addFileChildren(
+  AppSettingsRouteChildren,
+)
+
 interface AppRouteRouteChildren {
   AppConnectionsRoute: typeof AppConnectionsRoute
   AppFilesRoute: typeof AppFilesRoute
   AppOverviewRoute: typeof AppOverviewRoute
-  AppSettingsRoute: typeof AppSettingsRoute
+  AppSettingsRoute: typeof AppSettingsRouteWithChildren
   AppSummaryRoute: typeof AppSummaryRoute
   AppTeamRoute: typeof AppTeamRoute
   AppGithubCallbackRoute: typeof AppGithubCallbackRoute
@@ -378,7 +470,7 @@ const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppConnectionsRoute: AppConnectionsRoute,
   AppFilesRoute: AppFilesRoute,
   AppOverviewRoute: AppOverviewRoute,
-  AppSettingsRoute: AppSettingsRoute,
+  AppSettingsRoute: AppSettingsRouteWithChildren,
   AppSummaryRoute: AppSummaryRoute,
   AppTeamRoute: AppTeamRoute,
   AppGithubCallbackRoute: AppGithubCallbackRoute,

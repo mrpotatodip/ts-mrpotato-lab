@@ -1,6 +1,5 @@
-import type { ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { ChevronUp, ClipboardCheck, FileText, FolderGit2, LayoutDashboard, PanelLeftClose, PanelLeftOpen, Plug, ScanSearch, Settings, Sparkles, Users } from "lucide-react";
+import { ChevronUp, ClipboardCheck, FileText, FolderGit2, LayoutDashboard, PanelLeftClose, PanelLeftOpen, Plug, ScanSearch, Sparkles, Users } from "lucide-react";
 import { Avatar, AvatarFallback } from "#/components/ui/avatar";
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
@@ -10,7 +9,9 @@ import { AuthSignOutButton } from "#/modules/auth";
 import { cn } from "#/lib/utils";
 import { ShellBrand } from "./shell-brand";
 import { useSidebarReposOpen } from "../hooks";
+import { NAV_ACTIVE as ACTIVE, NAV_CHEVRON as CHEVRON, NAV_ICON as ICON, NAV_ROW as ROW, NAV_TOGGLE as TOGGLE, NavHint as Hint } from "./shell-nav";
 import { ShellRepoTree } from "./shell-repo-tree";
+import { ShellSettingsNav } from "./shell-settings-nav";
 import { ShellThemeSwitch } from "./shell-theme-switch";
 
 export type ShellRepo = {
@@ -20,14 +21,6 @@ export type ShellRepo = {
   status: "queued" | "running" | "succeeded" | "failed";
   isPrivate?: boolean;
 };
-
-const ROW =
-  "relative flex h-10 items-center gap-3 rounded-lg px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
-const ACTIVE = { className: "bg-accent text-foreground" };
-const ICON = "size-[18px] shrink-0";
-const CHEVRON = "size-4 rotate-180 transition-transform group-data-[panel-open]:rotate-0";
-const TOGGLE =
-  "group absolute right-2 top-1/2 grid size-6 -translate-y-1/2 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
 type ShellSidebarProps = {
   accountName: string;
@@ -52,16 +45,6 @@ const initials = (name: string) =>
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase())
     .join("");
-
-function Hint({ label, collapsed, children }: { label: string; collapsed: boolean; children: ReactNode }) {
-  if (!collapsed) return children;
-  return (
-    <Tooltip>
-      <TooltipTrigger render={<div className="w-full" />}>{children}</TooltipTrigger>
-      <TooltipContent side="right">{label}</TooltipContent>
-    </Tooltip>
-  );
-}
 
 export function ShellSidebar({ accountName, userName, email, scanCount, running, repos, repoCount, showTeam, showSettings, showDashboard, collapsed, canToggle, onToggle }: ShellSidebarProps) {
   const { open: reposOpen, setOpen: setReposOpen } = useSidebarReposOpen();
@@ -186,14 +169,7 @@ export function ShellSidebar({ accountName, userName, email, scanCount, running,
           </Hint>
         )}
 
-        {showSettings && (
-          <Hint label="Settings" collapsed={collapsed}>
-            <Link to="/settings" aria-label="Settings" className={cn(ROW, collapsed && "justify-center px-0")} activeProps={ACTIVE}>
-              <Settings className={ICON} strokeWidth={1.5} />
-              {!collapsed && "Settings"}
-            </Link>
-          </Hint>
-        )}
+        {showSettings && <ShellSettingsNav collapsed={collapsed} />}
       </nav>
 
       {empty && !collapsed && showDashboard && (

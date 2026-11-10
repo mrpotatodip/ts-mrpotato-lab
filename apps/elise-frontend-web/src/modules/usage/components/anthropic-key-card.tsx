@@ -17,19 +17,21 @@ export function AnthropicKeyCard() {
 
   const save = useMutation({
     mutationFn: (apiKey: string) => setAnthropicKey({ data: { apiKey } }),
-    onSuccess: (key) => {
+    onSuccess: async (key) => {
       queryClient.setQueryData(usageKeys.anthropicKey(), key);
       setEditing(false);
       toast.success(`New scans now use your key ending in ${key.lastFour}.`);
+      await queryClient.invalidateQueries({ queryKey: usageKeys.changes() });
     },
     onError: (error: Error) => toast.error(`We couldn't save the key. ${error.message}`),
   });
 
   const remove = useMutation({
     mutationFn: () => removeAnthropicKey(),
-    onSuccess: (key) => {
+    onSuccess: async (key) => {
       queryClient.setQueryData(usageKeys.anthropicKey(), key);
       toast.success("New scans use the EliseLAB key again.");
+      await queryClient.invalidateQueries({ queryKey: usageKeys.changes() });
     },
     onError: (error: Error) => toast.error(`We couldn't remove the key. ${error.message}`),
   });
@@ -39,7 +41,7 @@ export function AnthropicKeyCard() {
       <CardHeader>
         <CardTitle>Anthropic API key</CardTitle>
         <p className="text-sm leading-relaxed text-muted-foreground">
-          Scans run on EliseLAB&apos;s key by default. Bring your own and new scans run on it, billed to your Anthropic organization. A scan already running keeps the key it started with. The monthly budget above still applies.
+          Scans run on EliseLAB&apos;s key by default. Bring your own and new scans run on it, billed to your Anthropic organization. A scan already running keeps the key it started with. The monthly budget still applies.
         </p>
       </CardHeader>
       <CardContent className="grid gap-5">

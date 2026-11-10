@@ -1,5 +1,5 @@
 import { queryOptions } from "@tanstack/react-query";
-import { fetchAnthropicKey, fetchBudgetChanges, fetchUsage } from "../api";
+import { fetchAnthropicKey, fetchSettingsChanges, fetchUsage } from "../api";
 
 export const usageKeys = {
   all: ["usage"] as const,
@@ -14,10 +14,10 @@ export const anthropicKeyQuery = () =>
     queryFn: () => fetchAnthropicKey(),
   });
 
-export const budgetChangesQuery = () =>
+export const settingsChangesQuery = () =>
   queryOptions({
     queryKey: usageKeys.changes(),
-    queryFn: () => fetchBudgetChanges(),
+    queryFn: () => fetchSettingsChanges(),
   });
 
 export const usageQuery = () =>

@@ -12,6 +12,11 @@ const LINK =
   "flex h-9 items-center gap-2.5 rounded-lg px-2.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 const ACTIVE = { className: "bg-accent text-foreground" };
 
+// -----
+// The same tree rows serve the Settings pages in the sidebar.
+// -----
+export { ITEM as TREE_ITEM, ITEM_LINE as TREE_ITEM_LINE, LINK as TREE_LINK };
+
 type ShellRepoTreeProps = {
   repos: readonly ShellRepo[];
 };
