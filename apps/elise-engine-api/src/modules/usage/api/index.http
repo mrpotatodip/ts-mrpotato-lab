@@ -19,6 +19,13 @@ Content-Type: application/json
 
 ###
 
+# The last changes to the scan settings (budget, Anthropic key), newest first. Needs a session.
+GET {{baseUrl}}/usage/changes
+Authorization: Bearer {{token}}
+x-account-id: {{account}}
+
+###
+
 # The last budget changes, newest first. Needs a session.
 GET {{baseUrl}}/usage/budget/changes
 Authorization: Bearer {{token}}

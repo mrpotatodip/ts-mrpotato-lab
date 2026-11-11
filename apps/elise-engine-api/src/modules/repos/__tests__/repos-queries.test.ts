@@ -99,6 +99,21 @@ describe("listReposEffect", () => {
     expect(repo.open.total).toBe(0);
   });
 
+  it("falls back to the oldest tracked branch when no scan without a ref ever set the default", async () => {
+    const named = (await seedTenant(test, "named")).tenantId;
+    const [repo] = await test.raw.insert(scanRepos).values({ tenantId: named, canonical: "octo/named", url: "https://github.com/octo/named" }).returning();
+    await test.raw.insert(scanRepoBranches).values([
+      { tenantId: named, repoId: repo.id, name: "feat/a", createdAt: new Date("2026-01-01") },
+      { tenantId: named, repoId: repo.id, name: "feat/b", createdAt: new Date("2026-01-02") },
+    ]);
+
+    const [listed] = await run(listReposEffect(test.http, named));
+    const branches = await run(listRepoBranchesEffect(test.http, named, repo.id));
+
+    expect(listed).toMatchObject({ defaultBranch: "feat/a", branchNames: ["feat/a", "feat/b"] });
+    expect(branches.map((branch) => [branch.name, branch.isDefault])).toEqual([["feat/a", true], ["feat/b", false]]);
+  });
+
   it("shows nothing of another account", async () => {
     const other = (await seedTenant(test, "other")).tenantId;
 

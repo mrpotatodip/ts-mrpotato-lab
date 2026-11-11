@@ -5,9 +5,10 @@ const open = (total: number) => ({ total, severity: { critical: 0, high: 0, medi
 
 describe("repoStatus", () => {
   it.each([
-    { name: "no default branch scanned yet", repo: { defaultBranch: null, open: open(0) }, expected: "not_scanned" },
-    { name: "a branch with nothing open", repo: { defaultBranch: "main", open: open(0) }, expected: "clear" },
-    { name: "a branch with one open finding", repo: { defaultBranch: "main", open: open(1) }, expected: "attention" },
+    { name: "a repository never scanned", repo: { defaultBranch: null, scans: 0, open: open(0) }, expected: "not_scanned" },
+    { name: "a repository scanned with no branch tracked", repo: { defaultBranch: null, scans: 2, open: open(0) }, expected: "no_branch" },
+    { name: "a branch with nothing open", repo: { defaultBranch: "main", scans: 1, open: open(0) }, expected: "clear" },
+    { name: "a branch with one open finding", repo: { defaultBranch: "main", scans: 1, open: open(1) }, expected: "attention" },
   ])("is $expected for $name", ({ repo, expected }) => {
     expect(repoStatus(repo)).toBe(expected);
   });

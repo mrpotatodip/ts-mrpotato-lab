@@ -1,2 +1,2 @@
-export { AnthropicKeySchema, SetAnthropicKeyBodySchema, UpdateUsageBudgetBodySchema, UsageBudgetChangesSchema, UsageSchema } from "@repo/contracts/elise";
-export type { AnthropicKey, Usage, UsageBudgetChange } from "@repo/contracts/elise";
+export { AnthropicKeySchema, SetAnthropicKeyBodySchema, SettingsChangesSchema, UpdateUsageBudgetBodySchema, UsageSchema } from "@repo/contracts/elise";
+export type { AnthropicKey, SettingsChange, Usage } from "@repo/contracts/elise";

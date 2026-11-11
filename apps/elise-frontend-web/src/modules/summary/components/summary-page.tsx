@@ -4,13 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "#/components/ui/empty";
 import { rankRepos, reposQuery, RepoSummaryStrip } from "#/modules/repo";
 import { ShellPageHeader } from "#/modules/shell";
-import { repoStatus } from "../utils";
+import { SUMMARY_COPY } from "../constants";
+import { summaryStanding } from "../utils";
 import { SummaryRepo } from "./summary-repo";
 
 export function SummaryPage() {
   const { data } = useSuspenseQuery(reposQuery());
   const ranked = rankRepos(data.repos);
-  const firstOpenId = ranked.find((repo) => repoStatus(repo) === "attention")?.id;
 
   return (
     <>
@@ -36,16 +36,21 @@ export function SummaryPage() {
           <Card>
             <CardHeader className="gap-1.5">
               <CardTitle>Repositories</CardTitle>
-              <p className="max-w-copy text-sm leading-relaxed text-muted-foreground">The most urgent first. Open a repository to read what is still open in it.</p>
+              <p className="max-w-copy text-sm leading-relaxed text-muted-foreground">
+                {summaryStanding(ranked)} {SUMMARY_COPY.readMore}
+              </p>
             </CardHeader>
             <CardContent className="overflow-hidden p-0">
               <ul className="divide-y">
                 {ranked.map((repo) => (
                   <li key={repo.id}>
-                    <SummaryRepo repo={repo} defaultOpen={repo.id === firstOpenId} />
+                    <SummaryRepo repo={repo} />
                   </li>
                 ))}
               </ul>
+              <div className="border-t px-5 py-4">
+                <p className="max-w-copy text-sm leading-relaxed text-muted-foreground">{SUMMARY_COPY.listLegend}</p>
+              </div>
             </CardContent>
           </Card>
         </>

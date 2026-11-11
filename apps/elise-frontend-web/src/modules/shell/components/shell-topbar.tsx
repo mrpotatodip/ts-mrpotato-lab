@@ -7,7 +7,7 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage, BreadcrumbS
 import { Tooltip, TooltipContent, TooltipTrigger } from "#/components/ui/tooltip";
 import { cn } from "#/lib/utils";
 import { useRouteNames, type RouteNames } from "../hooks";
-type Crumb = { label: string; to?: "/scans" | "/repos" | "/connections"; branch?: { repoId: string; branchId: string }; plain?: boolean };
+type Crumb = { label: string; to?: "/scans" | "/repos" | "/connections" | "/summary"; branch?: { repoId: string; branchId: string }; plain?: boolean };
 
 // -----
 // A scan belongs to the branch it read, so its breadcrumb follows the data:
@@ -38,6 +38,7 @@ const crumbs = (pathname: string, names: RouteNames | null): Crumb[] => {
   if (pathname.startsWith("/connections")) return [{ label: "Connections" }];
   if (pathname.startsWith("/team")) return [{ label: "Team" }];
   if (pathname.startsWith("/settings")) return [{ label: "Settings" }];
+  if (pathname.startsWith("/summary/")) return [{ label: "Summary", to: "/summary" }, { label: names?.name ?? "Repository" }];
   if (pathname.startsWith("/summary")) return [{ label: "Summary" }];
   return [{ label: "Overview" }];
 };

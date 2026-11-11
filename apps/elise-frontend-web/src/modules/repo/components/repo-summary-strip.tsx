@@ -12,6 +12,7 @@ import { repoTotals } from "../utils";
 // -----
 export function RepoSummaryStrip({ repos }: { repos: readonly Repo[] }) {
   const totals = repoTotals(repos);
+  const notRated = totals.total - Object.values(totals.severity).reduce((sum, count) => sum + count, 0);
 
   return (
     <section aria-label="Summary across repositories">
@@ -20,7 +21,21 @@ export function RepoSummaryStrip({ repos }: { repos: readonly Repo[] }) {
           lead
           label="Open findings"
           value={totals.total}
-          note={totals.total === 0 ? `Across ${scanPlural(repos.length, "repository", "repositories")}. Nothing is open.` : <ScanSeverityDots counts={totals.severity} />}
+          note={
+            totals.total === 0 ? (
+              `Across ${scanPlural(repos.length, "repository", "repositories")}. Nothing is open.`
+            ) : (
+              <>
+                <ScanSeverityDots counts={totals.severity} />
+                {notRated > 0 && (
+                  <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <span aria-hidden="true" className="size-1.5 rounded-full border border-muted-foreground" />
+                    <span className="tabular-nums">{notRated}</span> not rated
+                  </span>
+                )}
+              </>
+            )
+          }
         />
         <Cell label="Came back" value={totals.regressed} note={totals.regressed > 0 ? "Fixed before, reported again. Look at these first." : "Nothing that was fixed has returned."} />
         <Cell label="Needs a person" value={totals.needsValidation} note={totals.needsValidation > 0 ? "Likely but unverified. Check by hand before acting." : "Every open finding was verified."} />

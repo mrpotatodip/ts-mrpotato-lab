@@ -109,6 +109,13 @@ const repoOpenCountRowsEffect = (db: DbConnectType, tenantId: string, repoId?: s
   });
 
 // -----
+// The default branch is a pointer only a scan with no ref moves.
+// A repo whose scans all named a branch has tracked branches and
+// no pointer, so its oldest tracked branch stands in for it.
+// -----
+const effectiveDefaultBranch = (pointer: string | null, trackedNames: readonly string[]): string | null => pointer ?? trackedNames[0] ?? null;
+
+// -----
 // The account's repos, or one, with how many scans each has,
 // its latest scan and what is still open on its default branch.
 // -----
@@ -153,14 +160,16 @@ export const listReposEffect = (db: DbConnectType, tenantId: string, repoId?: st
     const findings = yield* repoOpenCountRowsEffect(db, tenantId, repoId);
     return repos.map((repo) => {
       const last = latest.find((row) => row.repoId === repo.id);
-      const defaultBranchId = branches.find((branch) => branch.repoId === repo.id && branch.name === repo.defaultBranch)?.id;
+      const branchNames = branches.filter((branch) => branch.repoId === repo.id).map((branch) => branch.name);
+      const defaultBranch = effectiveDefaultBranch(repo.defaultBranch, branchNames);
+      const defaultBranchId = branches.find((branch) => branch.repoId === repo.id && branch.name === defaultBranch)?.id;
       return {
         id: repo.id,
         url: repo.url,
         canonical: repo.canonical,
         isPrivate: repo.isPrivate,
-        defaultBranch: repo.defaultBranch,
-        branchNames: branches.filter((branch) => branch.repoId === repo.id).map((branch) => branch.name),
+        defaultBranch,
+        branchNames,
         scans: totals.find((row) => row.repoId === repo.id)?.total ?? 0,
         lastScanId: last?.id ?? null,
         lastScanStatus: last?.status ?? null,
@@ -205,12 +214,13 @@ export const listRepoBranchesEffect = (db: DbConnectType, tenantId: string, repo
       catch: toDbError,
     });
     const findings = yield* repoOpenCountRowsEffect(db, tenantId, repoId);
+    const defaultBranch = effectiveDefaultBranch(repo?.defaultBranch ?? null, rows.map((branch) => branch.name));
     return rows.map((branch) => {
       const last = latest.find((row) => row.branchId === branch.id);
       return {
         id: branch.id,
         name: branch.name,
-        isDefault: branch.name === repo?.defaultBranch,
+        isDefault: branch.name === defaultBranch,
         open: openCountsOf(findings.get(branch.id) ?? []),
         latestScanId: last?.id ?? null,
         latestCommit: last?.commitSha ?? null,
