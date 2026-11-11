@@ -17,6 +17,12 @@ describe("scanFailure", () => {
     ["a branch, tag or commit that does not exist", NO_REF, "That branch, tag or commit was not found in the repository."],
     ["a clone the timeout killed", TIMEOUT, "Cloning the repository took too long and was stopped."],
     ["an agent that ran out of memory", "claude exited 1: RangeError: Out of memory", "The agent ran out of memory while it read the repository."],
+    [
+      "a review that ended with no report, whose text mentions budget",
+      "The audit finished without writing REPORT.md. The agent may have been stopped by a permission, or run out of budget.",
+      "The agent stopped before it wrote the report.",
+    ],
+    ["a scan that reached its spend limit", "claude exited 1: Error: Exceeded USD budget (2)", "The scan reached its spend limit before it finished."],
   ])("names the cause of %s", (_name, error, title) => {
     expect(scanFailure(error).title).toBe(title);
   });

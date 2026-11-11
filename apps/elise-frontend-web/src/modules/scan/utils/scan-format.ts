@@ -43,6 +43,15 @@ const FAILURE_CAUSES = [
     advice: "Check that the link is correct. If the repository is private, connect GitHub on the Connections page and include this repository in the install.",
   },
   { test: /clone|could not read from remote/i, title: "The repository could not be cloned.", advice: "Check the link. If the repository is private, connect GitHub on the Connections page first." },
+  // -----
+  // Before the budget line: this text says "budget" among its guesses, and a
+  // review that ended without a file is not a scan that hit its spend limit.
+  // -----
+  {
+    test: /finished without writing REPORT\.md/i,
+    title: "The agent stopped before it wrote the report.",
+    advice: "Open the details to read the agent's last words. If it names a permission, check that the agent can write its output folder, then start a new scan.",
+  },
   { test: /budget|spend limit/i, title: "The scan reached its spend limit before it finished.", advice: "Start a new scan with a lower effort, or check the monthly budget on the Overview page." },
   { test: /timed out|timeout/i, title: "The scan took too long and was stopped.", advice: "Start a new scan. If it keeps timing out, try a smaller repository." },
 ];
