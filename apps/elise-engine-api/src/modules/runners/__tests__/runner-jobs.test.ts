@@ -192,7 +192,7 @@ describe("the runner as a sandbox", () => {
     expect(await sandbox.pollAgent()).toEqual({ state: "succeeded" });
     expect(await sandbox.readFiles()).toEqual({ "REPORT.md": "# Report" });
     expect(await sandbox.readUsage()).toMatchObject({ inputTokens: 5, costUsd: 0 });
-    expect(await sandbox.readCheckout?.()).toEqual({ commitSha: "b".repeat(40), branch: "main" });
+    expect(await sandbox.readCheckout()).toEqual({ commitSha: "b".repeat(40), branch: "main" });
   });
 
   it("refuses a private repository before anything is queued", async () => {

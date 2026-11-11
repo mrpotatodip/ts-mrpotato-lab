@@ -63,6 +63,7 @@ const setup = (options: { priors?: PriorFinding[]; recordFails?: ScanState; agen
     agentLogTail: async () => "log",
     readUsage: async () => usage,
     readFiles: async () => ({ "REPORT.md": "# report", "findings.json": "[]" }),
+    readCheckout: async () => null,
     destroy: async () => void calls.push("destroy"),
   };
   const deps = {

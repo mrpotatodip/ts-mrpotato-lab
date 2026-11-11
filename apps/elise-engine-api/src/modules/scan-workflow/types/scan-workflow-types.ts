@@ -18,10 +18,12 @@ export type SandboxPort = {
   readFiles: () => Promise<ScanFiles>;
   // -----
   // Only a sandbox that learns the commit after the agent ends has
-  // this (a Runner clones on its own computer). It is read before
-  // the results are recorded, so the Scan's commit and branch are set.
+  // an answer (a Runner clones on its own computer); the cloud
+  // Sandbox returns null, because `prepare` already gave it. It is
+  // not optional: a Durable Object stub accepts any method name,
+  // so a missing one fails at run time, after the agent was paid.
   // -----
-  readCheckout?: () => Promise<ScanCheckout | null>;
+  readCheckout: () => Promise<ScanCheckout | null>;
   destroy: () => Promise<void>;
 };
 

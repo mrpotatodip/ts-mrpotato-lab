@@ -141,6 +141,10 @@ export class ScanSandbox extends DurableObject<Bindings> {
     };
   }
 
+  async readCheckout(): Promise<ScanCheckout | null> {
+    return null;
+  }
+
   async readFiles(): Promise<ScanFiles> {
     console.log("scan: reading deliverables");
     const files: ScanFiles = {};
