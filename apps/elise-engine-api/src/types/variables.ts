@@ -13,6 +13,7 @@ export type Bindings = {
   MODEL: string;
   EFFORT: string;
   MAX_BUDGET_USD: string;
+  MAX_BUDGET_OWN_KEY_USD: string;
   MAX_ACTIVE_SCANS: string;
   MONTHLY_BUDGET_USD: string;
   BUDGET_ALLOWANCE_USD: string;

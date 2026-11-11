@@ -14,8 +14,10 @@ import type { MonthSpend } from "#/modules/usage/types";
 // because a month of tokens stays far below 2^53.
 // platformCost and platformReserved count only scans on the
 // platform's key: the plan's included credit is spent by those.
-// count leaves out the scans that ran on a Runner: they take
-// nothing from the plan's allowance, so they must not use it up.
+// cost and count leave out the scans that ran on a Runner: they
+// take nothing from the plan's allowance and cost EliseLAB nothing,
+// so they must not use up the allowance or the monthly budget. The
+// estimate they carry is for the person to read, not to be spent.
 // The five reads do not depend on each other and run together.
 // -----
 export const monthSpendEffect = (db: DbConnectType, tenantId: string, monthStart: Date): Effect.Effect<MonthSpend, DbError> =>
@@ -26,7 +28,7 @@ export const monthSpendEffect = (db: DbConnectType, tenantId: string, monthStart
           try: () =>
             db
               .select({
-                cost: sql<string>`coalesce(sum(${scans.costUsd}), 0)`,
+                cost: sql<string>`coalesce(sum(${scans.costUsd}) filter (where not exists (select 1 from ${scanRunnerJobs} where ${scanRunnerJobs.scanId} = ${scans.id})), 0)`,
                 platformCost: sql<string>`coalesce(sum(${scans.costUsd}) filter (where ${scans.keySource} = 'platform'), 0)`,
                 count: sql<number>`(count(*) filter (where not exists (select 1 from ${scanRunnerJobs} where ${scanRunnerJobs.scanId} = ${scans.id})))::int`,
                 input: sql<string>`coalesce(sum(${scans.inputTokens}), 0)`,

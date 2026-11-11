@@ -2,7 +2,7 @@ import { Effect } from "effect";
 import { Invalid, RateLimited, toExternalError, type Conflict, type DbError, type ExternalError } from "#/lib/effect-query";
 import { ScanOptionsSchema, type ScanParams } from "#/schemas";
 import { normalizeBranchName } from "#/modules/branches";
-import { RUNNER_JOB_NOT_CONNECTED, RUNNER_JOB_PRIVATE } from "#/modules/runners/constants";
+import { RUNNER_JOB_NOT_CONNECTED, RUNNER_JOB_PRIVATE, RUNNER_MAX_BUDGET_USD } from "#/modules/runners/constants";
 import type { GithubAccess } from "#/modules/github-installs";
 import { newScanId } from "#/modules/scan-store";
 import type { ScanRepo } from "#/modules/scan-ledger";
@@ -30,7 +30,14 @@ export const createScanSvc = (
   release?: ReleaseCredit,
 ): Effect.Effect<ScanQueued, Invalid | RateLimited | Conflict | DbError | ExternalError> =>
   Effect.gen(function* () {
-    const ceiling = Number(env.MAX_BUDGET_USD);
+    // -----
+    // The per-scan ceiling follows who pays. A scan on a Runner runs
+    // on the person's own Claude and has a safety cap. A scan on the
+    // account's own key is paid by that key, so it gets a higher
+    // ceiling than a scan on EliseLAB's key. A request may lower it.
+    // -----
+    const ownKeyScan = input.runner_id !== undefined || (spend.plan ? spend.plan.keySource === "account" : spend.ownKey);
+    const ceiling = input.runner_id !== undefined ? RUNNER_MAX_BUDGET_USD : Number(ownKeyScan ? env.MAX_BUDGET_OWN_KEY_USD : env.MAX_BUDGET_USD);
     const maxBudgetUsd = input.max_budget_usd ?? ceiling;
     if (maxBudgetUsd > ceiling) return yield* new Invalid({ message: `max_budget_usd: must be at most ${ceiling}` });
 
@@ -98,9 +105,11 @@ export const createScanSvc = (
     // -----
     // The monthly budget is an optional guard for an Account on a plan:
     // it applies once an admin sets one, and counts in credit dollars
-    // (cost times the markup). An Account with no plan always has it.
+    // (cost times the markup). An Account with no plan has it too,
+    // unless the scan runs on its own key: that key pays for itself,
+    // so only a budget an admin set on purpose can stop it.
     // -----
-    if (!onRunner && (plan === null || spend.budgetOverrideUsd !== null)) {
+    if (!onRunner && (spend.budgetOverrideUsd !== null || (plan === null && !usesOwnKey))) {
       const markup = plan && plan.keySource === "platform" ? plan.creditMarkup : 1;
       const budgetUsd = budgetUsdOf(spend, env);
       const reservedUsd = reservedUsdOf(activeScans);

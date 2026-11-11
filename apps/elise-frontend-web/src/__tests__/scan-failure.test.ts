@@ -23,6 +23,8 @@ describe("scanFailure", () => {
       "The agent stopped before it wrote the report.",
     ],
     ["a scan that reached its spend limit", "claude exited 1: Error: Exceeded USD budget (2)", "The scan reached its spend limit before it finished."],
+    ["a scan the engine stopped at its limit", "the scan's budget is spent", "The scan reached its spend limit before it finished."],
+    ["an error that only mentions a budget", "the agent said its budget plan was unclear", "the agent said its budget plan was unclear"],
   ])("names the cause of %s", (_name, error, title) => {
     expect(scanFailure(error).title).toBe(title);
   });

@@ -48,9 +48,12 @@ export function ScanSummary({ scan }: { scan: ScanStatus }) {
         )}
         {usage && (
           <ShellStatCell
-            label="What it cost"
+            label={scan.runner ? "What it would cost" : "What it cost"}
             value={scanCost(usage.costUsd)}
-            note={[duration && `Took ${duration}`, tokens > 0 && `${scanTokens(tokens)} tokens`, usage.turns !== null && `${usage.turns} turns`].filter(Boolean).join(", ") + ". Estimated at list price."}
+            note={
+              [duration && `Took ${duration}`, tokens > 0 && `${scanTokens(tokens)} tokens`, usage.turns !== null && `${usage.turns} turns`].filter(Boolean).join(", ") +
+              (scan.runner ? `. Estimated at list price. It ran on ${scan.runner.name}, so nothing was billed.` : ". Estimated at list price.")
+            }
           />
         )}
       </Card>
