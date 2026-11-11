@@ -113,11 +113,18 @@ p {
 
 main {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  padding: 24px;
+  gap: 20px;
+  padding: 20px 24px;
+}
+
+/* A section keeps its own height. When they do not all fit, the window scrolls; it never
+   squashes a card and cuts off its button. */
+main > * {
+  flex: none;
 }
 
 .page-title {
@@ -234,6 +241,10 @@ main {
 .confirm {
   color: var(--muted-foreground);
   max-width: 52ch;
+}
+
+.confirm:empty {
+  display: none;
 }
 
 /* Buttons: one primary per screen. */
@@ -353,6 +364,9 @@ main {
   background: var(--tone-soft);
   color: var(--tone);
   max-width: 60ch;
+  overflow-wrap: anywhere;
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 /* Facts: a label above its value. */
