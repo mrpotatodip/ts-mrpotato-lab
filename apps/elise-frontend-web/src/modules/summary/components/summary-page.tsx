@@ -14,7 +14,7 @@ export function SummaryPage() {
 
   return (
     <>
-      <ShellPageHeader title="Summary" description="Where each repository stands, and what is still open. Nothing here changes anything." />
+      <ShellPageHeader title="Security status"description="Where each repository stands, and what is still open. Nothing here changes anything." />
 
       {ranked.length === 0 ? (
         <Card>

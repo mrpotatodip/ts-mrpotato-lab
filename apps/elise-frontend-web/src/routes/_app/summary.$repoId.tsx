@@ -16,7 +16,7 @@ export const Route = createFileRoute("/_app/summary/$repoId")({
     await context.queryClient.infiniteQuery({ ...repoFindingsQuery(repo.id, { branch: repo.defaultBranch ?? undefined, triage: "open" }), staleTime: "static" });
     return { name: repoName(repo.url) };
   },
-  head: ({ loaderData }) => ({ meta: [{ title: `${loaderData?.name ?? "Repository"} · Summary · EliseLAB` }] }),
+  head: ({ loaderData }) => ({ meta: [{ title: `${loaderData?.name ?? "Repository"} · Security status · EliseLAB` }] }),
   component: SummaryRepoRoute,
 });
 
