@@ -4,7 +4,7 @@ import { reposQuery } from "#/modules/repo";
 import { SummaryPage, SummarySkeleton } from "#/modules/summary";
 
 export const Route = createFileRoute("/_app/summary/")({
-  head: () => ({ meta: [{ title: "Summary · EliseLAB" }] }),
+  head: () => ({ meta: [{ title: "Security status · EliseLAB" }] }),
   loader: ({ context }) => context.queryClient.query({ ...reposQuery(), staleTime: "static" }),
   component: SummaryRoute,
 });

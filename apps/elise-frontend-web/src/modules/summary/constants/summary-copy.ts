@@ -1,5 +1,5 @@
 // -----
-// The words a person reads on Summary and on a repository's page, in one
+// The words a person reads on Security status and on a repository's page, in one
 // place so one edit changes them everywhere.
 // -----
 export const SUMMARY_COPY = {
