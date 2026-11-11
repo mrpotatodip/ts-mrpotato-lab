@@ -131,7 +131,7 @@ export function ScanNewForm({ onDone, repo, startBranch, startRef, startOptions 
   const repoInput = useRef<HTMLInputElement>(null);
   const { data: list } = useQuery(scansQuery());
   const { data: usage } = useQuery(usageQuery());
-  const budgetSpent = usage !== undefined && usage.remainingUsd <= 0;
+  const budgetSpent = usage !== undefined && usage.budgetApplies !== false && usage.remainingUsd <= 0;
   const { data: repoList } = useQuery(scanReposQuery());
   const everyKnown = repoList ? scanRepoChoices(repoList.repos, list?.scans ?? []) : scanKnownRepos(list?.scans ?? []);
   const known = everyKnown.filter((item) => !item.isPrivate);
@@ -475,11 +475,15 @@ export function ScanNewForm({ onDone, repo, startBranch, startRef, startOptions 
         </p>
         <div className="flex items-center justify-end gap-3">
           <p className={cn("mr-auto text-xs", budgetSpent ? "text-status-danger" : "text-muted-foreground")} role={budgetSpent ? "alert" : undefined}>
-            {usage === undefined
-              ? "Each audit stops at a spend limit, and your account has a monthly budget."
-              : budgetSpent
-                ? "This month's budget is used up or held by running scans, so no new audit can start. It resets on the 1st (UTC)."
-                : `${usageUsd(usage.remainingUsd)} of this month's budget is left. Each audit stops at its own spend limit.`}
+            {runner !== undefined
+              ? `This audit runs on ${runner.name}'s own Claude, so no spend limit applies. It will show what it would have cost.`
+              : usage === undefined
+                ? "Each audit stops at a spend limit, and your account has a monthly budget."
+                : usage.budgetApplies === false
+                  ? "Your own key pays for this audit, so no monthly budget applies. Each audit still stops at its own spend limit."
+                  : budgetSpent
+                    ? "This month's budget is used up or held by running scans, so no new audit can start. It resets on the 1st (UTC)."
+                    : `${usageUsd(usage.remainingUsd)} of this month's budget is left. Each audit stops at its own spend limit.`}
           </p>
           <DialogClose render={<Button type="button" variant="outline" />}>Cancel</DialogClose>
           <Button type="submit" disabled={start.isPending || (budgetSpent && runner === undefined) || (isPrivate ? privatePicked === undefined || privateRunning : !typing && chosen?.running === true)}>

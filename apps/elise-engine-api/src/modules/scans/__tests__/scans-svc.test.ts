@@ -263,6 +263,42 @@ describe("createScanSvc: the plan", () => {
   });
 });
 
+const OWN: MonthSpend = { ...NO_SPEND, ownKey: true };
+const outcomeOf = (spend: MonthSpend, body: CreateScanBody = input) => {
+  const { env } = fakeBindings();
+  return Effect.runPromise(
+    createScanSvc(env, memoryScanRepo().repo, "acme", body, spend).pipe(
+      Effect.match({ onSuccess: () => "queued", onFailure: (failure) => (failure._tag === "RateLimited" ? failure.code : failure._tag) }),
+    ),
+  );
+};
+
+describe("createScanSvc: the per-scan ceiling and the monthly budget by key", () => {
+  it.each([
+    ["the platform's key, above its ceiling", NO_SPEND, 5, "Invalid"],
+    ["the platform's key, at its ceiling", NO_SPEND, 2, "queued"],
+    ["the account's own key, above the platform's ceiling", OWN, 5, "queued"],
+    ["the account's own key, above its own ceiling", OWN, 11, "Invalid"],
+  ])("a request for a limit on %s: the scan is %s", async (_name, spend, limit, expected) => {
+    expect(await outcomeOf(spend, { ...input, max_budget_usd: limit })).toBe(expected);
+  });
+
+  it("defaults the limit of a scan on the account's own key to its own ceiling", async () => {
+    const { env, created } = fakeBindings();
+    await Effect.runPromise(createScanSvc(env, memoryScanRepo().repo, "acme", input, OWN));
+
+    expect(created[0].params.options.maxBudgetUsd).toBe(10);
+  });
+
+  it.each([
+    ["no plan, the platform's key, over the default budget", { ...NO_SPEND, spentUsd: 19.5 }, "MONTHLY_BUDGET_EXCEEDED"],
+    ["no plan, the account's own key, over the default budget", { ...OWN, spentUsd: 500 }, "queued"],
+    ["no plan, the account's own key, over a budget the admin set", { ...OWN, spentUsd: 500, budgetOverrideUsd: 10 }, "MONTHLY_BUDGET_EXCEEDED"],
+  ])("with %s the scan is %s", async (_name, spend, expected) => {
+    expect(await outcomeOf(spend)).toBe(expected);
+  });
+});
+
 const connected = () => Effect.succeed(true);
 const gone = () => Effect.succeed(false);
 
@@ -288,6 +324,14 @@ describe("createScanSvc: a Runner", () => {
     ["a canceled plan", onPlan({ status: "canceled" }), "NO_ACTIVE_PLAN"],
   ])("with %s a scan on a connected runner is %s", async (_name, spend, expected) => {
     expect(await outcome(spend, connected)).toBe(expected);
+  });
+
+  it("gives a scan on a runner the safety cap by default and refuses a limit above it", async () => {
+    const { env, created } = fakeBindings();
+    await Effect.runPromise(createScanSvc(env, memoryScanRepo().repo, "acme", onRunner, NO_SPEND, undefined, hold, connected));
+
+    expect(created[0].params.options.maxBudgetUsd).toBe(50);
+    expect(await outcome(NO_SPEND, connected, { ...onRunner, max_budget_usd: 60 })).toBe("Invalid");
   });
 
   it("refuses a runner that is not connected to the account", async () => {

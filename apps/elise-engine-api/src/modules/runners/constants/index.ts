@@ -22,6 +22,15 @@ export const RUNNER_TOKEN_PREFIX = "elr_";
 // Anthropic, so it is told not to use the network, not that there
 // is none.
 // -----
+// -----
+// The cap a scan on a Runner carries. It is a safety net, not a
+// price: the scan runs on the person's own Claude, so the agent's
+// estimate at API prices is only for them to read, and the 40
+// minute timeout in the Runner app is the real stop. The number
+// is far above what that time can reach.
+// -----
+export const RUNNER_MAX_BUDGET_USD = 50;
+
 export const RUNNER_PROMPT_PLACE = {
   repoDir: "./repo",
   outDir: "./out",

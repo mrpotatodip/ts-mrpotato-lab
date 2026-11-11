@@ -52,7 +52,12 @@ const FAILURE_CAUSES = [
     title: "The agent stopped before it wrote the report.",
     advice: "Open the details to read the agent's last words. If it names a permission, check that the agent can write its output folder, then start a new scan.",
   },
-  { test: /budget|spend limit/i, title: "The scan reached its spend limit before it finished.", advice: "Start a new scan with a lower effort, or check the monthly budget on the Overview page." },
+  // -----
+  // Only the words a spend limit itself uses: Claude's own ("Exceeded USD budget",
+  // error_max_budget_usd) and the engine's ("the scan's budget is spent"). Any
+  // other text that happens to say "budget" is not a scan that hit its limit.
+  // -----
+  { test: /exceeded usd budget|error_max_budget_usd|the scan's budget is spent|reached its spend limit/i, title: "The scan reached its spend limit before it finished.", advice: "Start a new scan with a lower effort, or check the monthly budget on the Overview page." },
   { test: /timed out|timeout/i, title: "The scan took too long and was stopped.", advice: "Start a new scan. If it keeps timing out, try a smaller repository." },
 ];
 

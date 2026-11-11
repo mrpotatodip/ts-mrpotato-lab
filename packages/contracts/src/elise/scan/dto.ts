@@ -141,9 +141,14 @@ export type ScanQueued = z.infer<typeof ScanQueuedSchema>;
 // -----
 // GET /usage: what the account spent this month (UTC) and what is left.
 // reservedUsd is the cap of the scans that are still running.
+// budgetApplies says whether the monthly budget can stop a new scan:
+// false for an account that pays for its scans itself (its own key)
+// and has no budget an admin set, so a spent budget blocks nothing.
+// Absent from an older engine, which means it applies.
 // -----
 export const UsageSchema = z.object({
   month: z.string(),
+  budgetApplies: z.boolean().optional(),
   budgetUsd: z.number().min(0),
   allowanceUsd: z.number().min(0).optional(),
   spentUsd: z.number().min(0),

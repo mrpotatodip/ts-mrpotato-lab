@@ -39,6 +39,7 @@ export const summarizeUsage = (now: Date, spend: MonthSpend, defaults: UsageEnv,
   const budgetUsd = budgetUsdOf(spend, defaults);
   return {
     month: monthLabelOf(now),
+    budgetApplies: spend.budgetOverrideUsd !== null || (spend.plan === null && !spend.ownKey),
     budgetUsd,
     allowanceUsd: allowanceUsdOf(spend, defaults),
     spentUsd: roundCents(spend.spentUsd),
