@@ -22,6 +22,7 @@ export const ACCESS_CATALOGUE = [
     children: [
       { key: "dashboard", label: "Dashboard", actions: ["read"] },
       { key: "summary", label: "Summary", actions: ["read"] },
+      { key: "plan", label: "Plan", actions: ["read"] },
       {
         key: "team",
         label: "Team",
