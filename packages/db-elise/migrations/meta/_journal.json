@@ -533,6 +533,13 @@
       "when": 1794371082160,
       "tag": "0075_dizzy_vin_gonzales",
       "breakpoints": true
+    },
+    {
+      "idx": 76,
+      "version": "7",
+      "when": 1794393256205,
+      "tag": "0076_runner_admin_powers",
+      "breakpoints": true
     }
   ]
 }

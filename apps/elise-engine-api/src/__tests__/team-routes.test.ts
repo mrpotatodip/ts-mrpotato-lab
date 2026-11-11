@@ -13,6 +13,7 @@ const app = buildApp({
   githubAccess: noGithubAccess,
   monthSpend: async () => ({ spentUsd: 0, scans: 0, tokens: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }, budgetOverrideUsd: null, budgetAllowanceUsd: null, platformSpentUsd: 0, platformReservedUsd: 0, ownKey: false, plan: null }),
   holdCredit: async () => ({ held: true, balanceUsd: 0 }),
+  releaseCredit: async () => ({ settled: true, chargeUsd: 0 }),
   sessionUserId: async () => signedInUser,
   userHasAccount: async () => true,
   userHasPower: async () => managesAccount,
@@ -46,6 +47,8 @@ const MANAGER_ROUTES: Array<[string, string, string | undefined]> = [
   ["DELETE", `/groups/${ID}`, undefined],
   ["PUT", `/groups/${ID}/members/${ID}`, undefined],
   ["DELETE", `/groups/${ID}/members/${ID}`, undefined],
+  ["POST", "/runners", JSON.stringify({ name: "Ada's Mac" })],
+  ["DELETE", `/runners/${ID}`, undefined],
 ];
 
 describe.each(MANAGER_ROUTES)("%s %s", (method, path, body) => {

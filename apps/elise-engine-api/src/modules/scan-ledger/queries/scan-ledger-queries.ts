@@ -1,6 +1,6 @@
 import { and, asc, eq, gt, gte, inArray, lt, ne, or, sql } from "drizzle-orm";
 import { Effect } from "effect";
-import { scanFiles, scanFindings, scanRepos, scans } from "@repo/db-elise/schema";
+import { scanFiles, scanFindings, scanRepos, scanRunnerJobs, scans, tenantCreditLedger } from "@repo/db-elise/schema";
 import type { DbConnectType } from "#/lib/db-connection";
 import { Conflict, toDbError, type DbError } from "#/lib/effect-query";
 import { PG_UNIQUE_VIOLATION, pgErrorCode } from "#/lib/pg-error";
@@ -73,15 +73,43 @@ export const neonScanRepo = (db: DbConnectType): ScanRepo => ({
     }),
 
   // -----
-  // One batch is one transaction: first expire a scan of
-  // this repo that stalled, then insert. The unique index
-  // on active scans refuses a second live scan, and the
+  // One batch is one transaction: first close what a scan of
+  // this repo that stalled still holds (its credit hold, given
+  // back with no charge, and its Runner job, cancelled so a late
+  // report is refused), then expire it, then insert. The unique
+  // index on active scans refuses a second live scan, and the
   // answer names the one that is running.
   // -----
-  create: (params, repoId, staleBeforeMs) =>
-    Effect.tryPromise({
+  create: (params, repoId, staleBeforeMs) => {
+    const stalled = db
+      .select({ id: scans.id })
+      .from(scans)
+      .where(and(eq(scans.repoId, repoId), inArray(scans.status, ["queued", "running"]), lt(scans.updatedAt, new Date(staleBeforeMs))));
+    return Effect.tryPromise({
       try: () =>
         db.batch([
+          db
+            .insert(tenantCreditLedger)
+            .select(
+              db
+                .select({
+                  id: sql<string>`gen_random_uuid()`.as("id"),
+                  tenantId: tenantCreditLedger.tenantId,
+                  kind: sql<string>`'scan_settle'`.as("kind"),
+                  amountUsd: sql<string>`-${tenantCreditLedger.amountUsd}`.as("amount_usd"),
+                  scanId: tenantCreditLedger.scanId,
+                  idempotencyKey: sql<string | null>`null`.as("idempotency_key"),
+                  note: sql<string>`'the scan stalled and was closed by a newer request'`.as("note"),
+                  createdAt: sql<Date>`now()`.as("created_at"),
+                })
+                .from(tenantCreditLedger)
+                .where(and(eq(tenantCreditLedger.kind, "scan_hold"), inArray(tenantCreditLedger.scanId, stalled))),
+            )
+            .onConflictDoNothing(),
+          db
+            .update(scanRunnerJobs)
+            .set({ state: "cancelled", finishedAt: new Date() })
+            .where(and(inArray(scanRunnerJobs.scanId, stalled), inArray(scanRunnerJobs.state, ["queued", "claimed"]))),
           db
             .update(scans)
             .set({ status: "failed", step: null, finishedAt: new Date(), error: "the scan stalled and was closed by a newer request", updatedAt: new Date() })
@@ -116,7 +144,8 @@ export const neonScanRepo = (db: DbConnectType): ScanRepo => ({
         }).pipe(Effect.flatMap(([active]) => Effect.fail(new Conflict({ message: active ? `${ACTIVE_SCAN_CONFLICT}: ${active.id}` : ACTIVE_SCAN_CONFLICT })))),
       ),
       Effect.asVoid,
-    ),
+    );
+  },
 
   mark: (accountId, scanId, patch) => {
     const ended = patch.status === "succeeded" || patch.status === "failed";
@@ -205,6 +234,12 @@ export const neonScanRepo = (db: DbConnectType): ScanRepo => ({
       Effect.map((found) => found[0] ?? null),
     ),
 
+  // -----
+  // Callers count these scans and add up their budget caps, so the
+  // rows come back with no files and no finding counts: a queued or
+  // running scan has no summary, and two more queries on the
+  // path of every new scan would buy nothing.
+  // -----
   activeSince: (accountId, sinceMs) =>
     Effect.tryPromise({
       try: () =>
@@ -219,7 +254,7 @@ export const neonScanRepo = (db: DbConnectType): ScanRepo => ({
             ),
           ),
       catch: toDbError,
-    }).pipe(Effect.flatMap((rows) => withFiles(db, rows))),
+    }).pipe(Effect.map((rows) => rows.map((row) => scanRowToStatus(row, [], null)))),
 
   file: (accountId, scanId, name) =>
     Effect.tryPromise({

@@ -2,7 +2,7 @@ import type { Context } from "hono";
 import { createAuth } from "#/lib/auth";
 import { dbConnect, poolConnect } from "#/lib/db-connection";
 import { runEffect } from "#/lib/effect-query";
-import { holdCreditEffect } from "#/modules/credit";
+import { holdCreditEffect, settleCreditEffect } from "#/modules/credit";
 import { githubAccessFor, neonInstallationRepo } from "#/modules/github-installs";
 import { userHasAccountEffect, userHasPowerEffect } from "#/modules/me";
 import { neonScanRepo } from "#/modules/scan-ledger";
@@ -29,6 +29,14 @@ export const realAppDeps: AppDeps = {
     const { db, close } = poolConnect(env.DATABASE_URL);
     try {
       return await runEffect(holdCreditEffect(db, { tenantId: accountId, scanId, holdUsd }));
+    } finally {
+      await close();
+    }
+  },
+  releaseCredit: async (env, accountId, scanId) => {
+    const { db, close } = poolConnect(env.DATABASE_URL);
+    try {
+      return await runEffect(settleCreditEffect(db, { tenantId: accountId, scanId, chargeUsd: 0 }));
     } finally {
       await close();
     }

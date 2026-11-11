@@ -1,11 +1,14 @@
 import { Effect } from "effect";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { authUser, scans } from "@repo/db-elise";
+import { eq } from "drizzle-orm";
+import { authUser, scanRunnerJobs, scans } from "@repo/db-elise";
 import { RUNNER_JOB_QUEUE_TIMEOUT_MS } from "@repo/contracts/elise";
 import { openTestDb, scanValues, seedRepo, seedTenant, type TestDb } from "#/__tests__/test-db";
 import type { ScanOptions, ScanParams } from "#/schemas";
 import { claimJobSvc, reportJobSvc } from "#/modules/runners/handlers";
 import { runnerSandbox } from "#/modules/runners/lib";
+import { neonScanRepo } from "#/modules/scan-ledger";
+import { monthSpendEffect } from "#/modules/usage";
 import { claimRunnerJobEffect, createRunnerEffect, claimPairingEffect, readRunnerJobEffect, reportRunnerJobEffect } from "#/modules/runners/queries";
 
 let test: TestDb;
@@ -86,6 +89,26 @@ describe("claiming a job", () => {
     expect(claimed).toMatchObject({ scanId: first, repo: "https://github.com/octocat/Hello-World", ref: null, skill: "lite", model: "claude-sonnet-5-5", maxBudgetUsd: 2 });
     expect(claimed?.prompt).toContain("./repo");
     expect(again?.scanId).not.toBe(first);
+  });
+
+  it("fails a job whose options cannot be read and hands over the next one", async () => {
+    const broken = await queue(await newScan());
+    await test.raw.update(scanRunnerJobs).set({ optionsJson: "not json" }).where(eq(scanRunnerJobs.scanId, broken));
+    const next = await queue(await newScan());
+    const claimed = await run(claimJobSvc(test.http, runnerId));
+
+    expect(claimed?.scanId).toBe(next);
+    expect(await jobOf(broken)).toMatchObject({ state: "failed", error: expect.stringContaining("could not be read") });
+  });
+
+  it("cancels the job of a scan that stalled when a newer scan of the repo starts", async () => {
+    counter += 1;
+    const stalledId = `job-stalled-${counter}`;
+    await test.raw.insert(scans).values(scanValues(tenantId, repoId, stalledId, NOW.toISOString(), { status: "running" }));
+    await queue(stalledId);
+    await run(neonScanRepo(test.http).create(paramsFor(`job-newer-${counter}`, { runnerId: undefined }), repoId, Date.now() + 60_000));
+
+    expect((await jobOf(stalledId)).state).toBe("cancelled");
   });
 
   it("gives a runner nothing that was queued for another", async () => {
@@ -200,6 +223,16 @@ describe("the runner as a sandbox", () => {
     const sandbox = runnerSandbox(test.http, paramsFor("job-scan-private", { github }), runnerId);
 
     await expect(sandbox.prepare("https://github.com/o/n")).rejects.toThrow("private repository");
+  });
+
+  it("keeps a Runner scan out of the month's scan count and counts a plain one", async () => {
+    const monthStart = new Date("2026-11-01T00:00:00Z");
+    const before = (await run(monthSpendEffect(test.http, tenantId, monthStart))).scans;
+    await queue(await newScan());
+    await newScan();
+    const after = (await run(monthSpendEffect(test.http, tenantId, monthStart))).scans;
+
+    expect(after - before).toBe(1);
   });
 
   it("leaves a finished job as it was when the scan cleans up", async () => {

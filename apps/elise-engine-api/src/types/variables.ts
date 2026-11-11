@@ -1,6 +1,6 @@
 import type { Context } from "hono";
 import type { AccessPower } from "@repo/contracts/elise";
-import type { HoldResult } from "#/modules/credit";
+import type { HoldResult, SettleResult } from "#/modules/credit";
 import type { GithubAccess } from "#/modules/github-installs";
 import type { ScanRepo } from "#/modules/scan-ledger";
 import type { MonthSpend } from "#/modules/usage";
@@ -50,6 +50,7 @@ export type AppDeps = {
   githubAccess: (env: Bindings, accountId: string) => GithubAccess;
   monthSpend: (env: Bindings, accountId: string) => Promise<MonthSpend>;
   holdCredit: (env: Bindings, accountId: string, scanId: string, holdUsd: number) => Promise<HoldResult>;
+  releaseCredit: (env: Bindings, accountId: string, scanId: string) => Promise<SettleResult>;
   sessionUserId: (c: Context<AppEnv>) => Promise<string | undefined>;
   userHasAccount: (c: Context<AppEnv>, userId: string, accountId: string) => Promise<boolean>;
   userHasPower: (c: Context<AppEnv>, userId: string, accountId: string, power: AccessPower) => Promise<boolean>;

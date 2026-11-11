@@ -7,32 +7,49 @@ import type { ScanFiles } from "#/lib/scan-file-types";
 import { ScanOptionsSchema } from "#/schemas";
 import { normalizeBranchName } from "#/modules/branches";
 import { parseAgentUsage } from "#/modules/scan-sandbox/utils";
-import { RUNNER_JOB_NO_REPORT, RUNNER_JOB_NOT_FOUND } from "#/modules/runners/constants";
+import { RUNNER_JOB_BAD_OPTIONS, RUNNER_JOB_NO_REPORT, RUNNER_JOB_NOT_FOUND } from "#/modules/runners/constants";
 import { claimRunnerJobEffect, readRunnerJobEffect, reportRunnerJobEffect } from "#/modules/runners/queries";
 
 // -----
 // The Runner takes the next Scan waiting for it, or gets null.
 // Asking also records that the Runner is alive, through the
 // authentication that comes before this.
+// A job whose options no longer parse is failed on the spot, so
+// the Scan ends with a reason and the Runner moves to the next
+// job instead of meeting the same row on every poll.
 // -----
 export const claimJobSvc = (db: DbConnectType, runnerId: string): Effect.Effect<RunnerJob | null, DbError> =>
-  claimRunnerJobEffect(db, runnerId, new Date()).pipe(
-    Effect.map((row) => {
-      if (row === null) return null;
-      const options = ScanOptionsSchema.parse(JSON.parse(row.optionsJson));
-      return {
+  Effect.gen(function* () {
+    const now = new Date();
+    const row = yield* claimRunnerJobEffect(db, runnerId, now);
+    if (row === null) return null;
+    const options = yield* Effect.try(() => ScanOptionsSchema.parse(JSON.parse(row.optionsJson))).pipe(Effect.option);
+    if (options._tag === "None") {
+      yield* reportRunnerJobEffect(db, {
         scanId: row.scanId,
-        repo: row.repoUrl,
-        ref: row.ref,
-        skill: options.skill,
-        model: options.model,
-        effort: options.effort,
-        maxBudgetUsd: options.maxBudgetUsd,
-        prompt: row.prompt,
-        priorsJson: row.priorsJson,
-      };
-    }),
-  );
+        runnerId,
+        state: "failed",
+        error: RUNNER_JOB_BAD_OPTIONS,
+        commitSha: null,
+        branch: null,
+        usageJson: null,
+        filesJson: "{}",
+        now,
+      });
+      return yield* claimJobSvc(db, runnerId);
+    }
+    return {
+      scanId: row.scanId,
+      repo: row.repoUrl,
+      ref: row.ref,
+      skill: options.value.skill,
+      model: options.value.model,
+      effort: options.value.effort,
+      maxBudgetUsd: options.value.maxBudgetUsd,
+      prompt: row.prompt,
+      priorsJson: row.priorsJson,
+    };
+  });
 
 // -----
 // Only the names a Scan may keep, and not the earlier findings,
