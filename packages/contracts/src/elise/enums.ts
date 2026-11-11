@@ -56,6 +56,14 @@ export const FINDING_TRIAGE_STATUS_VALUES = ["open", "fixed", "false_positive", 
 export const SCAN_KEY_SOURCE_VALUES = ["platform", "account"] as const;
 
 // -----
+// Where a Scan that runs on a Runner has got to. queued: waiting for
+// the Runner to claim it. claimed: the Runner is working. cancelled:
+// the Scan ended (timed out or failed) before the Runner reported.
+// Twin of the CHECK on scan_runner_jobs.state.
+// -----
+export const RUNNER_JOB_STATE_VALUES = ["queued", "claimed", "succeeded", "failed", "cancelled"] as const;
+
+// -----
 // Subscriptions. Twins of the CHECKs on tenant_subscriptions. status
 // follows Stripe's own words. source says who made the row: a Stripe
 // subscription, or a grant by the operator that Stripe does not know.
@@ -78,6 +86,7 @@ export type FindingStatusValue = (typeof FINDING_STATUS_VALUES)[number];
 export type FindingSeverityValue = (typeof FINDING_SEVERITY_VALUES)[number];
 export type FindingTriageStatusValue = (typeof FINDING_TRIAGE_STATUS_VALUES)[number];
 export type ScanKeySourceValue = (typeof SCAN_KEY_SOURCE_VALUES)[number];
+export type RunnerJobStateValue = (typeof RUNNER_JOB_STATE_VALUES)[number];
 export type SubscriptionStatusValue = (typeof SUBSCRIPTION_STATUS_VALUES)[number];
 export type SubscriptionSourceValue = (typeof SUBSCRIPTION_SOURCE_VALUES)[number];
 export type CreditEntryKindValue = (typeof CREDIT_ENTRY_KIND_VALUES)[number];

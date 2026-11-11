@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#
 import { fieldAria, fieldMessage } from "#/lib/form-field";
 import { cn } from "#/lib/utils";
 import { githubReposQuery, type GithubRepo } from "#/modules/github";
+import { runnersQuery } from "#/modules/runner";
 import { usageQuery, usageUsd } from "#/modules/usage";
 import {
   SCAN_DEFAULT_BRANCH,
@@ -82,6 +83,7 @@ function OptionSelect<T extends string>({ id, options, value, onPick }: OptionSe
 }
 
 const OTHER_REPO = "other";
+const RUN_IN_CLOUD = "cloud";
 
 const DEFAULT_BRANCH = SCAN_DEFAULT_BRANCH;
 const OTHER_BRANCH = SCAN_OTHER_BRANCH;
@@ -140,6 +142,14 @@ export function ScanNewForm({ onDone, repo, startBranch, startRef, startOptions 
   const connectedMatch = repo === undefined ? undefined : connected?.find((item) => item.url.toLowerCase() === repo.replace(/(\.git)?\/?$/, "").toLowerCase());
   const source: ScanSource = userSource ?? (connectedMatch?.private ? "private" : "public");
   const isPrivate = source === "private";
+  // -----
+  // A scan can run on one of the account's connected runners: the person's own
+  // computer, on their own Claude. Only a public repository can, because a private one
+  // needs the GitHub token that only EliseLAB's container can make.
+  // -----
+  const { data: runners } = useQuery(runnersQuery());
+  const connectedRunners = (runners ?? []).filter((item) => item.state === "connected");
+  const runner = isPrivate ? undefined : connectedRunners.find((item) => item.id === values.runnerId);
   const privatePicked = isPrivate ? (privateRepo ?? connectedMatch) : undefined;
   const privateRunning = privatePicked === undefined ? false : everyKnown.find((item) => item.url.toLowerCase() === privatePicked.url.toLowerCase())?.running === true;
   const choice = picked ?? repo ?? known[0]?.url ?? OTHER_REPO;
@@ -149,7 +159,9 @@ export function ScanNewForm({ onDone, repo, startBranch, startRef, startOptions 
   const { data: detail } = useQuery({ ...scanRepoBranchesQuery(chosen?.repoId ?? ""), enabled: !typing && chosen !== undefined });
   const ref = typing || branchPick === OTHER_BRANCH ? values.ref : branchPick === DEFAULT_BRANCH ? undefined : branchPick;
   const privateRef = privateBranch === OTHER_BRANCH ? values.ref : privateBranch === DEFAULT_BRANCH ? undefined : privateBranch;
-  const plan: CreateScanInput = isPrivate ? { ...values, repo: privatePicked?.url ?? "", ref: privateRef } : { ...values, repo: typing ? values.repo : choice, ref };
+  const plan: CreateScanInput = isPrivate
+    ? { ...values, runnerId: undefined, repo: privatePicked?.url ?? "", ref: privateRef }
+    : { ...values, runnerId: runner?.id, repo: typing ? values.repo : choice, ref };
   const freeBranch = typing || branchPick === OTHER_BRANCH;
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -165,7 +177,7 @@ export function ScanNewForm({ onDone, repo, startBranch, startRef, startOptions 
     onError: (error) => toast.error(`We couldn't start the audit. ${error.message}`),
   });
 
-  const summary = scanPlanSummary(plan);
+  const summary = scanPlanSummary(plan, runner?.name);
 
   return (
     <form
@@ -370,6 +382,42 @@ export function ScanNewForm({ onDone, repo, startBranch, startRef, startOptions 
         </div>
         )}
 
+        {!isPrivate && connectedRunners.length > 0 && (
+          <div className="grid gap-2">
+            <Label htmlFor="run-where">Where should it run?</Label>
+            <Select
+              value={runner?.id ?? RUN_IN_CLOUD}
+              items={[{ value: RUN_IN_CLOUD, label: "EliseLAB's cloud" }, ...connectedRunners.map((item) => ({ value: item.id, label: item.name }))]}
+              onValueChange={(next) => form.setFieldValue("runnerId", connectedRunners.find((item) => item.id === next)?.id)}
+            >
+              <SelectTrigger id="run-where">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={RUN_IN_CLOUD}>
+                  <span className="grid">
+                    <span>EliseLAB&apos;s cloud</span>
+                    <span className="text-xs text-muted-foreground">Runs in an isolated container, and uses your plan&apos;s credit or key.</span>
+                  </span>
+                </SelectItem>
+                {connectedRunners.map((item) => (
+                  <SelectItem key={item.id} value={item.id}>
+                    <span className="grid">
+                      <span>{item.name}</span>
+                      <span className="text-xs text-muted-foreground">Your own computer. Uses its Claude login, not your credit.</span>
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              {runner === undefined
+                ? "Public repositories can also run on a computer you have paired. Add one in Settings, under Providers."
+                : "The EliseLAB Runner app must be open on that computer, with Claude Code signed in. Private repositories can't run there yet."}
+            </p>
+          </div>
+        )}
+
         <div className="grid gap-2">
           <span id="skill-label" className="text-sm font-medium leading-none">
             How thorough should the review be?
@@ -434,7 +482,7 @@ export function ScanNewForm({ onDone, repo, startBranch, startRef, startOptions 
                 : `${usageUsd(usage.remainingUsd)} of this month's budget is left. Each audit stops at its own spend limit.`}
           </p>
           <DialogClose render={<Button type="button" variant="outline" />}>Cancel</DialogClose>
-          <Button type="submit" disabled={start.isPending || budgetSpent || (isPrivate ? privatePicked === undefined || privateRunning : !typing && chosen?.running === true)}>
+          <Button type="submit" disabled={start.isPending || (budgetSpent && runner === undefined) || (isPrivate ? privatePicked === undefined || privateRunning : !typing && chosen?.running === true)}>
             {start.isPending ? "Starting…" : "Start audit"}
           </Button>
         </div>

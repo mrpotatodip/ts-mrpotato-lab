@@ -249,6 +249,64 @@ describe("createScanSvc: the plan", () => {
   });
 });
 
+const connected = () => Effect.succeed(true);
+const gone = () => Effect.succeed(false);
+
+describe("createScanSvc: a Runner", () => {
+  const RUNNER = "5b3f0d7e-61a4-4c2f-9d58-2f7a1c9e4b10";
+  const onRunner: CreateScanBody = { ...input, runner_id: RUNNER };
+  const BYOK_PLAN: Partial<PlanState> = { planKey: "byok", keySource: "account", includedCreditUsd: 0, creditBalanceUsd: 0, monthlyScanAllowance: 300 };
+
+  const outcome = (spend: MonthSpend, runnerConnected: () => Effect.Effect<boolean>, body: CreateScanBody = onRunner) => {
+    const { env } = fakeBindings({ BILLING_ENFORCED: "true" });
+    return Effect.runPromise(
+      createScanSvc(env, memoryScanRepo().repo, "acme", body, spend, undefined, hold, runnerConnected).pipe(
+        Effect.match({ onSuccess: () => "queued", onFailure: (failure) => (failure._tag === "RateLimited" ? failure.code : failure._tag) }),
+      ),
+    );
+  };
+
+  it.each([
+    ["a platform plan with no credit", onPlan({ creditBalanceUsd: 0 }), "queued"],
+    ["an account plan with no own key", onPlan(BYOK_PLAN, { ownKey: false }), "queued"],
+    ["an account plan with its allowance used", onPlan(BYOK_PLAN, { ownKey: true, scans: 300 }), "queued"],
+    ["a month that is over the budget the admin set", onPlan({}, { spentUsd: 500, budgetOverrideUsd: 10 }), "queued"],
+    ["a canceled plan", onPlan({ status: "canceled" }), "NO_ACTIVE_PLAN"],
+  ])("with %s a scan on a connected runner is %s", async (_name, spend, expected) => {
+    expect(await outcome(spend, connected)).toBe(expected);
+  });
+
+  it("refuses a runner that is not connected to the account", async () => {
+    expect(await outcome(onPlan({}), gone)).toBe("Invalid");
+  });
+
+  it("refuses a runner when the caller cannot check it", async () => {
+    const { env } = fakeBindings();
+    const failure = await Effect.runPromise(Effect.flip(createScanSvc(env, memoryScanRepo().repo, "acme", onRunner, NO_SPEND)));
+
+    expect(failure).toMatchObject({ _tag: "Invalid" });
+  });
+
+  it("starts the workflow with the runner, takes no hold and uses no platform key", async () => {
+    held.length = 0;
+    const { env, created } = fakeBindings();
+    await Effect.runPromise(createScanSvc(env, memoryScanRepo().repo, "acme", onRunner, onPlan({}), undefined, hold, connected));
+
+    expect(held).toEqual([]);
+    expect(created[0].params).toMatchObject({ runnerId: RUNNER, keySource: "account" });
+  });
+
+  it("refuses a private repository, which only the container can read", async () => {
+    const { env, created } = fakeBindings();
+    const github = { installationRowId: "7c1e4a52-9d3b-4f60-8a71-2b3c4d5e6f70", installationId: 42, repoId: 7, repo: "octocat/hello-world", isPrivate: true };
+    const access: GithubAccess = { forRepo: () => Effect.succeed(github) };
+    const failure = await Effect.runPromise(Effect.flip(createScanSvc(env, memoryScanRepo().repo, "acme", onRunner, NO_SPEND, access, hold, connected)));
+
+    expect(failure).toMatchObject({ _tag: "Invalid" });
+    expect(created).toEqual([]);
+  });
+});
+
 describe("createScanSvc: the ref", () => {
   const paramsOf = async (ref: string | undefined) => {
     const { env, created } = fakeBindings();

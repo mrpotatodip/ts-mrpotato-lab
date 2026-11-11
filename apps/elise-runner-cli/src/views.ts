@@ -1,10 +1,22 @@
-import { pairRunner, unpairRunner, type RunnerStatus } from "./api";
+import { pairRunner, runnerActivity, unpairRunner, type RunnerStatus } from "./api";
 import { COPY } from "./copy";
 import { h, logo } from "./dom";
 
 export type Tone = "success" | "danger" | "warning" | "info" | "neutral";
 
 type OnStatus = (status: RunnerStatus) => void;
+
+// -----
+// The connected view asks what the runner is doing every few seconds. The timer stops when the
+// window draws another view, so a view that is gone never keeps asking.
+// -----
+const ACTIVITY_EVERY_MS = 3000;
+let activityTimer: number | undefined;
+
+export const stopActivity = () => {
+  if (activityTimer !== undefined) window.clearInterval(activityTimer);
+  activityTimer = undefined;
+};
 
 export const topbar = (label: string, tone: Tone): HTMLElement =>
   h("header", { class: "topbar" }, logo(), h("span", { class: "brand-name" }, COPY.appName), h("span", { class: `badge tone-${tone}`, role: "status" }, label));
@@ -121,6 +133,18 @@ export const connectedView = (status: Extract<RunnerStatus, { state: "connected"
 
   showActions();
 
+  const activity = h("p", { class: "alert tone-info", role: "status" });
+  const showActivity = async () => {
+    const now = await runnerActivity();
+    const tone: Tone = now.state === "running" ? "info" : now.state === "finished" && !now.ok ? "danger" : now.state === "finished" ? "success" : "neutral";
+    activity.className = `alert tone-${tone}`;
+    activity.textContent =
+      now.state === "running" ? copy.running(now.repo) : now.state === "finished" ? (now.ok ? copy.finishedOk(now.repo) : copy.finishedFailed(now.repo, now.message)) : copy.idle;
+  };
+  void showActivity();
+  stopActivity();
+  activityTimer = window.setInterval(() => void showActivity(), ACTIVITY_EVERY_MS);
+
   const facts = h(
     "dl",
     { class: "facts" },
@@ -129,7 +153,8 @@ export const connectedView = (status: Extract<RunnerStatus, { state: "connected"
   );
   return [
     pageHeader(copy.title, copy.description(status.accountName)),
-    h("section", { class: "card" }, cardHeader(copy.cardTitle, copy.cardHint), h("div", { class: "card-content" }, facts, alert("info", copy.notice), confirm, error, actions)),
+    h("section", { class: "card" }, cardHeader(copy.cardTitle, copy.cardHint), h("div", { class: "card-content" }, facts, confirm, error, actions)),
+    h("section", { class: "card" }, cardHeader(copy.activityTitle, copy.activityHint), h("div", { class: "card-content" }, activity)),
   ];
 };
 

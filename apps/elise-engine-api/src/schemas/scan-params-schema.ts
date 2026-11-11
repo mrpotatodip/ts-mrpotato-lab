@@ -23,6 +23,12 @@ export const ScanParamsSchema = z.object({
   github: ScanGithubSchema.optional(),
   options: ScanOptionsSchema,
   keySource: z.enum(SCAN_KEY_SOURCE_VALUES).optional(),
+  // -----
+  // Set when the Scan runs on one of the Account's Runners instead of
+  // in the container. Such a Scan is not billed to EliseLAB, so its
+  // keySource is "account".
+  // -----
+  runnerId: z.uuid().optional(),
   createdAt: z.string(),
 });
 

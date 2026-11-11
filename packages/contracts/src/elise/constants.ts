@@ -30,6 +30,16 @@ export const RUNNER_PAIRING_CODE_TTL_MS = 10 * 60 * 1000;
 export const RUNNER_TOKEN_BYTES = 32;
 
 // -----
+// A Scan on a Runner: how long it may wait for the app to claim it,
+// and the most a report may carry (characters), so one Runner cannot
+// fill the database.
+// -----
+export const RUNNER_JOB_QUEUE_TIMEOUT_MS = 10 * 60 * 1000;
+export const RUNNER_JOB_ERROR_MAX = 4000;
+export const RUNNER_JOB_LOG_MAX = 200_000;
+export const RUNNER_JOB_FILE_MAX = 2_000_000;
+
+// -----
 // Groups and team invites: caps the form and the
 // server share, so one Tenant cannot grow without
 // bound

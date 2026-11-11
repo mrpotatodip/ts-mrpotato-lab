@@ -4,6 +4,7 @@ import { dbConnect, type DbConnectType } from "#/lib/db-connection";
 import type { ScanParams } from "#/schemas";
 import { findSealedKeyEffect } from "#/modules/anthropic-key";
 import { findBranchEffect, findBranchesAtTipEffect, isCommitId } from "#/modules/branches";
+import { runnerSandbox } from "#/modules/runners/lib";
 import { neonScanRepo } from "#/modules/scan-ledger";
 import { listPriorsEffect, recordScanSvc, SCAN_RECORDS_PRIOR_LIMIT, type PriorFinding } from "#/modules/scan-records";
 import type { Bindings } from "#/types/variables";
@@ -40,7 +41,7 @@ export class ScanWorkflow extends WorkflowEntrypoint<Bindings, ScanParams> {
   async run(event: WorkflowEvent<ScanParams>, step: WorkflowStep) {
     return runScan(
       {
-        sandbox: this.env.SANDBOX.getByName(event.payload.scanId),
+        sandbox: event.payload.runnerId ? runnerSandbox(dbConnect(this.env.DATABASE_URL), event.payload, event.payload.runnerId) : this.env.SANDBOX.getByName(event.payload.scanId),
         ledger: neonScanRepo(dbConnect(this.env.DATABASE_URL)),
         reports: this.env.REPORTS,
         readPriors: (params) => priorsOf(this.env, params),

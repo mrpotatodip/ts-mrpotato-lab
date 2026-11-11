@@ -4,6 +4,7 @@
 
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
+use std::sync::Mutex;
 use std::time::Duration;
 
 const ENGINE_URL: &str = "https://api.eliselab.com";
@@ -13,7 +14,7 @@ const REQUEST_TIMEOUT: Duration = Duration::from_secs(15);
 
 // A debug build (`pnpm app:dev`) may point at another API with ELISE_ENGINE_URL.
 // A release build cannot: the token only ever goes to api.eliselab.com.
-fn engine_url() -> String {
+pub(crate) fn engine_url() -> String {
     #[cfg(debug_assertions)]
     if let Ok(url) = std::env::var("ELISE_ENGINE_URL") {
         return url.trim_end_matches('/').to_string();
@@ -69,7 +70,7 @@ struct EnrollBody<'a> {
     code: &'a str,
 }
 
-fn client() -> reqwest::Client {
+pub(crate) fn client() -> reqwest::Client {
     reqwest::Client::builder()
         .timeout(REQUEST_TIMEOUT)
         .build()
@@ -80,11 +81,24 @@ fn keychain_entry() -> keyring::Result<keyring::Entry> {
     keyring::Entry::new(KEYCHAIN_SERVICE, KEYCHAIN_USER)
 }
 
-fn read_token() -> Option<String> {
-    keychain_entry().ok()?.get_password().ok()
+// The token is read from the keychain once and kept in memory: the work loop asks for it
+// every few seconds, and a keychain read each time would be slow and may prompt.
+static TOKEN_CACHE: Mutex<Option<String>> = Mutex::new(None);
+
+pub(crate) fn token() -> Option<String> {
+    let mut cached = TOKEN_CACHE.lock().expect("the token cache is not poisoned");
+    if cached.is_none() {
+        *cached = keychain_entry().ok().and_then(|entry| entry.get_password().ok());
+    }
+    cached.clone()
 }
 
-fn forget_token() {
+fn remember_token(token: &str) {
+    *TOKEN_CACHE.lock().expect("the token cache is not poisoned") = Some(token.to_string());
+}
+
+pub(crate) fn forget_token() {
+    *TOKEN_CACHE.lock().expect("the token cache is not poisoned") = None;
     if let Ok(entry) = keychain_entry() {
         let _ = entry.delete_credential();
     }
@@ -92,7 +106,7 @@ fn forget_token() {
 
 // Asks EliseLAB who this runner is. Also the proof that the pairing still works.
 pub async fn status() -> RunnerStatus {
-    let Some(token) = read_token() else {
+    let Some(token) = token() else {
         return RunnerStatus::Unpaired;
     };
     let answer = client()
@@ -141,6 +155,7 @@ pub async fn pair(code: &str) -> Result<RunnerStatus, RunnerError> {
     keychain_entry()
         .and_then(|entry| entry.set_password(&enrolled.token))
         .map_err(|_| RunnerError::KeychainFailed)?;
+    remember_token(&enrolled.token);
     Ok(RunnerStatus::Connected {
         name: enrolled.name,
         account_name: enrolled.account_name,
@@ -150,7 +165,7 @@ pub async fn pair(code: &str) -> Result<RunnerStatus, RunnerError> {
 // Tells EliseLAB to stop trusting this runner, then forgets the token. If EliseLAB cannot
 // be reached the token is kept, so a copy of it is never left alive without a way to retry.
 pub async fn unpair() -> Result<RunnerStatus, RunnerError> {
-    let Some(token) = read_token() else {
+    let Some(token) = token() else {
         return Ok(RunnerStatus::Unpaired);
     };
     let response = client()

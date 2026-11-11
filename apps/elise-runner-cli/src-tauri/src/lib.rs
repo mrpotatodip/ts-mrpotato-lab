@@ -1,5 +1,7 @@
+mod jobs;
 mod runner;
 
+use jobs::Activity;
 use runner::{RunnerError, RunnerStatus};
 use tauri::{
     menu::{Menu, MenuItem},
@@ -23,6 +25,11 @@ async fn unpair_runner() -> Result<RunnerStatus, RunnerError> {
     runner::unpair().await
 }
 
+#[tauri::command]
+fn runner_activity() -> Activity {
+    jobs::activity()
+}
+
 fn show_main_window(app: &tauri::AppHandle) {
     if let Some(window) = app.get_webview_window("main") {
         let _ = window.show();
@@ -32,9 +39,11 @@ fn show_main_window(app: &tauri::AppHandle) {
 
 pub fn run() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![runner_status, pair_runner, unpair_runner])
+        .invoke_handler(tauri::generate_handler![runner_status, pair_runner, unpair_runner, runner_activity])
         .setup(|app| {
-            let open = MenuItem::with_id(app, "open", "Open EliseLAB Runner", true, None::<&str>)?;
+            // The work loop asks EliseLAB for scans for as long as the app runs.
+            tauri::async_runtime::spawn(jobs::work_loop(app.handle().clone()));
+            let open =MenuItem::with_id(app, "open", "Open EliseLAB Runner", true, None::<&str>)?;
             let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&open, &quit])?;
 

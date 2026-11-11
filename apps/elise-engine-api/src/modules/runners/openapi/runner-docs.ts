@@ -1,5 +1,14 @@
 import { describeRoute } from "hono-openapi";
-import { CreatedRunnerSchema, EnrolledRunnerSchema, RunnerDisconnectedSchema, RunnerIdentitySchema, RunnerRemovedSchema, RunnersSchema } from "@repo/contracts/elise";
+import {
+  CreatedRunnerSchema,
+  EnrolledRunnerSchema,
+  RunnerDisconnectedSchema,
+  RunnerIdentitySchema,
+  RunnerJobReportedSchema,
+  RunnerJobSchema,
+  RunnerRemovedSchema,
+  RunnersSchema,
+} from "@repo/contracts/elise";
 import { EXAMPLE_ACCOUNT_ID, EXAMPLE_BASE_URL, SERVICE_SECURITY, bash, envelope, errorResponses, json, jsonResponse, routeText } from "#/lib/openapi";
 
 const RUNNER_ID = "5b3f0d7e-61a4-4c2f-9d58-2f7a1c9e4b10";
@@ -74,6 +83,44 @@ export const disconnectRunnerDoc = describeRoute({
     example: ["Disconnect:", bash(`curl -X DELETE ${EXAMPLE_BASE_URL}/runners/me \\`, '  -H "authorization: Bearer $RUNNER_TOKEN"')],
   }),
   responses: { 200: jsonResponse("The Runner is disconnected.", envelope(RunnerDisconnectedSchema)), ...errorResponses(401) },
+});
+
+export const claimJobDoc = describeRoute({
+  tags: ["runners"],
+  security: SERVICE_SECURITY,
+  summary: "Claim the next Scan waiting for this Runner",
+  description: routeText({
+    context:
+      "A paired Runner asks for work every few seconds. When a Scan was started on this Runner, the answer holds what to clone and the prompt to give the agent. With nothing waiting, `data` is null. Asking also records that the Runner is alive.",
+    steps: [
+      "The Worker reads the bearer token and finds the Runner. A removed or unknown one is 401.",
+      "In one UPDATE the Worker takes this Runner's oldest queued Scan and marks it claimed, so a Scan is never claimed twice.",
+      "The Worker returns the repository, the ref, the model options, the prompt and the earlier findings, or null.",
+    ],
+    example: ["Claim:", bash(`curl -X POST ${EXAMPLE_BASE_URL}/runners/claim \\`, '  -H "authorization: Bearer $RUNNER_TOKEN"')],
+  }),
+  responses: { 200: jsonResponse("The Scan to run, or null.", envelope(RunnerJobSchema.nullable())), ...errorResponses(401) },
+});
+
+export const reportJobDoc = describeRoute({
+  tags: ["runners"],
+  security: SERVICE_SECURITY,
+  summary: "Report the result of a Scan the Runner ran",
+  description: routeText({
+    context:
+      "The Runner sends what its agent wrote and what git said about the clone. The Scan then moves on as if the container had finished: the files are saved, the findings recorded, the History updated. A Scan on a Runner costs EliseLAB nothing, so its cost is recorded as zero.",
+    steps: [
+      "The Worker reads the bearer token and finds the Runner.",
+      "The Worker checks the Scan was claimed by this Runner and has not ended. A Scan that timed out is refused with 404.",
+      "The Worker keeps only the file names a Scan may have. A succeeded report with no `REPORT.md` is a failure.",
+      "The Worker reads the usage from the agent's own report and saves the files and the commit with the job.",
+    ],
+    example: [
+      "Report success:",
+      bash(`curl -X POST ${EXAMPLE_BASE_URL}/runners/jobs/$SCAN_ID/result \\`, '  -H "authorization: Bearer $RUNNER_TOKEN" \\', '  -H "Content-Type: application/json" \\', `  -d '{"state":"succeeded","checkout":{"commitSha":"7fd1a60b01f91b314f59955a4e4d4e80d8edf11d","headBranch":"main","kind":null},"files":{"REPORT.md":"# Report","findings.json":"{}"}}'`),
+    ],
+  }),
+  responses: { 200: jsonResponse("The report was accepted.", envelope(RunnerJobReportedSchema)), ...errorResponses(400, 401, 404) },
 });
 
 export const listRunnersDoc = describeRoute({

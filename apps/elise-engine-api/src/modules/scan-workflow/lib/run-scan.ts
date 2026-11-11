@@ -121,6 +121,8 @@ export const runScan = async (deps: ScanRunDeps, params: ScanParams, step: Workf
 
     await step.do("save-files", async () => {
       await runEffect(ledger.mark(params.accountId, params.scanId, { step: "saving" }));
+      const checkout = await sandbox.readCheckout?.();
+      if (checkout) await runEffect(ledger.mark(params.accountId, params.scanId, checkout));
       const saved = await runEffect(saveScanFilesEffect(reports, params.accountId, params.scanId, await sandbox.readFiles()));
       await runEffect(ledger.addFiles(params.accountId, params.scanId, saved));
       return saved.map((file) => file.name);

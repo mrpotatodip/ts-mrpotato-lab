@@ -25,6 +25,11 @@ const settle = (call: Promise<RunnerStatus>): Promise<RunnerResult> =>
     (error: unknown): RunnerResult => ({ ok: false, code: codeOf(error) }),
   );
 
+// What the work loop is doing, as src-tauri/src/jobs.rs keeps it.
+export type RunnerActivity = { state: "idle" } | { state: "running"; repo: string } | { state: "finished"; ok: boolean; repo: string; message: string };
+
+export const runnerActivity = (): Promise<RunnerActivity> => invoke<RunnerActivity>("runner_activity");
+
 export const runnerStatus = (): Promise<RunnerStatus> => invoke<RunnerStatus>("runner_status");
 
 export const pairRunner = (code: string): Promise<RunnerResult> => settle(invoke<RunnerStatus>("pair_runner", { code }));

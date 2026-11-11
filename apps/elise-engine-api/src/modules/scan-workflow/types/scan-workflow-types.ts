@@ -16,6 +16,12 @@ export type SandboxPort = {
   agentLogTail: () => Promise<string>;
   readUsage: () => Promise<ScanUsage | null>;
   readFiles: () => Promise<ScanFiles>;
+  // -----
+  // Only a sandbox that learns the commit after the agent ends has
+  // this (a Runner clones on its own computer). It is read before
+  // the results are recorded, so the Scan's commit and branch are set.
+  // -----
+  readCheckout?: () => Promise<ScanCheckout | null>;
   destroy: () => Promise<void>;
 };
 

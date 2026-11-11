@@ -11,6 +11,7 @@ export const CreateScanBodySchema = z.object({
   profile: z.enum(SCAN_PROFILES).optional(),
   budget: z.number().int().min(1).max(SCAN_AGENT_BUDGET_MAX).optional(),
   max_budget_usd: z.number().positive().optional(),
+  runner_id: z.uuid().optional().meta({ description: "Run the scan on this Runner of the account instead of in EliseLAB's cloud. The Runner must be connected, and the repository public." }),
   ref: z
     .string()
     .regex(SCANS_GIT_REF)

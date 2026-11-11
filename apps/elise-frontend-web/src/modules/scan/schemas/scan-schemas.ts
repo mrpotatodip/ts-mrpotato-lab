@@ -11,6 +11,7 @@ export const CreateScanInputSchema = z.object({
   skill: z.enum(SCAN_SKILLS),
   profile: z.enum(SCAN_PROFILES),
   ref: z.string().optional(),
+  runnerId: z.uuid().optional(),
 });
 
 export const ScanIdInputSchema = z.object({ scanId: z.string().regex(/^[\w-]+$/) });

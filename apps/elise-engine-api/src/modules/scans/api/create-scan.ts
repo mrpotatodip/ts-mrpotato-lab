@@ -1,6 +1,8 @@
 import { Effect } from "effect";
 import { Hono } from "hono";
+import { dbConnect } from "#/lib/db-connection";
 import { runEffect, toDbError } from "#/lib/effect-query";
+import { findConnectedRunnerEffect } from "#/modules/runners/queries";
 import type { HoldCredit } from "#/modules/credit";
 import { zValidator } from "#/lib/zod-validator";
 import type { AppEnv } from "#/types/variables";
@@ -16,7 +18,8 @@ app.post("/", createScanDoc, zValidator("header", AccountHeaderSchema), zValidat
   const spend = await c.get("deps").monthSpend(c.env, accountId);
   const deps = c.get("deps");
   const hold: HoldCredit = (scanId, holdUsd) => Effect.tryPromise({ try: () => deps.holdCredit(c.env, accountId, scanId, holdUsd), catch: toDbError });
-  const data = await runEffect(createScanSvc(c.env, deps.scanRepo(c.env), accountId, body, spend, deps.githubAccess(c.env, accountId), hold));
+  const runnerConnected = (runnerId: string) => findConnectedRunnerEffect(dbConnect(c.env.DATABASE_URL), accountId, runnerId);
+  const data = await runEffect(createScanSvc(c.env, deps.scanRepo(c.env), accountId, body, spend, deps.githubAccess(c.env, accountId), hold, runnerConnected));
   return c.json({ data, error: null }, 201);
 });
 

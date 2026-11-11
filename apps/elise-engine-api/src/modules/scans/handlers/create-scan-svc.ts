@@ -2,6 +2,7 @@ import { Effect } from "effect";
 import { Invalid, RateLimited, toExternalError, type Conflict, type DbError, type ExternalError } from "#/lib/effect-query";
 import { ScanOptionsSchema, type ScanParams } from "#/schemas";
 import { normalizeBranchName } from "#/modules/branches";
+import { RUNNER_JOB_NOT_CONNECTED, RUNNER_JOB_PRIVATE } from "#/modules/runners/constants";
 import type { GithubAccess } from "#/modules/github-installs";
 import { newScanId } from "#/modules/scan-store";
 import type { ScanRepo } from "#/modules/scan-ledger";
@@ -12,6 +13,11 @@ import { scanBlockOf } from "#/modules/billing";
 import { holdOf, type HoldCredit } from "#/modules/credit";
 import { budgetUsdOf, reservedUsdOf, type MonthSpend } from "#/modules/usage";
 
+// -----
+// Whether a Runner of the Account has paired and is not removed.
+// -----
+export type RunnerConnected = (runnerId: string) => Effect.Effect<boolean, DbError>;
+
 export const createScanSvc = (
   env: CreateScanEnv,
   repo: ScanRepo,
@@ -20,6 +26,7 @@ export const createScanSvc = (
   spend: MonthSpend,
   access?: GithubAccess,
   hold?: HoldCredit,
+  runnerConnected?: RunnerConnected,
 ): Effect.Effect<ScanQueued, Invalid | RateLimited | Conflict | DbError | ExternalError> =>
   Effect.gen(function* () {
     const ceiling = Number(env.MAX_BUDGET_USD);
@@ -51,23 +58,35 @@ export const createScanSvc = (
     }
 
     // -----
+    // A Scan on a Runner runs on the person's own Claude, so it takes
+    // no credit, needs no key of the Account's, and does not count
+    // against the plan's allowance or the monthly budget. The Runner
+    // must belong to the Account and be paired.
+    // -----
+    const runnerId = input.runner_id;
+    if (runnerId !== undefined && !(runnerConnected ? yield* runnerConnected(runnerId) : false)) {
+      return yield* new Invalid({ message: RUNNER_JOB_NOT_CONNECTED });
+    }
+    const onRunner = runnerId !== undefined;
+
+    // -----
     // The plan decides the key. A platform plan always uses the
     // platform's key and takes credit for the scan; an account plan
     // needs the Account's own key and takes none. An Account with no
     // plan uses its own key when it has one, as before.
     // -----
     const plan = spend.plan;
-    const usesOwnKey = plan ? plan.keySource === "account" : spend.ownKey;
-    if (plan?.keySource === "account" && !spend.ownKey) {
+    const usesOwnKey = onRunner || (plan ? plan.keySource === "account" : spend.ownKey);
+    if (!onRunner && plan?.keySource === "account" && !spend.ownKey) {
       return yield* new RateLimited({ code: "OWN_KEY_REQUIRED", message: "This plan runs scans on your own Anthropic key. Add it in Settings to run scans." });
     }
-    if (plan && plan.monthlyScanAllowance !== null && spend.scans >= plan.monthlyScanAllowance) {
+    if (!onRunner && plan && plan.monthlyScanAllowance !== null && spend.scans >= plan.monthlyScanAllowance) {
       return yield* new RateLimited({
         code: "SCAN_ALLOWANCE_EXCEEDED",
         message: `This plan allows ${plan.monthlyScanAllowance} scans a month and this account has used them. The allowance starts again on the 1st`,
       });
     }
-    const holdUsd = plan && plan.keySource === "platform" ? holdOf(maxBudgetUsd, plan.creditMarkup) : 0;
+    const holdUsd = !onRunner && plan && plan.keySource === "platform" ? holdOf(maxBudgetUsd, plan.creditMarkup) : 0;
     if (plan && holdUsd > plan.creditBalanceUsd) {
       return yield* new RateLimited({
         code: "INSUFFICIENT_CREDIT",
@@ -80,7 +99,7 @@ export const createScanSvc = (
     // it applies once an admin sets one, and counts in credit dollars
     // (cost times the markup). An Account with no plan always has it.
     // -----
-    if (plan === null || spend.budgetOverrideUsd !== null) {
+    if (!onRunner && (plan === null || spend.budgetOverrideUsd !== null)) {
       const markup = plan && plan.keySource === "platform" ? plan.creditMarkup : 1;
       const budgetUsd = budgetUsdOf(spend, env);
       const reservedUsd = reservedUsdOf(activeScans);
@@ -101,6 +120,7 @@ export const createScanSvc = (
     // -----
     const ref = input.ref === undefined ? undefined : (normalizeBranchName(input.ref) ?? undefined);
     const github = access === undefined ? null : yield* access.forRepo(record.url);
+    if (onRunner && github) return yield* new Invalid({ message: RUNNER_JOB_PRIVATE });
     const params: ScanParams = {
       scanId: newScanId(),
       accountId,
@@ -109,6 +129,7 @@ export const createScanSvc = (
       github: github ?? undefined,
       options,
       keySource: usesOwnKey ? "account" : "platform",
+      runnerId,
       createdAt: new Date().toISOString(),
     };
     yield* repo.create(params, record.id, Date.now() - SCANS_ACTIVE_WINDOW_MS);

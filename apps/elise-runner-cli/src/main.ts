@@ -2,7 +2,7 @@ import "./style.css";
 import { runnerStatus, type RunnerStatus } from "./api";
 import { COPY } from "./copy";
 import { h } from "./dom";
-import { connectedView, offlineView, pairView, topbar, type Tone } from "./views";
+import { connectedView, offlineView, pairView, stopActivity, topbar, type Tone } from "./views";
 
 const root = document.getElementById("app");
 if (!root) throw new Error("#app is missing from index.html");
@@ -39,6 +39,7 @@ const viewOf = (status: RunnerStatus | null): HTMLElement[] => {
 // Draws the whole window for one status. Only a change of status redraws it; typing in the
 // code field and the form's errors update their own elements.
 function show(status: RunnerStatus | null): void {
+  stopActivity();
   const pill = pillOf(status);
   root?.replaceChildren(topbar(pill.label, pill.tone), h("main", { id: "main" }, ...viewOf(status)));
   document.getElementById("code")?.focus();

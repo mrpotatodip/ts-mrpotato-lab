@@ -526,6 +526,13 @@
       "when": 1794367068250,
       "tag": "0074_free_doctor_doom",
       "breakpoints": true
+    },
+    {
+      "idx": 75,
+      "version": "7",
+      "when": 1794371082160,
+      "tag": "0075_dizzy_vin_gonzales",
+      "breakpoints": true
     }
   ]
 }

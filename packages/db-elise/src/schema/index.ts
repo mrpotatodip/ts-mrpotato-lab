@@ -14,6 +14,7 @@ export * from "./tenant-credit-ledger";
 export * from "./tenant-team-invites";
 export * from "./tenant-anthropic-keys";
 export * from "./tenant-runners";
+export * from "./scan-runner-jobs";
 export * from "./tenant-github-installations";
 export * from "./tenant-groups";
 export * from "./scans";
