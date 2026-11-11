@@ -167,7 +167,7 @@ async fn handle(app: &AppHandle, token: &str, job: Job) {
             state: "failed",
             error: Some(tail(&error, ERROR_MAX)),
             checkout: None,
-            agent_log: None,
+            agent_log: read_agent_log(&work),
             files: BTreeMap::new(),
         },
     };
@@ -372,6 +372,16 @@ async fn run_agent(work: &Path, job: &Job) -> Result<(), String> {
     Err(format!("claude exited {}: {} {}", status.code().unwrap_or(-1), tail(stderr.trim(), 1500), tail(stdout.trim(), 1500)))
 }
 
+// -----
+// The agent's own final report, which carries the usage. A failed scan sends it too: the
+// agent spent its tokens either way. None when the agent never started.
+// -----
+fn read_agent_log(work: &Path) -> Option<String> {
+    let log = fs::read_to_string(work.join("agent.log")).ok()?;
+    let log = log.trim();
+    (!log.is_empty()).then(|| tail(log, LOG_MAX))
+}
+
 fn read_trimmed(path: PathBuf) -> Option<String> {
     let text = fs::read_to_string(path).ok()?;
     let text = text.trim();
@@ -402,7 +412,7 @@ fn collect(work: &Path) -> Result<Report, String> {
             tail(log.trim(), 2400)
         ));
     }
-    let agent_log = fs::read_to_string(work.join("agent.log")).ok().map(|log| tail(log.trim(), LOG_MAX));
+    let agent_log = read_agent_log(work);
     Ok(Report {
         state: "succeeded",
         error: None,
