@@ -1,6 +1,7 @@
 import { Effect } from "effect";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { scanFindings } from "@repo/db-elise/schema";
+import { eq } from "drizzle-orm";
+import { scanFindings, tenantCreditLedger } from "@repo/db-elise/schema";
 import { openTestDb, seedTenant, type TestDb } from "#/__tests__/test-db";
 import type { ScanParams } from "#/schemas";
 import { neonScanRepo } from "#/modules/scan-ledger";
@@ -179,6 +180,17 @@ describe("neonScanRepo", () => {
 
     expect(await Effect.runPromise(repo.get(acme, "stall-1"))).toMatchObject({ status: "failed", step: null });
     expect(await Effect.runPromise(repo.get(acme, "stall-2"))).toMatchObject({ status: "queued" });
+  });
+
+  it("gives back the credit hold of a scan that stalled, with no charge", async () => {
+    const repo = neonScanRepo(test.http);
+    const record = await queue(repo, { ...paramsFor(acme, "stall-hold-1"), repo: "https://github.com/octocat/stall-hold" });
+    await test.raw.insert(tenantCreditLedger).values({ tenantId: acme, kind: "scan_hold", amountUsd: "-3.0000", scanId: "stall-hold-1" });
+
+    await Effect.runPromise(repo.create(paramsFor(acme, "stall-hold-2"), record.id, Date.now() + 60_000));
+    const entries = await test.raw.select({ kind: tenantCreditLedger.kind, amountUsd: tenantCreditLedger.amountUsd }).from(tenantCreditLedger).where(eq(tenantCreditLedger.scanId, "stall-hold-1"));
+
+    expect(entries.map((entry) => `${entry.kind} ${Number(entry.amountUsd)}`).toSorted()).toEqual(["scan_hold -3", "scan_settle 3"]);
   });
 
   it("keeps the requested ref and the commit that was read", async () => {

@@ -18,6 +18,7 @@ const app = buildApp({
   githubAccess: noGithubAccess,
   monthSpend: async () => ({ spentUsd: 0, scans: 0, tokens: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }, budgetOverrideUsd: null, budgetAllowanceUsd: null, platformSpentUsd: 0, platformReservedUsd: 0, ownKey: false, plan: null }),
   holdCredit: async () => ({ held: true, balanceUsd: 0 }),
+  releaseCredit: async () => ({ settled: true, chargeUsd: 0 }),
   sessionUserId: async () => signedInUser,
   userHasAccount: async () => userHoldsRole,
   userHasPower: async (_c, _userId, _accountId, power) => userHoldsRole && (!userIsWatcher || power === "company:summary:read"),

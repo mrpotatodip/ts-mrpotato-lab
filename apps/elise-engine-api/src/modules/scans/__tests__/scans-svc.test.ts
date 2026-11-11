@@ -4,7 +4,7 @@ import { fakeBindings } from "#/__tests__/fake-bindings";
 import { brokenScanRepo, memoryScanRepo } from "#/__tests__/memory-scan-repo";
 import { ExternalError } from "#/lib/effect-query";
 import type { PlanState } from "#/modules/billing";
-import type { HoldCredit } from "#/modules/credit";
+import type { HoldCredit, ReleaseCredit } from "#/modules/credit";
 import type { GithubAccess } from "#/modules/github-installs";
 import type { ScanRepo } from "#/modules/scan-ledger";
 import type { MonthSpend } from "#/modules/usage";
@@ -234,6 +234,20 @@ describe("createScanSvc: the plan", () => {
     expect(failure).toMatchObject({ _tag: "RateLimited", code: "INSUFFICIENT_CREDIT" });
     expect([...mem.rows.values()].map((row) => row.status)).toEqual(["failed"]);
     expect(created).toEqual([]);
+  });
+
+  it("gives the hold back when the workflow cannot start", async () => {
+    const released: string[] = [];
+    const release: ReleaseCredit = (scanId) => {
+      released.push(scanId);
+      return Effect.succeed({ settled: true, chargeUsd: 0 });
+    };
+    // SAFETY: the service calls only create on the workflow.
+    const { env } = fakeBindings({ SCAN_WORKFLOW: { create: down } as never });
+    const mem = memoryScanRepo();
+    await Effect.runPromise(Effect.flip(createScanSvc(env, mem.repo, "acme", input, onPlan({}), undefined, hold, undefined, release)));
+
+    expect(released).toEqual([...mem.rows.keys()]);
   });
 
   it.each([

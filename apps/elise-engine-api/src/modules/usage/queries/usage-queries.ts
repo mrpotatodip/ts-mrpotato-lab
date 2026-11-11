@@ -1,6 +1,6 @@
 import { and, eq, gte, inArray, sql } from "drizzle-orm";
 import { Effect } from "effect";
-import { scans, tenantAnthropicKeys, tenants } from "@repo/db-elise/schema";
+import { scanRunnerJobs, scans, tenantAnthropicKeys, tenants } from "@repo/db-elise/schema";
 import type { DbConnectType, PoolDbType } from "#/lib/db-connection";
 import { toDbError, type DbError } from "#/lib/effect-query";
 import { actorPartyOf, insertAuditEntry } from "#/modules/audit-trail";
@@ -14,53 +14,68 @@ import type { MonthSpend } from "#/modules/usage/types";
 // because a month of tokens stays far below 2^53.
 // platformCost and platformReserved count only scans on the
 // platform's key: the plan's included credit is spent by those.
+// count leaves out the scans that ran on a Runner: they take
+// nothing from the plan's allowance, so they must not use it up.
+// The five reads do not depend on each other and run together.
 // -----
 export const monthSpendEffect = (db: DbConnectType, tenantId: string, monthStart: Date): Effect.Effect<MonthSpend, DbError> =>
   Effect.gen(function* () {
-    const [totals] = yield* Effect.tryPromise({
-      try: () =>
-        db
-          .select({
-            cost: sql<string>`coalesce(sum(${scans.costUsd}), 0)`,
-            platformCost: sql<string>`coalesce(sum(${scans.costUsd}) filter (where ${scans.keySource} = 'platform'), 0)`,
-            count: sql<number>`count(*)::int`,
-            input: sql<string>`coalesce(sum(${scans.inputTokens}), 0)`,
-            output: sql<string>`coalesce(sum(${scans.outputTokens}), 0)`,
-            cacheRead: sql<string>`coalesce(sum(${scans.cacheReadTokens}), 0)`,
-            cacheWrite: sql<string>`coalesce(sum(${scans.cacheWriteTokens}), 0)`,
-          })
-          .from(scans)
-          .where(and(eq(scans.tenantId, tenantId), gte(scans.createdAt, monthStart))),
-      catch: toDbError,
-    });
-    const [tenant] = yield* Effect.tryPromise({
-      try: () =>
-        db
-          .select({ budget: tenants.monthlyScanBudgetUsd, allowance: tenants.monthlyScanBudgetAllowanceUsd })
-          .from(tenants)
-          .where(eq(tenants.id, tenantId)),
-      catch: toDbError,
-    });
-    const [reserved] = yield* Effect.tryPromise({
-      try: () =>
-        db
-          .select({ total: sql<string>`coalesce(sum(${scans.maxBudgetUsd}), 0)` })
-          .from(scans)
-          .where(
-            and(
-              eq(scans.tenantId, tenantId),
-              eq(scans.keySource, "platform"),
-              inArray(scans.status, ["queued", "running"]),
-              gte(scans.updatedAt, new Date(Date.now() - SCANS_ACTIVE_WINDOW_MS)),
-            ),
-          ),
-      catch: toDbError,
-    });
-    const [ownKey] = yield* Effect.tryPromise({
-      try: () => db.select({ tenantId: tenantAnthropicKeys.tenantId }).from(tenantAnthropicKeys).where(eq(tenantAnthropicKeys.tenantId, tenantId)),
-      catch: toDbError,
-    });
-    const plan = yield* planOfEffect(db, tenantId);
+    const read = Effect.all(
+      {
+        totals: Effect.tryPromise({
+          try: () =>
+            db
+              .select({
+                cost: sql<string>`coalesce(sum(${scans.costUsd}), 0)`,
+                platformCost: sql<string>`coalesce(sum(${scans.costUsd}) filter (where ${scans.keySource} = 'platform'), 0)`,
+                count: sql<number>`(count(*) filter (where not exists (select 1 from ${scanRunnerJobs} where ${scanRunnerJobs.scanId} = ${scans.id})))::int`,
+                input: sql<string>`coalesce(sum(${scans.inputTokens}), 0)`,
+                output: sql<string>`coalesce(sum(${scans.outputTokens}), 0)`,
+                cacheRead: sql<string>`coalesce(sum(${scans.cacheReadTokens}), 0)`,
+                cacheWrite: sql<string>`coalesce(sum(${scans.cacheWriteTokens}), 0)`,
+              })
+              .from(scans)
+              .where(and(eq(scans.tenantId, tenantId), gte(scans.createdAt, monthStart))),
+          catch: toDbError,
+        }),
+        tenant: Effect.tryPromise({
+          try: () =>
+            db
+              .select({ budget: tenants.monthlyScanBudgetUsd, allowance: tenants.monthlyScanBudgetAllowanceUsd })
+              .from(tenants)
+              .where(eq(tenants.id, tenantId)),
+          catch: toDbError,
+        }),
+        reserved: Effect.tryPromise({
+          try: () =>
+            db
+              .select({ total: sql<string>`coalesce(sum(${scans.maxBudgetUsd}), 0)` })
+              .from(scans)
+              .where(
+                and(
+                  eq(scans.tenantId, tenantId),
+                  eq(scans.keySource, "platform"),
+                  inArray(scans.status, ["queued", "running"]),
+                  gte(scans.updatedAt, new Date(Date.now() - SCANS_ACTIVE_WINDOW_MS)),
+                ),
+              ),
+          catch: toDbError,
+        }),
+        ownKey: Effect.tryPromise({
+          try: () => db.select({ tenantId: tenantAnthropicKeys.tenantId }).from(tenantAnthropicKeys).where(eq(tenantAnthropicKeys.tenantId, tenantId)),
+          catch: toDbError,
+        }),
+        plan: planOfEffect(db, tenantId),
+      },
+      { concurrency: "unbounded" },
+    );
+    const {
+      totals: [totals],
+      tenant: [tenant],
+      reserved: [reserved],
+      ownKey: [ownKey],
+      plan,
+    } = yield* read;
     return {
       spentUsd: Number(totals.cost),
       platformSpentUsd: Number(totals.platformCost),

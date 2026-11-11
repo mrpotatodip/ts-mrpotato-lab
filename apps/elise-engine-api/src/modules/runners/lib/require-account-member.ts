@@ -5,9 +5,9 @@ import type { AppEnv } from "#/types/variables";
 
 // -----
 // A signed-in login with any Role in the account named by
-// x-account-id. No Power is asked for yet: every member may
-// add a Runner. Ask for one here (requirePower) when that
-// should be for admins only.
+// x-account-id. Only listing Runners asks no more: a member who
+// starts a Scan picks one. Adding and removing a Runner are
+// Powers an admin holds (requirePower).
 // -----
 export const requireAccountMember = createMiddleware<AppEnv>(async (c, next) => {
   const deps = c.get("deps");

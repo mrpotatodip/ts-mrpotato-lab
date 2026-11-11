@@ -10,7 +10,7 @@ import { SCANS_ACTIVE_WINDOW_MS } from "#/modules/scans/constants";
 import type { CreateScanBody, ScanQueued } from "#/modules/scans/schemas";
 import type { CreateScanEnv } from "#/modules/scans/types";
 import { scanBlockOf } from "#/modules/billing";
-import { holdOf, type HoldCredit } from "#/modules/credit";
+import { holdOf, type HoldCredit, type ReleaseCredit } from "#/modules/credit";
 import { budgetUsdOf, reservedUsdOf, type MonthSpend } from "#/modules/usage";
 
 // -----
@@ -27,6 +27,7 @@ export const createScanSvc = (
   access?: GithubAccess,
   hold?: HoldCredit,
   runnerConnected?: RunnerConnected,
+  release?: ReleaseCredit,
 ): Effect.Effect<ScanQueued, Invalid | RateLimited | Conflict | DbError | ExternalError> =>
   Effect.gen(function* () {
     const ceiling = Number(env.MAX_BUDGET_USD);
@@ -148,9 +149,19 @@ export const createScanSvc = (
         });
       }
     }
+    // -----
+    // A scan whose workflow never starts is never settled by one, so
+    // its hold is given back here.
+    // -----
     yield* Effect.tryPromise({ try: () => env.SCAN_WORKFLOW.create({ id: params.scanId, params }), catch: toExternalError }).pipe(
       Effect.tapError((error) =>
-        repo.mark(accountId, params.scanId, { status: "failed", error: `could not start the workflow: ${String(error.cause)}` }).pipe(Effect.ignore),
+        Effect.all(
+          [
+            repo.mark(accountId, params.scanId, { status: "failed", error: `could not start the workflow: ${String(error.cause)}` }).pipe(Effect.ignore),
+            holdUsd > 0 && release ? release(params.scanId).pipe(Effect.ignore) : Effect.void,
+          ],
+          { discard: true },
+        ),
       ),
     );
     return { scanId: params.scanId, status: "queued" as const, ...options };

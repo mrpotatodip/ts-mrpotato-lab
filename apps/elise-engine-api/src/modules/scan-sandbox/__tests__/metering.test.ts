@@ -22,6 +22,13 @@ describe("createUsageScanner", () => {
     ]);
   });
 
+  it("counts input and cache once when message_delta repeats their running totals", () => {
+    const final = { type: "message_delta", usage: { input_tokens: 100, output_tokens: 40, cache_read_input_tokens: 50, cache_creation_input_tokens: 10 } };
+    const tokens = scan([sse(start), `data: ${JSON.stringify(final)}\n\n`]);
+
+    expect(tokens[1]).toEqual({ inputTokens: 0, outputTokens: 39, cacheReadTokens: 0, cacheWriteTokens: 0 });
+  });
+
   it("finds events split across chunks", () => {
     const text = sse(start);
     expect(scan([text.slice(0, 30), text.slice(30)])).toHaveLength(1);

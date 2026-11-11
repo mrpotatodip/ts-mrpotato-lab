@@ -22,4 +22,10 @@ export type HoldResult = { held: boolean; balanceUsd: number };
 // -----
 export type HoldCredit = (scanId: string, holdUsd: number) => Effect.Effect<HoldResult, DbError>;
 export type SettleResult = { settled: boolean; chargeUsd: number };
+
+// -----
+// Gives a scan's hold back with no charge, for a scan that never
+// started. Like the hold, the scan service gets it from its caller.
+// -----
+export type ReleaseCredit = (scanId: string) => Effect.Effect<SettleResult, DbError>;
 export type RenewResult = { grantedUsd: number; duplicate: boolean };

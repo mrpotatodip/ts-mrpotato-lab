@@ -15,7 +15,12 @@ export const insertRunnerJobEffect = (db: DbConnectType, job: NewRunnerJob): Eff
 // -----
 // The Runner takes its oldest queued job in one UPDATE. The state
 // is checked again in the UPDATE itself, so a job is never claimed
-// twice. Null when nothing is waiting.
+// twice. The pick skips a row another claim has locked, so two
+// claims at once take two jobs instead of one taking its job and
+// the other getting nothing. The pick is compared with = (one
+// value, read once): with IN, Postgres may read it again for every
+// row and one claim would take every queued job. Null when nothing
+// is waiting.
 // -----
 export const claimRunnerJobEffect = (db: DbConnectType, runnerId: string, now: Date): Effect.Effect<TScanRunnerJob | null, DbError> =>
   Effect.tryPromise({
@@ -25,11 +30,12 @@ export const claimRunnerJobEffect = (db: DbConnectType, runnerId: string, now: D
         .from(scanRunnerJobs)
         .where(and(eq(scanRunnerJobs.runnerId, runnerId), eq(scanRunnerJobs.state, "queued")))
         .orderBy(asc(scanRunnerJobs.createdAt))
-        .limit(1);
+        .limit(1)
+        .for("update", { skipLocked: true });
       return db
         .update(scanRunnerJobs)
         .set({ state: "claimed", claimedAt: now })
-        .where(and(inArray(scanRunnerJobs.scanId, next), eq(scanRunnerJobs.state, "queued")))
+        .where(and(eq(scanRunnerJobs.scanId, next), eq(scanRunnerJobs.state, "queued")))
         .returning();
     },
     catch: toDbError,

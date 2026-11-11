@@ -36,6 +36,7 @@ export const ACCESS_CATALOGUE = [
         label: "GitHub",
         children: [{ key: "installations", label: "GitHub installation", actions: ["create", "delete"] }],
       },
+      { key: "runners", label: "Runner", actions: ["create", "delete"] },
       {
         key: "findings",
         label: "Findings",
