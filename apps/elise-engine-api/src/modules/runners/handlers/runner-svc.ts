@@ -6,11 +6,12 @@ import {
   type EnrolledRunner,
   type EnrollRunnerBody,
   type RunnerIdentity,
+  type Runners,
 } from "@repo/contracts/elise";
 import type { DbConnectType } from "#/lib/db-connection";
-import { Forbidden, type DbError } from "#/lib/effect-query";
-import { RUNNER_PAIRING_INVALID } from "#/modules/runners/constants";
-import { claimPairingEffect, createRunnerEffect, findRunnerByTokenEffect, revokeRunnerByTokenEffect } from "#/modules/runners/queries";
+import { Forbidden, NotFound, type DbError } from "#/lib/effect-query";
+import { RUNNER_NOT_FOUND, RUNNER_PAIRING_INVALID } from "#/modules/runners/constants";
+import { claimPairingEffect, createRunnerEffect, findRunnerByTokenEffect, listRunnersEffect, removeRunnerEffect, revokeRunnerByTokenEffect } from "#/modules/runners/queries";
 import { generatePairingCode, generateRunnerToken, hashPairingCode, hashRunnerToken } from "#/modules/runners/utils";
 
 // -----
@@ -44,7 +45,14 @@ export const enrollRunnerSvc = (db: DbConnectType, body: EnrollRunnerBody): Effe
     return { ...identity, token };
   });
 
-export const disconnectRunnerSvc = (db: DbConnectType, token: string): Effect.Effect<boolean, DbError> =>
+export const listRunnersSvc = (db: DbConnectType, accountId: string): Effect.Effect<Runners, DbError> => listRunnersEffect(db, accountId, new Date());
+
+export const removeRunnerSvc = (db: DbConnectType, accountId: string, runnerId: string): Effect.Effect<{ removed: true }, NotFound | DbError> =>
+  removeRunnerEffect(db, accountId, runnerId, new Date()).pipe(
+    Effect.flatMap((removed) => (removed ? Effect.succeed({ removed: true as const }) : Effect.fail(new NotFound({ message: RUNNER_NOT_FOUND })))),
+  );
+
+export const disconnectRunnerSvc =(db: DbConnectType, token: string): Effect.Effect<boolean, DbError> =>
   Effect.gen(function* () {
     const tokenHash = yield* Effect.promise(() => hashRunnerToken(token));
     return yield* revokeRunnerByTokenEffect(db, tokenHash, new Date());

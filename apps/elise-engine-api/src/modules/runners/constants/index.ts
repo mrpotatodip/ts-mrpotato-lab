@@ -4,6 +4,7 @@
 // expired or used one.
 // -----
 export const RUNNER_PAIRING_INVALID = "This pairing code is invalid or has expired";
+export const RUNNER_NOT_FOUND = "Runner not found";
 
 // -----
 // A pairing code is 8 characters from an alphabet with

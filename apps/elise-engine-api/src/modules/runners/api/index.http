@@ -28,3 +28,17 @@ Authorization: Bearer <runner-token>
 # Disconnect. The Runner app sends this when the person presses Disconnect; the token stops working.
 DELETE {{baseUrl}}/runners/me
 Authorization: Bearer <runner-token>
+
+###
+
+# List the account's Runners. Needs a session of any member.
+GET {{baseUrl}}/runners
+Authorization: Bearer <session-token>
+x-account-id: {{account}}
+
+###
+
+# Remove a Runner. A connected computer stops working at once.
+DELETE {{baseUrl}}/runners/5b3f0d7e-61a4-4c2f-9d58-2f7a1c9e4b10
+Authorization: Bearer <session-token>
+x-account-id: {{account}}

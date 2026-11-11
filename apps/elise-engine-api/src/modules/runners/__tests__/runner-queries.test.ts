@@ -3,7 +3,7 @@ import { Effect } from "effect";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { authUser, tenantRunners } from "@repo/db-elise";
 import { openTestDb, seedTenant, type TestDb } from "#/__tests__/test-db";
-import { claimPairingEffect, createRunnerEffect, findRunnerByTokenEffect, revokeRunnerByTokenEffect } from "#/modules/runners/queries";
+import { claimPairingEffect, createRunnerEffect, findRunnerByTokenEffect, listRunnersEffect, removeRunnerEffect, revokeRunnerByTokenEffect } from "#/modules/runners/queries";
 
 let test: TestDb;
 let tenantId: string;
@@ -61,6 +61,46 @@ describe("pairing a Runner", () => {
     const [row] = await test.raw.select().from(tenantRunners).where(eq(tenantRunners.tokenHash, "token-cleared"));
     expect(row).toMatchObject({ pairingCodeHash: null, pairingExpiresAt: null });
     expect(row?.pairedAt).toEqual(NOW);
+  });
+});
+
+describe("listing Runners", () => {
+  it("tells waiting, expired and connected apart, newest first, and leaves out the removed", async () => {
+    const other = await seedTenant(test, "other-account");
+    const list = (id: string, at: Date) => run(listRunnersEffect(test.http, id, at));
+    await addRunner("list-waiting");
+    await addRunner("list-expired", new Date("2026-11-11T08:00:00Z"));
+    await addRunner("list-connected");
+    await claim("list-connected", "token-list");
+    await addRunner("list-removed");
+    await test.raw.update(tenantRunners).set({ revokedAt: NOW }).where(eq(tenantRunners.pairingCodeHash, "list-removed"));
+
+    const states = (await list(tenantId, NOW)).filter((runner) => runner.name === "Jayson MacBook").map((runner) => runner.state);
+    expect(states).toEqual(expect.arrayContaining(["waiting", "expired", "connected"]));
+    expect(states).not.toContain("removed");
+    expect(await list(other.tenantId, NOW)).toEqual([]);
+  });
+});
+
+describe("removing a Runner", () => {
+  it("stops a connected one, once, and only inside its own account", async () => {
+    const other = await seedTenant(test, "third-account");
+    await addRunner("code-remove");
+    const identity = await claim("code-remove", "token-remove");
+    const runnerId = identity?.runnerId ?? "";
+
+    const wrongAccount = await run(removeRunnerEffect(test.http, other.tenantId, runnerId, LATER));
+    const first = await run(removeRunnerEffect(test.http, tenantId, runnerId, LATER));
+    const second = await run(removeRunnerEffect(test.http, tenantId, runnerId, LATER));
+
+    expect({ wrongAccount, first, second }).toEqual({ wrongAccount: false, first: true, second: false });
+    expect(await run(findRunnerByTokenEffect(test.http, "token-remove", LATER))).toBeNull();
+  });
+
+  it("clears a code that was not used", async () => {
+    const created = await addRunner("code-unused");
+    await run(removeRunnerEffect(test.http, tenantId, created.id, NOW));
+    expect(await claim("code-unused", "token-unused")).toBeNull();
   });
 });
 

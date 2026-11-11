@@ -1,7 +1,7 @@
-import { and, eq, gt, isNull } from "drizzle-orm";
+import { and, desc, eq, gt, isNull } from "drizzle-orm";
 import { Effect } from "effect";
 import { tenantRunners, tenants } from "@repo/db-elise";
-import type { RunnerIdentity } from "@repo/contracts/elise";
+import type { Runner, RunnerIdentity } from "@repo/contracts/elise";
 import type { DbConnectType } from "#/lib/db-connection";
 import { Forbidden, toDbError, type DbError } from "#/lib/effect-query";
 import { actorPartyOf } from "#/modules/audit-trail";
@@ -55,6 +55,48 @@ export const claimPairingEffect = (db: DbConnectType, claim: PairingClaim): Effe
         .returning({ id: tenantRunners.id, name: tenantRunners.name, tenantId: tenantRunners.tenantId }),
     catch: toDbError,
   }).pipe(Effect.flatMap((rows) => identityOrNull(db, rows)));
+
+// -----
+// The Account's Runners, newest first, without the removed
+// ones. The state is read from the row: a token means
+// connected, else an unexpired code means waiting.
+// -----
+export const listRunnersEffect = (db: DbConnectType, tenantId: string, now: Date): Effect.Effect<Runner[], DbError> =>
+  Effect.tryPromise({
+    try: () => db.select().from(tenantRunners).where(and(eq(tenantRunners.tenantId, tenantId), isNull(tenantRunners.revokedAt))).orderBy(desc(tenantRunners.createdAt)),
+    catch: toDbError,
+  }).pipe(
+    Effect.map((rows) =>
+      rows.map((row): Runner => {
+        const live = row.pairingExpiresAt !== null && row.pairingExpiresAt > now;
+        return {
+          id: row.id,
+          name: row.name,
+          state: row.tokenHash !== null ? "connected" : live ? "waiting" : "expired",
+          createdAt: row.createdAt.toISOString(),
+          expiresAt: row.pairingExpiresAt?.toISOString() ?? null,
+          pairedAt: row.pairedAt?.toISOString() ?? null,
+          lastSeenAt: row.lastSeenAt?.toISOString() ?? null,
+        };
+      }),
+    ),
+  );
+
+// -----
+// An admin removes a Runner of the Account. Its token stops
+// working and an unused code is cleared. False when the
+// Account has no such live Runner.
+// -----
+export const removeRunnerEffect = (db: DbConnectType, tenantId: string, runnerId: string, now: Date): Effect.Effect<boolean, DbError> =>
+  Effect.tryPromise({
+    try: () =>
+      db
+        .update(tenantRunners)
+        .set({ revokedAt: now, pairingCodeHash: null, pairingExpiresAt: null })
+        .where(and(eq(tenantRunners.id, runnerId), eq(tenantRunners.tenantId, tenantId), isNull(tenantRunners.revokedAt)))
+        .returning({ id: tenantRunners.id }),
+    catch: toDbError,
+  }).pipe(Effect.map((rows) => rows.length > 0));
 
 // -----
 // A Runner stops itself: its token no longer works. False

@@ -1,5 +1,5 @@
 import { describeRoute } from "hono-openapi";
-import { CreatedRunnerSchema, EnrolledRunnerSchema, RunnerDisconnectedSchema, RunnerIdentitySchema } from "@repo/contracts/elise";
+import { CreatedRunnerSchema, EnrolledRunnerSchema, RunnerDisconnectedSchema, RunnerIdentitySchema, RunnerRemovedSchema, RunnersSchema } from "@repo/contracts/elise";
 import { EXAMPLE_ACCOUNT_ID, EXAMPLE_BASE_URL, SERVICE_SECURITY, bash, envelope, errorResponses, json, jsonResponse, routeText } from "#/lib/openapi";
 
 const RUNNER_ID = "5b3f0d7e-61a4-4c2f-9d58-2f7a1c9e4b10";
@@ -74,4 +74,36 @@ export const disconnectRunnerDoc = describeRoute({
     example: ["Disconnect:", bash(`curl -X DELETE ${EXAMPLE_BASE_URL}/runners/me \\`, '  -H "authorization: Bearer $RUNNER_TOKEN"')],
   }),
   responses: { 200: jsonResponse("The Runner is disconnected.", envelope(RunnerDisconnectedSchema)), ...errorResponses(401) },
+});
+
+export const listRunnersDoc = describeRoute({
+  tags: ["runners"],
+  security: SERVICE_SECURITY,
+  summary: "List the account's Runners",
+  description: routeText({
+    context: "The dashboard shows each Runner of the account: waiting for its code to be used, expired, or connected, with when it was last seen. A removed Runner is not listed.",
+    steps: [
+      "The Worker checks the session and that the login holds a Role in the account named by `x-account-id`.",
+      "The Worker reads the account's Runners that are not removed, newest first.",
+      "A Runner with a token is `connected`. One with an unexpired pairing code is `waiting`. Any other is `expired`.",
+    ],
+    example: ["List the Runners:", bash(`curl ${EXAMPLE_BASE_URL}/runners \\`, '  -H "authorization: Bearer $SESSION_TOKEN" \\', `  -H "x-account-id: ${EXAMPLE_ACCOUNT_ID}"`)],
+  }),
+  responses: { 200: jsonResponse("The Runners.", envelope(RunnersSchema)), ...errorResponses(400, 401, 403) },
+});
+
+export const removeRunnerDoc = describeRoute({
+  tags: ["runners"],
+  security: SERVICE_SECURITY,
+  summary: "Remove a Runner",
+  description: routeText({
+    context: "A member removes a Runner of the account. A connected computer stops working at once, and its app shows that it was removed. A pairing code that was not used stops working.",
+    steps: [
+      "The Worker checks the session and that the login holds a Role in the account named by `x-account-id`.",
+      "The Worker marks the Runner removed and clears its pairing code, but only if it belongs to the account and is not already removed.",
+      "A Runner of another account, or one already removed, is 404.",
+    ],
+    example: ["Remove a Runner:", bash(`curl -X DELETE ${EXAMPLE_BASE_URL}/runners/${RUNNER_ID} \\`, '  -H "authorization: Bearer $SESSION_TOKEN" \\', `  -H "x-account-id: ${EXAMPLE_ACCOUNT_ID}"`)],
+  }),
+  responses: { 200: jsonResponse("The Runner is removed.", envelope(RunnerRemovedSchema)), ...errorResponses(400, 401, 403, 404) },
 });
