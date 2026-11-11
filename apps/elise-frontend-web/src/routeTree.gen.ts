@@ -27,6 +27,7 @@ import { Route as AppScansScanIdRouteImport } from './routes/_app/scans/$scanId'
 import { Route as AppSettingsIndexRouteImport } from './routes/_app/settings.index'
 import { Route as AppSettingsBudgetRouteImport } from './routes/_app/settings.budget'
 import { Route as AppSettingsHistoryRouteImport } from './routes/_app/settings.history'
+import { Route as AppSettingsPlanRouteImport } from './routes/_app/settings.plan'
 import { Route as AppSettingsProvidersRouteImport } from './routes/_app/settings.providers'
 import { Route as AppSummaryIndexRouteImport } from './routes/_app/summary.index'
 import { Route as AppSummaryRepoIdRouteImport } from './routes/_app/summary.$repoId'
@@ -121,6 +122,11 @@ const AppSettingsHistoryRoute = AppSettingsHistoryRouteImport.update({
   path: '/history',
   getParentRoute: () => AppSettingsRoute,
 } as any)
+const AppSettingsPlanRoute = AppSettingsPlanRouteImport.update({
+  id: '/plan',
+  path: '/plan',
+  getParentRoute: () => AppSettingsRoute,
+} as any)
 const AppSettingsProvidersRoute = AppSettingsProvidersRouteImport.update({
   id: '/providers',
   path: '/providers',
@@ -158,6 +164,7 @@ export interface FileRoutesByFullPath {
   '/scans/$scanId': typeof AppScansScanIdRoute
   '/settings/budget': typeof AppSettingsBudgetRoute
   '/settings/history': typeof AppSettingsHistoryRoute
+  '/settings/plan': typeof AppSettingsPlanRoute
   '/settings/providers': typeof AppSettingsProvidersRoute
   '/summary/$repoId': typeof AppSummaryRepoIdRoute
   '/repos/': typeof AppReposIndexRoute
@@ -180,6 +187,7 @@ export interface FileRoutesByTo {
   '/scans/$scanId': typeof AppScansScanIdRoute
   '/settings/budget': typeof AppSettingsBudgetRoute
   '/settings/history': typeof AppSettingsHistoryRoute
+  '/settings/plan': typeof AppSettingsPlanRoute
   '/settings/providers': typeof AppSettingsProvidersRoute
   '/summary/$repoId': typeof AppSummaryRepoIdRoute
   '/repos': typeof AppReposIndexRoute
@@ -205,6 +213,7 @@ export interface FileRoutesById {
   '/_app/scans/$scanId': typeof AppScansScanIdRoute
   '/_app/settings/budget': typeof AppSettingsBudgetRoute
   '/_app/settings/history': typeof AppSettingsHistoryRoute
+  '/_app/settings/plan': typeof AppSettingsPlanRoute
   '/_app/settings/providers': typeof AppSettingsProvidersRoute
   '/_app/summary/$repoId': typeof AppSummaryRepoIdRoute
   '/_app/repos/': typeof AppReposIndexRoute
@@ -230,6 +239,7 @@ export interface FileRouteTypes {
     | '/scans/$scanId'
     | '/settings/budget'
     | '/settings/history'
+    | '/settings/plan'
     | '/settings/providers'
     | '/summary/$repoId'
     | '/repos/'
@@ -252,6 +262,7 @@ export interface FileRouteTypes {
     | '/scans/$scanId'
     | '/settings/budget'
     | '/settings/history'
+    | '/settings/plan'
     | '/settings/providers'
     | '/summary/$repoId'
     | '/repos'
@@ -276,6 +287,7 @@ export interface FileRouteTypes {
     | '/_app/scans/$scanId'
     | '/_app/settings/budget'
     | '/_app/settings/history'
+    | '/_app/settings/plan'
     | '/_app/settings/providers'
     | '/_app/summary/$repoId'
     | '/_app/repos/'
@@ -421,6 +433,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSettingsHistoryRouteImport
       parentRoute: typeof AppSettingsRoute
     }
+    '/_app/settings/plan': {
+      id: '/_app/settings/plan'
+      path: '/plan'
+      fullPath: '/settings/plan'
+      preLoaderRoute: typeof AppSettingsPlanRouteImport
+      parentRoute: typeof AppSettingsRoute
+    }
     '/_app/settings/providers': {
       id: '/_app/settings/providers'
       path: '/providers'
@@ -455,6 +474,7 @@ declare module '@tanstack/react-router' {
 interface AppSettingsRouteChildren {
   AppSettingsBudgetRoute: typeof AppSettingsBudgetRoute
   AppSettingsHistoryRoute: typeof AppSettingsHistoryRoute
+  AppSettingsPlanRoute: typeof AppSettingsPlanRoute
   AppSettingsProvidersRoute: typeof AppSettingsProvidersRoute
   AppSettingsIndexRoute: typeof AppSettingsIndexRoute
 }
@@ -462,6 +482,7 @@ interface AppSettingsRouteChildren {
 const AppSettingsRouteChildren: AppSettingsRouteChildren = {
   AppSettingsBudgetRoute: AppSettingsBudgetRoute,
   AppSettingsHistoryRoute: AppSettingsHistoryRoute,
+  AppSettingsPlanRoute: AppSettingsPlanRoute,
   AppSettingsProvidersRoute: AppSettingsProvidersRoute,
   AppSettingsIndexRoute: AppSettingsIndexRoute,
 }

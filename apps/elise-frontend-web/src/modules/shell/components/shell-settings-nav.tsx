@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { ChevronUp, History, KeyRound, Settings, Wallet } from "lucide-react";
+import { ChevronUp, CreditCard, History, KeyRound, Settings, Wallet } from "lucide-react";
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "#/components/ui/collapsible";
 import { cn } from "#/lib/utils";
 import { NAV_ACTIVE, NAV_CHEVRON, NAV_ICON, NAV_ROW, NAV_TOGGLE, NavHint } from "./shell-nav";
@@ -8,6 +8,7 @@ import { TREE_ITEM, TREE_ITEM_LINE, TREE_LINK } from "./shell-repo-tree";
 
 const CHILDREN = [
   { to: "/settings/budget", label: "Budget", icon: Wallet },
+  { to: "/settings/plan", label: "Plan", icon: CreditCard },
   { to: "/settings/providers", label: "Providers", icon: KeyRound },
   { to: "/settings/history", label: "History", icon: History },
 ] as const;
