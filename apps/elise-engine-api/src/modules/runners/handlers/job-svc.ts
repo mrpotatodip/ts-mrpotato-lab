@@ -76,9 +76,11 @@ const branchOf = (ref: string | null, checkout: RunnerJobResultBody["checkout"])
 
 // -----
 // A succeeded report with no REPORT.md is a failure, as in the
-// container. The cost is zero: a Scan on a Runner runs on the
-// person's own Claude, so EliseLAB has nothing to bill and the
-// agent's estimate must not count against the month's spend.
+// container. The cost is the agent's own estimate at API prices,
+// kept so the person can see what the scan would have cost. It
+// carries no markup and is never billed: a Scan on a Runner runs
+// on the person's own Claude, takes no credit hold, settles
+// nothing, and the month's spend leaves it out.
 // -----
 export const reportJobSvc = (db: DbConnectType, runnerId: string, scanId: string, body: RunnerJobResultBody): Effect.Effect<{ accepted: true }, NotFound | DbError> =>
   Effect.gen(function* () {
@@ -95,7 +97,7 @@ export const reportJobSvc = (db: DbConnectType, runnerId: string, scanId: string
       error: succeeded ? null : (body.error ?? RUNNER_JOB_NO_REPORT),
       commitSha: body.checkout?.commitSha ?? null,
       branch: branchOf(job.ref, body.checkout),
-      usageJson: usage === null ? null : JSON.stringify({ ...usage, costUsd: 0 }),
+      usageJson: usage === null ? null : JSON.stringify(usage),
       filesJson: succeeded ? JSON.stringify(files) : null,
       now: new Date(),
     });

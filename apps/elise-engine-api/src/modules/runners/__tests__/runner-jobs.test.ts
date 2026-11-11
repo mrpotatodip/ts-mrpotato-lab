@@ -101,6 +101,19 @@ describe("claiming a job", () => {
     expect(await jobOf(broken)).toMatchObject({ state: "failed", error: expect.stringContaining("could not be read") });
   });
 
+  it("keeps a Runner scan's cost estimate out of the month's spend and counts a plain scan's cost", async () => {
+    const monthStart = new Date("2026-11-01T00:00:00Z");
+    const before = (await run(monthSpendEffect(test.http, tenantId, monthStart))).spentUsd;
+    const onRunner = await newScan();
+    await test.raw.update(scans).set({ costUsd: "4.0000" }).where(eq(scans.id, onRunner));
+    await queue(onRunner);
+    counter += 1;
+    await test.raw.insert(scans).values(scanValues(tenantId, repoId, `job-plain-${counter}`, NOW.toISOString(), { costUsd: "0.5000" }));
+    const after = (await run(monthSpendEffect(test.http, tenantId, monthStart))).spentUsd;
+
+    expect(after - before).toBeCloseTo(0.5);
+  });
+
   it("cancels the job of a scan that stalled when a newer scan of the repo starts", async () => {
     counter += 1;
     const stalledId = `job-stalled-${counter}`;
@@ -129,14 +142,14 @@ describe("reporting a job", () => {
     return scanId;
   };
 
-  it("keeps the files, and the usage with a cost of zero", async () => {
+  it("keeps the files, and the usage with the agent's own cost estimate", async () => {
     const scanId = await claimed();
     await report(scanId, { state: "succeeded", agentLog: AGENT_LOG, files: { ...FILES, "notes.txt": "dropped" } });
     const job = await jobOf(scanId);
 
     expect(job.state).toBe("succeeded");
     expect(JSON.parse(job.filesJson ?? "{}")).toEqual(FILES);
-    expect(JSON.parse(job.usageJson ?? "{}")).toMatchObject({ inputTokens: 10, outputTokens: 20, costUsd: 0, turns: 4 });
+    expect(JSON.parse(job.usageJson ?? "{}")).toMatchObject({ inputTokens: 10, outputTokens: 20, costUsd: 1.5, turns: 4 });
   });
 
   it("fails a scan that reports success without REPORT.md", async () => {
@@ -214,7 +227,7 @@ describe("the runner as a sandbox", () => {
 
     expect(await sandbox.pollAgent()).toEqual({ state: "succeeded" });
     expect(await sandbox.readFiles()).toEqual({ "REPORT.md": "# Report" });
-    expect(await sandbox.readUsage()).toMatchObject({ inputTokens: 5, costUsd: 0 });
+    expect(await sandbox.readUsage()).toMatchObject({ inputTokens: 5, costUsd: 3 });
     expect(await sandbox.readCheckout()).toEqual({ commitSha: "b".repeat(40), branch: "main" });
   });
 
