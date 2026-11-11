@@ -22,7 +22,7 @@ export function ScanVerdictRun({ repoId, repoUrl, commit, last }: ScanVerdictRun
   const { data: list } = useQuery(scansQuery());
   const { data: usage } = useQuery(usageQuery());
   const running = list?.scans.some((scan) => scan.repoId === repoId && isScanActive(scan.status)) === true;
-  const budgetSpent = usage !== undefined && usage.remainingUsd <= 0;
+  const budgetSpent = usage !== undefined && usage.budgetApplies !== false && usage.remainingUsd <= 0;
 
   const start = useMutation({
     mutationFn: (input: CreateScanInput) => createScan({ data: input }),

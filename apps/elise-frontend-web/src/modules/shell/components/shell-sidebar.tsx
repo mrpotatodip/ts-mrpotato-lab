@@ -83,10 +83,10 @@ export function ShellSidebar({ accountName, userName, email, scanCount, running,
           </Hint>
         )}
 
-        <Hint label="Summary" collapsed={collapsed}>
-          <Link to="/summary" aria-label="Summary" className={cn(ROW, collapsed && "justify-center px-0")} activeProps={ACTIVE}>
+        <Hint label="Security status" collapsed={collapsed}>
+          <Link to="/summary" aria-label="Security status" className={cn(ROW, collapsed && "justify-center px-0")} activeProps={ACTIVE}>
             <ClipboardCheck className={ICON} strokeWidth={1.5} />
-            {!collapsed && "Summary"}
+            {!collapsed && "Security status"}
           </Link>
         </Hint>
 

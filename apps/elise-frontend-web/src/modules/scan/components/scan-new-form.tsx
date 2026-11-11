@@ -128,7 +128,7 @@ export function ScanNewForm({ onDone, repo, startBranch, startRef, startOptions 
   const [branchPick, setBranchPick] = useState(startRef ? SCAN_OTHER_BRANCH : (startBranch ?? SCAN_DEFAULT_BRANCH));
   const { data: list } = useQuery(scansQuery());
   const { data: usage } = useQuery(usageQuery());
-  const budgetSpent = usage !== undefined && usage.remainingUsd <= 0;
+  const budgetSpent = usage !== undefined && usage.budgetApplies !== false && usage.remainingUsd <= 0;
   const { data: repoList } = useQuery(scanReposQuery());
   const { data: connected, isPending: connecting } = useQuery(githubReposQuery());
   const { data: installs } = useQuery(githubInstallationsQuery());
@@ -353,11 +353,15 @@ export function ScanNewForm({ onDone, repo, startBranch, startRef, startOptions 
         </p>
         <div className="flex items-center justify-end gap-3">
           <p className={cn("mr-auto text-sm leading-relaxed", budgetSpent ? "text-status-danger" : "text-muted-foreground")} role={budgetSpent ? "alert" : undefined}>
-            {usage === undefined
-              ? "Each audit stops at a spend limit, and your account has a monthly budget."
-              : budgetSpent
-                ? usageBlockedNote(usage)
-                : `${usageUsd(usage.remainingUsd)} of this month's budget is left. Each audit stops at its own spend limit.`}
+            {runner !== undefined
+              ? `This audit runs on ${runner.name}'s own Claude, so no spend limit applies. It will show what it would have cost.`
+              : usage === undefined
+                ? "Each audit stops at a spend limit, and your account has a monthly budget."
+                : usage.budgetApplies === false
+                  ? "Your own key pays for this audit, so no monthly budget applies. Each audit still stops at its own spend limit."
+                  : budgetSpent
+                    ? usageBlockedNote(usage)
+                    : `${usageUsd(usage.remainingUsd)} of this month's budget is left. Each audit stops at its own spend limit.`}
           </p>
           <DialogClose render={<Button type="button" variant="outline" />}>Cancel</DialogClose>
           <Button type="submit" disabled={start.isPending || connecting || selected === null || selected.running || (budgetSpent && runner === undefined)}>

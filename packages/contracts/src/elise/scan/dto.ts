@@ -83,6 +83,16 @@ export const ScanSummarySchema = z.object({
   recheck: RecheckTallySchema.nullable(),
 });
 
+// -----
+// The Runner a scan ran on: its ID and the name the account gave
+// it. The name stays after the Runner is removed. Absent for a
+// scan that ran in EliseLAB's cloud.
+// -----
+export const ScanRunnerSchema = z.object({
+  id: z.uuid(),
+  name: z.string(),
+});
+
 export const ScanStatusSchema = ScanOptionsSchema.extend({
   scanId: z.string(),
   accountId: z.string(),
@@ -104,6 +114,7 @@ export const ScanStatusSchema = ScanOptionsSchema.extend({
   step: z.enum(SCAN_STEP_VALUES).nullish(),
   usage: ScanUsageSchema.nullish(),
   summary: ScanSummarySchema.nullish(),
+  runner: ScanRunnerSchema.nullish(),
 });
 
 export const ScanListSchema = z.object({
@@ -122,6 +133,7 @@ export type ScanSummary = z.infer<typeof ScanSummarySchema>;
 export type ScanArtifact = z.infer<typeof ScanArtifactSchema>;
 export type ScanUsage = z.infer<typeof ScanUsageSchema>;
 export type ScanState = z.infer<typeof ScanStateSchema>;
+export type ScanRunner = z.infer<typeof ScanRunnerSchema>;
 export type ScanStatus = z.infer<typeof ScanStatusSchema>;
 export type ScanList = z.infer<typeof ScanListSchema>;
 export type ScanQueued = z.infer<typeof ScanQueuedSchema>;
@@ -129,9 +141,14 @@ export type ScanQueued = z.infer<typeof ScanQueuedSchema>;
 // -----
 // GET /usage: what the account spent this month (UTC) and what is left.
 // reservedUsd is the cap of the scans that are still running.
+// budgetApplies says whether the monthly budget can stop a new scan:
+// false for an account that pays for its scans itself (its own key)
+// and has no budget an admin set, so a spent budget blocks nothing.
+// Absent from an older engine, which means it applies.
 // -----
 export const UsageSchema = z.object({
   month: z.string(),
+  budgetApplies: z.boolean().optional(),
   budgetUsd: z.number().min(0),
   allowanceUsd: z.number().min(0).optional(),
   spentUsd: z.number().min(0),

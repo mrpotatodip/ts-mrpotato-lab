@@ -87,6 +87,7 @@ describe("summarizeUsage", () => {
   it("subtracts what was spent and reserved from the budget", () => {
     expect(summarizeUsage(new Date("2026-11-07T00:00:00Z"), spend, ENV, 2)).toEqual({
       month: "2026-11",
+      budgetApplies: true,
       budgetUsd: 20,
       allowanceUsd: 1000,
       spentUsd: 4.5,
@@ -95,6 +96,14 @@ describe("summarizeUsage", () => {
       scans: 6,
       tokens: spend.tokens,
     });
+  });
+
+  it.each([
+    ["no plan and no own key", { plan: null, ownKey: false, budgetOverrideUsd: null }, true],
+    ["no plan and an own key", { plan: null, ownKey: true, budgetOverrideUsd: null }, false],
+    ["no plan, an own key and a budget an admin set", { plan: null, ownKey: true, budgetOverrideUsd: 10 }, true],
+  ])("says whether the monthly budget applies with %s: %s", (_name, over, expected) => {
+    expect(summarizeUsage(new Date("2026-11-07T00:00:00Z"), { ...spend, ...over }, ENV, 0).budgetApplies).toBe(expected);
   });
 
   it("goes negative when the month passed the budget", () => {

@@ -53,6 +53,7 @@ export function fakeBindings(overrides: Partial<Bindings> = {}, workflowStatus: 
     MODEL: "claude-sonnet-5-5",
     EFFORT: "high",
     MAX_BUDGET_USD: "2",
+    MAX_BUDGET_OWN_KEY_USD: "10",
     MAX_ACTIVE_SCANS: "3",
     MONTHLY_BUDGET_USD: "20",
     BUDGET_ALLOWANCE_USD: "1000",
