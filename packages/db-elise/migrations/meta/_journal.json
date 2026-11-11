@@ -540,6 +540,13 @@
       "when": 1794393256205,
       "tag": "0076_runner_admin_powers",
       "breakpoints": true
+    },
+    {
+      "idx": 77,
+      "version": "7",
+      "when": 1794422113023,
+      "tag": "0077_plan_read_power",
+      "breakpoints": true
     }
   ]
 }

@@ -1,4 +1,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { Link, useRouteContext } from "@tanstack/react-router";
+import { hasAccessPower } from "@repo/contracts/elise";
+import { buttonVariants } from "#/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { cn } from "#/lib/utils";
 import { usageUsd } from "#/modules/usage";
@@ -7,6 +10,8 @@ import { creditScansLabel } from "../utils";
 
 export function CreditCard() {
   const { data } = useSuspenseQuery(creditQuery());
+  const { user } = useRouteContext({ from: "/_app" });
+  const canViewPlan = hasAccessPower(user?.powers ?? [], "company:plan:read");
   if (data.planKey === null) return null;
   const ownKey = data.keySource === "account";
 
@@ -32,6 +37,11 @@ export function CreditCard() {
             <dd className="font-medium tabular-nums">{creditScansLabel(data.scans, data.scanAllowance)}</dd>
           </div>
         </dl>
+        {canViewPlan && (
+          <Link to="/settings/plan" className={buttonVariants({ variant: "outline", size: "sm", className: "justify-self-start" })}>
+            View plan
+          </Link>
+        )}
       </CardContent>
     </Card>
   );
