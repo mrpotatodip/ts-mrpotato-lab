@@ -34,6 +34,17 @@ export const usageCommittedPercent = (budgetUsd: number, spentUsd: number, reser
 export const usageBudgetFloorUsd = (spentUsd: number, reservedUsd: number) => Math.ceil((spentUsd + reservedUsd) * 100) / 100;
 
 // -----
+// Why a new scan is refused. A running scan holds its whole spend cap, so a
+// budget can be blocked with money still unspent: say which of the two it is,
+// because one clears when a scan finishes and the other on the 1st or when an
+// admin raises the budget.
+// -----
+export const usageBlockedNote = (usage: { budgetUsd: number; spentUsd: number; reservedUsd: number }) =>
+  usage.reservedUsd > 0 && usage.spentUsd < usage.budgetUsd
+    ? `Running scans hold ${usageUsd(usage.reservedUsd)} of this month's ${usageUsd(usage.budgetUsd)} budget, so no new audit can start until one finishes. An admin can raise the budget in Settings.`
+    : `This month's ${usageUsd(usage.budgetUsd)} budget is spent, so no new audit can start. It resets on the 1st (UTC), or an admin can raise it in Settings.`;
+
+// -----
 // What the engine checks before it asks Anthropic: an API key
 // starts with sk-ant- and is not a few characters long. Whether
 // Anthropic accepts it only the engine can say.

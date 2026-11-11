@@ -43,7 +43,7 @@ function RadioCard({ value, title, description, badge }: RadioCardProps) {
           {title}
           {badge}
         </span>
-        <span className="text-xs leading-relaxed text-muted-foreground">{description}</span>
+        <span className="text-sm leading-relaxed text-muted-foreground">{description}</span>
       </span>
     </label>
   )

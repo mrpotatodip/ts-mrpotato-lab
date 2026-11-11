@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { usageBudgetError, usageBudgetFloorUsd, usageBudgetLabel, usageChangedAt } from "#/modules/usage/utils/usage-format";
+import { usageBlockedNote, usageBudgetError, usageBudgetFloorUsd, usageBudgetLabel, usageChangedAt } from "#/modules/usage/utils/usage-format";
 
 describe("usageBudgetLabel", () => {
   it.each([
@@ -23,6 +23,19 @@ describe("usageChangedAt", () => {
 describe("usageBudgetFloorUsd", () => {
   it("rounds what the month has committed up to the cent", () => {
     expect(usageBudgetFloorUsd(4.501, 2)).toBe(6.51);
+  });
+});
+
+describe("usageBlockedNote", () => {
+  it("blames the running scans when they hold the budget and money is still unspent", () => {
+    expect(usageBlockedNote({ budgetUsd: 49, spentUsd: 4.27, reservedUsd: 50 })).toContain("Running scans hold $50.00 of this month's $49.00 budget");
+  });
+
+  it.each([
+    [{ budgetUsd: 49, spentUsd: 49, reservedUsd: 0 }],
+    [{ budgetUsd: 49, spentUsd: 60, reservedUsd: 10 }],
+  ])("says the budget is spent when spending alone reaches it: %j", (usage) => {
+    expect(usageBlockedNote(usage)).toContain("budget is spent");
   });
 });
 
