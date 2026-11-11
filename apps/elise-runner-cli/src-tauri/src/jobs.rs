@@ -18,6 +18,7 @@ use tokio::time::{sleep, timeout};
 const POLL_EVERY: Duration = Duration::from_secs(5);
 const CLONE_TIMEOUT: Duration = Duration::from_secs(300);
 const AGENT_TIMEOUT: Duration = Duration::from_secs(40 * 60);
+const VALIDATE_TIMEOUT: Duration = Duration::from_secs(60);
 const REPORT_TRIES: u32 = 3;
 const ERROR_MAX: usize = 3800;
 const LOG_MAX: usize = 190_000;
@@ -248,7 +249,11 @@ async fn execute(app: &AppHandle, job: &Job, work: &Path) -> Result<Report, Stri
 
     install_skill(app, skill_dir)?;
     run_agent(work, job).await?;
-    collect(work)
+    let report = collect(work)?;
+    if job.skill == "full" {
+        validate_full(work).await?;
+    }
+    Ok(report)
 }
 
 async fn clone_repo(work: &Path, repo: &str, git_ref: &str) -> Result<(), String> {
@@ -329,6 +334,67 @@ fn find_claude() -> Option<PathBuf> {
     let line = String::from_utf8_lossy(&output.stdout).lines().last()?.trim().to_string();
     let path = PathBuf::from(line);
     path.is_file().then_some(path)
+}
+
+// -----
+// `node` is found the way `claude` is: in the usual places, nvm's folders last version first,
+// then asked of a login shell.
+// -----
+fn find_node() -> Option<PathBuf> {
+    let home = std::env::var("HOME").ok()?;
+    let mut candidates: Vec<PathBuf> = Vec::new();
+    if let Ok(versions) = fs::read_dir(PathBuf::from(&home).join(".nvm/versions/node")) {
+        let mut found: Vec<PathBuf> = versions.flatten().map(|v| v.path().join("bin/node")).collect();
+        found.sort();
+        found.reverse();
+        candidates.extend(found);
+    }
+    candidates.extend(["/opt/homebrew/bin/node", "/usr/local/bin/node", "/usr/bin/node"].map(PathBuf::from));
+    if let Some(found) = candidates.into_iter().find(|p| p.is_file()) {
+        return Some(found);
+    }
+    let shell = std::env::var("SHELL").unwrap_or_else(|_| "/bin/zsh".to_string());
+    let output = std::process::Command::new(shell).args(["-ilc", "command -v node"]).output().ok()?;
+    let line = String::from_utf8_lossy(&output.stdout).lines().last()?.trim().to_string();
+    let path = PathBuf::from(line);
+    path.is_file().then_some(path)
+}
+
+// -----
+// A full audit ends by checking findings.json and coverage-ledger.json with the skill's own
+// validators. The agent may not run node on this computer, so this app does, after the agent
+// has ended: the skill's two scripts, each on one file the agent left, nothing else. A file the
+// agent did not write fails the same way as one that does not pass. The failure goes to the
+// dashboard with the validator's own words, and the folder stays for a person to read.
+// -----
+async fn validate_full(work: &Path) -> Result<(), String> {
+    let node = find_node().ok_or("Node.js is not installed on this computer, or this app cannot find it. A full audit is checked with Node.js: install it from https://nodejs.org, then start the scan again.")?;
+    let home = std::env::var("HOME").map_err(|_| "Could not find your home folder.".to_string())?;
+    let skill = PathBuf::from(home).join(".claude").join("skills").join("security-audit");
+    for (script, file) in [("validate-findings.cjs", "findings.json"), ("validate-coverage-ledger.cjs", "coverage-ledger.json")] {
+        let path = work.join("out").join(file);
+        if !path.is_file() {
+            return Err(format!("The audit finished without writing {file}, which a full audit must have."));
+        }
+        let mut command = Command::new(&node);
+        command
+            .arg(skill.join(script))
+            .arg(&path)
+            .current_dir(work)
+            .env_clear()
+            .env("PATH", "/usr/bin:/bin")
+            .stdin(Stdio::null())
+            .kill_on_drop(true);
+        let output = match timeout(VALIDATE_TIMEOUT, command.output()).await {
+            Ok(result) => result.map_err(|e| format!("Could not run the check on {file}: {e}"))?,
+            Err(_) => return Err(format!("The check on {file} did not finish in a minute, so this runner stopped it.")),
+        };
+        if !output.status.success() {
+            let said = format!("{} {}", String::from_utf8_lossy(&output.stdout).trim(), String::from_utf8_lossy(&output.stderr).trim());
+            return Err(format!("{file} did not pass the audit skill's own check ({script}). {}", tail(said.trim(), 1500)));
+        }
+    }
+    Ok(())
 }
 
 async fn run_agent(work: &Path, job: &Job) -> Result<(), String> {

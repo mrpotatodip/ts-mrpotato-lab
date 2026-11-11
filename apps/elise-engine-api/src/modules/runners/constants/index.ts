@@ -36,7 +36,8 @@ export const RUNNER_PROMPT_PLACE = {
   outDir: "./out",
   priorPath: "./prior-findings.json",
   networkRule: "do not use the network",
-};
+  validatedBy: "runner",
+} as const;
 export const RUNNER_JOB_NOT_FOUND = "This scan is not waiting for a report from this runner";
 export const RUNNER_JOB_PRIVATE = "A private repository can't run on a runner yet. Run it in EliseLAB's cloud.";
 export const RUNNER_JOB_NOT_CONNECTED = "runner_id: this runner is not connected to the account";

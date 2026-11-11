@@ -69,4 +69,13 @@ describe("buildAgentPrompt", () => {
     expect(prompt).toContain("Profile: deep");
     expect(prompt).toContain("at most 12 agent invocations");
   });
+
+  it("has the agent run the validators in the container and the app run them on a Runner", () => {
+    const full: ScanOptions = { ...options, skill: "full" };
+    const onRunner = buildAgentPrompt(full, 0, { repoDir: "./repo", outDir: "./out", priorPath: "./prior-findings.json", networkRule: "do not use the network", validatedBy: "runner" });
+
+    expect(buildAgentPrompt(full)).toContain("run the skill's validators");
+    expect(onRunner).toContain("Do not run the validators or any node command");
+    expect(onRunner).not.toContain("run the skill's validators");
+  });
 });
