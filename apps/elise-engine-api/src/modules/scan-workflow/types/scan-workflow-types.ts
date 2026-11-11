@@ -31,6 +31,7 @@ export type ScanRunDeps = {
   readPriors: (params: ScanParams) => Promise<PriorFinding[]>;
   sealedKeyFor: (accountId: string) => Promise<string | null>;
   recordScan: (params: ScanParams, status: ScanState, error: string | null, usage: ScanUsage | null) => Promise<void>;
+  settleCredit: (params: ScanParams, status: "succeeded" | "failed", usage: ScanUsage | null) => Promise<void>;
 };
 
 export type PollResult = { state: "running" | "succeeded" | "failed"; error?: string };

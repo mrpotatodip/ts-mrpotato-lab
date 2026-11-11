@@ -13,6 +13,7 @@ export * from "./team";
 export * from "./group";
 export * from "./admin";
 export * from "./scan";
+export * from "./credit";
 export * from "./verdict";
 export * from "./file";
 export * from "./github";

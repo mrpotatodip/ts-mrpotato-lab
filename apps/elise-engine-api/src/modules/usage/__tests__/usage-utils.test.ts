@@ -5,7 +5,17 @@ import type { MonthSpend, UsageEnv } from "#/modules/usage";
 import { allowanceUsdOf, budgetUsdOf, defaultBudgetUsdOf, monthLabelOf, monthStartOf, reservedUsdOf, summarizeUsage } from "#/modules/usage";
 
 const ENV: UsageEnv = { MONTHLY_BUDGET_USD: "20", BUDGET_ALLOWANCE_USD: "1000" };
-const TEAM: PlanState = { planKey: "team", includedCreditUsd: 50, maxMembers: 10, status: "active", pastDueSince: null };
+const TEAM: PlanState = {
+  planKey: "team",
+  includedCreditUsd: 50,
+  keySource: "platform",
+  creditMarkup: 1.5,
+  creditBalanceUsd: 50,
+  monthlyScanAllowance: null,
+  maxMembers: 10,
+  status: "active",
+  pastDueSince: null,
+};
 
 const spend: MonthSpend = {
   spentUsd: 4.5,

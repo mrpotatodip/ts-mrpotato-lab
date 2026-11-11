@@ -63,6 +63,14 @@ export const SCAN_KEY_SOURCE_VALUES = ["platform", "account"] as const;
 export const SUBSCRIPTION_STATUS_VALUES = ["active", "past_due", "canceled", "unpaid", "incomplete"] as const;
 export const SUBSCRIPTION_SOURCE_VALUES = ["stripe", "grant"] as const;
 
+// -----
+// What a credit ledger entry is. grant and topup add credit; scan_hold
+// takes what a running scan may spend; scan_settle gives back the hold
+// and takes the real charge; expiry takes credit that lapsed; adjustment
+// is the operator's correction, up or down.
+// -----
+export const CREDIT_ENTRY_KIND_VALUES = ["grant", "topup", "scan_hold", "scan_settle", "expiry", "adjustment"] as const;
+
 export type ScanStateValue = (typeof SCAN_STATE_VALUES)[number];
 export type FindingOriginValue = (typeof FINDING_ORIGIN_VALUES)[number];
 export type RepoFindingStateValue = (typeof REPO_FINDING_STATE_VALUES)[number];
@@ -72,6 +80,7 @@ export type FindingTriageStatusValue = (typeof FINDING_TRIAGE_STATUS_VALUES)[num
 export type ScanKeySourceValue = (typeof SCAN_KEY_SOURCE_VALUES)[number];
 export type SubscriptionStatusValue = (typeof SUBSCRIPTION_STATUS_VALUES)[number];
 export type SubscriptionSourceValue = (typeof SUBSCRIPTION_SOURCE_VALUES)[number];
+export type CreditEntryKindValue = (typeof CREDIT_ENTRY_KIND_VALUES)[number];
 
 // -----
 // Where a running scan is: cloning the repo, the agent

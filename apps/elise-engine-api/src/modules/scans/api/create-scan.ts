@@ -1,5 +1,7 @@
+import { Effect } from "effect";
 import { Hono } from "hono";
-import { runEffect } from "#/lib/effect-query";
+import { runEffect, toDbError } from "#/lib/effect-query";
+import type { HoldCredit } from "#/modules/credit";
 import { zValidator } from "#/lib/zod-validator";
 import type { AppEnv } from "#/types/variables";
 import { createScanSvc } from "#/modules/scans/handlers";
@@ -13,7 +15,8 @@ app.post("/", createScanDoc, zValidator("header", AccountHeaderSchema), zValidat
   const body = c.req.valid("json");
   const spend = await c.get("deps").monthSpend(c.env, accountId);
   const deps = c.get("deps");
-  const data = await runEffect(createScanSvc(c.env, deps.scanRepo(c.env), accountId, body, spend, deps.githubAccess(c.env, accountId)));
+  const hold: HoldCredit = (scanId, holdUsd) => Effect.tryPromise({ try: () => deps.holdCredit(c.env, accountId, scanId, holdUsd), catch: toDbError });
+  const data = await runEffect(createScanSvc(c.env, deps.scanRepo(c.env), accountId, body, spend, deps.githubAccess(c.env, accountId), hold));
   return c.json({ data, error: null }, 201);
 });
 

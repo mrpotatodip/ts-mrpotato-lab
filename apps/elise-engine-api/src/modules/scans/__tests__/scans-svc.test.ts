@@ -4,6 +4,7 @@ import { fakeBindings } from "#/__tests__/fake-bindings";
 import { brokenScanRepo, memoryScanRepo } from "#/__tests__/memory-scan-repo";
 import { ExternalError } from "#/lib/effect-query";
 import type { PlanState } from "#/modules/billing";
+import type { HoldCredit } from "#/modules/credit";
 import type { GithubAccess } from "#/modules/github-installs";
 import type { ScanRepo } from "#/modules/scan-ledger";
 import type { MonthSpend } from "#/modules/usage";
@@ -142,7 +143,23 @@ describe("createScanSvc", () => {
   });
 });
 
-const TEAM: PlanState = { planKey: "team", includedCreditUsd: 50, maxMembers: 10, status: "active", pastDueSince: null };
+const TEAM: PlanState = {
+  planKey: "pro",
+  includedCreditUsd: 49,
+  keySource: "platform",
+  creditMarkup: 1.5,
+  creditBalanceUsd: 49,
+  monthlyScanAllowance: null,
+  maxMembers: 5,
+  status: "active",
+  pastDueSince: null,
+};
+const held: number[] = [];
+const hold: HoldCredit = (_scanId, holdUsd) => {
+  held.push(holdUsd);
+  return Effect.succeed({ held: true, balanceUsd: 0 });
+};
+const raced: HoldCredit = () => Effect.succeed({ held: false, balanceUsd: 1 });
 const DAY = 24 * 60 * 60 * 1000;
 const onPlan = (plan: Partial<PlanState>, rest: Partial<MonthSpend> = {}): MonthSpend => ({ ...NO_SPEND, plan: { ...TEAM, ...plan }, ...rest });
 
@@ -150,7 +167,7 @@ describe("createScanSvc: the plan", () => {
   const outcome = (spend: MonthSpend, enforced: string) => {
     const { env } = fakeBindings({ BILLING_ENFORCED: enforced });
     return Effect.runPromise(
-      createScanSvc(env, memoryScanRepo().repo, "acme", input, spend).pipe(
+      createScanSvc(env, memoryScanRepo().repo, "acme", input, spend, undefined, hold).pipe(
         Effect.match({ onSuccess: () => "queued", onFailure: (failure) => (failure._tag === "RateLimited" ? failure.code : failure._tag) }),
       ),
     );
@@ -168,29 +185,65 @@ describe("createScanSvc: the plan", () => {
     expect(await outcome(spend, enforced)).toBe(expected);
   });
 
+  const BYOK: Partial<PlanState> = { planKey: "byok", keySource: "account", includedCreditUsd: 0, creditBalanceUsd: 0, monthlyScanAllowance: 300 };
+
   it.each([
-    ["the platform's key with credit left", onPlan({}, { platformSpentUsd: 40, spentUsd: 40 }), "queued"],
-    ["the platform's key with the credit used", onPlan({}, { platformSpentUsd: 49, spentUsd: 49, budgetOverrideUsd: 100 }), "PLATFORM_CREDIT_EXCEEDED"],
-    ["the platform's key with the credit held by running scans", onPlan({}, { platformSpentUsd: 40, platformReservedUsd: 9, spentUsd: 40, budgetOverrideUsd: 100 }), "PLATFORM_CREDIT_EXCEEDED"],
-    ["the account's own key, whatever the platform part is", onPlan({}, { ownKey: true, platformSpentUsd: 49, spentUsd: 49, budgetOverrideUsd: 100 }), "queued"],
-    ["the account's own key, but the admin's budget used", onPlan({}, { ownKey: true, spentUsd: 49, budgetOverrideUsd: 50 }), "MONTHLY_BUDGET_EXCEEDED"],
+    ["a platform plan with credit for the hold", onPlan({ creditBalanceUsd: 49 }), "queued"],
+    ["a platform plan with exactly the hold left", onPlan({ creditBalanceUsd: 3 }), "queued"],
+    ["a platform plan a cent short of the hold", onPlan({ creditBalanceUsd: 2.99 }), "INSUFFICIENT_CREDIT"],
+    ["a platform plan with no credit", onPlan({ creditBalanceUsd: 0 }), "INSUFFICIENT_CREDIT"],
+    ["a platform plan, whatever the month's spend", onPlan({}, { spentUsd: 500, platformSpentUsd: 500 }), "queued"],
+    ["an account plan with the account's own key", onPlan(BYOK, { ownKey: true }), "queued"],
+    ["an account plan with no own key", onPlan(BYOK, { ownKey: false }), "OWN_KEY_REQUIRED"],
+    ["an account plan with its last allowed scan", onPlan(BYOK, { ownKey: true, scans: 299 }), "queued"],
+    ["an account plan with its allowance used", onPlan(BYOK, { ownKey: true, scans: 300 }), "SCAN_ALLOWANCE_EXCEEDED"],
+    ["a budget the admin set, counted in credit", onPlan({}, { spentUsd: 5, budgetOverrideUsd: 10 }), "MONTHLY_BUDGET_EXCEEDED"],
+    ["a budget the admin set, with room in credit", onPlan({}, { spentUsd: 4, budgetOverrideUsd: 10 }), "queued"],
   ])("with %s the scan is %s", async (_name, spend, expected) => {
     expect(await outcome(spend, "true")).toBe(expected);
   });
 
-  it("says in the refusal that an own key is the way out", async () => {
+  it("says in the refusal that a top up is the way out", async () => {
     const { env } = fakeBindings();
-    const failure = await Effect.runPromise(Effect.flip(createScanSvc(env, memoryScanRepo().repo, "acme", input, onPlan({}, { platformSpentUsd: 49, spentUsd: 49, budgetOverrideUsd: 100 }))));
+    const failure = await Effect.runPromise(Effect.flip(createScanSvc(env, memoryScanRepo().repo, "acme", input, onPlan({ creditBalanceUsd: 1 }), undefined, hold)));
 
-    expect(failure).toMatchObject({ message: expect.stringContaining("Add your own Anthropic key") });
+    expect(failure).toMatchObject({ message: expect.stringContaining("Top up in Settings") });
+  });
+
+  it("holds the scan's budget cap times the markup", async () => {
+    held.length = 0;
+    const { env } = fakeBindings();
+    await Effect.runPromise(createScanSvc(env, memoryScanRepo().repo, "acme", { ...input, max_budget_usd: 1 }, onPlan({}), undefined, hold));
+
+    expect(held).toEqual([1.5]);
+  });
+
+  it("takes no hold for a scan on the account's own key", async () => {
+    held.length = 0;
+    const { env } = fakeBindings();
+    await Effect.runPromise(createScanSvc(env, memoryScanRepo().repo, "acme", input, onPlan(BYOK, { ownKey: true }), undefined, hold));
+
+    expect(held).toEqual([]);
+  });
+
+  it("fails a scan whose hold lost the race and does not start it", async () => {
+    const { env, created } = fakeBindings();
+    const mem = memoryScanRepo();
+    const failure = await Effect.runPromise(Effect.flip(createScanSvc(env, mem.repo, "acme", input, onPlan({}), undefined, raced)));
+
+    expect(failure).toMatchObject({ _tag: "RateLimited", code: "INSUFFICIENT_CREDIT" });
+    expect([...mem.rows.values()].map((row) => row.status)).toEqual(["failed"]);
+    expect(created).toEqual([]);
   });
 
   it.each([
-    [false, "platform"],
-    [true, "account"],
-  ])("accepts a scan with an own key of %s to use the %s key", async (ownKey, expected) => {
+    ["no plan and no own key", NO_SPEND, "platform"],
+    ["no plan and an own key", { ...NO_SPEND, ownKey: true }, "account"],
+    ["a platform plan, even with an own key saved", onPlan({}, { ownKey: true }), "platform"],
+    ["an account plan with its own key", onPlan(BYOK, { ownKey: true }), "account"],
+  ])("with %s the scan uses the %s key", async (_name, spend, expected) => {
     const { env, created } = fakeBindings();
-    await Effect.runPromise(createScanSvc(env, memoryScanRepo().repo, "acme", input, { ...NO_SPEND, ownKey }));
+    await Effect.runPromise(createScanSvc(env, memoryScanRepo().repo, "acme", input, spend, undefined, hold));
 
     expect(created[0].params.keySource).toBe(expected);
   });

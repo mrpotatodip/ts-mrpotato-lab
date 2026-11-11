@@ -8,6 +8,7 @@ import { neonScanRepo } from "#/modules/scan-ledger";
 import { listPriorsEffect, recordScanSvc, SCAN_RECORDS_PRIOR_LIMIT, type PriorFinding } from "#/modules/scan-records";
 import type { Bindings } from "#/types/variables";
 import { runScan } from "./run-scan";
+import { settleScanCredit } from "./settle-scan-credit";
 
 const branchAtTip = async (db: DbConnectType, accountId: string, repoId: string, ref: string | null | undefined) => {
   if (!ref || !isCommitId(ref)) return null;
@@ -45,6 +46,7 @@ export class ScanWorkflow extends WorkflowEntrypoint<Bindings, ScanParams> {
         readPriors: (params) => priorsOf(this.env, params),
         sealedKeyFor: (accountId) => runEffect(findSealedKeyEffect(dbConnect(this.env.DATABASE_URL), accountId)),
         recordScan: (params, status, error, usage) => runEffect(recordScanSvc(this.env, params, status, error, usage)),
+        settleCredit: (params, status, usage) => settleScanCredit(this.env, params, status, usage),
       },
       event.payload,
       step,

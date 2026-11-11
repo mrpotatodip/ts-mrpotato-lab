@@ -42,6 +42,22 @@ export const runScan = async (deps: ScanRunDeps, params: ScanParams, step: Workf
     }
   };
 
+  // -----
+  // Closes the scan's credit once it has ended. A failure here is
+  // logged, never thrown: the scan's own result stands, and its hold
+  // stays on the ledger, where it can be found.
+  // -----
+  const settle = async (status: "succeeded" | "failed", spent: ScanUsage | null) => {
+    try {
+      await step.do(`settle-credit-${status}`, { retries: SCAN_WORKFLOW_RECORD_RETRY, timeout: SCAN_WORKFLOW_RECORD_TIMEOUT }, async () => {
+        await deps.settleCredit(params, status, spent);
+        return true;
+      });
+    } catch (cause) {
+      console.error("scan: could not settle the credit", cause instanceof Error ? cause.message : cause);
+    }
+  };
+
   let usage: ScanUsage | null = null;
   const readUsage = async () => {
     try {
@@ -60,7 +76,7 @@ export const runScan = async (deps: ScanRunDeps, params: ScanParams, step: Workf
       // Workflow's saved state, and a key set or removed before a
       // retry is the one the retry uses.
       // -----
-      const sealed = await deps.sealedKeyFor(params.accountId);
+      const sealed = params.keySource === "account" ? await deps.sealedKeyFor(params.accountId) : null;
       const checkout = await sandbox.prepare(
         params.repo,
         params.ref,
@@ -120,6 +136,7 @@ export const runScan = async (deps: ScanRunDeps, params: ScanParams, step: Workf
       throw new Error(`the results were saved but could not be recorded: ${cause instanceof Error ? cause.message : String(cause)}`, { cause });
     }
     await mark("status-succeeded", { status: "succeeded", error: null, usage });
+    await settle("succeeded", usage);
     return { ok: true };
   } catch (cause) {
     const error = cause instanceof Error ? cause.message : String(cause);
@@ -135,6 +152,7 @@ export const runScan = async (deps: ScanRunDeps, params: ScanParams, step: Workf
       console.error("scan: could not write the failed status");
     }
     await record("failed", error, usage);
+    await settle("failed", usage);
     throw cause;
   } finally {
     await step.do("cleanup", async () => {

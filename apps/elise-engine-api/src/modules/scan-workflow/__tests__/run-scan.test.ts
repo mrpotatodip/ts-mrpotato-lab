@@ -41,6 +41,7 @@ const fakeStep = (names: string[]): WorkflowStep => {
 const setup = (options: { priors?: PriorFinding[]; recordFails?: ScanState; agent?: "succeeded" | "failed"; pollThrows?: boolean; sealedKey?: string } = {}) => {
   const names: string[] = [];
   const calls: string[] = [];
+  const settles: string[] = [];
   const ledger = memoryScanRepo();
   const bindings = fakeBindings();
   const launches: PriorFinding[][] = [];
@@ -74,8 +75,9 @@ const setup = (options: { priors?: PriorFinding[]; recordFails?: ScanState; agen
       calls.push(`record:${status}:${ledger.rows.get("scan-1")?.status}`);
       if (options.recordFails === status) throw new Error("database down");
     },
+    settleCredit: async (_params: ScanParams, status: "succeeded" | "failed") => void settles.push(status),
   };
-  return { names, calls, ledger, bindings, launches, prepares, githubs, anthropicKeys, deps };
+  return { names, calls, ledger, bindings, launches, prepares, githubs, anthropicKeys, settles, deps };
 };
 
 const queue = async (ledger: ReturnType<typeof memoryScanRepo>, input: ScanParams) => {
@@ -109,14 +111,48 @@ describe("runScan", () => {
 
   it("hands the sandbox the account's sealed Anthropic key, and nothing for an account on the platform key", async () => {
     const own = setup({ sealedKey: "iv.ciphertext" });
-    await queue(own.ledger, params());
-    await runScan(own.deps, params(), fakeStep(own.names));
+    await queue(own.ledger, params({ keySource: "account" }));
+    await runScan(own.deps, params({ keySource: "account" }), fakeStep(own.names));
     const platform = setup();
     await queue(platform.ledger, params());
     await runScan(platform.deps, params(), fakeStep(platform.names));
 
     expect(own.anthropicKeys).toEqual([{ accountId: ACCOUNT, sealed: "iv.ciphertext" }]);
     expect(platform.anthropicKeys).toEqual([undefined]);
+  });
+
+  it("never opens a stored key for a scan the plan put on the platform key", async () => {
+    const stored = setup({ sealedKey: "iv.ciphertext" });
+    await queue(stored.ledger, params({ keySource: "platform" }));
+
+    await runScan(stored.deps, params({ keySource: "platform" }), fakeStep(stored.names));
+
+    expect(stored.anthropicKeys).toEqual([undefined]);
+  });
+
+  it("settles the scan's credit once it has succeeded", async () => {
+    const { names, ledger, deps, settles } = setup();
+    await queue(ledger, params());
+
+    await runScan(deps, params(), fakeStep(names));
+
+    expect(settles).toEqual(["succeeded"]);
+  });
+
+  it("settles the scan's credit when it fails, and still reports the failure", async () => {
+    const { names, ledger, deps, settles } = setup({ agent: "failed" });
+    await queue(ledger, params());
+
+    await expect(runScan(deps, params(), fakeStep(names))).rejects.toThrow("claude exited 1");
+    expect(settles).toEqual(["failed"]);
+  });
+
+  it("lets a scan succeed when its credit cannot be settled", async () => {
+    const { names, ledger, deps } = setup();
+    await queue(ledger, params());
+    const broken = { ...deps, settleCredit: async () => Promise.reject(new Error("database down")) };
+
+    await expect(runScan(broken, params(), fakeStep(names))).resolves.toEqual({ ok: true });
   });
 
   it("saves the branch the clone reported, with the commit", async () => {

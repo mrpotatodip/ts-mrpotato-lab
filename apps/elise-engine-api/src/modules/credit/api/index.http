@@ -1,0 +1,8 @@
+@baseUrl = http://localhost:8787
+@token = <service-token-or-session-token>
+@account = <tenant-uuid>
+
+# The credit the account may spend on scans, with its plan.
+GET {{baseUrl}}/usage/credit
+Authorization: Bearer {{token}}
+x-account-id: {{account}}

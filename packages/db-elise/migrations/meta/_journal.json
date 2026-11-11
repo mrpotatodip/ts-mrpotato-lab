@@ -505,6 +505,20 @@
       "when": 1794352021172,
       "tag": "0071_plans_and_subscriptions",
       "breakpoints": true
+    },
+    {
+      "idx": 72,
+      "version": "7",
+      "when": 1794364351656,
+      "tag": "0072_credit_ledger_and_plan_pricing",
+      "breakpoints": true
+    },
+    {
+      "idx": 73,
+      "version": "7",
+      "when": 1794364352289,
+      "tag": "0073_credit_plans_and_starting_balance",
+      "breakpoints": true
     }
   ]
 }

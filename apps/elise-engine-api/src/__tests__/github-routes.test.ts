@@ -12,6 +12,7 @@ const app = buildApp({
   scanRepo: () => memoryScanRepo().repo,
   githubAccess: noGithubAccess,
   monthSpend: async () => ({ spentUsd: 0, scans: 0, tokens: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }, budgetOverrideUsd: null, budgetAllowanceUsd: null, platformSpentUsd: 0, platformReservedUsd: 0, ownKey: false, plan: null }),
+  holdCredit: async () => ({ held: true, balanceUsd: 0 }),
   sessionUserId: async () => signedInUser,
   userHasAccount: async () => true,
   userHasPower: async () => managesAccount,

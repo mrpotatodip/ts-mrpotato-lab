@@ -4,6 +4,7 @@ import { ArrowUpRight, Layers, LoaderCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "#/components/ui/empty";
 import { ShellPageHeader } from "#/modules/shell";
+import { CreditCard } from "#/modules/credit";
 import { UsageCard } from "#/modules/usage";
 import { Suspense, type ReactNode } from "react";
 import { Skeleton } from "#/components/ui/skeleton";
@@ -129,9 +130,14 @@ export function ScanOverview({ decide, attention }: ScanOverviewProps) {
       </div>
 
       <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-        <Suspense fallback={<Skeleton className="h-72 w-full" />}>
-          <UsageCard />
-        </Suspense>
+        <div className="grid content-start gap-8">
+          <Suspense fallback={<Skeleton className="h-72 w-full" />}>
+            <UsageCard />
+          </Suspense>
+          <Suspense fallback={<Skeleton className="h-40 w-full" />}>
+            <CreditCard />
+          </Suspense>
+        </div>
         <ScanSuccessRing succeeded={overview.byState.succeeded} failed={overview.byState.failed} rate={rate} />
         <div className="grid md:col-span-2">
           <ScanActivityChart days={activity} />

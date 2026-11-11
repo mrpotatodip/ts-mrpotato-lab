@@ -2,7 +2,18 @@ import { describe, expect, it } from "vitest";
 import { BILLING_GRACE_MS, scanBlockOf, type PlanState } from "#/modules/billing";
 
 const NOW = new Date("2026-11-11T12:00:00Z");
-const plan = (extra: Partial<PlanState>): PlanState => ({ planKey: "team", includedCreditUsd: 50, maxMembers: 10, status: "active", pastDueSince: null, ...extra });
+const plan = (extra: Partial<PlanState>): PlanState => ({
+  planKey: "pro",
+  includedCreditUsd: 49,
+  keySource: "platform",
+  creditMarkup: 1.5,
+  creditBalanceUsd: 49,
+  monthlyScanAllowance: null,
+  maxMembers: 5,
+  status: "active",
+  pastDueSince: null,
+  ...extra,
+});
 const ago = (ms: number) => new Date(NOW.getTime() - ms);
 
 describe("scanBlockOf", () => {

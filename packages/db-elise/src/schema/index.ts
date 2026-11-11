@@ -10,6 +10,7 @@ export * from "./chat-bot-durable-stream";
 export * from "./platform-invite-codes";
 export * from "./platform-master-plans";
 export * from "./tenant-subscriptions";
+export * from "./tenant-credit-ledger";
 export * from "./tenant-team-invites";
 export * from "./tenant-anthropic-keys";
 export * from "./tenant-github-installations";
