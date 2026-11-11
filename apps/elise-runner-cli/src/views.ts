@@ -13,6 +13,13 @@ type OnStatus = (status: RunnerStatus) => void;
 const ACTIVITY_EVERY_MS = 3000;
 let activityTimer: number | undefined;
 
+// -----
+// A failure carries the agent's whole output, which fills a small window. The window shows
+// the start of it; the scan's page in EliseLAB has all of it.
+// -----
+const BRIEF_MAX = 200;
+const brief = (text: string) => (text.length > BRIEF_MAX ? `${text.slice(0, BRIEF_MAX).trimEnd()}… The full text is on the scan's page in EliseLAB.` : text);
+
 export const stopActivity = () => {
   if (activityTimer !== undefined) window.clearInterval(activityTimer);
   activityTimer = undefined;
@@ -139,7 +146,7 @@ export const connectedView = (status: Extract<RunnerStatus, { state: "connected"
     const tone: Tone = now.state === "running" ? "info" : now.state === "finished" && !now.ok ? "danger" : now.state === "finished" ? "success" : "neutral";
     activity.className = `alert tone-${tone}`;
     activity.textContent =
-      now.state === "running" ? copy.running(now.repo) : now.state === "finished" ? (now.ok ? copy.finishedOk(now.repo) : copy.finishedFailed(now.repo, now.message)) : copy.idle;
+      now.state === "running" ? copy.running(now.repo) : now.state === "finished" ? (now.ok ? copy.finishedOk(now.repo) : copy.finishedFailed(now.repo, brief(now.message))) : copy.idle;
   };
   void showActivity();
   stopActivity();

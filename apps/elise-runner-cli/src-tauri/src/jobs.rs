@@ -24,9 +24,11 @@ const LOG_MAX: usize = 190_000;
 const FILE_MAX: u64 = 1_900_000;
 
 // What the agent may do. The repository is untrusted, so this is the cloud's "no code
-// execution" rule as an allowlist: read the code, write only into ./out, and run the skill's
-// own validator with node. Edit this line to change what a scan may do on this computer.
-const ALLOWED_TOOLS: &str = "Read Glob Grep Write(out/**) Edit(out/**) Bash(node ~/.claude/skills:*) Bash(ls:*) Bash(cat:*) Bash(find:*) Bash(wc:*) Bash(head:*) Bash(tail:*) Bash(grep:*) Bash(rg:*) Bash(git log:*) Bash(git show:*) Bash(git ls-files:*)";
+// execution" rule as an allowlist: read the code, run the skill's own validator with node, and
+// a few commands that only read. Writing files is allowed by the permission mode below, and
+// only inside the scan's own work folder (Claude writes absolute paths, which a path rule here
+// did not match). Edit this line to change what a scan may do on this computer.
+const ALLOWED_TOOLS: &str = "Read Glob Grep Bash(node ~/.claude/skills:*) Bash(cd:*) Bash(pwd:*) Bash(mkdir:*) Bash(ls:*) Bash(cat:*) Bash(find:*) Bash(wc:*) Bash(head:*) Bash(tail:*) Bash(grep:*) Bash(rg:*) Bash(sed:*) Bash(awk:*) Bash(sort:*) Bash(uniq:*) Bash(cut:*) Bash(tr:*) Bash(echo:*) Bash(git log:*) Bash(git show:*) Bash(git ls-files:*)";
 
 // The same clone the cloud container does: a plain shallow clone, or a fetch of the ref, tried
 // as a branch first. It writes the commit, the branch HEAD was on, and how the ref was fetched.
@@ -172,7 +174,11 @@ async fn handle(app: &AppHandle, token: &str, job: Job) {
     let ok = report.state == "succeeded";
     let message = report.error.clone().unwrap_or_default();
     let sent = send_report(token, &job.scan_id, &report).await;
-    let _ = fs::remove_dir_all(&work);
+    // A finished scan cleans up after itself. A failed one keeps its folder, so the agent's
+    // own log can be read.
+    if ok && sent {
+        let _ = fs::remove_dir_all(&work);
+    }
 
     set_activity(Activity::Finished {
         ok: ok && sent,
@@ -336,6 +342,7 @@ async fn run_agent(work: &Path, job: &Job) -> Result<(), String> {
     command
         .args(["--print", "--output-format", "json", "--no-session-persistence", "--setting-sources", "user"])
         .args(["--model", &job.model, "--effort", &job.effort, "--max-budget-usd", &job.max_budget_usd.to_string()])
+        .args(["--permission-mode", "acceptEdits"])
         .args(["--allowedTools", ALLOWED_TOOLS])
         .arg("--")
         .arg(&job.prompt)
@@ -387,7 +394,13 @@ fn collect(work: &Path) -> Result<Report, String> {
         }
     }
     if !files.contains_key("REPORT.md") {
-        return Err("The audit finished without writing REPORT.md. The agent may have been stopped by a permission, or run out of budget.".into());
+        let log = fs::read_to_string(work.join("agent.log")).unwrap_or_default();
+        let err = fs::read_to_string(work.join("agent.err")).unwrap_or_default();
+        return Err(format!(
+            "The audit finished without writing REPORT.md. The agent was probably stopped by a permission. Agent output: {} {}",
+            tail(err.trim(), 600),
+            tail(log.trim(), 2400)
+        ));
     }
     let agent_log = fs::read_to_string(work.join("agent.log")).ok().map(|log| tail(log.trim(), LOG_MAX));
     Ok(Report {

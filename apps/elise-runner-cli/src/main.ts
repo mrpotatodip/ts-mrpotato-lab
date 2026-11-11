@@ -38,8 +38,11 @@ const viewOf = (status: RunnerStatus | null): HTMLElement[] => {
 
 // Draws the whole window for one status. Only a change of status redraws it; typing in the
 // code field and the form's errors update their own elements.
+let shownKey = "";
+
 function show(status: RunnerStatus | null): void {
   stopActivity();
+  shownKey = JSON.stringify(status);
   const pill = pillOf(status);
   root?.replaceChildren(topbar(pill.label, pill.tone), h("main", { id: "main" }, ...viewOf(status)));
   document.getElementById("code")?.focus();
@@ -50,10 +53,19 @@ async function refresh(): Promise<void> {
   show(await runnerStatus());
 }
 
+// -----
+// Coming back to the window asks EliseLAB again, so a runner that was removed meanwhile
+// shows as removed, and a lost connection shows as back. The window is drawn again only when
+// the answer changed, so it does not flash and an open "Disconnect" question stays open.
+// A form being typed in is left alone.
+// -----
+async function recheck(): Promise<void> {
+  const next = await runnerStatus();
+  if (JSON.stringify(next) !== shownKey) show(next);
+}
+
 await refresh();
 
-// Coming back to the window asks EliseLAB again, so a runner that was removed meanwhile
-// shows as removed, and a lost connection shows as back. A form being typed in is left alone.
 window.addEventListener("focus", () => {
-  if (!document.getElementById("code")) void refresh();
+  if (!document.getElementById("code")) void recheck();
 });
