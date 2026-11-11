@@ -40,6 +40,10 @@ describe("monthSpendEffect", () => {
 
     expect(spend).toEqual({
       spentUsd: 0.75,
+      platformSpentUsd: 0.75,
+      platformReservedUsd: 0,
+      ownKey: false,
+      plan: null,
       scans: 3,
       tokens: { input: 150, output: 150, cacheRead: 150, cacheWrite: 150 },
       budgetOverrideUsd: null,

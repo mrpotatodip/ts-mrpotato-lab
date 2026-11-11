@@ -33,8 +33,10 @@
     "producers": [{ "binding": "INVITE_EMAIL_QUEUE", "queue": "elise-invite-emails" }],
     "consumers": [{ "queue": "elise-invite-emails", "max_batch_size": 10, "max_batch_timeout": 5, "max_retries": 4, "dead_letter_queue": "elise-invite-emails-dlq" }]
   },
-  "vars": { "ENVIRONMENT": "production", "MODEL": "claude-sonnet-5-5", "EFFORT": "high", "MAX_BUDGET_USD": "2", "MAX_ACTIVE_SCANS": "3", "MONTHLY_BUDGET_USD": "20", "DASHBOARD_URL": "https://app.eliselab.com", "INVITE_FROM": "no-reply@hello.eliselab.com", "AUTH_BASE_URL": "https://api.eliselab.com", "AUTH_TRUSTED_ORIGINS": "https://api.eliselab.com,https://app.eliselab.com,http://localhost:3000" }
-  // MONTHLY_BUDGET_USD is the default monthly spend per account (tenants.monthly_scan_budget_usd overrides it).
+  "vars": { "ENVIRONMENT": "production", "MODEL": "claude-sonnet-5-5", "EFFORT": "high", "MAX_BUDGET_USD": "2", "MAX_ACTIVE_SCANS": "3", "MONTHLY_BUDGET_USD": "20", "BUDGET_ALLOWANCE_USD": "1000", "BILLING_ENFORCED": "false", "DASHBOARD_URL": "https://app.eliselab.com", "INVITE_FROM": "no-reply@hello.eliselab.com", "AUTH_BASE_URL": "https://api.eliselab.com", "AUTH_TRUSTED_ORIGINS": "https://api.eliselab.com,https://app.eliselab.com,http://localhost:3000" }
+  // MONTHLY_BUDGET_USD is the default monthly spend per account with no plan (a plan's included credit is the default instead; tenants.monthly_scan_budget_usd overrides both).
+  // BUDGET_ALLOWANCE_USD is the most an admin may set as the monthly budget (tenants.monthly_scan_budget_allowance_usd overrides it for one account).
+  // BILLING_ENFORCED: "true" refuses new scans from an account with no plan row; "false" lets such accounts run as before. Accounts that have a plan row follow it either way.
   // MAX_BUDGET_USD is the per-scan spend ceiling: requests may lower it, never raise it.
   // Secrets (wrangler secret put / --secrets-file): ANTHROPIC_API_KEY, SCAN_API_TOKEN, DATABASE_URL, AUTH_SECRET
   // Optional, for accounts that bring their own Anthropic key: KEY_ENCRYPTION_SECRET (any long random string; changing it makes every saved key unreadable, and those accounts' scans stop until they save the key again)

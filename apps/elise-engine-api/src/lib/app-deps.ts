@@ -17,7 +17,7 @@ const sessionUserId = async (c: Context<AppEnv>): Promise<string | undefined> =>
   }
 };
 
-const noSpend = { spentUsd: 0, scans: 0, tokens: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }, budgetOverrideUsd: null, budgetAllowanceUsd: null };
+const noSpend = { spentUsd: 0, scans: 0, tokens: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }, budgetOverrideUsd: null, budgetAllowanceUsd: null, platformSpentUsd: 0, platformReservedUsd: 0, ownKey: false, plan: null };
 
 export const realAppDeps: AppDeps = {
   scanRepo: (env) => neonScanRepo(dbConnect(env.DATABASE_URL)),

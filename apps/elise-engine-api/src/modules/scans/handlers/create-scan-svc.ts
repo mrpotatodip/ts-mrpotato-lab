@@ -8,6 +8,7 @@ import type { ScanRepo } from "#/modules/scan-ledger";
 import { SCANS_ACTIVE_WINDOW_MS } from "#/modules/scans/constants";
 import type { CreateScanBody, ScanQueued } from "#/modules/scans/schemas";
 import type { CreateScanEnv } from "#/modules/scans/types";
+import { scanBlockOf } from "#/modules/billing";
 import { budgetUsdOf, reservedUsdOf, type MonthSpend } from "#/modules/usage";
 
 export const createScanSvc = (
@@ -34,6 +35,9 @@ export const createScanSvc = (
       }),
     ).pipe(Effect.orDie);
 
+    const block = scanBlockOf(spend.plan, env.BILLING_ENFORCED === "true", new Date());
+    if (block) return yield* new RateLimited(block);
+
     const limit = Number(env.MAX_ACTIVE_SCANS);
     const activeScans = yield* repo.activeSince(accountId, Date.now() - SCANS_ACTIVE_WINDOW_MS);
     const active = activeScans.length;
@@ -44,7 +48,23 @@ export const createScanSvc = (
       });
     }
 
-    const budgetUsd = budgetUsdOf(spend, env.MONTHLY_BUDGET_USD);
+    // -----
+    // The plan's credit is spent only by scans on the platform's key:
+    // an account with its own key pays Anthropic itself. It is checked
+    // before the budget, so the message says what to do about it.
+    // -----
+    if (!spend.ownKey && spend.plan) {
+      const creditUsd = spend.plan.includedCreditUsd;
+      const usedUsd = spend.platformSpentUsd + spend.platformReservedUsd;
+      if (usedUsd + maxBudgetUsd > creditUsd) {
+        return yield* new RateLimited({
+          code: "PLATFORM_CREDIT_EXCEEDED",
+          message: `This scan could cost up to $${maxBudgetUsd}, but only $${Math.max(0, creditUsd - usedUsd).toFixed(2)} of this month's $${creditUsd} included credit is left. Add your own Anthropic key in Settings, or wait until the 1st`,
+        });
+      }
+    }
+
+    const budgetUsd = budgetUsdOf(spend, env);
     const reservedUsd = reservedUsdOf(activeScans);
     if (spend.spentUsd + reservedUsd + maxBudgetUsd > budgetUsd) {
       return yield* new RateLimited({
@@ -68,6 +88,7 @@ export const createScanSvc = (
       ref,
       github: github ?? undefined,
       options,
+      keySource: spend.ownKey ? "account" : "platform",
       createdAt: new Date().toISOString(),
     };
     yield* repo.create(params, record.id, Date.now() - SCANS_ACTIVE_WINDOW_MS);

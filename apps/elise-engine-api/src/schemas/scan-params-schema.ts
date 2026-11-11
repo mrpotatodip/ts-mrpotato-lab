@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { SCAN_KEY_SOURCE_VALUES } from "@repo/contracts/elise";
 import { ScanOptionsSchema } from "./scan-options-schema";
 
 // -----
@@ -21,6 +22,7 @@ export const ScanParamsSchema = z.object({
   ref: z.string().optional(),
   github: ScanGithubSchema.optional(),
   options: ScanOptionsSchema,
+  keySource: z.enum(SCAN_KEY_SOURCE_VALUES).optional(),
   createdAt: z.string(),
 });
 

@@ -10,5 +10,5 @@ export const getUsageSvc = (env: UsageEnv, repo: ScanRepo, accountId: string, sp
   Effect.gen(function* () {
     const now = Date.now();
     const active = yield* repo.activeSince(accountId, now - SCANS_ACTIVE_WINDOW_MS);
-    return summarizeUsage(new Date(now), spend, env.MONTHLY_BUDGET_USD, reservedUsdOf(active));
+    return summarizeUsage(new Date(now), spend, env, reservedUsdOf(active));
   });

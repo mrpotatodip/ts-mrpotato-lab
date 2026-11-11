@@ -6,7 +6,7 @@ import type { ScanRepo } from "#/modules/scan-ledger";
 import { SCANS_ACTIVE_WINDOW_MS } from "#/modules/scans/constants";
 import { setMonthlyBudgetEffect } from "#/modules/usage/queries";
 import type { MonthSpend, UsageEnv } from "#/modules/usage/types";
-import { allowanceUsdOf, reservedUsdOf, summarizeUsage } from "#/modules/usage/utils";
+import { allowanceUsdOf, defaultBudgetUsdOf, reservedUsdOf, summarizeUsage } from "#/modules/usage/utils";
 
 // -----
 // A budget must be at most the allowance and at least what the month
@@ -27,8 +27,8 @@ export const updateUsageBudgetSvc = (
     const now = Date.now();
     const active = yield* repo.activeSince(accountId, now - SCANS_ACTIVE_WINDOW_MS);
     const reservedUsd = reservedUsdOf(active);
-    const budgetUsd = requestedUsd ?? Number(env.MONTHLY_BUDGET_USD);
-    const allowanceUsd = allowanceUsdOf(spend, env.MONTHLY_BUDGET_USD);
+    const budgetUsd = requestedUsd ?? defaultBudgetUsdOf(spend, env);
+    const allowanceUsd = allowanceUsdOf(spend, env);
     if (budgetUsd > allowanceUsd) {
       return yield* new Invalid({ message: `monthlyBudgetUsd: must be at most $${allowanceUsd}, the most this account may set` });
     }
@@ -37,5 +37,5 @@ export const updateUsageBudgetSvc = (
       return yield* new Invalid({ message: `monthlyBudgetUsd: must be at least $${Math.ceil(committedUsd * 100) / 100}, which this month has already spent or holds for running scans` });
     }
     yield* setMonthlyBudgetEffect(db, accountId, userId, requestedUsd);
-    return summarizeUsage(new Date(now), { ...spend, budgetOverrideUsd: requestedUsd }, env.MONTHLY_BUDGET_USD, reservedUsd);
+    return summarizeUsage(new Date(now), { ...spend, budgetOverrideUsd: requestedUsd }, env, reservedUsd);
   });

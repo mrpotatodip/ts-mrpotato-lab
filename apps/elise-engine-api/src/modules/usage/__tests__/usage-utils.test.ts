@@ -1,10 +1,18 @@
 import { describe, expect, it } from "vitest";
 import type { ScanStatus } from "#/schemas";
-import type { MonthSpend } from "#/modules/usage";
-import { allowanceUsdOf, budgetUsdOf, monthLabelOf, monthStartOf, reservedUsdOf, summarizeUsage } from "#/modules/usage";
+import type { PlanState } from "#/modules/billing";
+import type { MonthSpend, UsageEnv } from "#/modules/usage";
+import { allowanceUsdOf, budgetUsdOf, defaultBudgetUsdOf, monthLabelOf, monthStartOf, reservedUsdOf, summarizeUsage } from "#/modules/usage";
+
+const ENV: UsageEnv = { MONTHLY_BUDGET_USD: "20", BUDGET_ALLOWANCE_USD: "1000" };
+const TEAM: PlanState = { planKey: "team", includedCreditUsd: 50, maxMembers: 10, status: "active", pastDueSince: null };
 
 const spend: MonthSpend = {
   spentUsd: 4.5,
+  platformSpentUsd: 4.5,
+  platformReservedUsd: 0,
+  ownKey: false,
+  plan: null,
   scans: 6,
   tokens: { input: 10, output: 20, cacheRead: 30, cacheWrite: 40 },
   budgetOverrideUsd: null,
@@ -21,26 +29,39 @@ describe("month", () => {
   });
 });
 
+describe("defaultBudgetUsdOf", () => {
+  it.each([
+    ["no plan", null, 20],
+    ["a plan", TEAM, 50],
+  ])("with %s is %s", (_name, plan, expected) => {
+    expect(defaultBudgetUsdOf({ ...spend, plan }, ENV)).toBe(expected);
+  });
+});
+
 describe("budgetUsdOf", () => {
   it("falls back to the default", () => {
-    expect(budgetUsdOf(spend, "20")).toBe(20);
+    expect(budgetUsdOf(spend, ENV)).toBe(20);
+  });
+
+  it("falls back to the plan's included credit when there is a plan", () => {
+    expect(budgetUsdOf({ ...spend, plan: TEAM }, ENV)).toBe(50);
   });
 
   it("prefers the account's own budget", () => {
-    expect(budgetUsdOf({ ...spend, budgetOverrideUsd: 50 }, "20")).toBe(50);
+    expect(budgetUsdOf({ ...spend, budgetOverrideUsd: 50 }, ENV)).toBe(50);
   });
 
   it("lets a lowered allowance win over a budget set before it", () => {
-    expect(budgetUsdOf({ ...spend, budgetOverrideUsd: 50, budgetAllowanceUsd: 30 }, "20")).toBe(30);
+    expect(budgetUsdOf({ ...spend, budgetOverrideUsd: 50, budgetAllowanceUsd: 30 }, ENV)).toBe(30);
   });
 });
 
 describe("allowanceUsdOf", () => {
   it.each([
-    [null, 20],
+    [null, 1000],
     [75, 75],
   ])("with %s on the account is %s", (allowance, expected) => {
-    expect(allowanceUsdOf({ ...spend, budgetAllowanceUsd: allowance }, "20")).toBe(expected);
+    expect(allowanceUsdOf({ ...spend, budgetAllowanceUsd: allowance }, ENV)).toBe(expected);
   });
 });
 
@@ -54,10 +75,10 @@ describe("reservedUsdOf", () => {
 
 describe("summarizeUsage", () => {
   it("subtracts what was spent and reserved from the budget", () => {
-    expect(summarizeUsage(new Date("2026-11-07T00:00:00Z"), spend, "20", 2)).toEqual({
+    expect(summarizeUsage(new Date("2026-11-07T00:00:00Z"), spend, ENV, 2)).toEqual({
       month: "2026-11",
       budgetUsd: 20,
-      allowanceUsd: 20,
+      allowanceUsd: 1000,
       spentUsd: 4.5,
       reservedUsd: 2,
       remainingUsd: 13.5,
@@ -67,6 +88,6 @@ describe("summarizeUsage", () => {
   });
 
   it("goes negative when the month passed the budget", () => {
-    expect(summarizeUsage(new Date("2026-11-07T00:00:00Z"), { ...spend, spentUsd: 25 }, "20", 0).remainingUsd).toBe(-5);
+    expect(summarizeUsage(new Date("2026-11-07T00:00:00Z"), { ...spend, spentUsd: 25 }, ENV, 0).remainingUsd).toBe(-5);
   });
 });

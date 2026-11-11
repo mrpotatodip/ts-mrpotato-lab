@@ -6,8 +6,10 @@ import {
   findTenantRole,
   partyMasterRoles,
   partyRoles,
+  platformMasterPlans,
   tenantGroupMembers,
   tenantGroups,
+  tenantSubscriptions,
   tenantTeamInviteGroups,
   tenantTeamInvites,
   tenants,
@@ -38,6 +40,7 @@ import {
   TEAM_PENDING_EMAIL_CONSTRAINT,
   TEAM_ROLE_UNKNOWN,
   TEAM_TOO_MANY_INVITES,
+  teamPlanFullMessage,
 } from "#/modules/team/constants";
 import type { AcceptInvite, NewInvite } from "#/modules/team/types";
 
@@ -217,6 +220,23 @@ export const createInviteEffect = (db: PoolDbType, invite: NewInvite): Effect.Ef
           .from(tenantTeamInvites)
           .where(and(eq(tenantTeamInvites.tenantId, invite.tenantId), pendingAt(invite.now)));
         if (pending >= TEAM_PENDING_INVITE_LIMIT) return refuse(new Conflict({ message: TEAM_TOO_MANY_INVITES }));
+
+        // -----
+        // The plan holds a number of people. People in the account plus
+        // invites still waiting count; an account with no plan has no cap.
+        // -----
+        const [plan] = await tx
+          .select({ maxMembers: platformMasterPlans.maxMembers })
+          .from(tenantSubscriptions)
+          .innerJoin(platformMasterPlans, eq(platformMasterPlans.id, tenantSubscriptions.planId))
+          .where(eq(tenantSubscriptions.tenantId, invite.tenantId));
+        if (plan) {
+          const [{ members }] = await tx
+            .select({ members: sql<number>`count(distinct ${partyRoles.partyId})::int` })
+            .from(partyRoles)
+            .where(eq(partyRoles.tenantId, invite.tenantId));
+          if (members + pending >= plan.maxMembers) return refuse(new Conflict({ message: teamPlanFullMessage(plan.maxMembers) }));
+        }
 
         const [row] = await tx
           .insert(tenantTeamInvites)

@@ -1,15 +1,19 @@
-import { and, eq, gte, sql } from "drizzle-orm";
+import { and, eq, gte, inArray, sql } from "drizzle-orm";
 import { Effect } from "effect";
-import { scans, tenants } from "@repo/db-elise/schema";
+import { scans, tenantAnthropicKeys, tenants } from "@repo/db-elise/schema";
 import type { DbConnectType, PoolDbType } from "#/lib/db-connection";
 import { toDbError, type DbError } from "#/lib/effect-query";
 import { actorPartyOf, insertAuditEntry } from "#/modules/audit-trail";
+import { planOfEffect } from "#/modules/billing";
+import { SCANS_ACTIVE_WINDOW_MS } from "#/modules/scans/constants";
 import type { MonthSpend } from "#/modules/usage/types";
 
 // -----
 // Sums of bigint and numeric columns come back as
 // text from the driver; Number() is safe here
 // because a month of tokens stays far below 2^53.
+// platformCost and platformReserved count only scans on the
+// platform's key: the plan's included credit is spent by those.
 // -----
 export const monthSpendEffect = (db: DbConnectType, tenantId: string, monthStart: Date): Effect.Effect<MonthSpend, DbError> =>
   Effect.gen(function* () {
@@ -18,6 +22,7 @@ export const monthSpendEffect = (db: DbConnectType, tenantId: string, monthStart
         db
           .select({
             cost: sql<string>`coalesce(sum(${scans.costUsd}), 0)`,
+            platformCost: sql<string>`coalesce(sum(${scans.costUsd}) filter (where ${scans.keySource} = 'platform'), 0)`,
             count: sql<number>`count(*)::int`,
             input: sql<string>`coalesce(sum(${scans.inputTokens}), 0)`,
             output: sql<string>`coalesce(sum(${scans.outputTokens}), 0)`,
@@ -36,8 +41,32 @@ export const monthSpendEffect = (db: DbConnectType, tenantId: string, monthStart
           .where(eq(tenants.id, tenantId)),
       catch: toDbError,
     });
+    const [reserved] = yield* Effect.tryPromise({
+      try: () =>
+        db
+          .select({ total: sql<string>`coalesce(sum(${scans.maxBudgetUsd}), 0)` })
+          .from(scans)
+          .where(
+            and(
+              eq(scans.tenantId, tenantId),
+              eq(scans.keySource, "platform"),
+              inArray(scans.status, ["queued", "running"]),
+              gte(scans.updatedAt, new Date(Date.now() - SCANS_ACTIVE_WINDOW_MS)),
+            ),
+          ),
+      catch: toDbError,
+    });
+    const [ownKey] = yield* Effect.tryPromise({
+      try: () => db.select({ tenantId: tenantAnthropicKeys.tenantId }).from(tenantAnthropicKeys).where(eq(tenantAnthropicKeys.tenantId, tenantId)),
+      catch: toDbError,
+    });
+    const plan = yield* planOfEffect(db, tenantId);
     return {
       spentUsd: Number(totals.cost),
+      platformSpentUsd: Number(totals.platformCost),
+      platformReservedUsd: Number(reserved.total),
+      ownKey: ownKey !== undefined,
+      plan,
       scans: totals.count,
       tokens: {
         input: Number(totals.input),

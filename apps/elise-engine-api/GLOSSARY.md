@@ -130,12 +130,24 @@ The most dollars the agent may spend in one scan (`--max-budget-usd`). The ceili
 _Avoid_: Limit, quota
 
 **Monthly budget**:
-The dollars an Account may spend on scans in a UTC calendar month: `tenants.monthly_scan_budget_usd`, or `MONTHLY_BUDGET_USD` when unset. An admin with the Power `company:usage:budget:update` sets it. A new scan is refused when spent plus the cap of running scans plus its own cap would pass it.
-_Avoid_: Quota, plan
+The dollars an Account may spend on scans, on either key, in a UTC calendar month: `tenants.monthly_scan_budget_usd`, or the Plan's Included credit when unset, or `MONTHLY_BUDGET_USD` when the Account has no Plan. An admin with the Power `company:usage:budget:update` sets it. A new scan is refused when spent plus the cap of running scans plus its own cap would pass it.
+_Avoid_: Quota
 
 **Budget allowance**:
-The most an admin may set as the Monthly budget: `tenants.monthly_scan_budget_allowance_usd`, or `MONTHLY_BUDGET_USD` when unset. Only the operator changes it, so an admin cannot raise their own spending.
+The most an admin may set as the Monthly budget: `tenants.monthly_scan_budget_allowance_usd`, or `BUDGET_ALLOWANCE_USD` (a sanity maximum) when unset. Only the operator changes it. It does not decide what the platform's key may spend: the Included credit does.
 _Avoid_: Ceiling (that is the Budget cap's `MAX_BUDGET_USD`), limit
+
+**Plan**:
+What an Account pays for: Solo or Team, a row of `platform_master_plans` with a monthly price, an Included credit and a member cap. An Account's Plan is its `tenant_subscriptions` row; no row means no Plan. A `grant` row is a Plan the operator gave, never charged. This is the subscription, not the Instance type.
+_Avoid_: Tier, subscription (for the Plan itself)
+
+**Included credit**:
+The most dollars the platform's Anthropic key may spend for an Account in a UTC calendar month, set by its Plan. Scans on the Account's own key do not use it. A new scan on the platform's key is refused with `PLATFORM_CREDIT_EXCEEDED` when the month's platform spend plus the cap of running platform scans plus its own cap would pass it.
+_Avoid_: Allowance, quota
+
+**Key source**:
+Which Anthropic key paid for a scan, `platform` or `account`, kept in `scans.key_source` and set when the scan is accepted. A scan from before the column is `platform`.
+_Avoid_: Key type
 
 **Effort**:
 How hard the agent thinks: `low`, `medium`, `high`, `xhigh`, or `max`.

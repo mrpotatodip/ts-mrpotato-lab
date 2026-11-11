@@ -10,8 +10,18 @@ import type { MonthSpend } from "#/modules/usage";
 let test: TestDb;
 let tenantId: string;
 
-const ENV = { MONTHLY_BUDGET_USD: "20" };
-const SPEND: MonthSpend = { spentUsd: 5, scans: 3, tokens: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }, budgetOverrideUsd: null, budgetAllowanceUsd: 100 };
+const ENV = { MONTHLY_BUDGET_USD: "20", BUDGET_ALLOWANCE_USD: "1000" };
+const SPEND: MonthSpend = {
+  spentUsd: 5,
+  platformSpentUsd: 5,
+  platformReservedUsd: 0,
+  ownKey: false,
+  plan: null,
+  scans: 3,
+  tokens: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+  budgetOverrideUsd: null,
+  budgetAllowanceUsd: 100,
+};
 
 const update = (requestedUsd: number | null, spend: MonthSpend = SPEND) =>
   updateUsageBudgetSvc(ENV, test.pool, memoryScanRepo().repo, tenantId, "admin-user", requestedUsd, spend);

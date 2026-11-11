@@ -9,6 +9,8 @@ export const TEAM_ROLE_UNKNOWN = "Unknown role";
 export const TEAM_GROUP_UNKNOWN = "Unknown group";
 export const TEAM_ALREADY_MEMBER = "This person is already a member of the account";
 export const TEAM_TOO_MANY_INVITES = "Too many pending invites. Revoke some first.";
+export const teamPlanFullMessage = (maxMembers: number) =>
+  `This plan holds ${maxMembers} ${maxMembers === 1 ? "person" : "people"}, counting invites that are still waiting. Change the plan to invite more.`;
 export const TEAM_INVITE_RACE = "Another invite for this email was just made. Try again.";
 export const TEAM_INVITE_NOT_FOUND = "Invite not found";
 export const TEAM_EMAIL_TAKEN = "A login with this email already exists";
