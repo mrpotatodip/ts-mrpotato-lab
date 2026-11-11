@@ -519,6 +519,13 @@
       "when": 1794364352289,
       "tag": "0073_credit_plans_and_starting_balance",
       "breakpoints": true
+    },
+    {
+      "idx": 74,
+      "version": "7",
+      "when": 1794367068250,
+      "tag": "0074_free_doctor_doom",
+      "breakpoints": true
     }
   ]
 }

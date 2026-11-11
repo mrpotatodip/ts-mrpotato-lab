@@ -1,0 +1,30 @@
+@baseUrl = http://localhost:8787
+@account = 0b8c1d2e-3f4a-4b5c-8d6e-7f8091a2b3c4
+
+# Add a Runner. Needs the session of any member of the account (sign in with POST /auth/sign-in/email). The answer holds the pairing code, shown once; it works for 10 minutes.
+POST {{baseUrl}}/runners
+Authorization: Bearer <session-token>
+x-account-id: {{account}}
+Content-Type: application/json
+
+{ "name": "Jayson MacBook" }
+
+###
+
+# Pair. The Runner app sends this; no session. Any case, with or without the dash.
+POST {{baseUrl}}/runners/enroll
+Content-Type: application/json
+
+{ "code": "K7QM-4TXD" }
+
+###
+
+# Who is this Runner? Send the token that enroll returned. 401 means revoked or never paired.
+GET {{baseUrl}}/runners/me
+Authorization: Bearer <runner-token>
+
+###
+
+# Disconnect. The Runner app sends this when the person presses Disconnect; the token stops working.
+DELETE {{baseUrl}}/runners/me
+Authorization: Bearer <runner-token>

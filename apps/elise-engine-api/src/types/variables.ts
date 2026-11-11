@@ -31,6 +31,7 @@ export type Bindings = {
   SIGN_UP_LIMITER?: RateLimit;
   SIGN_IN_LIMITER?: RateLimit;
   TEAM_INVITE_LIMITER?: RateLimit;
+  RUNNER_ENROLL_LIMITER?: RateLimit;
   DASHBOARD_URL: string;
   INVITE_FROM: string;
   EMAIL: SendEmail;

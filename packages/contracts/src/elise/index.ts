@@ -17,3 +17,4 @@ export * from "./credit";
 export * from "./verdict";
 export * from "./file";
 export * from "./github";
+export * from "./runner";

@@ -21,6 +21,15 @@ export const TEAM_INVITE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 export const TEAM_INVITE_TOKEN_BYTES = 32;
 
 // -----
+// Runners: a pairing code works once, for 10 minutes. The
+// token a paired Runner keeps is 32 random bytes.
+// -----
+export const RUNNER_NAME_MAX = 60;
+export const RUNNER_PAIRING_CODE_MAX = 32;
+export const RUNNER_PAIRING_CODE_TTL_MS = 10 * 60 * 1000;
+export const RUNNER_TOKEN_BYTES = 32;
+
+// -----
 // Groups and team invites: caps the form and the
 // server share, so one Tenant cannot grow without
 // bound

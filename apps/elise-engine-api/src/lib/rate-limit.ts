@@ -2,7 +2,7 @@ import { createMiddleware } from "hono/factory";
 import type { AppError } from "#/lib/errors";
 import type { AppEnv, Bindings } from "#/types/variables";
 
-type LimiterName = "SIGN_UP_LIMITER" | "SIGN_IN_LIMITER" | "TEAM_INVITE_LIMITER";
+type LimiterName = "SIGN_UP_LIMITER" | "SIGN_IN_LIMITER" | "TEAM_INVITE_LIMITER" | "RUNNER_ENROLL_LIMITER";
 
 // -----
 // Per IP, before the body is read. No binding
