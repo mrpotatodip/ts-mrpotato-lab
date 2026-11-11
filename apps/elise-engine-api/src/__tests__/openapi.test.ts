@@ -13,18 +13,68 @@ const operations = (spec: Spec) =>
     Object.entries(methods).map(([method, operation]) => ({ route: `${method.toUpperCase()} ${path}`, operation })),
   );
 
+// -----
+// Opened by someone with no login yet: the invitee, and a
+// Runner that pairs with a code.
+// -----
+const PUBLIC_ROUTES: ReadonlySet<string> = new Set(["GET /team/invites/{token}", "POST /team/invites/{token}/accept", "POST /runners/enroll"]);
+
 describe("GET /openapi.json", () => {
   it("lists every route of the API", async () => {
     const spec: Spec = await (await request("development")).json();
 
     expect(spec.openapi).toBe("3.1.0");
     expect(operations(spec).map(({ route }) => route).toSorted()).toEqual([
+      "DELETE /github/installations/{id}",
+      "DELETE /groups/{groupId}",
+      "DELETE /groups/{groupId}/members/{partyId}",
+      "DELETE /runners/me",
+      "DELETE /runners/{runnerId}",
+      "DELETE /team/invites/{inviteId}",
+      "DELETE /usage/anthropic-key",
+      "GET /files",
+      "GET /findings",
+      "GET /github/branches",
+      "GET /github/installations",
+      "GET /github/repos",
+      "GET /groups",
       "GET /me",
+      "GET /repos",
+      "GET /repos/{repoId}",
+      "GET /repos/{repoId}/findings",
+      "GET /repos/{repoId}/verdict",
+      "GET /runners",
+      "GET /runners/me",
       "GET /scans",
       "GET /scans/{scanId}",
+      "GET /scans/{scanId}/diff",
       "GET /scans/{scanId}/files/{file}",
+      "GET /team",
+      "GET /team/invites/{token}",
+      "GET /team/roles",
+      "GET /usage",
+      "GET /usage/anthropic-key",
+      "GET /usage/budget/changes",
+      "GET /usage/changes",
+      "GET /usage/credit",
+      "PATCH /groups/{groupId}",
+      "PATCH /usage/budget",
+      "POST /github/connect",
+      "POST /github/installations",
+      "POST /groups",
+      "POST /repos",
+      "POST /repos/{repoId}/branches",
+      "POST /runners",
+      "POST /runners/claim",
+      "POST /runners/enroll",
+      "POST /runners/jobs/{scanId}/result",
       "POST /scans",
       "POST /sign-up",
+      "POST /team/invites",
+      "POST /team/invites/{token}/accept",
+      "PUT /findings/triage",
+      "PUT /groups/{groupId}/members/{partyId}",
+      "PUT /usage/anthropic-key",
     ]);
   });
 
@@ -34,9 +84,9 @@ describe("GET /openapi.json", () => {
     for (const { route, operation } of operations(spec)) {
       expect({ route, summary: Boolean(operation.summary) }).toEqual({ route, summary: true });
       expect({ route, description: operation.description?.includes("**Context.**") }).toEqual({ route, description: true });
-      const tag = route.includes("/scans") ? "scans" : route.includes("/me") ? "me" : "sign-up";
+      const tag = ["github", "groups", "team", "repos", "scans", "files", "findings", "usage", "runners", "me", "sign-up"].find((name) => route.includes(`/${name}`));
       expect({ route, tags: operation.tags }).toEqual({ route, tags: [tag] });
-      const security = tag === "sign-up" ? undefined : [{ bearerAuth: [] }];
+      const security = tag === "sign-up" || PUBLIC_ROUTES.has(route) ? undefined : [{ bearerAuth: [] }];
       expect({ route, security: operation.security }).toEqual({ route, security });
     }
   });

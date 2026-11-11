@@ -1,109 +1,202 @@
-import { useState } from "react";
+import { useForm } from "@tanstack/react-form";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useRouter } from "@tanstack/react-router";
+import { SIGN_UP_PASSWORD_MIN } from "@repo/contracts/elise";
 import { toast } from "sonner";
+import { ShellPublicBrand, ShellPublicThemeSwitch } from "#/modules/shell";
 import { Button } from "#/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
+import { Card, CardContent, CardHeader } from "#/components/ui/card";
+import { FieldError } from "#/components/ui/field-error";
 import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
+import { fieldAria, fieldMessage, focusFirstInvalidField } from "#/lib/form-field";
 import { signIn, signUp } from "../api";
+import { AUTH_COPY } from "../constants";
+import { AuthBrandPanel } from "./auth-brand-panel";
+import { authKeys } from "../hooks";
 import { SignInSchema, SignUpInputSchema } from "../schemas";
 
-const COPY = {
-  signin: { title: "Sign in", submit: "Sign in", swap: "Create an account", to: "/signup" },
-  signup: { title: "Create an account", submit: "Create account", swap: "I already have an account", to: "/signin" },
-} as const;
-
-export function AuthForm({ mode }: { mode: "signin" | "signup" }) {
-  const [inviteCode, setInviteCode] = useState("");
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [accountName, setAccountName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [pending, setPending] = useState(false);
+// -----
+// After a sign-in or sign-up: forget the old session and go to the app.
+// A failure from the server is a toast; a bad field is an inline error.
+// -----
+function useAuthDone() {
   const router = useRouter();
   const navigate = useNavigate();
-  const copy = COPY[mode];
-
-  const submit = async (event: React.FormEvent) => {
-    event.preventDefault();
-    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    const parsed =
-      mode === "signup"
-        ? SignUpInputSchema.safeParse({ inviteCode, firstName, lastName, email, password, accountName, timezone })
-        : SignInSchema.safeParse({ email, password });
-    if (!parsed.success) {
-      toast.error(parsed.error.issues[0]?.message ?? "Check the form");
-      return;
-    }
-    setPending(true);
-    try {
-      if (mode === "signup") await signUp({ data: SignUpInputSchema.parse(parsed.data) });
-      else await signIn({ data: SignInSchema.parse(parsed.data) });
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Something went wrong");
-      return;
-    } finally {
-      setPending(false);
-    }
-    await router.invalidate();
-    await navigate({ to: "/overview" });
+  const queryClient = useQueryClient();
+  return {
+    onSuccess: async () => {
+      queryClient.removeQueries({ queryKey: authKeys.session() });
+      await router.invalidate();
+      await navigate({ to: "/overview" });
+    },
+    onError: (error: Error) => toast.error(error.message || "Something went wrong"),
   };
+}
+
+function SignInFields() {
+  const done = useAuthDone();
+  const signInMutation = useMutation({ mutationFn: (input: typeof SignInSchema._output) => signIn({ data: input }), ...done });
+  const form = useForm({
+    defaultValues: { email: "", password: "" },
+    validators: { onSubmit: SignInSchema },
+    onSubmit: ({ value }) => signInMutation.mutate(value),
+    onSubmitInvalid: focusFirstInvalidField,
+  });
 
   return (
-    <div className="mx-auto grid min-h-svh w-full max-w-sm content-center gap-4 p-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>{copy.title}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={submit} className="grid gap-4">
-            {mode === "signup" && (
-              <>
-                <div className="grid gap-2">
-                  <Label htmlFor="inviteCode">Invite code</Label>
-                  <Input id="inviteCode" autoComplete="off" value={inviteCode} onChange={(e) => setInviteCode(e.target.value)} required />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="firstName">First name</Label>
-                    <Input id="firstName" autoComplete="given-name" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="lastName">Last name</Label>
-                    <Input id="lastName" autoComplete="family-name" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
-                  </div>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="accountName">Account name</Label>
-                  <Input id="accountName" autoComplete="organization" value={accountName} onChange={(e) => setAccountName(e.target.value)} required />
-                </div>
-              </>
-            )}
-            <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+    <form
+      noValidate
+      onSubmit={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        void form.handleSubmit();
+      }}
+      className="grid gap-5"
+    >
+      <form.Field name="email">
+        {(field) => (
+          <div className="grid gap-2">
+            <Label htmlFor="email">Email</Label>
+            <Input id="email" name={field.name} type="email" autoComplete="email" value={field.state.value} onBlur={field.handleBlur} onChange={(event) => field.handleChange(event.target.value)} {...fieldAria(field, "email")} />
+            <FieldError id="email" message={fieldMessage(field)} />
+          </div>
+        )}
+      </form.Field>
+      <form.Field name="password">
+        {(field) => (
+          <div className="grid gap-2">
+            <Label htmlFor="password">Password</Label>
+            <Input id="password" name={field.name} type="password" autoComplete="current-password" value={field.state.value} onBlur={field.handleBlur} onChange={(event) => field.handleChange(event.target.value)} {...fieldAria(field, "password")} />
+            <FieldError id="password" message={fieldMessage(field)} />
+          </div>
+        )}
+      </form.Field>
+      <Button type="submit" size="lg" className="mt-1 w-full" disabled={signInMutation.isPending}>
+        {signInMutation.isPending ? "Please wait…" : AUTH_COPY.signin.submit}
+      </Button>
+      <p className="text-sm leading-relaxed text-muted-foreground">{AUTH_COPY.signin.forgot}</p>
+    </form>
+  );
+}
+
+const browserTimezone = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+function SignUpFields() {
+  const done = useAuthDone();
+  const signUpMutation = useMutation({ mutationFn: (input: typeof SignUpInputSchema._output) => signUp({ data: input }), ...done });
+  const form = useForm({
+    defaultValues: { inviteCode: "", firstName: "", lastName: "", accountName: "", email: "", password: "", timezone: browserTimezone() },
+    validators: { onSubmit: SignUpInputSchema },
+    onSubmit: ({ value }) => signUpMutation.mutate(value),
+    onSubmitInvalid: focusFirstInvalidField,
+  });
+
+  return (
+    <form
+      noValidate
+      onSubmit={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        void form.handleSubmit();
+      }}
+      className="grid gap-5"
+    >
+      <form.Field name="inviteCode">
+        {(field) => (
+          <div className="grid gap-2">
+            <Label htmlFor="inviteCode">Invite code</Label>
+            <Input id="inviteCode" name={field.name} autoComplete="off" value={field.state.value} onBlur={field.handleBlur} onChange={(event) => field.handleChange(event.target.value)} {...fieldAria(field, "inviteCode", "inviteCode-help")} />
+            <p id="inviteCode-help" className="text-sm leading-relaxed text-muted-foreground">
+              {AUTH_COPY.signup.inviteCodeHelp}
+            </p>
+            <FieldError id="inviteCode" message={fieldMessage(field)} />
+          </div>
+        )}
+      </form.Field>
+      <div className="grid grid-cols-2 gap-4">
+        <form.Field name="firstName">
+          {(field) => (
+            <div className="grid content-start gap-2">
+              <Label htmlFor="firstName">First name</Label>
+              <Input id="firstName" name={field.name} autoComplete="given-name" value={field.state.value} onBlur={field.handleBlur} onChange={(event) => field.handleChange(event.target.value)} {...fieldAria(field, "firstName")} />
+              <FieldError id="firstName" message={fieldMessage(field)} />
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                autoComplete={mode === "signup" ? "new-password" : "current-password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+          )}
+        </form.Field>
+        <form.Field name="lastName">
+          {(field) => (
+            <div className="grid content-start gap-2">
+              <Label htmlFor="lastName">Last name</Label>
+              <Input id="lastName" name={field.name} autoComplete="family-name" value={field.state.value} onBlur={field.handleBlur} onChange={(event) => field.handleChange(event.target.value)} {...fieldAria(field, "lastName")} />
+              <FieldError id="lastName" message={fieldMessage(field)} />
             </div>
-            <Button type="submit" disabled={pending}>
-              {pending ? "Please wait…" : copy.submit}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-      <Link to={copy.to} className="text-center text-sm text-muted-foreground underline-offset-4 hover:underline">
-        {copy.swap}
-      </Link>
-    </div>
+          )}
+        </form.Field>
+      </div>
+      <form.Field name="accountName">
+        {(field) => (
+          <div className="grid gap-2">
+            <Label htmlFor="accountName">Account name</Label>
+            <Input id="accountName" name={field.name} autoComplete="organization" value={field.state.value} onBlur={field.handleBlur} onChange={(event) => field.handleChange(event.target.value)} {...fieldAria(field, "accountName", "accountName-help")} />
+            <p id="accountName-help" className="text-sm leading-relaxed text-muted-foreground">
+              {AUTH_COPY.signup.accountNameHelp}
+            </p>
+            <FieldError id="accountName" message={fieldMessage(field)} />
+          </div>
+        )}
+      </form.Field>
+      <form.Field name="email">
+        {(field) => (
+          <div className="grid gap-2">
+            <Label htmlFor="email">Email</Label>
+            <Input id="email" name={field.name} type="email" autoComplete="email" value={field.state.value} onBlur={field.handleBlur} onChange={(event) => field.handleChange(event.target.value)} {...fieldAria(field, "email")} />
+            <FieldError id="email" message={fieldMessage(field)} />
+          </div>
+        )}
+      </form.Field>
+      <form.Field name="password">
+        {(field) => (
+          <div className="grid gap-2">
+            <Label htmlFor="password">Password</Label>
+            <Input id="password" name={field.name} type="password" autoComplete="new-password" value={field.state.value} onBlur={field.handleBlur} onChange={(event) => field.handleChange(event.target.value)} {...fieldAria(field, "password", "password-hint")} />
+            <p id="password-hint" className="text-sm leading-relaxed text-muted-foreground">
+              At least {SIGN_UP_PASSWORD_MIN} characters.
+            </p>
+            <FieldError id="password" message={fieldMessage(field)} />
+          </div>
+        )}
+      </form.Field>
+      <p className="text-sm leading-relaxed text-muted-foreground">{AUTH_COPY.signup.consequence}</p>
+      <Button type="submit" size="lg" className="w-full" disabled={signUpMutation.isPending}>
+        {signUpMutation.isPending ? "Please wait…" : AUTH_COPY.signup.submit}
+      </Button>
+    </form>
+  );
+}
+
+export function AuthForm({ mode }: { mode: "signin" | "signup" }) {
+  const copy = AUTH_COPY[mode];
+
+  return (
+    <main className="mx-auto grid min-h-svh w-full max-w-6xl lg:grid-cols-2">
+      <ShellPublicThemeSwitch />
+      <AuthBrandPanel />
+      <div className="mx-auto grid w-full max-w-lg content-center gap-8 p-6 lg:p-12">
+        <div className="grid lg:hidden">
+          <ShellPublicBrand />
+        </div>
+        <Card className="shadow-raised">
+          <CardHeader className="gap-1.5 px-8 pb-9 pt-8">
+            <h1 className="text-xl font-semibold leading-none tracking-tight">{copy.title}</h1>
+            <p className="text-sm text-muted-foreground">{copy.hint}</p>
+          </CardHeader>
+          <CardContent className="p-8">{mode === "signup" ? <SignUpFields /> : <SignInFields />}</CardContent>
+        </Card>
+        <Link to={copy.to} className="inline-flex min-h-6 items-center justify-self-center rounded-sm text-sm text-muted-foreground underline underline-offset-4 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          {copy.swap}
+        </Link>
+      </div>
+    </main>
   );
 }

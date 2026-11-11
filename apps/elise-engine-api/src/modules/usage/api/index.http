@@ -1,0 +1,32 @@
+@baseUrl = http://localhost:8787
+@token = <service-token-or-session-token>
+@account = <tenant-uuid>
+
+# This month's spend, tokens and what is left of the budget.
+GET {{baseUrl}}/usage
+Authorization: Bearer {{token}}
+x-account-id: {{account}}
+
+###
+
+# Set the monthly budget in dollars; null goes back to the default. Needs a session.
+PATCH {{baseUrl}}/usage/budget
+Authorization: Bearer {{token}}
+x-account-id: {{account}}
+Content-Type: application/json
+
+{ "monthlyBudgetUsd": 30 }
+
+###
+
+# The last changes to the scan settings (budget, Anthropic key), newest first. Needs a session.
+GET {{baseUrl}}/usage/changes
+Authorization: Bearer {{token}}
+x-account-id: {{account}}
+
+###
+
+# The last budget changes, newest first. Needs a session.
+GET {{baseUrl}}/usage/budget/changes
+Authorization: Bearer {{token}}
+x-account-id: {{account}}

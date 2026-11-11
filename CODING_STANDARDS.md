@@ -6,7 +6,7 @@ Reviewers read [General](docs/standards/general.md) and the scope files that mat
 
 | Scope | Applies to |
 |---|---|
-| [General](docs/standards/general.md) | All code in every app and package, whether a person or an agent wrote it |
+| [General](docs/standards/general.md) | All code in every app and package, whether a person or an agent wrote it: comments and tests (lint rules first) |
 | [Hono JS](docs/standards/hono.md) | Route code in every Hono backend app |
 | [React](docs/standards/react.md) | React frontend apps built on TanStack Start, Router, Query and Form |
 | [Worker frontend](docs/standards/worker-frontend.md) | A TanStack Start app on Cloudflare Workers that holds secrets, bindings or a session |

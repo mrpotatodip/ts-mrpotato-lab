@@ -1,13 +1,17 @@
-import { queryOptions } from "@tanstack/react-query";
-import { fetchOverview, fetchScan, fetchScanFile, fetchScanFindings, fetchScans } from "../api";
-import type { ScanState } from "../schemas";
+import { noop, queryOptions, type QueryClient } from "@tanstack/react-query";
+import { fetchOverview, fetchScan, fetchScanRepoBranches, fetchScanRepos, fetchScanDiff, fetchScanFile, fetchScanFindings, fetchScans, fetchVerdict } from "../api";
+import type { ScanState, ScanStatus } from "../schemas";
 
 export const scanKeys = {
   all: ["scans"] as const,
   list: () => [...scanKeys.all, "list"] as const,
   detail: (scanId: string) => [...scanKeys.all, "detail", scanId] as const,
+  repos: () => [...scanKeys.all, "repos"] as const,
+  repoBranches: (repoId: string) => [...scanKeys.all, "repo-branches", repoId] as const,
   overview: () => [...scanKeys.all, "overview"] as const,
   findings: (scanId: string) => [...scanKeys.detail(scanId), "findings"] as const,
+  diff: (scanId: string) => [...scanKeys.detail(scanId), "diff"] as const,
+  verdict: (repoId: string, commit: string) => [...scanKeys.all, "verdict", repoId, commit] as const,
   file: (scanId: string, file: string) => [...scanKeys.detail(scanId), file] as const,
 };
 
@@ -37,6 +41,7 @@ export const scanFileQuery = (scanId: string, file: string) =>
     queryKey: scanKeys.file(scanId, file),
     queryFn: () => fetchScanFile({ data: { scanId, file } }),
     staleTime: Infinity,
+    retry: false,
   });
 
 export const overviewQuery = () =>
@@ -52,3 +57,35 @@ export const scanFindingsQuery = (scanId: string) =>
     queryFn: () => fetchScanFindings({ data: { scanId } }),
     staleTime: Infinity,
   });
+
+export const scanDiffQuery = (scanId: string) =>
+  queryOptions({
+    queryKey: scanKeys.diff(scanId),
+    queryFn: () => fetchScanDiff({ data: { scanId } }),
+    staleTime: Infinity,
+  });
+
+export const verdictQuery = (repoId: string, commit: string) =>
+  queryOptions({
+    queryKey: scanKeys.verdict(repoId, commit),
+    queryFn: () => fetchVerdict({ data: { repoId, commit } }),
+    retry: false,
+  });
+
+export const scanReposQuery = () => queryOptions({ queryKey: scanKeys.repos(), queryFn: () => fetchScanRepos() });
+
+export const scanRepoBranchesQuery = (repoId: string) => queryOptions({ queryKey: scanKeys.repoBranches(repoId), queryFn: () => fetchScanRepoBranches({ data: { repoId } }) });
+
+// -----
+// Starts the report's other reads as soon as the scan itself has arrived, so
+// the findings, verdict and comparison load beside each other instead of one
+// after the other. It does not wait: a failed read shows in its own card.
+// -----
+export function prefetchScanReport(queryClient: QueryClient, scan: ScanStatus) {
+  if (scan.status !== "succeeded") return;
+  const hasFindings = scan.summary != null || (scan.files ?? []).includes("findings.json");
+  if (hasFindings) void queryClient.query(scanFindingsQuery(scan.scanId)).catch(noop);
+  if (scan.skill !== "lite") return;
+  if (scan.commitSha) void queryClient.query(verdictQuery(scan.repoId, scan.commitSha)).catch(noop);
+  if (scan.branchId) void queryClient.query(scanDiffQuery(scan.scanId)).catch(noop);
+}

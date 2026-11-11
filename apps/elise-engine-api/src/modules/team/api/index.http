@@ -1,0 +1,44 @@
+@baseUrl = http://localhost:8787
+@account = 0b8c1d2e-3f4a-4b5c-8d6e-7f8091a2b3c4
+
+# These need the session of a tenant_admin or workspace_admin of the account (sign in with POST /auth/sign-in/email).
+
+GET {{baseUrl}}/team
+Authorization: Bearer <session-token>
+x-account-id: {{account}}
+
+###
+
+# The Roles an invite can give.
+GET {{baseUrl}}/team/roles
+Authorization: Bearer <session-token>
+x-account-id: {{account}}
+
+###
+
+# Invite someone. The Worker queues the email; the answer also holds the one-time token, in case it does not arrive.
+POST {{baseUrl}}/team/invites
+Authorization: Bearer <session-token>
+x-account-id: {{account}}
+Content-Type: application/json
+
+{ "email": "bo@example.com", "role": "workspace_member", "groupIds": [] }
+
+###
+
+DELETE {{baseUrl}}/team/invites/7c9e6679-7425-40de-944b-e07fc1f90ae7
+Authorization: Bearer <session-token>
+x-account-id: {{account}}
+
+###
+
+# The two below need no login. <token> comes from the invite answer.
+GET {{baseUrl}}/team/invites/<token>
+
+###
+
+# A new person sends a name and a password. Someone with a login signs in and sends the session with no body.
+POST {{baseUrl}}/team/invites/<token>/accept
+Content-Type: application/json
+
+{ "firstName": "Bo", "lastName": "Chen", "password": "correct-horse-battery" }

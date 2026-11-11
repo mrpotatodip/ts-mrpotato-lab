@@ -5,6 +5,8 @@
   // Files resolves native Linux errno names through node:os.
   "compatibility_flags": ["nodejs_compat"],
   "observability": { "enabled": true },
+  // Cloudflare creates the DNS record and certificate for a custom domain; the zone must be on this account.
+  "routes": [{ "pattern": "api.eliselab.com", "custom_domain": true }],
   "containers": [
     {
       "class_name": "ScanSandbox",
@@ -21,10 +23,24 @@
   "workflows": [{ "name": "elise-scan-workflow", "binding": "SCAN_WORKFLOW", "class_name": "ScanWorkflow" }],
   "ratelimits": [
     { "name": "SIGN_UP_LIMITER", "namespace_id": "1001", "simple": { "limit": 5, "period": 60 } },
-    { "name": "SIGN_IN_LIMITER", "namespace_id": "1002", "simple": { "limit": 10, "period": 60 } }
+    { "name": "SIGN_IN_LIMITER", "namespace_id": "1002", "simple": { "limit": 10, "period": 60 } },
+    { "name": "TEAM_INVITE_LIMITER", "namespace_id": "1003", "simple": { "limit": 10, "period": 60 } },
+    { "name": "RUNNER_ENROLL_LIMITER", "namespace_id": "1004", "simple": { "limit": 5, "period": 60 } }
   ],
   "r2_buckets": [{ "binding": "REPORTS", "bucket_name": "repo-scan-reports" }],
-  "vars": { "ENVIRONMENT": "production", "MODEL": "claude-sonnet-5-5", "EFFORT": "high", "MAX_BUDGET_USD": "2", "MAX_ACTIVE_SCANS": "3", "AUTH_BASE_URL": "https://elise-engine-api.mochi-project.workers.dev", "AUTH_TRUSTED_ORIGINS": "https://elise-engine-api.mochi-project.workers.dev,http://localhost:3000" }
+  // Invite emails: the Worker queues one per invite, the consumer below sends it. The queues must exist before a deploy (wrangler queues create).
+  "send_email": [{ "name": "EMAIL" }],
+  "queues": {
+    "producers": [{ "binding": "INVITE_EMAIL_QUEUE", "queue": "elise-invite-emails" }],
+    "consumers": [{ "queue": "elise-invite-emails", "max_batch_size": 10, "max_batch_timeout": 5, "max_retries": 4, "dead_letter_queue": "elise-invite-emails-dlq" }]
+  },
+  "vars": { "ENVIRONMENT": "production", "MODEL": "claude-sonnet-5-5", "EFFORT": "high", "MAX_BUDGET_USD": "2", "MAX_ACTIVE_SCANS": "3", "MONTHLY_BUDGET_USD": "20", "BUDGET_ALLOWANCE_USD": "1000", "BILLING_ENFORCED": "false", "DASHBOARD_URL": "https://app.eliselab.com", "INVITE_FROM": "no-reply@hello.eliselab.com", "AUTH_BASE_URL": "https://api.eliselab.com", "AUTH_TRUSTED_ORIGINS": "https://api.eliselab.com,https://app.eliselab.com,http://localhost:3000" }
+  // MONTHLY_BUDGET_USD is the default monthly spend per account with no plan (a plan's included credit is the default instead; tenants.monthly_scan_budget_usd overrides both).
+  // BUDGET_ALLOWANCE_USD is the most an admin may set as the monthly budget (tenants.monthly_scan_budget_allowance_usd overrides it for one account).
+  // BILLING_ENFORCED: "true" refuses new scans from an account with no plan row; "false" lets such accounts run as before. Accounts that have a plan row follow it either way.
   // MAX_BUDGET_USD is the per-scan spend ceiling: requests may lower it, never raise it.
   // Secrets (wrangler secret put / --secrets-file): ANTHROPIC_API_KEY, SCAN_API_TOKEN, DATABASE_URL, AUTH_SECRET
+  // Optional, for accounts that bring their own Anthropic key: KEY_ENCRYPTION_SECRET (any long random string; changing it makes every saved key unreadable, and those accounts' scans stop until they save the key again)
+  // Optional, for private repos: GITHUB_APP_ID, GITHUB_APP_PRIVATE_KEY (PKCS#8 PEM)
+  // Optional, for Connect GitHub: GITHUB_APP_CLIENT_ID, GITHUB_APP_CLIENT_SECRET
 }

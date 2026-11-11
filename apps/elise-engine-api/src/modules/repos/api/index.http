@@ -1,0 +1,49 @@
+@baseUrl = http://localhost:8787
+@account = 0b8c1d2e-3f4a-4b5c-8d6e-7f8091a2b3c4
+@repo = 5d1f0c9a-2b3e-4f60-9a71-8b92c3d4e5f6
+
+# The service token and the account, or a session of someone with a Role in the account.
+
+GET {{baseUrl}}/repos
+Authorization: Bearer <service-token>
+x-account-id: {{account}}
+
+###
+
+GET {{baseUrl}}/repos/{{repo}}
+Authorization: Bearer <service-token>
+x-account-id: {{account}}
+
+###
+
+# state: open | fixed_by_code | regressed. Also severity, triage, limit, cursor.
+GET {{baseUrl}}/repos/{{repo}}/findings?state=regressed
+Authorization: Bearer <service-token>
+x-account-id: {{account}}
+
+###
+
+# Add a repo without scanning it, and the branches to track (at most 25 in all; a successful scan of a branch tracks it too).
+POST {{baseUrl}}/repos
+Authorization: Bearer <service-token>
+x-account-id: {{account}}
+content-type: application/json
+
+{ "repo": "https://github.com/octocat/Hello-World", "branches": ["main", "release"] }
+
+###
+
+# Track one more branch. A branch is known by its exact name.
+POST {{baseUrl}}/repos/{{repo}}/branches
+Authorization: Bearer <service-token>
+x-account-id: {{account}}
+content-type: application/json
+
+{ "name": "release" }
+
+###
+
+# The problems of one tracked branch. Without branch, the default branch.
+GET {{baseUrl}}/repos/{{repo}}/findings?branch=release
+Authorization: Bearer <service-token>
+x-account-id: {{account}}

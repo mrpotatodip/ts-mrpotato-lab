@@ -3,7 +3,10 @@ import type { Bindings } from "#/types/variables";
 
 export const TEST_TOKEN = "test-token-test-token";
 
-export const testExecutionContext = { waitUntil: () => undefined, passThroughOnException: () => undefined };
+// SAFETY: the app calls only waitUntil and passThroughOnException on the context.
+const executionContext = { waitUntil: () => undefined, passThroughOnException: () => undefined } as never;
+
+export const testExecutionContext: ExecutionContext = executionContext;
 
 type Created = { id: string; params: ScanParams };
 type WorkflowStatus = { status: string; error?: { name: string; message: string } };
@@ -45,12 +48,15 @@ export function fakeBindings(overrides: Partial<Bindings> = {}, workflowStatus: 
   };
 
   // SAFETY: the routes under test read only the bindings listed here.
-  const env = {
+  const env: Bindings = {
     ENVIRONMENT: "production",
     MODEL: "claude-sonnet-5-5",
     EFFORT: "high",
     MAX_BUDGET_USD: "2",
     MAX_ACTIVE_SCANS: "3",
+    MONTHLY_BUDGET_USD: "20",
+    BUDGET_ALLOWANCE_USD: "1000",
+    BILLING_ENFORCED: "false",
     ANTHROPIC_API_KEY: "test-key",
     SCAN_API_TOKEN: TEST_TOKEN,
     DATABASE_URL: "postgresql://user:pass@127.0.0.1:1/none",

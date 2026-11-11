@@ -38,4 +38,12 @@ describe("engineJson", () => {
     answer(JSON.stringify({ data: { scans: "nope" }, error: null }));
     await expect(engineJson(ScanListSchema, "/scans")).rejects.toThrow("scans");
   });
+
+  it("names the route and the missing field when the engine is older than the contract", async () => {
+    answer(JSON.stringify({ data: { scans: [{ scanId: "s" }], nextCursor: null }, error: null }));
+    const failure = engineJson(ScanListSchema, "/scans");
+    await expect(failure).rejects.toBeInstanceOf(EngineError);
+    await expect(failure).rejects.toThrow(/unexpected response for \/scans: scans\.0\./);
+    await expect(failure).rejects.toThrow("older than this dashboard");
+  });
 });

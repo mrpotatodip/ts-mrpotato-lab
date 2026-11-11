@@ -11,6 +11,8 @@ export const MeAccountSchema = z.object({
   slug: z.string(),
   role: z.string(),
   roleLabel: z.string(),
+  // What the role may do here (ACCESS_POWERS strings). Optional while an older engine does not send it.
+  powers: z.array(z.string()).optional(),
 });
 
 export const MeSchema = z.object({

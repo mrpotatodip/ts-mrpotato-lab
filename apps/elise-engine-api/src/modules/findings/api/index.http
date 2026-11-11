@@ -1,0 +1,19 @@
+@baseUrl = http://localhost:8787
+@token = <service-token-or-session-token>
+@account = <tenant-uuid>
+
+# Findings of each repo's newest successful scan, worst first.
+# Filters: repo, scanId, severity, status, triage (open|fixed|false_positive|accepted_risk), limit, cursor
+GET {{baseUrl}}/findings?severity=high&triage=open
+Authorization: Bearer {{token}}
+x-account-id: {{account}}
+
+###
+
+# Record what a person decided about a finding.
+PUT {{baseUrl}}/findings/triage
+Authorization: Bearer {{token}}
+x-account-id: {{account}}
+Content-Type: application/json
+
+{ "repo": "https://github.com/octocat/Hello-World", "fingerprint": "<64 hex characters>", "status": "false_positive", "note": "test fixture" }

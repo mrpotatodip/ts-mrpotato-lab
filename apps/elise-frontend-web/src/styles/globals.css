@@ -1,144 +1,384 @@
 @import "tailwindcss";
 @import "sonner/dist/styles.css";
 
-@custom-variant dark (&:is(.dark *));
+/* -----
+   DESIGN.md asks for at most about 65 characters a line. Tailwind's max-w-prose
+   is 65ch, the width of 65 zeros, which fits 71 to 80 letters of this font.
+   Redefining max-w-prose does not work (the built-in wins), so reading text
+   uses max-w-copy: 52ch measures at 64 characters or fewer.
+   ----- */
+@utility max-w-copy {
+  max-width: 52ch;
+}
 
 :root {
-  --background: oklch(0.99 0.004 75);
-  --foreground: oklch(0.28 0.02 55);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.28 0.02 55);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.28 0.02 55);
-  --primary: oklch(0.58 0.09 30);
-  --primary-foreground: oklch(0.99 0.004 75);
-  --secondary: oklch(0.965 0.006 75);
-  --secondary-foreground: oklch(0.32 0.02 55);
-  --muted: oklch(0.965 0.006 75);
-  --muted-foreground: oklch(0.54 0.012 60);
-  --accent: oklch(0.955 0.01 75);
-  --accent-foreground: oklch(0.32 0.02 55);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(1 0 0);
-  --border: oklch(0.93 0.006 75);
-  --input: oklch(0.93 0.006 75);
-  --ring: oklch(0.64 0.07 30);
-  /* ----- */
-  /* Status colour for screens outside the dashboard theme: a solid
-     ink plus a soft fill. Dashboard overrides it with the same values. */
-  /* ----- */
-  --status-success: oklch(0.52 0.12 155);
-  --status-success-soft: oklch(0.95 0.04 155);
-  --status-danger: oklch(0.55 0.17 27);
-  --status-danger-soft: oklch(0.95 0.03 20);
+  color-scheme: light;
+  --background: oklch(0.958 0.004 258);
+  --foreground: oklch(0.22 0.012 258);
+  --sidebar: oklch(0.93 0.005 258);
+  --card: oklch(0.99 0.002 258);
+  --card-foreground: oklch(0.22 0.012 258);
+  --popover: oklch(0.998 0.001 258);
+  --popover-foreground: oklch(0.22 0.012 258);
+  --primary: oklch(0.27 0.012 258);
+  --primary-foreground: oklch(0.99 0.002 258);
+  --primary-ink: oklch(0.3 0.012 258);
+  --secondary: oklch(0.9 0.006 258);
+  --secondary-foreground: oklch(0.26 0.012 258);
+  --muted: oklch(0.94 0.004 258);
+  --muted-foreground: oklch(0.36 0.012 258);
+  --accent: oklch(0 0 0 / 0.055);
+  --accent-foreground: oklch(0.2 0.012 258);
+  --destructive: oklch(0.52 0.19 27);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: oklch(0 0 0 / 0.09);
+  --input: oklch(0 0 0 / 0.16);
+  --ring: oklch(0.4 0.015 258 / 0.5);
+
+  --status-success: oklch(0.4 0.12 155);
+  --status-success-soft: oklch(0.55 0.14 155 / 0.13);
+  --status-danger: oklch(0.44 0.18 27);
+  --status-danger-soft: oklch(0.58 0.2 27 / 0.12);
+  --status-warning: oklch(0.4 0.1 70);
+  --status-warning-soft: oklch(0.72 0.15 80 / 0.2);
+  --status-info: oklch(0.41 0.14 245);
+  --status-info-soft: oklch(0.6 0.14 245 / 0.13);
+  --status-neutral: oklch(0.38 0.012 258);
+  --status-neutral-soft: oklch(0.5 0.012 258 / 0.12);
+
+  --severity-critical: oklch(0.44 0.2 25);
+  --severity-high: oklch(0.44 0.14 48);
+  --severity-medium: oklch(0.42 0.1 80);
+  --severity-low: oklch(0.42 0.14 245);
+  --severity-informational: oklch(0.4 0.012 258);
+
+  /* Marks are colour used as a shape: a bar, a ring, a dot. They are brighter
+     and more saturated than the inks above, which have to carry text at 4.5:1,
+     and each keeps 3:1 against a card. */
+  --mark-success: oklch(0.6 0.12 160);
+  --mark-danger: oklch(0.6 0.17 18);
+  --mark-warning: oklch(0.66 0.14 72);
+  --mark-info: oklch(0.6 0.15 245);
+  --mark-neutral: oklch(0.62 0.015 258);
+  --mark-critical: oklch(0.55 0.21 20);
+  --mark-high: oklch(0.6 0.19 42);
+  --mark-medium: oklch(0.66 0.14 72);
+  --mark-low: oklch(0.6 0.15 245);
+  --mark-informational: oklch(0.62 0.015 258);
+
   --font-sans:
     ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-  --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
   --font-mono:
     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
     "Courier New", monospace;
   --radius: 0.75rem;
-  --shadow-x: 0;
-  --shadow-y: 1px;
-  --shadow-blur: 3px;
-  --shadow-spread: 0px;
-  --shadow-opacity: 0.1;
-  --shadow-color: oklch(0 0 0);
-  --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
-  --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
-  --shadow-sm:
-    0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
-  --shadow: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
-  --shadow-md:
-    0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 2px 4px -1px hsl(0 0% 0% / 0.1);
-  --shadow-lg:
-    0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 4px 6px -1px hsl(0 0% 0% / 0.1);
-  --shadow-xl:
-    0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 8px 10px -1px hsl(0 0% 0% / 0.1);
-  --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
-  --tracking-normal: 0em;
-  --spacing: 0.25rem;
-  --status-warning: oklch(0.58 0.12 75);
-  --status-warning-soft: oklch(0.96 0.05 90);
-  --status-info: oklch(0.52 0.12 245);
-  --status-info-soft: oklch(0.95 0.03 245);
-  --status-neutral: oklch(0.5 0.01 60);
-  --status-neutral-soft: oklch(0.95 0.005 75);
+
+  --glow: oklch(1 0 0 / 0.6);
+  --selection: oklch(0.3 0.012 258 / 0.16);
+
+  --shadow-card:
+    inset 0 1px 0 oklch(1 0 0 / 0.9), 0 1px 2px oklch(0 0 0 / 0.06),
+    0 10px 24px -14px oklch(0 0 0 / 0.14);
+  --shadow-raised:
+    inset 0 1px 0 oklch(1 0 0 / 0.9), 0 1px 2px oklch(0 0 0 / 0.08),
+    0 18px 38px -16px oklch(0 0 0 / 0.28);
+  --shadow-control: 0 1px 1px oklch(0 0 0 / 0.05);
+  --shadow-primary:
+    inset 0 1px 0 oklch(1 0 0 / 0.16), 0 1px 2px oklch(0 0 0 / 0.3),
+    0 6px 14px -6px oklch(0 0 0 / 0.4);
 }
 
-.dark {
-  --background: oklch(0.17 0.004 60);
-  --foreground: oklch(0.95 0.005 75);
-  --card: oklch(0.21 0.005 60);
-  --card-foreground: oklch(0.95 0.005 75);
-  --popover: oklch(0.21 0.005 60);
-  --popover-foreground: oklch(0.95 0.005 75);
-  --primary: oklch(0.8 0.08 30);
-  --primary-foreground: oklch(0.22 0.02 30);
-  --secondary: oklch(0.27 0.006 60);
-  --secondary-foreground: oklch(0.95 0.005 75);
-  --muted: oklch(0.27 0.006 60);
-  --muted-foreground: oklch(0.7 0.01 70);
-  --accent: oklch(0.29 0.008 60);
-  --accent-foreground: oklch(0.95 0.005 75);
-  --destructive: oklch(0.6600 0.1900 25.5);
-  --destructive-foreground: oklch(0.16 0 0);
-  --border: oklch(0.29 0.006 60);
-  --input: oklch(0.29 0.006 60);
-  --ring: oklch(0.64 0.07 30);
-  /* ----- */
-  /* Dark: the ink gains lightness to hold contrast, and the soft
-     fill becomes a dark tint of the same hue. */
-  /* ----- */
-  --status-success: oklch(0.78 0.13 155);
-  --status-success-soft: oklch(0.3 0.05 155);
-  --status-danger: oklch(0.72 0.16 27);
-  --status-danger-soft: oklch(0.3 0.055 27);
-  --font-sans:
-    ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif,
-    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-  --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
-  --font-mono:
-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
-    "Courier New", monospace;
-  --shadow-x: 0;
-  --shadow-y: 1px;
-  --shadow-blur: 3px;
-  --shadow-spread: 0px;
-  --shadow-opacity: 0.1;
-  --shadow-color: oklch(0 0 0);
-  --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
-  --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
-  --shadow-sm:
-    0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
-  --shadow: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
-  --shadow-md:
-    0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 2px 4px -1px hsl(0 0% 0% / 0.1);
-  --shadow-lg:
-    0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 4px 6px -1px hsl(0 0% 0% / 0.1);
-  --shadow-xl:
-    0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 8px 10px -1px hsl(0 0% 0% / 0.1);
-  --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
-  --status-warning: oklch(0.83 0.13 85);
-  --status-warning-soft: oklch(0.31 0.05 85);
-  --status-info: oklch(0.76 0.11 245);
-  --status-info-soft: oklch(0.3 0.045 245);
-  --status-neutral: oklch(0.75 0.01 70);
-  --status-neutral-soft: oklch(0.28 0.005 60);
+/* -----
+   Daylight: the same structure, brighter and firmer. A whiter page, pure
+   white cards, darker text and stronger edges for bright rooms.
+   ----- */
+:root[data-theme="daylight"] {
+  /* The sky is the `::before` layer below; the page itself is plain white.
+     --daylight-sky is set by themeInitScript to the random pick; the url after
+     it is only the no-JavaScript fallback. */
+  --sky: var(--daylight-sky, url("/theme-bgs/bg-daylight-1.jpeg"));
+  --bg-color: oklch(1 0 0);
+  --background: oklch(0.985 0.002 258 / 0.12);
+  --foreground: oklch(0.15 0.012 258);
+  --sidebar: oklch(0.99 0.002 258 / 0.42);
+  --card: oklch(1 0 0 / 0.74);
+  --card-foreground: oklch(0.18 0.012 258);
+  --popover: oklch(1 0 0 / 0.9);
+  --popover-foreground: oklch(0.18 0.012 258);
+  --primary: oklch(0.22 0.012 258);
+  --primary-ink: oklch(0.25 0.012 258);
+  --secondary: oklch(0.935 0.004 258);
+  --secondary-foreground: oklch(0.22 0.012 258);
+  --muted: oklch(0.965 0.003 258 / 0.45);
+  --muted-foreground: oklch(0.34 0.012 258);
+  --accent: oklch(0 0 0 / 0.06);
+  --accent-foreground: oklch(0.16 0.012 258);
+  --border: oklch(0 0 0 / 0.14);
+  --input: oklch(0 0 0 / 0.26);
+  --ring: oklch(0.3 0.015 258 / 0.6);
+}
+
+/* -----
+   Greenfields: Daylight's brightness and glass on a warm green ramp (hue 150)
+   under a picture of fields. Status, severity and mark colours stay Default's.
+   ----- */
+:root[data-theme="greenfields"] {
+  /* --greenfields-sky is set by themeInitScript to the random pick; the url
+     after it is only the no-JavaScript fallback. */
+  --sky: var(--greenfields-sky, url("/theme-bgs/bg-greenfields-1.jpeg"));
+  --bg-color: oklch(0.99 0.008 150);
+  --background: oklch(0.985 0.006 150 / 0.12);
+  --foreground: oklch(0.17 0.02 150);
+  --sidebar: oklch(0.99 0.006 150 / 0.42);
+  --card: oklch(1 0.004 150 / 0.74);
+  --card-foreground: oklch(0.2 0.02 150);
+  --popover: oklch(1 0.004 150 / 0.9);
+  --popover-foreground: oklch(0.2 0.02 150);
+  --primary: oklch(0.32 0.07 150);
+  --primary-ink: oklch(0.34 0.07 150);
+  --secondary: oklch(0.935 0.012 150);
+  --secondary-foreground: oklch(0.26 0.04 150);
+  --muted: oklch(0.965 0.008 150 / 0.45);
+  --muted-foreground: oklch(0.36 0.025 150);
+  --accent: oklch(0.3 0.06 150 / 0.08);
+  --accent-foreground: oklch(0.2 0.04 150);
+  --border: oklch(0.2 0.04 150 / 0.15);
+  --input: oklch(0.2 0.04 150 / 0.28);
+  --ring: oklch(0.38 0.07 150 / 0.6);
+  --selection: oklch(0.4 0.08 150 / 0.2);
+}
+
+/* -----
+   Moonlight: a dark theme on the same cool ramp (hue 258). Surfaces get
+   lighter as they come forward, as in light. The primary action flips to
+   near-white with dark text. Status and severity inks are light so they
+   read on dark and on their own tinted fills.
+   ----- */
+:root[data-theme="moonlight"],
+:root[data-theme="midnight"] {
+  color-scheme: dark;
+  /* The sky is the `::before` layer below; the page is a deep navy that the
+     picture fades into. --moonlight-sky is set by themeInitScript to the
+     random pick; the url after it is only the no-JavaScript fallback. */
+  --sky: var(--moonlight-sky, url("/theme-bgs/bg-moonlight-1.jpeg"));
+  --bg-color: oklch(0.17 0.03 268);
+  --background: oklch(0.18 0.012 258 / 0.12);
+  --foreground: oklch(0.95 0.004 258);
+  --sidebar: oklch(0.15 0.012 258 / 0.32);
+  --card: oklch(0.225 0.013 258 / 0.68);
+  --card-foreground: oklch(0.95 0.004 258);
+  --popover: oklch(0.26 0.014 258 / 0.92);
+  --popover-foreground: oklch(0.95 0.004 258);
+  --primary: oklch(0.93 0.005 258);
+  --primary-foreground: oklch(0.2 0.012 258);
+  --primary-ink: oklch(0.9 0.006 258);
+  --secondary: oklch(0.3 0.014 258);
+  --secondary-foreground: oklch(0.93 0.005 258);
+  --muted: oklch(0.255 0.013 258 / 0.4);
+  --muted-foreground: oklch(0.76 0.01 258);
+  --accent: oklch(1 0 0 / 0.07);
+  --accent-foreground: oklch(0.97 0.004 258);
+  --destructive: oklch(0.56 0.2 27);
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(1 0 0 / 0.1);
+  --input: oklch(1 0 0 / 0.18);
+  --ring: oklch(0.85 0.01 258 / 0.5);
+
+  --status-success: oklch(0.8 0.15 155);
+  --status-success-soft: oklch(0.7 0.15 155 / 0.16);
+  --status-danger: oklch(0.78 0.14 27);
+  --status-danger-soft: oklch(0.65 0.19 27 / 0.2);
+  --status-warning: oklch(0.84 0.13 82);
+  --status-warning-soft: oklch(0.78 0.15 82 / 0.18);
+  --status-info: oklch(0.8 0.11 245);
+  --status-info-soft: oklch(0.65 0.14 245 / 0.2);
+  --status-neutral: oklch(0.82 0.01 258);
+  --status-neutral-soft: oklch(0.7 0.012 258 / 0.18);
+
+  --severity-critical: oklch(0.76 0.16 25);
+  --severity-high: oklch(0.8 0.13 52);
+  --severity-medium: oklch(0.85 0.12 90);
+  --severity-low: oklch(0.78 0.11 245);
+  --severity-informational: oklch(0.8 0.01 258);
+
+  --mark-success: oklch(0.74 0.15 155);
+  --mark-danger: oklch(0.72 0.17 25);
+  --mark-warning: oklch(0.82 0.14 85);
+  --mark-info: oklch(0.74 0.13 245);
+  --mark-neutral: oklch(0.72 0.015 258);
+  --mark-critical: oklch(0.7 0.2 25);
+  --mark-high: oklch(0.76 0.15 50);
+  --mark-medium: oklch(0.84 0.14 88);
+  --mark-low: oklch(0.74 0.13 245);
+  --mark-informational: oklch(0.72 0.015 258);
+
+  --glow: oklch(0.6 0.04 258 / 0.12);
+  --selection: oklch(0.8 0.04 258 / 0.3);
+
+  --shadow-card:
+    inset 0 1px 0 oklch(1 0 0 / 0.05), 0 1px 2px oklch(0 0 0 / 0.4),
+    0 10px 24px -14px oklch(0 0 0 / 0.6);
+  --shadow-raised:
+    inset 0 1px 0 oklch(1 0 0 / 0.07), 0 1px 2px oklch(0 0 0 / 0.5),
+    0 18px 38px -16px oklch(0 0 0 / 0.8);
+  --shadow-control: 0 1px 1px oklch(0 0 0 / 0.3);
+  --shadow-primary:
+    inset 0 1px 0 oklch(1 0 0 / 0.5), 0 1px 2px oklch(0 0 0 / 0.5),
+    0 6px 14px -6px oklch(0 0 0 / 0.6);
+}
+
+/* -----
+   Midnight: Default turned dark. It shares Moonlight's dark ink, status and
+   shadow tokens above, but has no sky and no glass: the page and every
+   surface are solid, stepping lighter as they come forward.
+   ----- */
+:root[data-theme="midnight"] {
+  background-color: var(--background);
+  --background: oklch(0.175 0.01 258);
+  --sidebar: oklch(0.145 0.01 258);
+  --card: oklch(0.225 0.012 258);
+  --popover: oklch(0.26 0.013 258);
+  --muted: oklch(0.25 0.012 258);
+  --glow: oklch(0.6 0.04 258 / 0.08);
+}
+
+/* -----
+   Glass: only the two image themes set --sky. The picture sits fixed behind
+   the page and the surfaces above it blur what is under them.
+   ----- */
+:root[data-theme="daylight"],
+:root[data-theme="greenfields"],
+:root[data-theme="moonlight"] {
+  background-color: var(--bg-color);
+}
+/* -----
+   Each sky is a small banner (public/theme-bgs: three bg-daylight-N.jpeg and
+   three bg-moonlight-N.jpeg, all 1778 by 592), centred at the top, and its
+   sides and bottom fade into the page colour. Daylight is zoomed to 1.5 times;
+   Moonlight has its own size below. Zooming further softens it more. Which
+   pictures there are, and how they rotate, is in
+   modules/shell/constants/theme-skies.ts, not here.
+   ----- */
+:root[data-theme="daylight"]::before,
+:root[data-theme="greenfields"]::before,
+:root[data-theme="moonlight"]::before {
+  content: "";
+  position: fixed;
+  z-index: -1;
+  top: 0;
+  left: 50%;
+  width: min(150%, 2250px);
+  aspect-ratio: 3 / 1;
+  transform: translateX(-50%);
+  pointer-events: none;
+  background: var(--sky) center / 100% 100% no-repeat;
+  /* Eased fades (more stops than a straight ramp) so no hard edge shows
+     where the picture meets the page colour. */
+  -webkit-mask-image:
+    linear-gradient(to right, transparent, rgb(0 0 0 / 0.08) 6%, rgb(0 0 0 / 0.3) 13%, rgb(0 0 0 / 0.65) 22%, #000 34%, #000 66%, rgb(0 0 0 / 0.65) 78%, rgb(0 0 0 / 0.3) 87%, rgb(0 0 0 / 0.08) 94%, transparent),
+    linear-gradient(to bottom, #000 10%, rgb(0 0 0 / 0.85) 25%, rgb(0 0 0 / 0.55) 45%, rgb(0 0 0 / 0.25) 65%, rgb(0 0 0 / 0.07) 82%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(to right, transparent, rgb(0 0 0 / 0.08) 6%, rgb(0 0 0 / 0.3) 13%, rgb(0 0 0 / 0.65) 22%, #000 34%, #000 66%, rgb(0 0 0 / 0.65) 78%, rgb(0 0 0 / 0.3) 87%, rgb(0 0 0 / 0.08) 94%, transparent),
+    linear-gradient(to bottom, #000 10%, rgb(0 0 0 / 0.85) 25%, rgb(0 0 0 / 0.55) 45%, rgb(0 0 0 / 0.25) 65%, rgb(0 0 0 / 0.07) 82%, transparent);
+  mask-composite: intersect;
+}
+/* Moonlight shows its sky at 1.1 times the viewport, capped at 1950px. The
+   pictures are 1778px wide, so this enlarges them only slightly. */
+:root[data-theme="moonlight"]::before {
+  width: min(110%, 1950px);
+  /* Start just under the top of the 3.5rem top bar so it never clips the moon
+     (which then clears the first stat card). The art is left untouched, with
+     no veil over it: the page header's text halo keeps the text readable. */
+  top: 2.5rem;
+}
+/* Sign in, sign up and invite pages have no top bar, so the sky starts at the
+   top instead of leaving an empty dark strip above it. They mark themselves
+   with data-public-page (ShellPublicThemeSwitch). */
+:root[data-theme="moonlight"]:has([data-public-page])::before {
+  top: 0;
+}
+/* Page titles and their description sit straight on the sky, with no glass
+   behind them. A soft dark halo and a brighter description keep them
+   readable over bright clouds in Moonlight. */
+:root[data-theme="daylight"] [data-slot="page-header"],
+:root[data-theme="greenfields"] [data-slot="page-header"] {
+  text-shadow: 0 0 14px oklch(1 0 0 / 0.9), 0 0 3px oklch(1 0 0 / 0.7);
+}
+:root[data-theme="moonlight"] [data-slot="page-header"] {
+  text-shadow: 0 0 22px oklch(0.12 0.03 268 / 0.9), 0 0 10px oklch(0.12 0.03 268 / 0.95), 0 1px 3px oklch(0.1 0.03 268 / 0.9);
+}
+:root[data-theme="moonlight"] [data-slot="page-header"] .text-muted-foreground,
+:root[data-theme="moonlight"] .text-muted-foreground[data-slot="page-header"] {
+  color: oklch(0.9 0.008 258);
+}
+/* A card body sits inside its card, and two translucent layers would stack
+   into a near-opaque one. In both glass themes the inner one is clear, so
+   the whole card is one pane of glass. */
+:root[data-theme="daylight"] .bg-card .bg-card,
+:root[data-theme="greenfields"] .bg-card .bg-card,
+:root[data-theme="moonlight"] .bg-card .bg-card {
+  background-color: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+/* Dialogs and sheets are glass like the cards: the same fill and blur. The
+   dialog body is a second layer, so it is clear. Menus and tooltips keep the
+   stronger popover fill so they stay legible over page text. */
+:root[data-theme="daylight"] :is([data-slot="dialog-content"], [data-slot="sheet-content"]),
+:root[data-theme="greenfields"] :is([data-slot="dialog-content"], [data-slot="sheet-content"]),
+:root[data-theme="moonlight"] :is([data-slot="dialog-content"], [data-slot="sheet-content"]) {
+  background-color: var(--card);
+}
+:root[data-theme="daylight"] :is([data-slot="dialog-content"], [data-slot="sheet-content"]) .bg-popover,
+:root[data-theme="greenfields"] :is([data-slot="dialog-content"], [data-slot="sheet-content"]) .bg-popover,
+:root[data-theme="moonlight"] :is([data-slot="dialog-content"], [data-slot="sheet-content"]) .bg-popover {
+  background-color: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+/* The body normally overlaps the header by 1rem and its rounded top hides the
+   header fill behind it. A clear body hides nothing, so the header fill would
+   show through below the header. Here they meet edge to edge instead. */
+:root[data-theme="daylight"] :is([data-slot="card-header"], [data-slot="dialog-header"]),
+:root[data-theme="greenfields"] :is([data-slot="card-header"], [data-slot="dialog-header"]),
+:root[data-theme="moonlight"] :is([data-slot="card-header"], [data-slot="dialog-header"]) {
+  padding-bottom: 1rem;
+}
+:root[data-theme="daylight"] :is([data-slot="card-content"], [data-slot="dialog-body"]),
+:root[data-theme="greenfields"] :is([data-slot="card-content"], [data-slot="dialog-body"]),
+:root[data-theme="moonlight"] :is([data-slot="card-content"], [data-slot="dialog-body"]) {
+  margin-top: 0;
+  border-radius: 0;
+}
+:root[data-theme="daylight"] :is(.bg-sidebar, .bg-card, .bg-popover),
+:root[data-theme="greenfields"] :is(.bg-sidebar, .bg-card, .bg-popover),
+:root[data-theme="moonlight"] :is(.bg-sidebar, .bg-card, .bg-popover) {
+  -webkit-backdrop-filter: blur(10px) saturate(1.4);
+  backdrop-filter: blur(10px) saturate(1.4);
+}
+/* Dialogs and sheets float over the page, so they blur more than the cards.
+   This sits after the shared rule above, which has the same specificity. */
+:root[data-theme="daylight"] :is([data-slot="dialog-content"], [data-slot="sheet-content"]),
+:root[data-theme="greenfields"] :is([data-slot="dialog-content"], [data-slot="sheet-content"]),
+:root[data-theme="moonlight"] :is([data-slot="dialog-content"], [data-slot="sheet-content"]) {
+  -webkit-backdrop-filter: blur(32px) saturate(1.5);
+  backdrop-filter: blur(32px) saturate(1.5);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-sidebar: var(--sidebar);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-ink: var(--primary-ink);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
@@ -151,7 +391,6 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-
   --color-status-success: var(--status-success);
   --color-status-success-soft: var(--status-success-soft);
   --color-status-danger: var(--status-danger);
@@ -163,24 +402,35 @@
   --color-status-neutral: var(--status-neutral);
   --color-status-neutral-soft: var(--status-neutral-soft);
 
+  --color-severity-critical: var(--severity-critical);
+  --color-severity-high: var(--severity-high);
+  --color-severity-medium: var(--severity-medium);
+  --color-severity-low: var(--severity-low);
+  --color-severity-informational: var(--severity-informational);
+
+  --color-mark-success: var(--mark-success);
+  --color-mark-danger: var(--mark-danger);
+  --color-mark-warning: var(--mark-warning);
+  --color-mark-info: var(--mark-info);
+  --color-mark-neutral: var(--mark-neutral);
+  --color-mark-critical: var(--mark-critical);
+  --color-mark-high: var(--mark-high);
+  --color-mark-medium: var(--mark-medium);
+  --color-mark-low: var(--mark-low);
+  --color-mark-informational: var(--mark-informational);
+
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);
-  --font-serif: var(--font-serif);
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 
-  --shadow-2xs: var(--shadow-2xs);
-  --shadow-xs: var(--shadow-xs);
-  --shadow-sm: var(--shadow-sm);
-  --shadow: var(--shadow);
-  --shadow-md: var(--shadow-md);
-  --shadow-lg: var(--shadow-lg);
-  --shadow-xl: var(--shadow-xl);
-  --shadow-2xl: var(--shadow-2xl);
-  --shadow-floating: 0 8px 40px 12px oklch(0 0 0 / 0.06);
+  --shadow-card: var(--shadow-card);
+  --shadow-raised: var(--shadow-raised);
+  --shadow-control: var(--shadow-control);
+  --shadow-primary: var(--shadow-primary);
 }
 
 @layer base {
@@ -193,17 +443,20 @@
   body {
     @apply bg-background text-foreground;
     position: relative;
-    /* ----- */
-    /* Installed standalone there is no browser chrome, so content
-       runs under the notch and the home indicator. Every inset is 0
-       in a normal browser tab, so this is inert outside standalone.
-       Fixed/sticky elements ignore this padding and pad themselves. */
-    /* ----- */
-    padding-top: env(safe-area-inset-top);
-    padding-right: env(safe-area-inset-right);
-    padding-bottom: env(safe-area-inset-bottom);
-    padding-left: env(safe-area-inset-left);
-    overscroll-behavior-y: contain;
+    min-height: 100svh;
+    background-image: radial-gradient(
+      70rem 26rem at 78% -12%,
+      var(--glow),
+      transparent 70%
+    );
+    background-repeat: no-repeat;
+    font-feature-settings: "cv11", "ss01";
     -webkit-tap-highlight-color: transparent;
+  }
+  :where(svg.lucide) {
+    stroke-width: 1.5;
+  }
+  ::selection {
+    background: var(--selection);
   }
 }

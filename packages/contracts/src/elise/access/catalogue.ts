@@ -20,12 +20,33 @@ export const ACCESS_CATALOGUE = [
     key: "company",
     label: "Company",
     children: [
+      { key: "dashboard", label: "Dashboard", actions: ["read"] },
+      { key: "summary", label: "Summary", actions: ["read"] },
       {
         key: "team",
         label: "Team",
         children: [
           { key: "members", label: "Member", actions: ["read", "update", "delete"] },
           { key: "invites", label: "Team invite", actions: ["read", "create", "update", "delete"] },
+          { key: "groups", label: "Group", actions: ["read", "create", "update", "delete"] },
+        ],
+      },
+      {
+        key: "github",
+        label: "GitHub",
+        children: [{ key: "installations", label: "GitHub installation", actions: ["create", "delete"] }],
+      },
+      {
+        key: "findings",
+        label: "Findings",
+        children: [{ key: "accepted_risk", label: "Accepted risk", actions: ["update"] }],
+      },
+      {
+        key: "usage",
+        label: "Usage",
+        children: [
+          { key: "budget", label: "Monthly scan budget", actions: ["update"] },
+          { key: "anthropic_key", label: "Anthropic API key", actions: ["update"] },
         ],
       },
       {
@@ -119,6 +140,13 @@ export const isAccessPower = (value: string): value is AccessPower => ACCESS_POW
 
 export const hasAccessPower = (grants: readonly string[], power: AccessPower): boolean => grants.includes(power);
 
+// -----
+// A Watcher holds the Summary Power and not the Dashboard Power. Both
+// are needed, so an engine that does not grant the Summary Power yet
+// (before its migration) restricts nobody.
+// -----
+export const isWatcher = (grants: readonly string[]): boolean => hasAccessPower(grants, "company:summary:read") && !hasAccessPower(grants, "company:dashboard:read");
+
 const powerAction = (power: string): string => power.slice(power.lastIndexOf(":") + 1);
 
 export const canEditAccount = (powers: readonly string[]): boolean =>
@@ -133,18 +161,25 @@ export const canEditAccount = (powers: readonly string[]): boolean =>
 const TENANT_POWERS = ACCESS_POWERS.filter((power) => !power.startsWith("platform:"));
 const PLATFORM_POWERS = ACCESS_POWERS.filter((power) => power.startsWith("platform:"));
 const TENANT_READS = TENANT_POWERS.filter((power) => powerAction(power) === "read");
-const TEAM_WRITES = TENANT_POWERS.filter(
-  (power) => power.startsWith("company:team:") && powerAction(power) !== "read",
-);
 
-const STORE_STAFF_EXTRA = [
+// -----
+// The owner keeps what changes the people already in the account.
+// A Workspace admin invites and revokes, runs groups, connects
+// GitHub and accepts risk; a Workspace member does none of it
+// and sees no part of Team.
+// -----
+const OWNER_ONLY = ["company:team:members:update", "company:team:members:delete"] as const;
+const WORKSPACE_ADMIN_POWERS = TENANT_POWERS.filter((power) => !OWNER_ONLY.some((owner) => owner === power));
+const WORKSPACE_MEMBER_READS = TENANT_READS.filter((power) => !power.startsWith("company:team:"));
+
+const WORKSPACE_MEMBER_EXTRA = [
   "company:unanswered:questions:dismiss",
   "company:assistant:threads:create",
   "company:assistant:threads:update",
   "company:assistant:threads:delete",
 ] as const;
 
-for (const power of STORE_STAFF_EXTRA) {
+for (const power of WORKSPACE_MEMBER_EXTRA) {
   if (!ACCESS_POWER_SET.has(power)) {
     throw new Error(`ACCESS_ROLE_GRANTS seed is not a catalogue leaf: ${power}`);
   }
@@ -152,7 +187,8 @@ for (const power of STORE_STAFF_EXTRA) {
 
 export const ACCESS_ROLE_GRANTS = {
   tenant_admin: TENANT_POWERS,
-  store_admin: TENANT_POWERS.filter((power) => !TEAM_WRITES.includes(power)),
-  store_staff: [...TENANT_READS, ...STORE_STAFF_EXTRA],
+  workspace_admin: WORKSPACE_ADMIN_POWERS,
+  workspace_member: [...WORKSPACE_MEMBER_READS, ...WORKSPACE_MEMBER_EXTRA],
+  workspace_watcher: ["company:summary:read"],
   superuser: PLATFORM_POWERS,
 } as const;

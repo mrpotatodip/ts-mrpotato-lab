@@ -1,5 +1,17 @@
 {
+  "permissions": {
+    "deny": ["Read(**/.dev.vars)", "Read(**/.env)", "Read(**/.env.local)"]
+  },
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          { "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR\"/scripts/lint-edited.mjs" },
+          { "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR\"/scripts/block-secret-reads.mjs" }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Edit|Write|Bash",

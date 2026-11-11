@@ -1,3 +1,13 @@
 ENVIRONMENT=development
 SCAN_API_TOKEN=
 ANTHROPIC_API_KEY=
+# Optional: lets an account save its own Anthropic key. Any long random string.
+KEY_ENCRYPTION_SECRET=
+DATABASE_URL=
+AUTH_SECRET=
+# Private repos only. The key is PKCS#8 PEM: openssl pkcs8 -topk8 -nocrypt -in app.pem
+GITHUB_APP_ID=
+GITHUB_APP_PRIVATE_KEY=
+# Connect GitHub (the install flow) also needs the App's OAuth pair: Client ID, and a client secret from the App's Credentials tab
+GITHUB_APP_CLIENT_ID=
+GITHUB_APP_CLIENT_SECRET=

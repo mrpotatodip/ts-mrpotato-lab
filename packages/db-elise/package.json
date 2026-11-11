@@ -7,7 +7,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./schema": "./src/schema/index.ts",
-    "./client": "./src/client.ts"
+    "./client": "./src/client.ts",
+    "./test-db": "./src/test-db.ts"
   },
   "scripts": {
     "build": "tsc",
@@ -19,8 +20,10 @@
     "db:add-superuser": "tsx --env-file=.env src/add-superuser.ts",
     "db:create-invite-code": "tsx --env-file=.env src/create-invite-code.ts",
     "check": "tsc --noEmit && tsx src/check-table-names.ts",
-    "db:query": "tsx --env-file=.env src/query.ts",
-    "db:rehearse": "tsx --env-file=.env src/rehearse.ts"
+    "db:query": "NODE_NO_WARNINGS=1 tsx --env-file=.env src/query.ts",
+    "db:rehearse": "NODE_NO_WARNINGS=1 tsx --env-file=.env src/rehearse.ts",
+    "db:exec": "NODE_NO_WARNINGS=1 tsx --env-file=.env src/exec.ts",
+    "db:set-password": "NODE_NO_WARNINGS=1 tsx --env-file=.env src/set-password.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",

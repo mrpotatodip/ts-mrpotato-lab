@@ -1,6 +1,10 @@
 {
   "skills": [
     {
+      "source": "benjitaylor/skills",
+      "name": "stageshow"
+    },
+    {
       "source": "emilkowalski/skills",
       "name": "animate"
     },
@@ -210,6 +214,10 @@
     }
   ],
   "rules": [
+    {
+      "source": "benjitaylor/skills",
+      "prefix": "benjitaylor-"
+    },
     {
       "source": "emilkowalski/skills",
       "prefix": "emilkowalski-"

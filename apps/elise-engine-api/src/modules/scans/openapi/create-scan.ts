@@ -21,8 +21,10 @@ export const createScanDoc = describeRoute({
       "A dashboard needs a security report for a public GitHub repo. This route starts a scan and returns at once. The scan runs in the background.",
     steps: [
       "The Worker checks the token, the account, and the options.",
-      "The Worker refuses the request if the account already has too many active scans.",
-      "The Worker saves the status `queued` and starts the Workflow.",
+      "The Worker finds or makes the repo's record for the account. `Octocat/Hello-World.git` and `octocat/hello-world` are one repo.",
+      "The Worker refuses the request if the account already has too many active scans, or if this repo already has an active scan (409, naming the running scan).",
+      "The Worker saves the status `queued` and starts the Workflow. The scan reads the default branch, or the `ref` (a branch, tag or commit) if one is given, and records the commit it read.",
+      "A lite scan is given the repo's unresolved findings from earlier scans and re-checks them first, so a problem is carried forward, closed only by evidence, or flagged as back.",
       "The Worker returns the scan ID. Read the status with GET /scans/{scanId}.",
     ],
     example: [
@@ -42,6 +44,6 @@ export const createScanDoc = describeRoute({
   }),
   responses: {
     201: jsonResponse("The scan is queued.", envelope(ScanQueuedSchema)),
-    ...errorResponses(400, 401, 429),
+    ...errorResponses(400, 401, 409, 429),
   },
 });

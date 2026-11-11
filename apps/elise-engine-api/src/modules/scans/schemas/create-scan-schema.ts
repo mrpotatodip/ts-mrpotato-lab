@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { SCAN_AGENT_BUDGET_MAX, SCAN_EFFORTS, SCAN_MODELS, SCAN_PROFILES, SCAN_SKILLS } from "#/constants";
 import { ScanOptionsSchema } from "#/schemas";
-import { SCANS_GITHUB_REPO } from "#/modules/scans/constants";
+import { SCANS_GIT_REF, SCANS_GITHUB_REPO } from "#/modules/scans/constants";
 
 export const CreateScanBodySchema = z.object({
   repo: z.string().regex(SCANS_GITHUB_REPO).meta({ example: "https://github.com/octocat/Hello-World" }),
@@ -11,6 +11,12 @@ export const CreateScanBodySchema = z.object({
   profile: z.enum(SCAN_PROFILES).optional(),
   budget: z.number().int().min(1).max(SCAN_AGENT_BUDGET_MAX).optional(),
   max_budget_usd: z.number().positive().optional(),
+  runner_id: z.uuid().optional().meta({ description: "Run the scan on this Runner of the account instead of in EliseLAB's cloud. The Runner must be connected, and the repository public." }),
+  ref: z
+    .string()
+    .regex(SCANS_GIT_REF)
+    .optional()
+    .meta({ example: "main", description: "A branch, tag or commit to scan. Leave it out for the default branch." }),
 });
 
 export const ScanQueuedSchema = ScanOptionsSchema.extend({

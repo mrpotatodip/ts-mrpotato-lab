@@ -1,19 +1,19 @@
 import { HeadContent, Scripts, createRootRouteWithContext } from "@tanstack/react-router";
 import type { QueryClient } from "@tanstack/react-query";
 import { Toaster } from "#/components/ui/sonner";
-import { fetchSession } from "#/modules/auth/api";
-import type { SessionUser } from "#/modules/auth";
+import { sessionQuery, type SessionUser } from "#/modules/auth";
+import { themeInitScript } from "#/modules/shell/hooks/use-theme";
 import appCss from "../styles/globals.css?url";
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient; user: SessionUser | null }>()({
-  beforeLoad: async () => ({ user: await fetchSession() }),
+  beforeLoad: async ({ context }) => ({ user: await context.queryClient.query(sessionQuery()) }),
   head: () => ({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-      { title: "Elise" },
-      { name: "description", content: "Elise runs an AI security review on a public GitHub repository and saves the report." },
-      { name: "theme-color", content: "#fdfbf9" },
+      { title: "EliseLAB" },
+      { name: "description", content: "EliseLAB runs an AI security review on a public GitHub repository and saves the report." },
+      { name: "theme-color", content: "#f1f2f4" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
@@ -31,6 +31,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <HeadContent />
       </head>
       <body className="font-sans antialiased [overflow-wrap:anywhere]">

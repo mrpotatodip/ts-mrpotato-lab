@@ -1,0 +1,1 @@
+ALTER TABLE "tenant_github_installations" ADD COLUMN "html_url" text;

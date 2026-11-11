@@ -3,36 +3,55 @@ import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 import { openAPIRouteHandler } from "hono-openapi";
-import { realAuthDeps } from "#/lib/auth-deps";
+import { realAppDeps } from "#/lib/app-deps";
 import { AppError, TooManyRequestsError } from "#/lib/errors";
 import { rateLimitByIp } from "#/lib/rate-limit";
 import { openApiDocument, requireOpenApiEnabled, validationErrorResponse } from "#/lib/openapi-document";
 import { errorChainForLog } from "#/lib/redact-log";
 import { requireScanAccess } from "#/lib/require-scan-access";
 import authRoutes from "#/modules/auth";
+import filesRoutes from "#/modules/files";
+import findingsRoutes from "#/modules/findings";
+import githubRoutes from "#/modules/github-installs";
+import groupsRoutes from "#/modules/groups";
 import meRoutes from "#/modules/me";
+import reposRoutes from "#/modules/repos";
+import runnersRoutes from "#/modules/runners";
 import scansRoutes from "#/modules/scans";
 import signUpRoutes from "#/modules/sign-up";
-import type { AppEnv, AuthDeps } from "#/types/variables";
+import teamRoutes from "#/modules/team";
+import { consumeInviteEmails } from "#/modules/team/lib";
+import type { InviteEmail } from "#/modules/team/types";
+import anthropicKeyRoutes from "#/modules/anthropic-key";
+import creditRoutes from "#/modules/credit/api";
+import usageRoutes from "#/modules/usage";
+import verdictRoutes from "#/modules/verdict";
+import type { AppEnv, AppDeps, Bindings } from "#/types/variables";
 
 export { Outbound, ScanSandbox } from "#/modules/scan-sandbox";
 export { ScanWorkflow } from "#/modules/scan-workflow";
 
-export const buildApp = (authDeps: AuthDeps = realAuthDeps) => {
+export const buildApp = (deps: AppDeps = realAppDeps) => {
   const app = new Hono<AppEnv>();
 
   app.use("*", async (c, next) => {
-    c.set("authDeps", authDeps);
+    c.set("deps", deps);
     await next();
+    c.header("strict-transport-security", "max-age=31536000");
+    c.header("x-content-type-options", "nosniff");
   });
 
   // -----
   // Every /scans route needs the service token or a
   // signed-in session. /auth, /sign-up and /me do
-  // their own checks. The OpenAPI routes below are
+  // their own checks, and so do /team and /groups. The OpenAPI routes below are
   // not here: they answer only in development.
   // -----
   app.use("/scans/*", requireScanAccess);
+  app.use("/usage/*", requireScanAccess);
+  app.use("/findings/*", requireScanAccess);
+  app.use("/files/*", requireScanAccess);
+  app.use("/repos/*", requireScanAccess);
   app.use(
     "/auth/sign-in/*",
     rateLimitByIp("SIGN_IN_LIMITER", () => new TooManyRequestsError("Too many sign-in attempts. Wait a minute and try again.", "SIGN_IN_RATE_LIMITED")),
@@ -58,7 +77,7 @@ export const buildApp = (authDeps: AuthDeps = realAuthDeps) => {
     return c.json({ data: null, error: { code: "INTERNAL_ERROR", message: "Internal server error" } }, 500);
   });
 
-  const routes = app.route("/scans", scansRoutes).route("/auth", authRoutes).route("/sign-up", signUpRoutes).route("/me", meRoutes);
+  const routes = app.route("/scans", scansRoutes).route("/auth", authRoutes).route("/sign-up", signUpRoutes).route("/me", meRoutes).route("/usage", usageRoutes).route("/usage/anthropic-key", anthropicKeyRoutes).route("/usage/credit", creditRoutes).route("/findings", findingsRoutes).route("/files", filesRoutes).route("/github", githubRoutes).route("/team", teamRoutes).route("/groups", groupsRoutes).route("/repos", reposRoutes).route("/repos", verdictRoutes).route("/runners", runnersRoutes);
 
   // -----
   // The OpenAPI spec, for developers only.
@@ -85,6 +104,9 @@ export const buildApp = (authDeps: AuthDeps = realAuthDeps) => {
   return { app, routes };
 };
 
-export default { fetch: buildApp().app.fetch };
+export default {
+  fetch: buildApp().app.fetch,
+  queue: (batch: MessageBatch<InviteEmail>, env: Bindings) => consumeInviteEmails(batch, env),
+};
 
 export type AppType = ReturnType<typeof buildApp>["routes"];

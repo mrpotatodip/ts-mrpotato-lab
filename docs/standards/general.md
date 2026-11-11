@@ -7,6 +7,7 @@
 | # | Section |
 |---|---|
 | 1 | [General: Comments](#1-general-comments) |
+| 2 | [General: Tests](#2-general-tests) |
 
 ---
 
@@ -38,3 +39,21 @@
 ```
 
 **1.5 `[House]` Reviewers check the diff for comments.** Flag every added comment that 1.2 doesn't list, and ask for its removal.
+
+---
+
+## 2. General: Tests
+
+**2.1 `[House]` Lint comes first.** A test rule that a tool can check goes in the oxlint config, not in this document. This document holds only the rules that need judgment. When a review finds a test mistake that a lint rule could catch, add the rule in the same change. An agent follows a failing lint every time; it follows a sentence in a doc only sometimes.
+
+**2.2 `[House]` These are lint errors in every `__tests__/` folder** (`oxlint.config.ts` of the engine and the dashboard): a test with no assertion (`vitest/expect-expect`), a `console` call, a skipped or focused test, two tests with the same title, an `expect` inside a condition, and a snapshot matcher. The pre-commit check fails on them. Don't disable one with a directive; fix the test.
+
+**2.3 `[House]` Write a test only for these:** a rule of the product (limits, tenant isolation, who may do what), a query that reads or writes an Account's data, a parser or validator, and a bug that came back. Don't write a test for a type, a constant, a wrapper that only passes values through, or the behavior of a library.
+
+**2.4 `[House]` One test per behavior.** Use `it.each` when one rule runs on many inputs. Before you add a test, check that an existing test doesn't already cover the behavior, and extend that one.
+
+**2.5 `[House]` A new test must fail when the rule breaks.** Break the code once, watch the test fail, then restore the code. A test that passes both ways proves nothing.
+
+**2.6 `[House]` Don't write throwaway test or print scripts to check your work.** Run `pnpm check:apps`, or write the one test you will keep.
+
+**2.7 `[House]` Reviewers check the diff for tests.** Flag a new test that 2.3 doesn't allow, a case that duplicates another, and an assertion that only repeats the code (a non-null check, an expected value computed the way the code computes it).

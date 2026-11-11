@@ -3,13 +3,8 @@ import { Data, Effect } from "effect";
 import {
   accessMasterPowers,
   accessRolePowers,
-  authAccount,
-  authUser,
   ensureTenantRoles,
   findTenantRole,
-  parties,
-  partyMasterTypes,
-  partyPersons,
   partyRoles,
   platformInviteCodeRedemptions,
   platformInviteCodes,
@@ -26,6 +21,7 @@ import {
   SIGN_UP_SLUG_CONSTRAINT,
   SIGN_UP_SLUG_EXHAUSTED,
 } from "#/modules/sign-up/constants";
+import { createPersonLogin } from "#/modules/person-logins";
 import { slugCandidates } from "#/modules/sign-up/lib";
 import type { NewAccount } from "#/modules/sign-up/types";
 
@@ -100,43 +96,29 @@ export const insertAccountEffect = (
             .returning({ id: platformInviteCodes.id });
           if (!invite) throw new InviteRefused();
 
-          const [personType] = await tx.select({ id: partyMasterTypes.id }).from(partyMasterTypes).where(eq(partyMasterTypes.key, "person"));
-          if (!personType) throw new Error("party type person is missing; run the migrations");
-          const [party] = await tx.insert(parties).values({ masterTypeId: personType.id }).returning();
-          await tx.insert(partyPersons).values({ partyId: party.id, firstName: account.firstName, lastName: account.lastName });
-
-          const userId = crypto.randomUUID();
-          await tx.insert(authUser).values({
-            id: userId,
-            name: `${account.firstName} ${account.lastName}`,
+          const { userId, partyId } = await createPersonLogin(tx, {
+            firstName: account.firstName,
+            lastName: account.lastName,
             email: account.email,
-            emailVerified: false,
-            partyId: party.id,
-          });
-          await tx.insert(authAccount).values({
-            id: crypto.randomUUID(),
-            accountId: userId,
-            providerId: "credential",
-            userId,
-            password: account.passwordHash,
+            passwordHash: account.passwordHash,
           });
 
           const [tenant] = await tx
             .insert(tenants)
-            .values({ partyId: party.id, name: account.accountName, slug: account.slug, timezone: account.timezone })
+            .values({ partyId, name: account.accountName, slug: account.slug, timezone: account.timezone })
             .returning();
           await ensureTenantRoles(tx, tenant.id);
           const tenantAdminRole = await findTenantRole(tx, tenant.id, TENANT_ADMIN_ROLE_KEY);
           if (!tenantAdminRole) throw new Error(`${TENANT_ADMIN_ROLE_KEY} role missing after ensureTenantRoles`);
           await tx.insert(partyRoles).values({
-            partyId: party.id,
+            partyId,
             tenantId: tenant.id,
             roleId: tenantAdminRole.id,
             roleScope: tenantAdminRole.scope,
           });
           await tx.insert(platformInviteCodeRedemptions).values({
             inviteCodeId: invite.id,
-            personPartyId: party.id,
+            personPartyId: partyId,
             tenantId: tenant.id,
             redeemedAt: account.now,
           });

@@ -1,0 +1,224 @@
+import { Link, useRouterState } from "@tanstack/react-router";
+import { ChevronUp, ClipboardCheck, FileText, FolderGit2, LayoutDashboard, PanelLeftClose, PanelLeftOpen, Plug, ScanSearch, Sparkles, Users } from "lucide-react";
+import { Avatar, AvatarFallback } from "#/components/ui/avatar";
+import { Badge } from "#/components/ui/badge";
+import { Button } from "#/components/ui/button";
+import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "#/components/ui/collapsible";
+import { Tooltip, TooltipContent, TooltipTrigger } from "#/components/ui/tooltip";
+import { AuthSignOutButton } from "#/modules/auth";
+import { cn } from "#/lib/utils";
+import { ShellBrand } from "./shell-brand";
+import { useSidebarReposOpen } from "../hooks";
+import { NAV_ACTIVE as ACTIVE, NAV_CHEVRON as CHEVRON, NAV_ICON as ICON, NAV_ROW as ROW, NAV_TOGGLE as TOGGLE, NavHint as Hint } from "./shell-nav";
+import { ShellRepoTree } from "./shell-repo-tree";
+import { ShellSettingsNav } from "./shell-settings-nav";
+import { ShellThemeSwitch } from "./shell-theme-switch";
+
+export type ShellRepo = {
+  id: string;
+  owner: string;
+  name: string;
+  status: "queued" | "running" | "succeeded" | "failed";
+  isPrivate?: boolean;
+};
+
+type ShellSidebarProps = {
+  accountName: string;
+  userName?: string;
+  email: string;
+  scanCount: number;
+  running: number;
+  repos: readonly ShellRepo[];
+  repoCount: number;
+  showTeam: boolean;
+  showSettings: boolean;
+  showDashboard: boolean;
+  collapsed: boolean;
+  canToggle: boolean;
+  onToggle: () => void;
+};
+
+const initials = (name: string) =>
+  name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("");
+
+export function ShellSidebar({ accountName, userName, email, scanCount, running, repos, repoCount, showTeam, showSettings, showDashboard, collapsed, canToggle, onToggle }: ShellSidebarProps) {
+  const { open: reposOpen, setOpen: setReposOpen } = useSidebarReposOpen();
+  const scansLabel = running > 0 ? `Scans, ${running} in progress` : "Scans";
+  const hasRepoChildren = repoCount >= 2;
+  const onConnectFlow = useRouterState({ select: (state) => state.location.pathname.startsWith("/github/") });
+  const empty = scanCount === 0;
+  const personName = userName || accountName;
+  const personDetail = userName ? accountName : email;
+
+  return (
+    <aside className={cn("sticky top-0 flex h-svh flex-col gap-6 overflow-y-auto overflow-x-hidden border-r bg-sidebar pb-4 pt-6", collapsed ? "px-2.5" : "px-3")}>
+      <div className={cn("flex items-center", collapsed ? "flex-col gap-3" : "justify-between pl-2 pr-1")}>
+        <Link to={showDashboard ? "/overview" : "/summary"} aria-label={collapsed ? "EliseLAB home" : undefined} className="rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          {collapsed ? <span className="text-xl font-semibold tracking-tight">E</span> : <ShellBrand />}
+        </Link>
+        {canToggle && (
+          <Tooltip>
+            <TooltipTrigger
+              render={<Button variant="ghost" size="icon-sm" aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"} aria-expanded={!collapsed} className="text-muted-foreground" onClick={onToggle} />}
+            >
+              {collapsed ? <PanelLeftOpen strokeWidth={1.5} /> : <PanelLeftClose strokeWidth={1.5} />}
+            </TooltipTrigger>
+            <TooltipContent side={collapsed ? "right" : "bottom"}>{collapsed ? "Expand" : "Collapse"} sidebar (Ctrl B)</TooltipContent>
+          </Tooltip>
+        )}
+      </div>
+
+      <nav aria-label="Main" className="grid grid-cols-[minmax(0,1fr)] gap-1">
+        {showDashboard && (
+          <Hint label="Overview" collapsed={collapsed}>
+            <Link to="/overview" aria-label="Overview" className={cn(ROW, collapsed && "justify-center px-0")} activeProps={ACTIVE}>
+              <LayoutDashboard className={ICON} strokeWidth={1.5} />
+              {!collapsed && "Overview"}
+            </Link>
+          </Hint>
+        )}
+
+        <Hint label="Summary" collapsed={collapsed}>
+          <Link to="/summary" aria-label="Summary" className={cn(ROW, collapsed && "justify-center px-0")} activeProps={ACTIVE}>
+            <ClipboardCheck className={ICON} strokeWidth={1.5} />
+            {!collapsed && "Summary"}
+          </Link>
+        </Hint>
+
+        {showDashboard && (
+          <>
+            {collapsed || !hasRepoChildren ? (
+              <Hint label="Repositories" collapsed={collapsed}>
+                <Link to="/repos" aria-label="Repositories" className={cn(ROW, collapsed && "justify-center px-0")} activeProps={ACTIVE}>
+                  <FolderGit2 className={ICON} strokeWidth={1.5} />
+                  {!collapsed && "Repositories"}
+                </Link>
+              </Hint>
+            ) : (
+              <Collapsible open={reposOpen} onOpenChange={setReposOpen}>
+                <div className="relative">
+                  <Link to="/repos" activeOptions={{ exact: true }} className={cn(ROW, "pr-10")} activeProps={ACTIVE}>
+                    <FolderGit2 className={ICON} strokeWidth={1.5} />
+                    Repositories
+                  </Link>
+                  <CollapsibleTrigger aria-label={reposOpen ? "Hide recent repositories" : "Show recent repositories"} className={TOGGLE}>
+                    <ChevronUp className={CHEVRON} strokeWidth={1.5} />
+                  </CollapsibleTrigger>
+                </div>
+                <CollapsiblePanel>
+                  <ShellRepoTree repos={repos} />
+                </CollapsiblePanel>
+              </Collapsible>
+            )}
+
+            <Hint label={scansLabel} collapsed={collapsed}>
+              <Link to="/scans" aria-label={collapsed ? scansLabel : undefined} className={cn(ROW, collapsed && "justify-center px-0")} activeProps={ACTIVE}>
+                <ScanSearch className={ICON} strokeWidth={1.5} />
+                {collapsed ? (
+                  running > 0 && <span aria-hidden="true" className="absolute right-2.5 top-2 size-2 animate-pulse rounded-full bg-mark-info" />
+                ) : (
+                  <>
+                    <span className="flex-1">Scans</span>
+                    {running > 0 && (
+                      <>
+                        <span aria-hidden="true" className="size-2 animate-pulse rounded-full bg-mark-info" />
+                        <span className="sr-only">{running} in progress</span>
+                      </>
+                    )}
+                    {scanCount > 0 && (
+                      <Badge variant="secondary" className="h-5 min-w-5 justify-center px-1.5 tabular-nums">
+                        {scanCount}
+                      </Badge>
+                    )}
+                  </>
+                )}
+              </Link>
+            </Hint>
+
+            <Hint label="Files" collapsed={collapsed}>
+              <Link to="/files" aria-label="Files" className={cn(ROW, collapsed && "justify-center px-0")} activeProps={ACTIVE}>
+                <FileText className={ICON} strokeWidth={1.5} />
+                {!collapsed && "Files"}
+              </Link>
+            </Hint>
+          </>
+        )}
+      </nav>
+
+      <nav aria-label="Account" className="grid grid-cols-[minmax(0,1fr)] gap-1 border-t pt-3 empty:hidden">
+        {showDashboard && (
+          <Hint label="Connections" collapsed={collapsed}>
+            <Link to="/connections" aria-label="Connections" className={cn(ROW, collapsed && "justify-center px-0", onConnectFlow && ACTIVE.className)} activeProps={ACTIVE}>
+              <Plug className={ICON} strokeWidth={1.5} />
+              {!collapsed && "Connections"}
+            </Link>
+          </Hint>
+        )}
+
+        {showTeam && (
+          <Hint label="Team" collapsed={collapsed}>
+            <Link to="/team" aria-label="Team" className={cn(ROW, collapsed && "justify-center px-0")} activeProps={ACTIVE}>
+              <Users className={ICON} strokeWidth={1.5} />
+              {!collapsed && "Team"}
+            </Link>
+          </Hint>
+        )}
+
+        {showSettings && <ShellSettingsNav collapsed={collapsed} />}
+      </nav>
+
+      {empty && !collapsed && showDashboard && (
+        <Link
+          to="/scans"
+          className="mx-1 grid gap-1 rounded-xl border border-dashed border-input p-4 text-sm transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <span className="flex items-center gap-2 font-medium">
+            <Sparkles className="size-4 text-primary-ink" strokeWidth={1.5} />
+            Run your first audit
+          </span>
+          <span className="text-xs text-muted-foreground">Paste a public GitHub repository to get a report.</span>
+        </Link>
+      )}
+
+      <div className="mt-auto grid gap-3">
+        {collapsed ? (
+          <div className="grid justify-items-center gap-2">
+            <ShellThemeSwitch collapsed />
+            <Tooltip>
+              <TooltipTrigger render={<div />}>
+                <Avatar className="size-10">
+                  <AvatarFallback>{initials(personName)}</AvatarFallback>
+                </Avatar>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                {personName}
+                <span className="block text-muted-foreground">{personDetail}</span>
+                <span className="block text-muted-foreground">{email}</span>
+              </TooltipContent>
+            </Tooltip>
+            <AuthSignOutButton />
+          </div>
+        ) : (
+          <>
+          <ShellThemeSwitch />
+          <div className="flex items-center gap-3 rounded-xl bg-card p-2.5 shadow-card" title={email}>
+            <Avatar className="size-10">
+              <AvatarFallback>{initials(personName)}</AvatarFallback>
+            </Avatar>
+            <div className="grid min-w-0 flex-1 leading-tight">
+              <span className="truncate text-sm font-medium">{personName}</span>
+              <span className="truncate text-xs text-muted-foreground">{personDetail}</span>
+            </div>
+            <AuthSignOutButton />
+          </div>
+          </>
+        )}
+      </div>
+    </aside>
+  );
+}

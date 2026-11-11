@@ -26,6 +26,11 @@ const ErrorBodySchema = z.union([
   z.object({ code: z.string().optional(), message: z.string() }),
 ]);
 
+// -----
+// What a failed schema parse carries, whichever zod copy threw it.
+// -----
+const ParseFailureSchema = z.object({ issues: z.array(z.object({ path: z.array(z.union([z.string(), z.number()])), message: z.string() })) });
+
 export type EngineAuth = { token?: string; accountId?: string };
 
 export async function engineFetch(path: string, init: RequestInit = {}, auth: EngineAuth = {}) {
@@ -35,6 +40,7 @@ export async function engineFetch(path: string, init: RequestInit = {}, auth: En
 
   const res = await fetch(`${env.ELISE_ENGINE_URL}${path}`, { ...init, headers });
   if (!res.ok) {
+    console.error(`engine: ${init.method ?? "GET"} ${path} answered ${res.status}`);
     const body = ErrorBodySchema.safeParse(await res.json().catch(() => null));
     throw new EngineError(body.success ? body.data.message : `Engine error ${res.status}`, res.status, body.success ? body.data.code : undefined);
   }
@@ -50,7 +56,16 @@ type Parser<T> = Pick<z.ZodType<T>, "parse">;
 export async function engineJson<T>(schema: Parser<T>, path: string, init: RequestInit = {}, auth: EngineAuth = {}): Promise<T> {
   const res = await engineFetch(path, init, auth);
   const body = z.object({ data: z.unknown() }).parse(await res.json());
-  return schema.parse(body.data);
+  try {
+    return schema.parse(body.data);
+  } catch (error) {
+    const broken = ParseFailureSchema.safeParse(error);
+    if (!broken.success || broken.data.issues.length === 0) throw error;
+    const [first] = broken.data.issues;
+    const more = broken.data.issues.length > 1 ? ` (and ${broken.data.issues.length - 1} more)` : "";
+    console.error(`engine: ${path} broke the contract`, JSON.stringify(broken.data.issues));
+    throw new EngineError(`The engine sent an unexpected response for ${path}: ${first?.path.join(".") || "body"} ${first?.message}${more}. The engine may be older than this dashboard.`, 502);
+  }
 }
 
 export const jsonPost = (body: string): RequestInit => ({
