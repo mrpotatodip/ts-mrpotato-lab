@@ -19,6 +19,15 @@ export const SCAN_SKILL_OPTIONS: readonly ScanOption<CreateScanInput["skill"]>[]
   },
 ];
 
+// -----
+// The two kinds of review as the new-scan dialog's cards say them: one line
+// each, since the dialog sits on one screen.
+// -----
+export const SCAN_SKILL_SHORT = {
+  lite: "A fast first look for common security mistakes.",
+  full: "Deeper, with every finding checked independently. Takes longer and uses more budget.",
+} satisfies Record<CreateScanInput["skill"], string>;
+
 export const SCAN_PROFILE_OPTIONS: readonly ScanOption<CreateScanInput["profile"]>[] = [
   {
     value: "quick",
