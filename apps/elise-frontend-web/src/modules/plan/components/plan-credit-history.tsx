@@ -22,7 +22,7 @@ function Entries() {
               <div className="grid min-w-0 gap-0.5">
                 <span className="font-medium">
                   {entry.scanId !== null ? (
-                    <Link to="/scans/$scanId" params={{ scanId: entry.scanId }} className="hover:underline">
+                    <Link to="/scans/$scanId" params={{ scanId: entry.scanId }} className="inline-flex min-h-6 items-center rounded-sm underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                       {CREDIT_ENTRY_LABEL[entry.kind]}
                     </Link>
                   ) : (

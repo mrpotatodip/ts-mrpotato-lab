@@ -94,10 +94,10 @@ export function RepoList() {
                 return (
                   <li key={repo.id}>
                     <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-1 bg-muted/40 px-5 py-3">
-                      <h3 className="flex items-center gap-2 font-medium">
-                        {repoName(repo.url)}
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-medium">{repoName(repo.url)}</h3>
                         <GithubPrivateBadge isPrivate={repo.isPrivate} />
-                      </h3>
+                      </div>
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                         <span className="tabular-nums">{repo.scans} {repo.scans === 1 ? "scan" : "scans"}</span>
                         {repo.lastScanStatus && <ScanStatusBadge status={repo.lastScanStatus} />}
