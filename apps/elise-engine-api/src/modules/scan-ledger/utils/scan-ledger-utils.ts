@@ -1,5 +1,5 @@
 import type { scans } from "@repo/db-elise/schema";
-import type { FindingOriginValue, FindingSeverityValue, FindingStatusValue, ScanArtifact, ScanSummary } from "@repo/contracts/elise";
+import type { FindingOriginValue, FindingSeverityValue, FindingStatusValue, ScanArtifact, ScanRunner, ScanSummary } from "@repo/contracts/elise";
 import { ScanStatusSchema, type ScanStatus } from "#/schemas";
 
 type ScanRow = typeof scans.$inferSelect;
@@ -9,7 +9,7 @@ type ScanRow = typeof scans.$inferSelect;
 // costUsd is numeric in Neon and arrives as text. A row that
 // fails the schema is a bug in our own writes, so it throws.
 // -----
-export const scanRowToStatus = (row: ScanRow, artifacts: ScanArtifact[], summary: ScanSummary | null = null): ScanStatus =>
+export const scanRowToStatus = (row: ScanRow, artifacts: ScanArtifact[], summary: ScanSummary | null = null, runner: ScanRunner | null = null): ScanStatus =>
   ScanStatusSchema.parse({
   scanId: row.id,
   accountId: row.tenantId,
@@ -36,6 +36,7 @@ export const scanRowToStatus = (row: ScanRow, artifacts: ScanArtifact[], summary
   files: artifacts.length > 0 ? artifacts.map((artifact) => artifact.name) : null,
   artifacts,
   summary,
+  runner,
   usage:
     row.costUsd === null
       ? null

@@ -86,7 +86,12 @@ const columns = column.columns([
     id: "cost",
     header: "Cost",
     meta: { head: "text-right", cell: "text-right tabular-nums text-muted-foreground" },
-    cell: ({ row }) => (row.original.usage ? scanCost(row.original.usage.costUsd) : "-"),
+    cell: ({ row }) => (
+      <>
+        {row.original.usage ? scanCost(row.original.usage.costUsd) : "-"}
+        {row.original.runner && <span className="block text-xs">on {row.original.runner.name}</span>}
+      </>
+    ),
   }),
   column.display({ id: "started", header: "Started", cell: ({ row }) => <ScanTime value={row.original.createdAt} /> }),
   column.display({

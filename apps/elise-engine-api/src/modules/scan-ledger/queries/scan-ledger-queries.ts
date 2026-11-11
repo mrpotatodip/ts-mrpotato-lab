@@ -1,6 +1,6 @@
 import { and, asc, eq, gt, gte, inArray, lt, ne, or, sql } from "drizzle-orm";
 import { Effect } from "effect";
-import { scanFiles, scanFindings, scanRepos, scanRunnerJobs, scans, tenantCreditLedger } from "@repo/db-elise/schema";
+import { scanFiles, scanFindings, scanRepos, scanRunnerJobs, scans, tenantCreditLedger, tenantRunners } from "@repo/db-elise/schema";
 import type { DbConnectType } from "#/lib/db-connection";
 import { Conflict, toDbError, type DbError } from "#/lib/effect-query";
 import { PG_UNIQUE_VIOLATION, pgErrorCode } from "#/lib/pg-error";
@@ -13,8 +13,8 @@ type ScanRow = typeof scans.$inferSelect;
 const ACTIVE_SCAN_CONFLICT = "This repo already has an active scan";
 
 // -----
-// The rows with their files and, for a scan whose findings
-// are recorded, the counts of what it found.
+// The rows with their files, the Runner a scan ran on and, for a
+// scan whose findings are recorded, the counts of what it found.
 // -----
 const withFiles = (db: DbConnectType, rows: ScanRow[]): Effect.Effect<ScanStatus[], DbError> =>
   rows.length === 0
@@ -39,11 +39,21 @@ const withFiles = (db: DbConnectType, rows: ScanRow[]): Effect.Effect<ScanStatus
               .groupBy(scanFindings.scanId, scanFindings.status, scanFindings.severity, scanFindings.origin),
           catch: toDbError,
         });
+        const runners = yield* Effect.tryPromise({
+          try: () =>
+            db
+              .select({ scanId: scanRunnerJobs.scanId, id: tenantRunners.id, name: tenantRunners.name })
+              .from(scanRunnerJobs)
+              .innerJoin(tenantRunners, eq(tenantRunners.id, scanRunnerJobs.runnerId))
+              .where(inArray(scanRunnerJobs.scanId, ids)),
+          catch: toDbError,
+        });
         return rows.map((row) =>
           scanRowToStatus(
             row,
             files.filter((file) => file.scanId === row.id).map(({ name, sizeBytes, contentType }) => ({ name, sizeBytes, contentType })),
             summaryOf(row, counts.filter((count) => count.scanId === row.id)),
+            runners.find((runner) => runner.scanId === row.id) ?? null,
           ),
         );
       });
@@ -236,7 +246,7 @@ export const neonScanRepo = (db: DbConnectType): ScanRepo => ({
 
   // -----
   // Callers count these scans and add up their budget caps, so the
-  // rows come back with no files and no finding counts: a queued or
+  // rows come back with no files, no Runner and no finding counts: a queued or
   // running scan has no summary, and two more queries on the
   // path of every new scan would buy nothing.
   // -----

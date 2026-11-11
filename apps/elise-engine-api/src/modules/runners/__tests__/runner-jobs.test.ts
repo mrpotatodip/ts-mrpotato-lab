@@ -114,6 +114,15 @@ describe("claiming a job", () => {
     expect(after - before).toBeCloseTo(0.5);
   });
 
+  it("names the Runner on the scan it ran, and none on a cloud scan", async () => {
+    const onRunner = await queue(await newScan());
+    const inCloud = await newScan();
+    const repo = neonScanRepo(test.http);
+
+    expect(await run(repo.get(tenantId, onRunner))).toMatchObject({ runner: { id: runnerId, name: expect.stringMatching(/^runner-\d+$/) } });
+    expect((await run(repo.get(tenantId, inCloud)))?.runner).toBeNull();
+  });
+
   it("cancels the job of a scan that stalled when a newer scan of the repo starts", async () => {
     counter += 1;
     const stalledId = `job-stalled-${counter}`;

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { SCAN_RECORDED_MODELS, SCAN_STEP_VALUES, ScanArtifactSchema, ScanSummarySchema, ScanUsageSchema } from "@repo/contracts/elise";
+import { SCAN_RECORDED_MODELS, SCAN_STEP_VALUES, ScanArtifactSchema, ScanRunnerSchema, ScanSummarySchema, ScanUsageSchema } from "@repo/contracts/elise";
 import { ScanOptionsSchema } from "./scan-options-schema";
 
 export const ScanStateSchema = z.enum(["queued", "running", "succeeded", "failed"]);
@@ -26,6 +26,7 @@ export const ScanStatusSchema = ScanOptionsSchema.extend({
   step: z.enum(SCAN_STEP_VALUES).nullish().meta({ example: "auditing", description: "Where a running scan is. Null once it ends." }),
   usage: ScanUsageSchema.nullish(),
   summary: ScanSummarySchema.nullish().meta({ description: "What a finished lite scan found. Null for any other scan." }),
+  runner: ScanRunnerSchema.nullish().meta({ description: "The Runner the scan ran on, with the name its account gave it. Null for a scan that ran in EliseLAB's cloud. Its cost is the agent's estimate, never billed." }),
 });
 
 export type ScanState = z.infer<typeof ScanStateSchema>;
