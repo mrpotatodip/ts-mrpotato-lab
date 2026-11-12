@@ -39,7 +39,7 @@ const FAILURE_CAUSES = [
   { test: /command exited (124|137):/i, title: "Cloning the repository took too long and was stopped.", advice: "The repository may be too large. Try a smaller repository or a specific branch." },
   {
     test: /repository .*not found|could not read username|authentication failed|returned error: (401|403|404)/i,
-    title: "EliseLAB could not read this repository.",
+    title: "Elise could not read this repository.",
     advice: "Check that the link is correct. If the repository is private, connect GitHub on the Connections page and include this repository in the install.",
   },
   { test: /clone|could not read from remote/i, title: "The repository could not be cloned.", advice: "Check the link. If the repository is private, connect GitHub on the Connections page first." },

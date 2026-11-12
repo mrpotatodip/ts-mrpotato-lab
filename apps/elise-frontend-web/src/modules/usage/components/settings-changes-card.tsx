@@ -35,7 +35,7 @@ export function SettingsChangesCard() {
       </CardHeader>
       <CardContent>
         {data.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No changes yet. The budget is the default and scans use the EliseLAB key.</p>
+          <p className="text-sm text-muted-foreground">No changes yet. The budget is the default and scans use the Elise key.</p>
         ) : (
           <ul className="grid gap-3 text-sm">
             {data.map((change) => (

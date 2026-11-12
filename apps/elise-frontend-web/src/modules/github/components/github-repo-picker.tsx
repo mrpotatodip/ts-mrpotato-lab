@@ -32,7 +32,7 @@ function GithubRepoPickerView({ onPick }: GithubRepoPickerProps) {
           ))}
         </SelectContent>
       </Select>
-      <p className="text-xs text-muted-foreground">The repositories EliseLAB can read. Picking one fills in the link below.</p>
+      <p className="text-xs text-muted-foreground">The repositories Elise can read. Picking one fills in the link below.</p>
     </div>
   );
 }

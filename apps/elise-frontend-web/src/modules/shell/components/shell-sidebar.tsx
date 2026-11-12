@@ -58,7 +58,7 @@ export function ShellSidebar({ accountName, userName, email, scanCount, running,
   return (
     <aside className={cn("sticky top-0 flex h-svh flex-col gap-6 overflow-y-auto overflow-x-hidden border-r bg-sidebar pb-4 pt-6", collapsed ? "px-2.5" : "px-3")}>
       <div className={cn("flex items-center", collapsed ? "flex-col gap-3" : "justify-between pl-2 pr-1")}>
-        <Link to={showDashboard ? "/overview" : "/summary"} aria-label={collapsed ? "EliseLAB home" : undefined} className="rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+        <Link to={showDashboard ? "/overview" : "/summary"} aria-label={collapsed ? "Elise home" : undefined} className="rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
           {collapsed ? <span className="text-xl font-semibold tracking-tight">E</span> : <ShellBrand />}
         </Link>
         {canToggle && (

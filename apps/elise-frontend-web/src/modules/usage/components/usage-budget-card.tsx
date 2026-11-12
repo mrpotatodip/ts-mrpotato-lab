@@ -74,7 +74,7 @@ export function UsageBudgetCard() {
             </div>
           )}
         </dl>
-        <p className="text-sm leading-relaxed text-muted-foreground">Need a higher budget than this? Contact EliseLAB.</p>
+        <p className="text-sm leading-relaxed text-muted-foreground">Need a higher budget than this? Contact Elise.</p>
       </CardContent>
     </Card>
   );

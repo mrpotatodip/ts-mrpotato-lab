@@ -69,7 +69,7 @@ export function ShellThemeSwitch({ collapsed = false, tooltipSide = "right" }: S
       <DialogContent className="max-w-[34rem]">
         <DialogHeader>
           <DialogTitle>Theme</DialogTitle>
-          <DialogDescription>Pick how EliseLAB looks. It is saved in this browser.</DialogDescription>
+          <DialogDescription>Pick how Elise looks. It is saved in this browser.</DialogDescription>
         </DialogHeader>
         <DialogBody>
           <fieldset className="m-0 grid min-w-0 gap-3 border-0 p-0 sm:grid-cols-2">

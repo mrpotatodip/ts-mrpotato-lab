@@ -30,7 +30,7 @@ export function AnthropicKeyCard() {
     mutationFn: () => removeAnthropicKey(),
     onSuccess: async (key) => {
       queryClient.setQueryData(usageKeys.anthropicKey(), key);
-      toast.success("New scans use the EliseLAB key again.");
+      toast.success("New scans use the Elise key again.");
       await queryClient.invalidateQueries({ queryKey: usageKeys.changes() });
     },
     onError: (error: Error) => toast.error(`We couldn't remove the key. ${error.message}`),
@@ -41,13 +41,13 @@ export function AnthropicKeyCard() {
       <CardHeader>
         <CardTitle>Anthropic API key</CardTitle>
         <p className="text-sm leading-relaxed text-muted-foreground">
-          Scans run on EliseLAB&apos;s key by default. Bring your own and new scans run on it, billed to your Anthropic organization. A scan already running keeps the key it started with. The monthly budget still applies.
+          Scans run on Elise&apos;s key by default. Bring your own and new scans run on it, billed to your Anthropic organization. A scan already running keeps the key it started with. The monthly budget still applies.
         </p>
       </CardHeader>
       <CardContent className="grid gap-5">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="grid gap-1">
-            <p className="text-sm font-medium">{own ? "Your own key" : "EliseLAB's key"}</p>
+            <p className="text-sm font-medium">{own ? "Your own key" : "Elise's key"}</p>
             {own && data.lastFour !== null && (
               <p className="text-sm text-muted-foreground">
                 <span className="font-mono">sk-ant-…{data.lastFour}</span>

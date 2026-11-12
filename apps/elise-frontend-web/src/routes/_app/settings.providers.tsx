@@ -5,7 +5,7 @@ import { SettingsProvidersPage } from "#/modules/settings";
 import { anthropicKeyQuery } from "#/modules/usage";
 
 export const Route = createFileRoute("/_app/settings/providers")({
-  head: () => ({ meta: [{ title: "Providers · Settings · EliseLAB" }] }),
+  head: () => ({ meta: [{ title: "Providers · Settings · Elise" }] }),
   beforeLoad: ({ context }) => {
     if (!hasAccessPower(context.user?.powers ?? [], "company:usage:anthropic_key:update")) throw redirect({ to: "/settings/budget" });
   },

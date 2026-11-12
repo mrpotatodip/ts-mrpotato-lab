@@ -5,7 +5,7 @@ export const AUTH_COPY = {
     submit: "Sign in",
     swap: "Have an invite? Create an account",
     to: "/signup",
-    forgot: "Forgot your password? Contact the person who set up your EliseLAB account.",
+    forgot: "Forgot your password? Contact the person who set up your Elise account.",
   },
   signup: {
     title: "Create an account",
@@ -14,13 +14,13 @@ export const AUTH_COPY = {
     swap: "I already have an account",
     to: "/signin",
     inviteCodeHelp: "Ask the person who invited you for a code.",
-    accountNameHelp: "The name of the new EliseLAB account you are creating, for example your company or team.",
+    accountNameHelp: "The name of the new Elise account you are creating, for example your company or team.",
     consequence: "You will own this new account, and we will sign you in.",
   },
 } as const;
 
 // -----
-// The panel beside the form on wide screens: what EliseLAB does, in plain words.
+// The panel beside the form on wide screens: what Elise does, in plain words.
 // -----
 export const AUTH_BRAND_COPY = {
   headline: "Security audits for your code, in plain words.",

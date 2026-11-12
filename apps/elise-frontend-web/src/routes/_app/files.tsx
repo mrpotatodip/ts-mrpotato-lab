@@ -3,7 +3,7 @@ import { FileList, FilesSearchSchema, filesQuery } from "#/modules/file";
 import { ShellPageHeader } from "#/modules/shell";
 
 export const Route = createFileRoute("/_app/files")({
-  head: () => ({ meta: [{ title: "Files · EliseLAB" }] }),
+  head: () => ({ meta: [{ title: "Files · Elise" }] }),
   validateSearch: FilesSearchSchema,
   loaderDeps: ({ search }) => ({ filters: search }),
   loader: ({ context, deps }) => context.queryClient.query({ ...filesQuery(deps.filters), staleTime: "static" }),
