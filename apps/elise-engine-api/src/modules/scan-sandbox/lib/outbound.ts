@@ -11,9 +11,11 @@ import {
   MessagesBodySchema,
   messagesBlockedReason,
   repoOfGitPath,
+  reserveUsd,
   safeBetaHeader,
 } from "#/modules/scan-sandbox/utils";
 
+const BUDGET_REFUSED = "the scan's budget is spent, or the calls still running may use what is left";
 const blocked = (reason: string) => new Response(`Blocked: ${reason}`, { status: 403 });
 
 const parseMessagesBody = (text: string) => {
@@ -76,7 +78,6 @@ export class Outbound extends WorkerEntrypoint<Bindings, OutboundProps> {
 
   async #meteredMessages(request: Request, headers: Headers): Promise<Response> {
     const sandbox = this.env.SANDBOX.get(this.env.SANDBOX.idFromString(this.ctx.props.sandboxId));
-    if (!(await sandbox.meterAllows())) return blocked("the scan's budget is spent");
     const body = parseMessagesBody(await request.text());
     if (body === null) return blocked("the request is not a messages call");
     const refused = messagesBlockedReason(body);
@@ -86,12 +87,40 @@ export class Outbound extends WorkerEntrypoint<Bindings, OutboundProps> {
     else headers.set("anthropic-beta", beta);
     const maxTokens = Math.min(body.max_tokens ?? SCAN_SANDBOX_MAX_OUTPUT_TOKENS, SCAN_SANDBOX_MAX_OUTPUT_TOKENS);
     headers.delete("content-length");
-    const upstream = await fetch(
-      new Request(request.url, { method: "POST", headers, body: JSON.stringify({ ...body, max_tokens: maxTokens }) }),
-    );
-    if (!upstream.ok || upstream.body === null) return upstream;
 
-    const scanner = createUsageScanner((tokens) => this.ctx.waitUntil(sandbox.meterRecord(body.model, tokens)));
+    // -----
+    // The reserve is held until the call ends: a failed fetch, an
+    // answer that is not a stream, the end of the stream or a
+    // reader that walks away. Records and the release run in one
+    // line, so the release never lands before the last record.
+    // -----
+    const reserved = reserveUsd(body.model, maxTokens);
+    if (!(await sandbox.meterReserve(reserved))) return blocked(BUDGET_REFUSED);
+    let queue: Promise<void> = Promise.resolve();
+    const enqueue = (work: () => Promise<void>) => {
+      queue = queue.then(work).catch(() => console.error("meter update failed"));
+      this.ctx.waitUntil(queue);
+    };
+    let released = false;
+    const release = () => {
+      if (released) return;
+      released = true;
+      enqueue(() => sandbox.meterRelease(reserved));
+    };
+
+    let upstream: Response;
+    try {
+      upstream = await fetch(new Request(request.url, { method: "POST", headers, body: JSON.stringify({ ...body, max_tokens: maxTokens }) }));
+    } catch (error) {
+      release();
+      throw error;
+    }
+    if (!upstream.ok || upstream.body === null) {
+      release();
+      return upstream;
+    }
+
+    const scanner = createUsageScanner((tokens) => enqueue(() => sandbox.meterRecord(body.model, tokens)));
     const decoder = new TextDecoder();
     const counted = new TransformStream<Uint8Array, Uint8Array>({
       transform(chunk, controller) {
@@ -100,6 +129,11 @@ export class Outbound extends WorkerEntrypoint<Bindings, OutboundProps> {
       },
       flush() {
         scanner.end();
+        release();
+      },
+      cancel() {
+        scanner.end();
+        release();
       },
     });
     return new Response(upstream.body.pipeThrough(counted), upstream);
