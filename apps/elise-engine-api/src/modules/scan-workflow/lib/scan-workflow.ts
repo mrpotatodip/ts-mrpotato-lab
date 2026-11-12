@@ -8,6 +8,7 @@ import { findBranchEffect, findBranchesAtTipEffect, isCommitId } from "#/modules
 import { runnerSandbox } from "#/modules/runners/lib";
 import { neonScanRepo } from "#/modules/scan-ledger";
 import { listPriorsEffect, recordScanSvc, SCAN_RECORDS_PRIOR_LIMIT, type PriorFinding } from "#/modules/scan-records";
+import type { FullPhase } from "#/modules/scan-sandbox";
 import { SCAN_WORKFLOW_MAX_POLLS } from "#/modules/scan-workflow/constants";
 import type { Bindings } from "#/types/variables";
 import { runScan } from "./run-scan";
@@ -56,10 +57,19 @@ export class ScanWorkflow extends WorkflowEntrypoint<Bindings, ScanParams> {
     return SCAN_WORKFLOW_MAX_POLLS;
   }
 
+  // -----
+  // The Phases this Workflow runs, in order. A lite Scan has none: it is
+  // one run of the agent. FullScanWorkflow overrides it.
+  // -----
+  protected get phases(): readonly FullPhase[] | undefined {
+    return undefined;
+  }
+
   async run(event: WorkflowEvent<ScanParams>, step: WorkflowStep) {
     return runScan(
       {
         maxPolls: this.maxPolls,
+        phases: event.payload.runnerId ? undefined : this.phases,
         sandbox: event.payload.runnerId ? runnerSandbox(dbConnect(this.env.DATABASE_URL), event.payload, event.payload.runnerId) : this.sandboxes.getByName(event.payload.scanId),
         ledger: neonScanRepo(dbConnect(this.env.DATABASE_URL)),
         reports: this.env.REPORTS,

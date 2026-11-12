@@ -81,3 +81,24 @@ export const SCAN_SANDBOX_MODEL_PRICES = {
   "claude-opus-5-5": { input: 4, output: 20, cacheRead: 0.2, cacheWrite: 5 },
 } as const;
 export const SCAN_SANDBOX_DEFAULT_PRICE = { input: 10, output: 50, cacheRead: 0.25, cacheWrite: 12.5 } as const;
+
+// -----
+// A full Scan runs four Phases, one after the other, each as its own
+// run of the agent with its own slice of the Budget cap. The shares are
+// provisional guesses (a measurement of real full Scans will replace
+// them) and sit in this one object. They add up to 1.
+// -----
+export const SCAN_SANDBOX_FULL_PHASES = ["recon", "hunt", "check", "report"] as const;
+export const SCAN_SANDBOX_PHASE_SHARES = { recon: 0.1, hunt: 0.55, check: 0.25, report: 0.1 } as const;
+export const SCAN_SANDBOX_PHASES_KEY = "phases";
+
+// -----
+// Which of the skill's six phases each Phase runs. The skill's own
+// numbering is its workflow; a Phase here is one run of the agent.
+// -----
+export const SCAN_SANDBOX_PHASE_SKILL_PHASES = {
+  recon: "Phase 1 (Reconnaissance)",
+  hunt: "Phase 2 (Coverage-led hunting waves)",
+  check: "Phases 3, 4 and 5 (Candidate validation, Structured output, Independent record verification)",
+  report: "Phase 6 (Target-neutral report)",
+} as const;
