@@ -47,5 +47,8 @@ export const realAppDeps: AppDeps = {
   enqueueInviteEmail: async (env, mail) => {
     await env.INVITE_EMAIL_QUEUE.send(mail, { contentType: "json" });
   },
+  enqueuePasswordResetEmail: async (env, mail) => {
+    await env.INVITE_EMAIL_QUEUE.send(mail, { contentType: "json" });
+  },
   withTenant: (c, accountId, run) => withTenant(c.env.HYPERDRIVE_TENANT.connectionString, (promise) => c.executionCtx.waitUntil(promise), accountId, run),
 };

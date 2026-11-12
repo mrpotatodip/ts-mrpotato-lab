@@ -6,6 +6,7 @@ import type { GithubAccess } from "#/modules/github-installs";
 import type { ScanRepo } from "#/modules/scan-ledger";
 import type { MonthSpend } from "#/modules/usage";
 import type { ScanSandbox } from "#/modules/scan-sandbox";
+import type { PasswordResetEmail, QueuedEmail } from "#/modules/auth/types";
 import type { InviteEmail } from "#/modules/team/types";
 import type { ScanParams } from "#/schemas";
 
@@ -36,10 +37,11 @@ export type Bindings = {
   TEAM_INVITE_LIMITER?: RateLimit;
   RUNNER_ENROLL_LIMITER?: RateLimit;
   RUNNER_ENROLL_TOTAL_LIMITER?: RateLimit;
+  PASSWORD_RESET_LIMITER?: RateLimit;
   DASHBOARD_URL: string;
   INVITE_FROM: string;
   EMAIL: SendEmail;
-  INVITE_EMAIL_QUEUE: Queue<InviteEmail>;
+  INVITE_EMAIL_QUEUE: Queue<QueuedEmail>;
   REPORTS: R2Bucket;
   SANDBOX: DurableObjectNamespace<ScanSandbox>;
   SCAN_WORKFLOW: Workflow<ScanParams>;
@@ -59,6 +61,7 @@ export type AppDeps = {
   userHasAccount: (c: Context<AppEnv>, userId: string, accountId: string) => Promise<boolean>;
   userHasPower: (c: Context<AppEnv>, userId: string, accountId: string, power: AccessPower) => Promise<boolean>;
   enqueueInviteEmail: (env: Bindings, mail: InviteEmail) => Promise<void>;
+  enqueuePasswordResetEmail: (env: Bindings, mail: PasswordResetEmail) => Promise<void>;
   withTenant: <T>(c: Context<AppEnv>, accountId: string, run: (db: TenantDbType) => Promise<T>) => Promise<T>;
 };
 

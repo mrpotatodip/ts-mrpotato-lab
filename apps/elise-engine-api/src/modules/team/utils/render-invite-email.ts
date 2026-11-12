@@ -24,6 +24,11 @@ const MONO = "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace";
 const escapeHtml = (text: string) =>
   text.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#39;");
 
+// -----
+// The password reset email wears the same card.
+// -----
+export { COLOR as EMAIL_COLOR, SANS as EMAIL_SANS, MONO as EMAIL_MONO, escapeHtml as escapeEmailHtml };
+
 const detailRow = (label: string, value: string) =>
   `<tr><td style="padding:10px 16px;font-size:13px;color:${COLOR.muted};width:110px;">${label}</td><td style="padding:10px 16px;font-size:15px;font-weight:600;color:${COLOR.text};">${value}</td></tr>`;
 

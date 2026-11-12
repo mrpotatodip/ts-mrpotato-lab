@@ -19,6 +19,7 @@ const app = buildApp({
   userHasAccount: async () => true,
   userHasPower: async () => managesAccount,
   enqueueInviteEmail: async () => undefined,
+  enqueuePasswordResetEmail: async () => undefined,
   withTenant: noTenantDb,
 }).app;
 

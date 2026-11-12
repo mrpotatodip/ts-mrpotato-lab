@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { SignInSchema, SignUpInputSchema } from "#/modules/auth/schemas/auth-schemas";
+import { ResetPasswordSchema, SignInSchema, SignUpInputSchema } from "#/modules/auth/schemas/auth-schemas";
 
 const messagesOf = (result: { success: boolean; error?: { issues: readonly { path: PropertyKey[]; message: string }[] } }) =>
   Object.fromEntries((result.error?.issues ?? []).map((issue) => [String(issue.path[0]), issue.message]));
@@ -32,5 +32,15 @@ describe("SignInSchema", () => {
 
   it("says what is wrong with an email that was typed", () => {
     expect(messagesOf(SignInSchema.safeParse({ email: "nope", password: "x" }))).toEqual({ email: "Enter a valid email address, like name@company.com." });
+  });
+});
+
+describe("ResetPasswordSchema", () => {
+  it("holds a new password to the sign-up length", () => {
+    expect(messagesOf(ResetPasswordSchema.safeParse({ token: "abc", password: "short" })).password).toBe("Use at least 8 characters.");
+  });
+
+  it("accepts a long enough password with a token", () => {
+    expect(ResetPasswordSchema.safeParse({ token: "abc", password: "long-enough" }).success).toBe(true);
   });
 });

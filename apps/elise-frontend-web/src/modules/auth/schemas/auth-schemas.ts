@@ -21,6 +21,17 @@ export const SignInSchema = z.object({
   password: z.string().min(1, AUTH_ERRORS.password),
 });
 
+export const ForgotPasswordSchema = z.object({ email: emailField });
+
+// -----
+// The same length rules as sign-up, so a password that signs an account up can
+// also reset one.
+// -----
+export const ResetPasswordSchema = z.object({
+  token: z.string().min(1),
+  password: z.string().min(SIGN_UP_PASSWORD_MIN, AUTH_ERRORS.newPasswordTooShort(SIGN_UP_PASSWORD_MIN)).max(SIGN_UP_PASSWORD_MAX, AUTH_ERRORS.tooLong(SIGN_UP_PASSWORD_MAX)),
+});
+
 // -----
 // The contract's rules, with a message a person can act on for each. The
 // server still checks the contract's own schema, so the two cannot drift

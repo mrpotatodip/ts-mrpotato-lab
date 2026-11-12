@@ -20,8 +20,8 @@ import runnersRoutes from "#/modules/runners";
 import scansRoutes from "#/modules/scans";
 import signUpRoutes from "#/modules/sign-up";
 import teamRoutes from "#/modules/team";
-import { consumeInviteEmails } from "#/modules/team/lib";
-import type { InviteEmail } from "#/modules/team/types";
+import type { QueuedEmail } from "#/modules/auth/types";
+import { consumeQueuedEmails } from "#/modules/team/lib";
 import anthropicKeyRoutes from "#/modules/anthropic-key";
 import creditRoutes from "#/modules/credit/api";
 import planRoutes from "#/modules/plan/api";
@@ -56,6 +56,11 @@ export const buildApp = (deps: AppDeps = realAppDeps) => {
   app.use(
     "/auth/sign-in/*",
     rateLimitByIp("SIGN_IN_LIMITER", () => new TooManyRequestsError("Too many sign-in attempts. Wait a minute and try again.", "SIGN_IN_RATE_LIMITED")),
+  );
+
+  app.use(
+    "/auth/request-password-reset",
+    rateLimitByIp("PASSWORD_RESET_LIMITER", () => new TooManyRequestsError("Too many reset requests. Wait a minute and try again.", "PASSWORD_RESET_RATE_LIMITED")),
   );
 
   app.onError((err, c) => {
@@ -107,7 +112,7 @@ export const buildApp = (deps: AppDeps = realAppDeps) => {
 
 export default {
   fetch: buildApp().app.fetch,
-  queue: (batch: MessageBatch<InviteEmail>, env: Bindings) => consumeInviteEmails(batch, env),
+  queue: (batch: MessageBatch<QueuedEmail>, env: Bindings) => consumeQueuedEmails(batch, env),
 };
 
 export type AppType = ReturnType<typeof buildApp>["routes"];
