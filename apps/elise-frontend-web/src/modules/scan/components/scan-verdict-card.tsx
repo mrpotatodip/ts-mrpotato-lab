@@ -189,8 +189,8 @@ function verdictChecks(verdict: Verdict): Check[] {
 
   return [
     {
-      label: `At least ${scans.required} scans of this commit`,
-      detail: missing === 0 ? `This commit has ${scans.counted} scans.` : `${scans.counted} of ${scans.required} so far. Run ${missing} more scan${missing === 1 ? "" : "s"} of this exact commit. Only finished lite scans count.`,
+      label: `At least ${scanPlural(scans.required, "scan", "scans")} of this commit`,
+      detail: missing === 0 ? `This commit has ${scanPlural(scans.counted, "scan", "scans")}.` : `${scans.counted} of ${scans.required} so far. Run ${missing} more scan${missing === 1 ? "" : "s"} of this exact commit. Only finished lite scans count.`,
       state: missing === 0 ? "ok" : "wait",
     },
     {

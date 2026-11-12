@@ -43,28 +43,25 @@ describe("judgeCommit: enough trusted scans", () => {
   it("cannot tell when the commit was never scanned", () => {
     const verdict = judge({ scans: [] });
 
-    expect(verdict).toMatchObject({ verdict: "cannot_tell", scans: { required: 2, counted: 0 } });
+    expect(verdict).toMatchObject({ verdict: "cannot_tell", scans: { required: 1, counted: 0 } });
     expect(codes(verdict)).toEqual(["not_scanned"]);
     expect(verdict.basis).toBe("ai_audit");
   });
 
-  it("cannot tell from one clean scan, because one look can miss a problem", () => {
-    const verdict = judge({ scans: [scan("s1", 1)] });
-
-    expect(verdict.verdict).toBe("cannot_tell");
-    expect(verdict.reasons).toEqual([{ code: "too_few_scans", message: "1 of 2 scans of this commit; run another" }]);
+  it("passes after one clean scan: the person reads the verdict and decides", () => {
+    expect(judge({ scans: [scan("s1", 1)] })).toMatchObject({ verdict: "pass", reasons: [], scans: { required: 1, counted: 1, ids: ["s1"] } });
   });
 
   it("passes after two clean scans", () => {
     expect(judge({})).toMatchObject({ verdict: "pass", reasons: [], scans: { counted: 2, ids: ["s2", "s1"] } });
   });
 
-  it("cannot tell when one of the two newest scans left a problem unchecked", () => {
+  it("cannot tell when the newest scan left a problem unchecked", () => {
     expect(codes(judge({ scans: [scan("s1", 1), scan("s2", 2, { priorsUnchecked: 1 })] }))).toEqual(["unchecked_priors"]);
   });
 
-  it("does not look at a scan older than the two newest", () => {
-    const verdict = judge({ scans: [scan("s0", 0, { priorsUnchecked: 4 }), scan("s1", 1), scan("s2", 2)] });
+  it("does not look at a scan older than the newest", () => {
+    const verdict = judge({ scans: [scan("s0", 0, { priorsUnchecked: 4 }), scan("s1", 1, { priorsUnchecked: 4 }), scan("s2", 2)] });
 
     expect(verdict.verdict).toBe("pass");
   });
@@ -106,10 +103,10 @@ describe("judgeCommit: the limits", () => {
   });
 
   it("still lists the findings over the limit when the scans cannot be trusted", () => {
-    const verdict = judge({ scans: [scan("s1", 1)], findings: [finding("s1", "a", "critical")] });
+    const verdict = judge({ scans: [scan("s1", 1, { priorsUnchecked: 1 })], findings: [finding("s1", "a", "critical")] });
 
     expect(verdict.verdict).toBe("cannot_tell");
-    expect(codes(verdict)).toEqual(["too_few_scans", "over_limit"]);
+    expect(codes(verdict)).toEqual(["unchecked_priors", "over_limit"]);
   });
 });
 
