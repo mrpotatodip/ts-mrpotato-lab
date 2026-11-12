@@ -7,6 +7,7 @@ import type { ScanOptions } from "#/schemas";
 import type { PriorFinding } from "#/modules/scan-records";
 import type { Bindings } from "#/types/variables";
 import { normalizeBranchName } from "#/modules/branches";
+import { canonicalRepo } from "#/modules/scan-ledger";
 import {
   SCAN_SANDBOX_AGENT_ENV,
   SCAN_SANDBOX_AGENT_ERR,
@@ -78,7 +79,7 @@ export class ScanSandbox extends DurableObject<Bindings> {
   // -----
   async prepare(repoUrl: string, ref?: string, github?: OutboundGithub, anthropicKey?: OutboundAnthropicKey): Promise<ScanCheckout> {
     console.log("scan: starting container");
-    await this.#start(github, anthropicKey);
+    await this.#start(canonicalRepo(repoUrl), github, anthropicKey);
     if ((await this.#readText(SCAN_SANDBOX_CLONED_MARKER)) === null) {
       console.log("scan: cloning", repoUrl, ref ?? "");
       await this.#sh(buildCloneScript(), ref ? [repoUrl, ref] : [repoUrl], SCAN_SANDBOX_CLONE_GUARD_MS);
@@ -172,9 +173,9 @@ export class ScanSandbox extends DurableObject<Bindings> {
     }
   }
 
-  async #start(github?: OutboundGithub, anthropicKey?: OutboundAnthropicKey): Promise<void> {
+  async #start(repo: string, github?: OutboundGithub, anthropicKey?: OutboundAnthropicKey): Promise<void> {
     if (this.#container.running) return;
-    const outbound = this.#context.exports.Outbound({ props: { sandboxId: this.#context.id.toString(), github, anthropicKey } });
+    const outbound = this.#context.exports.Outbound({ props: { sandboxId: this.#context.id.toString(), repo, github, anthropicKey } });
     this.#container.start({
       image: this.#container.images.sandbox,
       instance: SCAN_SANDBOX_INSTANCE_TYPE,

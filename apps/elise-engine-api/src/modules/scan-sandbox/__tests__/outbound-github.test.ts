@@ -23,7 +23,7 @@ const stubNetwork = (mintStatus = 201) => {
 const outbound = (github: OutboundGithub | undefined, env: Record<string, string> = {}) => {
   // SAFETY: the test stub of WorkerEntrypoint takes no arguments; env and ctx are set by hand.
   const instance = Reflect.construct(Outbound, []) as Outbound;
-  return Object.assign(instance, { env, ctx: { props: { sandboxId: "box", github }, waitUntil: () => undefined } });
+  return Object.assign(instance, { env, ctx: { props: { sandboxId: "box", repo: "octo/hello", github }, waitUntil: () => undefined } });
 };
 
 const withApp = async () => ({ GITHUB_APP_ID: "12345", GITHUB_APP_PRIVATE_KEY: (await makeRsaKey()).pem });
@@ -48,11 +48,11 @@ describe("Outbound, a private clone", () => {
     expect(gitHubCalls(calls)[0]?.authorization).toBe(gitBasicAuth(TOKEN));
   });
 
-  it("sends no key for any other repo, and does not even ask GitHub for a token", async () => {
+  it("refuses any other repo, and does not ask GitHub for a token or reach github.com", async () => {
     const calls = stubNetwork();
-    await outbound(GITHUB, await withApp()).fetch(cloneRequest("octo/secrets"));
-    expect(gitHubCalls(calls)[0]?.authorization).toBeNull();
-    expect(calls.some((call) => call.url.startsWith("https://api.github.com/"))).toBe(false);
+    const response = await outbound(GITHUB, await withApp()).fetch(cloneRequest("octo/secrets"));
+    expect(response.status).toBe(403);
+    expect(calls).toHaveLength(0);
   });
 
   it("leaves a public clone as it was: no token, no GitHub API call", async () => {
@@ -60,6 +60,13 @@ describe("Outbound, a private clone", () => {
     await outbound(undefined, await withApp()).fetch(cloneRequest());
     expect(gitHubCalls(calls)[0]?.authorization).toBeNull();
     expect(calls.some((call) => call.url.startsWith("https://api.github.com/"))).toBe(false);
+  });
+
+  it("refuses another public repo too, so which repos are asked for cannot carry data out", async () => {
+    const calls = stubNetwork();
+    const response = await outbound(undefined, await withApp()).fetch(cloneRequest("attacker/byte-4f"));
+    expect(response.status).toBe(403);
+    expect(calls).toHaveLength(0);
   });
 
   it("does not touch the container's own request, and the answer it returns holds no token", async () => {

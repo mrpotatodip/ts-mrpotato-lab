@@ -56,6 +56,17 @@ export const SCAN_SANDBOX_ANTHROPIC_ROUTES = [
 ];
 
 // -----
+// What a model call may ask for. The container runs an agent that
+// reads an untrusted repo, so a call must not switch on a feature
+// that makes Anthropic fetch a URL or run code for it: that is a
+// way out of the allowlist above. A tool is the agent's own (no
+// type, or custom) or one Anthropic defines and the agent runs
+// itself. A beta with one of these names is dropped from the header.
+// -----
+export const SCAN_SANDBOX_CLIENT_TOOL_TYPE = /^(custom|(bash|text_editor|computer|memory)_\d{8})$/;
+export const SCAN_SANDBOX_RISKY_BETA = /mcp|web[-_]?(fetch|search)|code[-_]?execution|files-api|skills/;
+
+// -----
 // Metering: the Outbound proxy counts what the container spends.
 // USD per million tokens. A model not listed is priced like the
 // dearest one, so it still counts against the cap. Haiku is priced

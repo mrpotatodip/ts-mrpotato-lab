@@ -29,4 +29,8 @@ export type OutboundGithub = { installationId: number; repoId: number; repo: str
 // account on the platform key.
 // -----
 export type OutboundAnthropicKey = { accountId: string; sealed: string };
-export type OutboundProps = { sandboxId: string; github?: OutboundGithub; anthropicKey?: OutboundAnthropicKey };
+// -----
+// repo is the one repo this scan reads, as owner/name in lowercase.
+// Outbound passes git requests for no other repo, public or not.
+// -----
+export type OutboundProps = { sandboxId: string; repo: string; github?: OutboundGithub; anthropicKey?: OutboundAnthropicKey };
