@@ -27,6 +27,7 @@ const app = buildApp({
   userHasAccount: async () => true,
   userHasPower: async () => true,
   enqueueInviteEmail: async () => undefined,
+  enqueuePasswordResetEmail: async () => undefined,
   withTenant: (_c, accountId, run) =>
     test.raw.transaction(async (tx) => {
       await tx.execute(sql`set local role elise_app`);
