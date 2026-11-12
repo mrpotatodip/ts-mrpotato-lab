@@ -1,14 +1,19 @@
 import { describe, expect, it } from "vitest";
+import { RUNNER_PAIRING_ALPHABET, RUNNER_PAIRING_CODE_LENGTH } from "#/modules/runners/constants";
 import { bearerTokenOf, generatePairingCode, generateRunnerToken, hashPairingCode, normalizePairingCode } from "#/modules/runners/utils";
 
 describe("pairing codes", () => {
-  it("are two groups of four from the safe alphabet", () => {
-    expect(generatePairingCode()).toMatch(/^[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}$/);
+  it("are three groups of four from the safe alphabet", () => {
+    expect(generatePairingCode()).toMatch(/^[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}$/);
   });
 
-  it.each(["k7qm-4txd", "K7QM4TXD", " k7qm 4txd ", "K7QM-4TXD"])("find one hash however %j is typed", async (typed) => {
-    expect(normalizePairingCode(typed)).toBe("K7QM4TXD");
-    expect(await hashPairingCode(typed)).toBe(await hashPairingCode("K7QM-4TXD"));
+  it("carry at least 60 bits", () => {
+    expect(RUNNER_PAIRING_CODE_LENGTH * Math.log2(RUNNER_PAIRING_ALPHABET.length)).toBeGreaterThanOrEqual(60);
+  });
+
+  it.each(["k7qm-4txd-9wpa", "K7QM4TXD9WPA", " k7qm 4txd 9wpa ", "K7QM-4TXD-9WPA"])("find one hash however %j is typed", async (typed) => {
+    expect(normalizePairingCode(typed)).toBe("K7QM4TXD9WPA");
+    expect(await hashPairingCode(typed)).toBe(await hashPairingCode("K7QM-4TXD-9WPA"));
   });
 });
 

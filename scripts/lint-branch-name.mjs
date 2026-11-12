@@ -17,7 +17,7 @@ const slug = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const name = process.env.BRANCH ?? git(["rev-parse", "--abbrev-ref", "HEAD"]);
 
 if (!name || name === "HEAD") process.exit(0);
-if (name === "main" || name === "master") process.exit(0);
+if (name === "main" || name === "master" || name === "uat") process.exit(0);
 
 const fail = (message) => {
   console.error(`${message}
