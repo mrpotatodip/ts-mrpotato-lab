@@ -1,5 +1,6 @@
 ---
 import Base from "../layouts/Base.astro";
+import ScansCard from "../stageshow/ScansCard";
 import { EXAMPLE_FINDING, FEATURES, SITE, STEPS } from "../constants/site";
 ---
 
@@ -14,13 +15,19 @@ import { EXAMPLE_FINDING, FEATURES, SITE, STEPS } from "../constants/site";
     </header>
 
     <main>
-      <div class="hero">
-        <h1>Find the security flaws in your code before you ship it.</h1>
-        <p class="lede">{SITE.description}</p>
-        <div class="actions">
-          <a class="button" href={SITE.appUrl}>Audit a repository</a>
-          <a class="button quiet" href="#how-it-works">How it works</a>
+      <div class="hero-grid">
+        <div class="hero">
+          <h1>Find the security flaws in your code before you ship it.</h1>
+          <p class="lede">{SITE.description}</p>
+          <div class="actions">
+            <a class="button" href={SITE.appUrl}>Audit a repository</a>
+            <a class="button quiet" href="#how-it-works">How it works</a>
+          </div>
         </div>
+        <figure class="hero-card">
+          <ScansCard client:load />
+          <figcaption>The scan list in Elise, with an example scan. The repositories and findings are made up.</figcaption>
+        </figure>
       </div>
 
       <section id="how-it-works" aria-labelledby="how-heading">

@@ -1,0 +1,122 @@
+/* All rules belong to this example, including its responsive variants. */
+.ed-card {
+  & .ss-stage {
+    --gutter: 24px;
+    overflow: hidden;
+    border-radius: 16px;
+    background: var(--ss-well);
+  }
+
+  .ed-window {
+    position: absolute;
+    top: var(--gutter);
+    left: 104px;
+    width: 460px;
+    height: 320px;
+    background: var(--ss-surface);
+    border-radius: 10px;
+    box-shadow: var(--ss-shadow-hero);
+  }
+
+  & [data-layout="compact"] .ed-window { left: 68px; }
+
+  .ed-window .ss-window__body { display: flex; }
+
+  .ed-sidebar {
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    gap: 4px;
+    width: 120px;
+    padding: 16px 10px;
+    border-right: 1px solid var(--ss-line);
+    background: var(--ss-canvas);
+  }
+
+  .ed-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 24px;
+    padding: 0 6px;
+    border-radius: 6px;
+  }
+
+  .ed-nav__label { font-size: 10.5px; line-height: 14px; color: var(--ss-text); }
+  .ed-nav[data-on] .ed-nav__label { color: var(--ss-text-strong); font-weight: 600; }
+
+  .ed-main { flex: 1; min-width: 0; padding: 16px 18px; }
+
+  .ed-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .ed-title { font-size: 13px; font-weight: 600; color: var(--ss-text-strong); }
+
+  .ed-list { display: flex; flex-direction: column; }
+
+  .ed-row {
+    align-content: center;
+    height: 36px;
+    margin: 0 -8px;
+    padding: 0 8px;
+    border-radius: 8px;
+    border-bottom: 1px solid var(--ss-line-faint);
+    transition: background 0.15s ease;
+  }
+
+  .ed-row[data-selected] {
+    background: var(--ss-accent-soft);
+    border-bottom-color: transparent;
+  }
+
+  .ed-name { font-size: 12px; font-weight: 500; color: var(--ss-text-strong); }
+  .ed-row .ss-avatar { font-weight: 600; }
+  .ed-owner { color: var(--ss-text-faint); }
+
+  .ed-status {
+    margin-left: auto;
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 500;
+    color: #1f7a4d;
+  }
+
+  .ed-rowname { font-size: 11px; line-height: 14px; color: var(--ss-text); }
+  .ed-rowamount { margin-left: auto; font-size: 11px; line-height: 14px; color: var(--ss-text-faint); }
+
+  /* The satellite straddles the window's lower-left edge over the sidebar's
+     filler, a full gutter from the stage's left and bottom. */
+  .ed-detail {
+    position: absolute;
+    bottom: var(--gutter);
+    left: var(--gutter);
+    width: 190px;
+    padding: 14px 16px 8px;
+    border-radius: 12px;
+    background: var(--ss-surface);
+    box-shadow: var(--ss-shadow-satellite);
+  }
+
+  .ed-detail-head {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding-bottom: 10px;
+    margin-bottom: 2px;
+    border-bottom: 1px solid var(--ss-line);
+  }
+
+  .ed-detail-name { font-size: 12px; font-weight: 600; color: var(--ss-text-strong); }
+  .ed-detail-sub { font-size: 10.5px; color: var(--ss-text-faint); }
+
+  .ed-finding { display: flex; align-items: center; justify-content: space-between; gap: 12px; height: 28px; }
+  .ed-finding-title { font-size: 11px; color: var(--ss-text); white-space: nowrap; }
+  .ed-dot { flex: none; width: 6px; height: 6px; border-radius: 50%; }
+  .ed-dot[data-tone="high"] { background: #d4483f; }
+  .ed-dot[data-tone="medium"] { background: #e08a1e; }
+  .ed-dot[data-tone="low"] { background: #3b82c4; }
+}

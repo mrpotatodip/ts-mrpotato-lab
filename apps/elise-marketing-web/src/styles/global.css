@@ -87,6 +87,31 @@ a {
   outline-offset: 3px;
 }
 
+.hero-grid {
+  display: grid;
+  gap: 2rem 3rem;
+  align-items: center;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 62rem) {
+  .hero-grid {
+    grid-template-columns: minmax(0, 1fr) 25rem;
+  }
+}
+
+.hero-card {
+  margin: 0;
+  padding-block: 1rem;
+}
+
+.hero-card figcaption {
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+}
+
 .hero {
   padding-block: clamp(3rem, 9vw, 7rem) clamp(2.5rem, 6vw, 5rem);
   max-width: 46rem;
