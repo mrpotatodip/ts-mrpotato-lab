@@ -4,7 +4,7 @@ import { ShellPageHeader } from "#/modules/shell";
 import { hasAccessPower } from "@repo/contracts/elise";
 
 export const Route = createFileRoute("/_app/github/callback")({
-  head: () => ({ meta: [{ title: "Connect GitHub · EliseLAB" }] }),
+  head: () => ({ meta: [{ title: "Connect GitHub · Elise" }] }),
   validateSearch: GithubCallbackSearchSchema,
   beforeLoad: ({ context }) => {
     if (!hasAccessPower(context.user?.powers ?? [], "company:github:installations:create")) throw redirect({ to: "/connections" });
@@ -16,7 +16,7 @@ function GithubCallbackPage() {
   const search = Route.useSearch();
   return (
     <>
-      <ShellPageHeader title="Connect GitHub" description="Let EliseLAB read the repositories you chose on GitHub, so it can scan the private ones." />
+      <ShellPageHeader title="Connect GitHub" description="Let Elise read the repositories you chose on GitHub, so it can scan the private ones." />
       <GithubCallback search={search} />
     </>
   );

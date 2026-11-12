@@ -24,9 +24,9 @@ function GithubReadableReposView() {
     <Card>
       <CardHeader className="flex-row flex-wrap items-center justify-between gap-3">
         <div className="grid gap-1.5">
-          <CardTitle>Repositories EliseLAB can read</CardTitle>
+          <CardTitle>Repositories Elise can read</CardTitle>
           <p className="max-w-copy text-sm leading-relaxed text-muted-foreground">
-            What the connections above let EliseLAB scan. To add or remove one, use Manage on GitHub. Pick one when you add a repository, or when you start a scan.
+            What the connections above let Elise scan. To add or remove one, use Manage on GitHub. Pick one when you add a repository, or when you start a scan.
           </p>
         </div>
         <span className="text-xs tabular-nums text-muted-foreground">{visible.length === repos.length ? `${repos.length} ${repos.length === 1 ? "repository" : "repositories"}` : `${visible.length} of ${repos.length}`}</span>
@@ -36,7 +36,7 @@ function GithubReadableReposView() {
           <div className="border-b px-5 py-3">
             <div className="relative w-full sm:w-72">
               <Label htmlFor="github-repo-search" className="sr-only">
-                Search the repositories EliseLAB can read
+                Search the repositories Elise can read
               </Label>
               <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input id="github-repo-search" name="search" type="search" autoComplete="off" placeholder="Search by name" value={search} onChange={(event) => setSearch(event.target.value)} className="h-9 pl-9" />

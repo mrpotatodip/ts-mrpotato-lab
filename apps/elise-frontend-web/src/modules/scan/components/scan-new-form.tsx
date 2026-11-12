@@ -149,7 +149,7 @@ export function ScanNewForm({ onDone, repo, startBranch, startRef, startOptions 
   // -----
   // A scan can run on one of the account's connected runners: the person's own
   // computer, on their own Claude. Only a public repository can, because a private one
-  // needs the GitHub token that only EliseLAB's container can make.
+  // needs the GitHub token that only Elise's container can make.
   // -----
   const { data: runners } = useQuery(runnersQuery());
   const connectedRunners = (runners ?? []).filter((item) => item.state === "connected");
@@ -178,7 +178,7 @@ export function ScanNewForm({ onDone, repo, startBranch, startRef, startOptions 
   });
 
   const summary = scanPlanSummary(plan, runner?.name);
-  const chips = [runner?.name ?? "EliseLAB's cloud", labelOf(SCAN_MODEL_OPTIONS, values.model), `${labelOf(SCAN_EFFORT_OPTIONS, values.effort)} effort`];
+  const chips = [runner?.name ?? "Elise's cloud", labelOf(SCAN_MODEL_OPTIONS, values.model), `${labelOf(SCAN_EFFORT_OPTIONS, values.effort)} effort`];
 
   return (
     <form
@@ -308,7 +308,7 @@ export function ScanNewForm({ onDone, repo, startBranch, startRef, startOptions 
                       </Label>
                       <Select
                         value={runner?.id ?? RUN_IN_CLOUD}
-                        items={[{ value: RUN_IN_CLOUD, label: "EliseLAB's cloud" }, ...connectedRunners.map((item) => ({ value: item.id, label: item.name }))]}
+                        items={[{ value: RUN_IN_CLOUD, label: "Elise's cloud" }, ...connectedRunners.map((item) => ({ value: item.id, label: item.name }))]}
                         onValueChange={(next) => form.setFieldValue("runnerId", connectedRunners.find((item) => item.id === next)?.id)}
                       >
                         <SelectTrigger id="run-where" className="h-9">
@@ -317,7 +317,7 @@ export function ScanNewForm({ onDone, repo, startBranch, startRef, startOptions 
                         <SelectContent>
                           <SelectItem value={RUN_IN_CLOUD}>
                             <span className="grid">
-                              <span>EliseLAB&apos;s cloud</span>
+                              <span>Elise&apos;s cloud</span>
                               <span className="text-xs text-muted-foreground">Runs in an isolated container, and uses your plan&apos;s credit or key.</span>
                             </span>
                           </SelectItem>
@@ -339,7 +339,7 @@ export function ScanNewForm({ onDone, repo, startBranch, startRef, startOptions 
                 <p className="pt-3 text-sm leading-relaxed text-muted-foreground">
                   {runner === undefined
                     ? "More effort can find more issues, but takes longer and costs more."
-                    : "The EliseLAB Runner app must be open on that computer, with Claude Code signed in. Private repositories can't run there yet."}
+                    : "The Elise Runner app must be open on that computer, with Claude Code signed in. Private repositories can't run there yet."}
                 </p>
               </CollapsiblePanel>
             </Collapsible>

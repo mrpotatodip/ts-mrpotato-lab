@@ -11,8 +11,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient; user
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-      { title: "EliseLAB" },
-      { name: "description", content: "EliseLAB runs an AI security review on a public GitHub repository and saves the report." },
+      { title: "Elise" },
+      { name: "description", content: "Elise runs an AI security review on a public GitHub repository and saves the report." },
       { name: "theme-color", content: "#f1f2f4" },
     ],
     links: [

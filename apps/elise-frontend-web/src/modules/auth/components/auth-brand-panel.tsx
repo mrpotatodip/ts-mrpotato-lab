@@ -14,7 +14,7 @@ export function AuthBrandPanel() {
     <aside data-slot="page-header" className="hidden flex-col gap-12 p-12 lg:flex">
       <div className="flex items-center gap-3">
         <ShellLogo className="size-10 shrink-0" />
-        <span className="text-xl font-semibold tracking-tight">EliseLAB</span>
+        <span className="text-xl font-semibold tracking-tight">Elise</span>
       </div>
       <div className="my-auto grid max-w-md gap-10">
         <p className="text-balance text-3xl font-semibold leading-tight tracking-tight">{AUTH_BRAND_COPY.headline}</p>

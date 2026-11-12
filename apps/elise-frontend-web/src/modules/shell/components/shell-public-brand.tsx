@@ -10,7 +10,7 @@ export function ShellPublicBrand() {
   return (
     <div data-slot="page-header" className="flex items-center justify-center gap-3 justify-self-center">
       <ShellLogo className="size-9 shrink-0" />
-      <span className="text-xl font-semibold tracking-tight">EliseLAB</span>
+      <span className="text-xl font-semibold tracking-tight">Elise</span>
     </div>
   );
 }
