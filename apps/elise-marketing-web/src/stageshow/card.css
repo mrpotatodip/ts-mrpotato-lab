@@ -101,6 +101,10 @@
     box-shadow: var(--ss-shadow-satellite);
   }
 
+  /* The compact window starts at 68px, so its sidebar ends at 188px: keep the
+     card a gutter short of it, off the rows. */
+  & [data-layout="compact"] .ed-detail { width: 156px; padding-inline: 14px; }
+
   .ed-detail-head {
     display: flex;
     flex-direction: column;
@@ -116,7 +120,9 @@
   .ed-finding { display: flex; align-items: center; justify-content: space-between; gap: 12px; height: 28px; }
   .ed-finding-title { font-size: 11px; color: var(--ss-text); white-space: nowrap; }
   .ed-dot { flex: none; width: 6px; height: 6px; border-radius: 50%; }
-  .ed-dot[data-tone="high"] { background: #d4483f; }
-  .ed-dot[data-tone="medium"] { background: #e08a1e; }
-  .ed-dot[data-tone="low"] { background: #3b82c4; }
+  /* The dashboard's severity marks (mark-high, mark-medium, mark-low in its
+     globals.css, Default and Daylight): orange, yellow, blue. */
+  .ed-dot[data-tone="high"] { background: oklch(0.6 0.19 42); }
+  .ed-dot[data-tone="medium"] { background: oklch(0.66 0.14 72); }
+  .ed-dot[data-tone="low"] { background: oklch(0.6 0.15 245); }
 }
