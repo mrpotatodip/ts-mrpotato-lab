@@ -1,4 +1,4 @@
-// Pairing with EliseLAB. The web page never talks to the API and never sees the token:
+// Pairing with Elise. The web page never talks to the API and never sees the token:
 // it asks these functions, which call the API from Rust and keep the token in the
 // computer's keychain (macOS Keychain, Windows Credential Manager, Linux Secret Service).
 
@@ -28,9 +28,9 @@ pub(crate) fn engine_url() -> String {
 pub enum RunnerStatus {
     // No token on this computer.
     Unpaired,
-    // EliseLAB no longer knows the token: the runner was removed.
+    // Elise no longer knows the token: the runner was removed.
     Revoked,
-    // A token is saved, but EliseLAB could not be reached.
+    // A token is saved, but Elise could not be reached.
     Offline,
     Connected { name: String, account_name: String },
 }
@@ -55,7 +55,7 @@ pub struct PairingOffer {
     pub account_name: String,
 }
 
-// A token EliseLAB has issued that the person has not accepted yet. It lives in memory only:
+// A token Elise has issued that the person has not accepted yet. It lives in memory only:
 // it is not in the keychain, so the work loop cannot use it, and quitting the app loses it.
 struct Pending {
     token: String,
@@ -129,7 +129,7 @@ pub(crate) fn forget_token() {
     }
 }
 
-// Asks EliseLAB who this runner is. Also the proof that the pairing still works.
+// Asks Elise who this runner is. Also the proof that the pairing still works.
 pub async fn status() -> RunnerStatus {
     let Some(token) = token() else {
         return RunnerStatus::Unpaired;
@@ -195,7 +195,7 @@ pub async fn pair(code: &str) -> Result<PairingOffer, RunnerError> {
     Ok(offer)
 }
 
-// Tells EliseLAB to stop trusting a token. True when it did, or already had.
+// Tells Elise to stop trusting a token. True when it did, or already had.
 async fn revoke(token: &str) -> bool {
     match client().delete(format!("{}/runners/me", engine_url())).bearer_auth(token).send().await {
         Ok(response) => response.status().is_success() || response.status() == StatusCode::UNAUTHORIZED,
@@ -218,7 +218,7 @@ pub async fn accept_pairing() -> Result<RunnerStatus, RunnerError> {
     })
 }
 
-// The person refused. EliseLAB is told to drop the token; if it cannot be reached the token
+// The person refused. Elise is told to drop the token; if it cannot be reached the token
 // is dropped here anyway, and a token nobody holds works for nobody. The runner then shows in
 // the account's list until an admin removes it.
 pub async fn decline_pairing() -> Result<RunnerStatus, RunnerError> {
@@ -228,7 +228,7 @@ pub async fn decline_pairing() -> Result<RunnerStatus, RunnerError> {
     Ok(RunnerStatus::Unpaired)
 }
 
-// Tells EliseLAB to stop trusting this runner, then forgets the token. If EliseLAB cannot
+// Tells Elise to stop trusting this runner, then forgets the token. If Elise cannot
 // be reached the token is kept, so a copy of it is never left alive without a way to retry.
 pub async fn unpair() -> Result<RunnerStatus, RunnerError> {
     let Some(token) = token() else {
@@ -240,7 +240,7 @@ pub async fn unpair() -> Result<RunnerStatus, RunnerError> {
         .send()
         .await
         .map_err(|_| RunnerError::Unreachable)?;
-    // 401 means EliseLAB already dropped it, which is what we wanted.
+    // 401 means Elise already dropped it, which is what we wanted.
     match response.status() {
         StatusCode::OK | StatusCode::UNAUTHORIZED => {
             forget_token();

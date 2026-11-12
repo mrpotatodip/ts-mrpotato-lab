@@ -1,7 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 
 // The shapes src-tauri/src/runner.rs sends. The page never holds the token: Rust keeps it
-// in the keychain and makes the calls to EliseLAB.
+// in the keychain and makes the calls to Elise.
 export type RunnerStatus =
   | { state: "unpaired" }
   | { state: "revoked" }

@@ -15,10 +15,10 @@ let activityTimer: number | undefined;
 
 // -----
 // A failure carries the agent's whole output, which fills a small window. The window shows
-// the start of it; the scan's page in EliseLAB has all of it.
+// the start of it; the scan's page in Elise has all of it.
 // -----
 const BRIEF_MAX = 200;
-const brief = (text: string) => (text.length > BRIEF_MAX ? `${text.slice(0, BRIEF_MAX).trimEnd()}… The full text is on the scan's page in EliseLAB.` : text);
+const brief = (text: string) => (text.length > BRIEF_MAX ? `${text.slice(0, BRIEF_MAX).trimEnd()}… The full text is on the scan's page in Elise.` : text);
 
 export const stopActivity = () => {
   if (activityTimer !== undefined) window.clearInterval(activityTimer);
@@ -104,8 +104,8 @@ export const pairView = (onOffer: OnOffer, notice?: string): HTMLElement[] => {
 };
 
 // -----
-// The code worked and EliseLAB named the account. Nothing is saved yet: "Connect" keeps the
-// token, "Cancel" tells EliseLAB to drop it. Cancel is the focused button, so Enter does not
+// The code worked and Elise named the account. Nothing is saved yet: "Connect" keeps the
+// token, "Cancel" tells Elise to drop it. Cancel is the focused button, so Enter does not
 // connect a computer by habit.
 // -----
 export const acceptView = (offer: PairingOffer, onStatus: OnStatus): HTMLElement[] => {
@@ -144,7 +144,7 @@ export const acceptView = (offer: PairingOffer, onStatus: OnStatus): HTMLElement
 };
 
 // -----
-// Paired: who this computer is. Disconnecting asks once, in a sentence, and tells EliseLAB
+// Paired: who this computer is. Disconnecting asks once, in a sentence, and tells Elise
 // before the token is forgotten.
 // -----
 export const connectedView = (status: Extract<RunnerStatus, { state: "connected" }>, onStatus: OnStatus): HTMLElement[] => {
@@ -209,7 +209,7 @@ export const connectedView = (status: Extract<RunnerStatus, { state: "connected"
 };
 
 // -----
-// Paired, but EliseLAB did not answer. The pairing is kept, so the way out is to try again.
+// Paired, but Elise did not answer. The pairing is kept, so the way out is to try again.
 // -----
 export const offlineView = (onRetry: () => void): HTMLElement[] => {
   const retry = button(COPY.offline.retry, "primary");

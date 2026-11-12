@@ -1,16 +1,16 @@
 # elise-runner-cli
 
-EliseLAB Runner is a small desktop app (Tauri 2, Rust and TypeScript) that runs a scan on your own computer. You pair it with an EliseLAB account using a one-time code. When someone starts a scan and picks this computer, the app clones the repo, runs `claude` on it locally, and sends the report back to EliseLAB.
+Elise Runner is a small desktop app (Tauri 2, Rust and TypeScript) that runs a scan on your own computer. You pair it with an Elise account using a one-time code. When someone starts a scan and picks this computer, the app clones the repo, runs `claude` on it locally, and sends the report back to Elise.
 
 ## What you need
 
 - Claude Code installed and signed in on the computer. The app looks for `claude` in the usual places, then asks a login shell.
 - The app kept open while a scan runs.
-- A pairing code. Add a runner in EliseLAB to get one. A code works once and expires after 10 minutes. After a code works, the app names the account and waits: nothing is saved, and no scan can run, until you press Connect.
+- A pairing code. Add a runner in Elise to get one. A code works once and expires after 10 minutes. After a code works, the app names the account and waits: nothing is saved, and no scan can run, until you press Connect.
 
 ## How it is built
 
-The page never holds the API token. Rust keeps it in the system keychain and makes every call to EliseLAB. The page asks Rust through Tauri commands in `src/api.ts` and draws what comes back.
+The page never holds the API token. Rust keeps it in the system keychain and makes every call to Elise. The page asks Rust through Tauri commands in `src/api.ts` and draws what comes back.
 
 | Path | What it is |
 | --- | --- |
