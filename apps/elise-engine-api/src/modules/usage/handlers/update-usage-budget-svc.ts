@@ -3,7 +3,6 @@ import type { Usage } from "@repo/contracts/elise";
 import type { PoolDbType } from "#/lib/db-connection";
 import { Invalid, type DbError } from "#/lib/effect-query";
 import type { ScanRepo } from "#/modules/scan-ledger";
-import { SCANS_ACTIVE_WINDOW_MS } from "#/modules/scans/constants";
 import { setMonthlyBudgetEffect } from "#/modules/usage/queries";
 import type { MonthSpend, UsageEnv } from "#/modules/usage/types";
 import { allowanceUsdOf, defaultBudgetUsdOf, reservedUsdOf, summarizeUsage } from "#/modules/usage/utils";
@@ -25,7 +24,7 @@ export const updateUsageBudgetSvc = (
 ): Effect.Effect<Usage, DbError | Invalid> =>
   Effect.gen(function* () {
     const now = Date.now();
-    const active = yield* repo.activeSince(accountId, now - SCANS_ACTIVE_WINDOW_MS);
+    const active = yield* repo.activeSince(accountId, now);
     const reservedUsd = reservedUsdOf(active);
     const budgetUsd = requestedUsd ?? defaultBudgetUsdOf(spend, env);
     const allowanceUsd = allowanceUsdOf(spend, env);

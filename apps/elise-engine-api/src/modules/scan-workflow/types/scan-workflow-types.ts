@@ -34,6 +34,7 @@ export type SandboxPort = {
 // -----
 export type ScanRunDeps = {
   sandbox: SandboxPort;
+  maxPolls: number;
   ledger: ScanRepo;
   reports: R2Bucket;
   readPriors: (params: ScanParams) => Promise<PriorFinding[]>;

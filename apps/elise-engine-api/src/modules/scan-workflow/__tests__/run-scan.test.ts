@@ -38,7 +38,7 @@ const fakeStep = (names: string[]): WorkflowStep => {
   return { do: run, sleep: async (name: string) => void names.push(name) } as never;
 };
 
-const setup = (options: { priors?: PriorFinding[]; recordFails?: ScanState; agent?: "succeeded" | "failed"; pollThrows?: boolean; sealedKey?: string } = {}) => {
+const setup = (options: { priors?: PriorFinding[]; recordFails?: ScanState; agent?: "succeeded" | "failed" | "running"; pollThrows?: boolean; sealedKey?: string; maxPolls?: number } = {}) => {
   const names: string[] = [];
   const calls: string[] = [];
   const settles: string[] = [];
@@ -58,6 +58,7 @@ const setup = (options: { priors?: PriorFinding[]; recordFails?: ScanState; agen
     launchAgent: async (_options, priors) => void launches.push(priors),
     pollAgent: async () => {
       if (options.pollThrows) throw new Error("sandbox unreachable");
+      if (options.agent === "running") return { state: "running" };
       return options.agent === "failed" ? { state: "failed", error: "claude exited 1" } : { state: "succeeded" };
     },
     agentLogTail: async () => "log",
@@ -67,6 +68,7 @@ const setup = (options: { priors?: PriorFinding[]; recordFails?: ScanState; agen
     destroy: async () => void calls.push("destroy"),
   };
   const deps = {
+    maxPolls: options.maxPolls ?? 240,
     sandbox,
     ledger: ledger.repo,
     reports: bindings.env.REPORTS,
@@ -86,6 +88,15 @@ const queue = async (ledger: ReturnType<typeof memoryScanRepo>, input: ScanParam
 };
 
 describe("runScan", () => {
+  it("stops waiting for the agent after its own number of polls, and says how long that was", async () => {
+    const { names, ledger, deps } = setup({ agent: "running", maxPolls: 6 });
+    await queue(ledger, params());
+
+    await expect(runScan(deps, params(), fakeStep(names))).rejects.toThrow("the agent timed out after 1 minutes");
+    expect(names.filter((name) => name.startsWith("poll-"))).toHaveLength(6);
+    expect(ledger.rows.get("scan-1")).toMatchObject({ status: "failed" });
+  });
+
   it("saves the results first: the scan is still running when it is recorded, and succeeded after", async () => {
     const { names, calls, ledger, deps } = setup();
     await queue(ledger, params());

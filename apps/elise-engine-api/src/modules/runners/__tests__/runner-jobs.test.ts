@@ -128,7 +128,7 @@ describe("claiming a job", () => {
     const stalledId = `job-stalled-${counter}`;
     await test.raw.insert(scans).values(scanValues(tenantId, repoId, stalledId, NOW.toISOString(), { status: "running" }));
     await queue(stalledId);
-    await run(neonScanRepo(test.http).create(paramsFor(`job-newer-${counter}`, { runnerId: undefined }), repoId, Date.now() + 60_000));
+    await run(neonScanRepo(test.http).create(paramsFor(`job-newer-${counter}`, { runnerId: undefined }), repoId, Date.now() + 200 * 60 * 1000));
 
     expect((await jobOf(stalledId)).state).toBe("cancelled");
   });

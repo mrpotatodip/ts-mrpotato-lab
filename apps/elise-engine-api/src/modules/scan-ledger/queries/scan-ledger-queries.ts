@@ -1,4 +1,4 @@
-import { and, asc, eq, gt, gte, inArray, lt, ne, or, sql } from "drizzle-orm";
+import { and, asc, eq, gt, inArray, ne, notExists, sql } from "drizzle-orm";
 import { Effect } from "effect";
 import { scanFiles, scanFindings, scanRepos, scanRunnerJobs, scans, tenantCreditLedger, tenantRunners } from "@repo/db-elise/schema";
 import type { DbConnectType } from "#/lib/db-connection";
@@ -6,7 +6,7 @@ import { Conflict, toDbError, type DbError } from "#/lib/effect-query";
 import { PG_UNIQUE_VIOLATION, pgErrorCode } from "#/lib/pg-error";
 import type { ScanStatus } from "#/schemas";
 import type { ScanPage, ScanRepo } from "#/modules/scan-ledger/types";
-import { canonicalRepo, displayRepoUrl, scanRowToStatus, summaryOf } from "#/modules/scan-ledger/utils";
+import { canonicalRepo, displayRepoUrl, liveScansSql, scanRowToStatus, stalledScansSql, summaryOf } from "#/modules/scan-ledger/utils";
 
 type ScanRow = typeof scans.$inferSelect;
 
@@ -90,11 +90,8 @@ export const neonScanRepo = (db: DbConnectType): ScanRepo => ({
   // index on active scans refuses a second live scan, and the
   // answer names the one that is running.
   // -----
-  create: (params, repoId, staleBeforeMs) => {
-    const stalled = db
-      .select({ id: scans.id })
-      .from(scans)
-      .where(and(eq(scans.repoId, repoId), inArray(scans.status, ["queued", "running"]), lt(scans.updatedAt, new Date(staleBeforeMs))));
+  create: (params, repoId, nowMs) => {
+    const stalled = db.select({ id: scans.id }).from(scans).where(and(eq(scans.repoId, repoId), stalledScansSql(nowMs)));
     return Effect.tryPromise({
       try: () =>
         db.batch([
@@ -123,7 +120,7 @@ export const neonScanRepo = (db: DbConnectType): ScanRepo => ({
           db
             .update(scans)
             .set({ status: "failed", step: null, finishedAt: new Date(), error: "the scan stalled and was closed by a newer request", updatedAt: new Date() })
-            .where(and(eq(scans.repoId, repoId), inArray(scans.status, ["queued", "running"]), lt(scans.updatedAt, new Date(staleBeforeMs)))),
+            .where(and(eq(scans.repoId, repoId), stalledScansSql(nowMs))),
           db.insert(scans).values({
           id: params.scanId,
           tenantId: params.accountId,
@@ -250,21 +247,33 @@ export const neonScanRepo = (db: DbConnectType): ScanRepo => ({
   // running scan has no summary, and two more queries on the
   // path of every new scan would buy nothing.
   // -----
-  activeSince: (accountId, sinceMs) =>
+  activeSince: (accountId, nowMs) =>
+    Effect.tryPromise({
+      try: () => db.select().from(scans).where(and(eq(scans.tenantId, accountId), liveScansSql(nowMs))),
+      catch: toDbError,
+    }).pipe(Effect.map((rows) => rows.map((row) => scanRowToStatus(row, [], null)))),
+
+  // -----
+  // How many live scans each path holds, over every Account. It
+  // is the global cap's count, so it is the one read here that crosses
+  // Accounts, and it returns counts only. A scan on a Runner runs on the
+  // person's computer and holds no Sandbox of ours, so it is left out.
+  // -----
+  activeCounts: (nowMs) =>
     Effect.tryPromise({
       try: () =>
         db
-          .select()
+          .select({ skill: scans.skill, total: sql<string>`count(*)` })
           .from(scans)
-          .where(
-            and(
-              eq(scans.tenantId, accountId),
-              or(eq(scans.status, "queued"), eq(scans.status, "running")),
-              gte(scans.updatedAt, new Date(sinceMs)),
-            ),
-          ),
+          .where(and(liveScansSql(nowMs), notExists(db.select({ one: sql`1` }).from(scanRunnerJobs).where(eq(scanRunnerJobs.scanId, scans.id)))))
+          .groupBy(scans.skill),
       catch: toDbError,
-    }).pipe(Effect.map((rows) => rows.map((row) => scanRowToStatus(row, [], null)))),
+    }).pipe(
+      Effect.map((rows) => ({
+        lite: rows.filter((row) => row.skill !== "full").reduce((sum, row) => sum + Number(row.total), 0),
+        full: rows.filter((row) => row.skill === "full").reduce((sum, row) => sum + Number(row.total), 0),
+      })),
+    ),
 
   file: (accountId, scanId, name) =>
     Effect.tryPromise({

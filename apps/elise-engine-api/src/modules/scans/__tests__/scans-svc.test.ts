@@ -13,6 +13,8 @@ import type { CreateScanBody } from "#/modules/scans/schemas";
 
 const input: CreateScanBody = { repo: "https://github.com/octocat/Hello-World" };
 
+const repoOf = (name: string) => ({ repo: `https://github.com/octocat/${name}` });
+
 const down = async () => {
   throw new Error("down");
 };
@@ -119,6 +121,54 @@ describe("createScanSvc", () => {
     const error = await Effect.runPromise(Effect.flip(createScanSvc(env, repo, "acme", input, NO_SPEND)));
 
     expect(error._tag).toBe("ExternalError");
+  });
+
+  describe("the limits of each path", () => {
+    const start =(env: ReturnType<typeof fakeBindings>["env"], account: string, name: string, skill: "lite" | "full") =>
+      Effect.runPromise(Effect.flip(createScanSvc(env, repo, account, { ...repoOf(name), skill }, NO_SPEND)));
+    const startOk = (env: ReturnType<typeof fakeBindings>["env"], account: string, name: string, skill: "lite" | "full") =>
+      Effect.runPromise(createScanSvc(env, repo, account, { ...repoOf(name), skill }, NO_SPEND));
+
+    it("counts the lite and the full scans of one account on their own", async () => {
+      const { env } = fakeBindings({ MAX_ACTIVE_SCANS: "1", MAX_ACTIVE_FULL_SCANS: "1" });
+      await startOk(env, "acme", "a", "full");
+      await startOk(env, "acme", "b", "lite");
+
+      expect(await start(env, "acme", "c", "full")).toMatchObject({ _tag: "RateLimited", code: "TOO_MANY_ACTIVE_SCANS", message: expect.stringContaining("full scans (limit 1)") });
+      expect(await start(env, "acme", "d", "lite")).toMatchObject({ _tag: "RateLimited", code: "TOO_MANY_ACTIVE_SCANS", message: expect.stringContaining("lite scans (limit 1)") });
+    });
+
+    it.each([
+      ["lite", { MAX_GLOBAL_LITE_SCANS: "1" }],
+      ["full", { MAX_GLOBAL_FULL_SCANS: "1" }],
+    ] as const)("refuses a %s scan with a busy message when the global cap is full, with no queue", async (skill, cap) => {
+      const { env, created, createdFull } = fakeBindings(cap);
+      await startOk(env, "other", "a", skill);
+      const before = created.length + createdFull.length;
+
+      const error = await start(env, "acme", "b", skill);
+
+      expect(error).toMatchObject({ _tag: "RateLimited", code: "SCAN_WORKER_BUSY", message: expect.stringContaining("Try again in a few minutes") });
+      expect(created.length + createdFull.length).toBe(before);
+    });
+
+    it("lets a lite scan in when only the full cap is full, and the other way round", async () => {
+      const { env } = fakeBindings({ MAX_GLOBAL_LITE_SCANS: "1", MAX_GLOBAL_FULL_SCANS: "1" });
+      await startOk(env, "other", "a", "full");
+      await startOk(env, "acme", "b", "lite");
+
+      expect(await start(env, "acme", "c", "full")).toMatchObject({ code: "SCAN_WORKER_BUSY" });
+      expect(await start(env, "other", "d", "lite")).toMatchObject({ code: "SCAN_WORKER_BUSY" });
+    });
+
+    it("does not count a scan on a Runner against the global caps, which a Runner scan does not meet", async () => {
+      const { env } = fakeBindings({ MAX_GLOBAL_LITE_SCANS: "0" });
+      const queued = await Effect.runPromise(
+        createScanSvc(env, repo, "acme", { ...repoOf("a"), runner_id: "0b8c1d2e-3f4a-4b5c-8d6e-7f8091a2b3c4" }, NO_SPEND, undefined, undefined, () => Effect.succeed(true)),
+      );
+
+      expect(queued.status).toBe("queued");
+    });
   });
 
   it("dies, and does not fail, when the default model in the config is not on the list", async () => {

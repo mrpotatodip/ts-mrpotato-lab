@@ -41,7 +41,7 @@ const scanAndRecord = async (scanId: string, files: { findings: unknown[]; reche
   const onDefault = branch === "main";
   const params: ScanParams = { scanId, accountId: tenantId, repo: REPO, ref: onDefault ? undefined : branch, options, createdAt: new Date().toISOString() };
   const ledger = neonScanRepo(test.http);
-  await run(ledger.create(params, repoId, Date.now() - 90 * 60 * 1000));
+  await run(ledger.create(params, repoId, Date.now()));
   await run(ledger.mark(tenantId, scanId, { branch }));
   const outcome = await run(resolveScanBranchEffect(test.http, tenantId, repoId, { name: branch, ref: onDefault ? null : branch }));
   const resolved = outcome.id;
@@ -157,7 +157,7 @@ describe("a repo's history across scans", () => {
   it("saves nothing at all when one write in the record fails", async () => {
     await run(neonScanRepo(test.http).mark(tenantId, "s-4", { status: "succeeded", error: null }));
     const params: ScanParams = { scanId: "s-5", accountId: tenantId, repo: REPO, options, createdAt: new Date().toISOString() };
-    await run(neonScanRepo(test.http).create(params, repoId, Date.now() - 90 * 60 * 1000));
+    await run(neonScanRepo(test.http).create(params, repoId, Date.now()));
     const before = await allHistory();
     const bad = await run(buildScanRecordSvc(fakeBindings().env.REPORTS, params, repoId, { id: branchId, name: "main", reason: null }, "succeeded", null, null, { history: new Map(), triage: new Map(), given: [] }));
     bad.history.push({ repoId, branchId, tenantId, fingerprint: "x".repeat(64), state: "open", firstSeenScanId: "s-5", lastSeenScanId: "s-5" });

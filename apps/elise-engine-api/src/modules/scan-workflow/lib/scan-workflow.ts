@@ -8,6 +8,7 @@ import { findBranchEffect, findBranchesAtTipEffect, isCommitId } from "#/modules
 import { runnerSandbox } from "#/modules/runners/lib";
 import { neonScanRepo } from "#/modules/scan-ledger";
 import { listPriorsEffect, recordScanSvc, SCAN_RECORDS_PRIOR_LIMIT, type PriorFinding } from "#/modules/scan-records";
+import { SCAN_WORKFLOW_MAX_POLLS } from "#/modules/scan-workflow/constants";
 import type { Bindings } from "#/types/variables";
 import { runScan } from "./run-scan";
 import { settleScanCredit } from "./settle-scan-credit";
@@ -47,9 +48,18 @@ export class ScanWorkflow extends WorkflowEntrypoint<Bindings, ScanParams> {
     return sandboxesOf(this.env, "lite");
   }
 
+  // -----
+  // How many 10-second polls the audit may take: 40 minutes for lite.
+  // FullScanWorkflow overrides it with its own limit.
+  // -----
+  protected get maxPolls(): number {
+    return SCAN_WORKFLOW_MAX_POLLS;
+  }
+
   async run(event: WorkflowEvent<ScanParams>, step: WorkflowStep) {
     return runScan(
       {
+        maxPolls: this.maxPolls,
         sandbox: event.payload.runnerId ? runnerSandbox(dbConnect(this.env.DATABASE_URL), event.payload, event.payload.runnerId) : this.sandboxes.getByName(event.payload.scanId),
         ledger: neonScanRepo(dbConnect(this.env.DATABASE_URL)),
         reports: this.env.REPORTS,

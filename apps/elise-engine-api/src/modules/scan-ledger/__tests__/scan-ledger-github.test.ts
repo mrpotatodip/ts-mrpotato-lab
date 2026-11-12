@@ -43,7 +43,7 @@ const paramsFor = (accountId: string, scanId: string, github?: ScanGithub): Scan
   createdAt: new Date().toISOString(),
 });
 
-const STALE_AFTER = () => Date.now() - 90 * 60 * 1000;
+const NOW = () => Date.now();
 
 describe("neonScanRepo.create with a GitHub install", () => {
   it("saves the install, the GitHub repo and the private flag on the scan, and the flag on the repo", async () => {
@@ -51,7 +51,7 @@ describe("neonScanRepo.create with a GitHub install", () => {
     const record = await Effect.runPromise(repo.ensureRepo(acme, "https://github.com/octo/signed"));
     const github: ScanGithub = { installationRowId: acmeInstall, installationId: 42, repoId: 7, repo: "octo/signed", isPrivate: true };
 
-    await Effect.runPromise(repo.create(paramsFor(acme, "signed", github), record.id, STALE_AFTER()));
+    await Effect.runPromise(repo.create(paramsFor(acme, "signed", github), record.id, NOW()));
 
     const [scan] = await test.raw.select().from(scans).where(eq(scans.id, "signed"));
     expect(scan).toMatchObject({ installationId: acmeInstall, githubRepoId: 7, isPrivate: true });
@@ -63,7 +63,7 @@ describe("neonScanRepo.create with a GitHub install", () => {
     const repo = neonScanRepo(test.http);
     const record = await Effect.runPromise(repo.ensureRepo(acme, "https://github.com/octo/open"));
 
-    await Effect.runPromise(repo.create(paramsFor(acme, "open"), record.id, STALE_AFTER()));
+    await Effect.runPromise(repo.create(paramsFor(acme, "open"), record.id, NOW()));
 
     const [scan] = await test.raw.select().from(scans).where(eq(scans.id, "open"));
     expect(scan).toMatchObject({ installationId: null, githubRepoId: null, isPrivate: null });
@@ -76,8 +76,8 @@ describe("neonScanRepo.create with a GitHub install", () => {
     const closed = await Effect.runPromise(repo.ensureRepo(acme, "https://github.com/octo/shown-private"));
     const open = await Effect.runPromise(repo.ensureRepo(acme, "https://github.com/octo/shown-open"));
     const github: ScanGithub = { installationRowId: acmeInstall, installationId: 42, repoId: 9, repo: "octo/shown-private", isPrivate: true };
-    await Effect.runPromise(repo.create(paramsFor(acme, "shown-private", github), closed.id, STALE_AFTER()));
-    await Effect.runPromise(repo.create(paramsFor(acme, "shown-open"), open.id, STALE_AFTER()));
+    await Effect.runPromise(repo.create(paramsFor(acme, "shown-private", github), closed.id, NOW()));
+    await Effect.runPromise(repo.create(paramsFor(acme, "shown-open"), open.id, NOW()));
 
     const privateScan = await Effect.runPromise(repo.get(acme, "shown-private"));
     const openScan = await Effect.runPromise(repo.get(acme, "shown-open"));
@@ -91,7 +91,7 @@ describe("neonScanRepo.create with a GitHub install", () => {
     const record = await Effect.runPromise(repo.ensureRepo(acme, "https://github.com/octo/stolen"));
     const github: ScanGithub = { installationRowId: otherInstall, installationId: 99, repoId: 7, repo: "octo/stolen", isPrivate: true };
 
-    const error = await Effect.runPromise(Effect.flip(repo.create(paramsFor(acme, "stolen", github), record.id, STALE_AFTER())));
+    const error = await Effect.runPromise(Effect.flip(repo.create(paramsFor(acme, "stolen", github), record.id, NOW())));
 
     expect(error._tag).toBe("DbError");
     expect(await test.raw.select().from(scans).where(eq(scans.id, "stolen"))).toEqual([]);
