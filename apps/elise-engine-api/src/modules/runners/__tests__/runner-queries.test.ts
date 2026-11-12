@@ -4,6 +4,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { authUser, tenantRunners } from "@repo/db-elise";
 import { openTestDb, seedTenant, type TestDb } from "#/__tests__/test-db";
 import { claimPairingEffect, createRunnerEffect, findRunnerByTokenEffect, listRunnersEffect, removeRunnerEffect, revokeRunnerByTokenEffect } from "#/modules/runners/queries";
+import { hashPairingCode } from "#/modules/runners/utils";
 
 let test: TestDb;
 let tenantId: string;
@@ -38,6 +39,11 @@ describe("pairing a Runner", () => {
     const second = await claim("code-once", "token-twice");
     expect(first).toMatchObject({ name: "Jayson MacBook", accountId: tenantId, accountName: "acme" });
     expect(second).toBeNull();
+  });
+
+  it("still pairs a code of the earlier 8 character length", async () => {
+    await addRunner(await hashPairingCode("k7qm-4txd"));
+    expect(await claim(await hashPairingCode("K7QM4TXD"), "token-legacy")).toMatchObject({ accountId: tenantId });
   });
 
   it("refuses a code that has expired", async () => {

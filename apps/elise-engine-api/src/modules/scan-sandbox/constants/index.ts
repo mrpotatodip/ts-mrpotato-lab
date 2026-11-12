@@ -73,6 +73,7 @@ export const SCAN_SANDBOX_RISKY_BETA = /mcp|web[-_]?(fetch|search)|code[-_]?exec
 // at its rate above 100K prompt tokens.
 // -----
 export const SCAN_SANDBOX_METER_KEY = "meter";
+export const SCAN_SANDBOX_METER_EPSILON = 1e-9;
 export const SCAN_SANDBOX_MAX_OUTPUT_TOKENS = 64000;
 export const SCAN_SANDBOX_MODEL_PRICES = {
   "claude-haiku-5-5": { input: 0.5, output: 2.5, cacheRead: 0.05, cacheWrite: 0.625 },

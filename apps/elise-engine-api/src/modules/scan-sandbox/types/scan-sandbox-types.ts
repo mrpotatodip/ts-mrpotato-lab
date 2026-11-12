@@ -16,7 +16,11 @@ export type ScanCheckout = { commitSha: string | null; branch: string | null };
 // What the Outbound proxy counts for one scan
 // -----
 export type MeteredTokens = { inputTokens: number; outputTokens: number; cacheReadTokens: number; cacheWriteTokens: number };
-export type Meter = MeteredTokens & { budgetUsd: number; spentUsd: number };
+// -----
+// reservedUsd is what calls still in flight may yet cost; a meter
+// stored before it existed has none.
+// -----
+export type Meter = MeteredTokens & { budgetUsd: number; spentUsd: number; reservedUsd?: number };
 // -----
 // A private repo the Outbound handler signs for: the install and the
 // repo it may mint a token for, and repo as owner/name in lowercase.

@@ -30,7 +30,7 @@ import {
   SCAN_SANDBOX_WORK_DIR,
 } from "#/modules/scan-sandbox/constants";
 import type { AgentState, Meter, MeteredTokens, OutboundAnthropicKey, OutboundExport, OutboundGithub, ScanCheckout } from "#/modules/scan-sandbox/types";
-import { buildAgentPrompt, buildAgentScript, buildCloneScript, parseAgentUsage, priceUsage } from "#/modules/scan-sandbox/utils";
+import { buildAgentPrompt, buildAgentScript, buildCloneScript, parseAgentUsage, priceUsage, withReserve, withoutReserve } from "#/modules/scan-sandbox/utils";
 
 type SandboxContext = DurableObjectState & { exports: { Outbound: OutboundExport } };
 
@@ -48,13 +48,27 @@ export class ScanSandbox extends DurableObject<Bindings> {
   }
 
   // -----
-  // The meter. Outbound asks before each model call and reports
-  // what came back, so the cap and the recorded cost come from
-  // here, not from a file the container can write.
+  // The meter. Outbound reserves the cost of the largest possible
+  // answer before each model call, gives it back when the call ends
+  // and reports what came back, so the cap and the recorded cost
+  // come from here, not from a file the container can write. Calls
+  // in parallel each hold a reserve, so together they cannot pass
+  // the cap. Nothing awaits between the read and the write, so two
+  // calls never both see the same room.
   // -----
-  async meterAllows(): Promise<boolean> {
+  async meterReserve(usd: number): Promise<boolean> {
     const meter = await this.ctx.storage.get<Meter>(SCAN_SANDBOX_METER_KEY);
-    return meter !== undefined && meter.spentUsd < meter.budgetUsd;
+    if (meter === undefined) return false;
+    const reserved = withReserve(meter, usd);
+    if (reserved === null) return false;
+    await this.ctx.storage.put<Meter>(SCAN_SANDBOX_METER_KEY, reserved);
+    return true;
+  }
+
+  async meterRelease(usd: number): Promise<void> {
+    const meter = await this.ctx.storage.get<Meter>(SCAN_SANDBOX_METER_KEY);
+    if (meter === undefined) return;
+    await this.ctx.storage.put<Meter>(SCAN_SANDBOX_METER_KEY, withoutReserve(meter, usd));
   }
 
   async meterRecord(model: string, tokens: MeteredTokens): Promise<void> {
@@ -96,6 +110,7 @@ export class ScanSandbox extends DurableObject<Bindings> {
       await this.ctx.storage.put<Meter>(SCAN_SANDBOX_METER_KEY, {
         budgetUsd: options.maxBudgetUsd,
         spentUsd: 0,
+        reservedUsd: 0,
         inputTokens: 0,
         outputTokens: 0,
         cacheReadTokens: 0,

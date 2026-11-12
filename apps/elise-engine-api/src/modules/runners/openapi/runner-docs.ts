@@ -28,7 +28,7 @@ export const createRunnerDoc = describeRoute({
     example: [
       "Add a Runner:",
       bash(`curl -X POST ${EXAMPLE_BASE_URL}/runners \\`, '  -H "authorization: Bearer $SESSION_TOKEN" \\', `  -H "x-account-id: ${EXAMPLE_ACCOUNT_ID}" \\`, '  -H "Content-Type: application/json" \\', `  -d '{"name":"Jayson MacBook"}'`),
-      json(`{ "data": { "id": "${RUNNER_ID}", "name": "Jayson MacBook", "pairingCode": "K7QM-4TXD", "expiresAt": "2026-11-11T09:10:00.000Z" }, "error": null }`),
+      json(`{ "data": { "id": "${RUNNER_ID}", "name": "Jayson MacBook", "pairingCode": "K7QM-4TXD-9WPA", "expiresAt": "2026-11-11T09:10:00.000Z" }, "error": null }`),
     ],
   }),
   responses: { 201: jsonResponse("The new Runner and its pairing code.", envelope(CreatedRunnerSchema)), ...errorResponses(400, 401, 403) },
@@ -48,7 +48,7 @@ export const enrollRunnerDoc = describeRoute({
     ],
     example: [
       "Pair:",
-      bash(`curl -X POST ${EXAMPLE_BASE_URL}/runners/enroll \\`, '  -H "Content-Type: application/json" \\', `  -d '{"code":"K7QM-4TXD"}'`),
+      bash(`curl -X POST ${EXAMPLE_BASE_URL}/runners/enroll \\`, '  -H "Content-Type: application/json" \\', `  -d '{"code":"K7QM-4TXD-9WPA"}'`),
       json(`{ "data": { "runnerId": "${RUNNER_ID}", "name": "Jayson MacBook", "accountId": "${EXAMPLE_ACCOUNT_ID}", "accountName": "Acme", "token": "elr_..." }, "error": null }`),
     ],
   }),

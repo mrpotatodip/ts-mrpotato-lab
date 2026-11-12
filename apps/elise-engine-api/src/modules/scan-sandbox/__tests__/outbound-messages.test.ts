@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Outbound } from "#/modules/scan-sandbox";
-import { messagesBlockedReason, safeBetaHeader, type MessagesBody } from "#/modules/scan-sandbox/utils";
+import type { Meter, MeteredTokens } from "#/modules/scan-sandbox/types";
+import { messagesBlockedReason, priceUsage, safeBetaHeader, withReserve, withoutReserve, type MessagesBody } from "#/modules/scan-sandbox/utils";
 
 const body = (extra: Partial<MessagesBody> = {}): MessagesBody => ({ model: "claude-haiku-5-5", ...extra });
 
@@ -46,12 +47,39 @@ const stubAnthropic = () => {
   return sent;
 };
 
-const messages = (payload: MessagesBody, beta?: string) => {
-  const sandbox = { meterAllows: async () => true, meterRecord: async () => undefined };
+type FakeSandbox = {
+  meterReserve: (usd: number) => Promise<boolean>;
+  meterRelease: (usd: number) => Promise<void>;
+  meterRecord: (model: string, tokens: MeteredTokens) => Promise<void>;
+};
+const openSandbox: FakeSandbox = { meterReserve: async () => true, meterRelease: async () => undefined, meterRecord: async () => undefined };
+
+// -----
+// A sandbox whose meter is the real reserve logic over a value in memory
+// -----
+const meterSandbox = (budgetUsd: number) => {
+  let meter: Meter = { budgetUsd, spentUsd: 0, reservedUsd: 0, inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheWriteTokens: 0 };
+  return {
+    read: () => meter,
+    meterReserve: async (usd: number) => {
+      const next = withReserve(meter, usd);
+      if (next !== null) meter = next;
+      return next !== null;
+    },
+    meterRelease: async (usd: number) => {
+      meter = withoutReserve(meter, usd);
+    },
+    meterRecord: async (model: string, tokens: MeteredTokens) => {
+      meter = { ...meter, spentUsd: meter.spentUsd + priceUsage(model, tokens) };
+    },
+  };
+};
+
+const messages = (payload: MessagesBody, beta?: string, sandbox: FakeSandbox = openSandbox, pending: Promise<unknown>[] = []) => {
   const env = { ANTHROPIC_API_KEY: "platform-key", SANDBOX: { idFromString: () => "id", get: () => sandbox } };
   // SAFETY: the test stub of WorkerEntrypoint takes no arguments; env and ctx are set by hand.
   const instance = Reflect.construct(Outbound, []) as Outbound;
-  Object.assign(instance, { env, ctx: { props: { sandboxId: "box", repo: "octo/hello" }, waitUntil: () => undefined } });
+  Object.assign(instance, { env, ctx: { props: { sandboxId: "box", repo: "octo/hello" }, waitUntil: (work: Promise<unknown>) => pending.push(work) } });
   const headers = new Headers({ "content-type": "application/json", "x-api-key": "placeholder" });
   if (beta !== undefined) headers.set("anthropic-beta", beta);
   return instance.fetch(new Request("https://api.anthropic.com/v1/messages", { method: "POST", headers, body: JSON.stringify(payload) }));
@@ -73,5 +101,71 @@ describe("Outbound, a model call", () => {
     expect(response.status).toBe(200);
     expect(sent[0]?.headers.get("x-api-key")).toBe("platform-key");
     expect(sent[0]?.headers.get("anthropic-beta")).toBe("claude-code-20250219");
+  });
+});
+
+// -----
+// Haiku, 10000 tokens asked: a call reserves $0.025 and, as the stub
+// answers, spends $0.0025 of it.
+// -----
+describe("Outbound, the budget cap with calls in parallel", () => {
+  const call = { model: "claude-haiku-5-5", messages: [], max_tokens: 10_000 };
+  const answered = { usage: { input_tokens: 0, output_tokens: 1000 } };
+
+  const stubSlowAnthropic = () => {
+    const { promise: gate, resolve: open } = Promise.withResolvers<void>();
+    const upstream = vi.fn<() => Promise<Response>>(async () => {
+      await gate;
+      return Response.json(answered);
+    });
+    vi.stubGlobal("fetch", upstream);
+    return { open, upstream };
+  };
+
+  it("refuses the calls whose reserves do not fit while others run, and the spend stays under the cap", async () => {
+    const { open, upstream } = stubSlowAnthropic();
+    const sandbox = meterSandbox(0.06);
+    const pending: Promise<unknown>[] = [];
+    const inFlight = Array.from({ length: 5 }, () => messages(call, undefined, sandbox, pending));
+    await vi.waitFor(() => expect(upstream).toHaveBeenCalledTimes(2));
+    open();
+    const responses = await Promise.all(inFlight);
+    await Promise.all(responses.map((response) => response.text()));
+    await Promise.all(pending);
+
+    expect(responses.map((response) => response.status).toSorted()).toEqual([200, 200, 403, 403, 403]);
+    expect(sandbox.read().spentUsd).toBeCloseTo(0.005);
+    expect(sandbox.read().reservedUsd).toBeCloseTo(0);
+  });
+
+  it("does not refuse calls that come one after another while the cap has room for each", async () => {
+    stubSlowAnthropic().open();
+    const sandbox = meterSandbox(0.05);
+    const statuses: number[] = [];
+    const pending: Promise<unknown>[] = [];
+    for (let turn = 0; turn < 5; turn++) {
+      const response = await messages(call, undefined, sandbox, pending);
+      await response.text();
+      await Promise.all(pending);
+      statuses.push(response.status);
+    }
+
+    expect(statuses).toEqual([200, 200, 200, 200, 200]);
+  });
+
+  it("gives the reserve back when the upstream call fails", async () => {
+    vi.stubGlobal("fetch", async () => Response.json({ error: "overloaded" }, { status: 529 }));
+    const sandbox = meterSandbox(0.03);
+    const pending: Promise<unknown>[] = [];
+    await messages(call, undefined, sandbox, pending);
+    await messages(call, undefined, sandbox, pending);
+    await Promise.all(pending);
+
+    expect(sandbox.read().reservedUsd).toBeCloseTo(0);
+  });
+
+  it("tells the agent why a call was refused", async () => {
+    const response = await messages(call, undefined, meterSandbox(0.01));
+    expect(await response.text()).toContain("the scan's budget is spent");
   });
 });
