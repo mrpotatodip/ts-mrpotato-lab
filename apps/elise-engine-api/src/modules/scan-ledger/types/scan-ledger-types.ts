@@ -24,7 +24,12 @@ export type NewScanFile = ScanArtifact & { r2Key: string };
 
 export type ScanFileRef = { r2Key: string; contentType: string };
 
-export type ScanPage = { scans: ScanStatus[]; nextCursor: string | null };
+// -----
+// Live scans of every Account on our own Sandboxes, by path.
+// -----
+export type ActiveCounts = { lite: number; full: number };
+
+export type ScanPage ={ scans: ScanStatus[]; nextCursor: string | null };
 
 // -----
 // Neon is the record of every scan. The workflow
@@ -33,11 +38,12 @@ export type ScanPage = { scans: ScanStatus[]; nextCursor: string | null };
 // -----
 export type ScanRepo = {
   ensureRepo: (accountId: string, url: string) => Effect.Effect<RepoRecord, DbError>;
-  create: (params: ScanParams, repoId: string, staleBeforeMs: number) => Effect.Effect<void, DbError | Conflict>;
+  create: (params: ScanParams, repoId: string, nowMs: number) => Effect.Effect<void, DbError | Conflict>;
   mark: (accountId: string, scanId: string, patch: ScanPatch) => Effect.Effect<void, DbError>;
   addFiles: (accountId: string, scanId: string, files: NewScanFile[]) => Effect.Effect<void, DbError>;
   list: (accountId: string, limit: number, cursor?: string, filter?: ScanFilter) => Effect.Effect<ScanPage, DbError>;
   get: (accountId: string, scanId: string) => Effect.Effect<ScanStatus | null, DbError>;
-  activeSince: (accountId: string, sinceMs: number) => Effect.Effect<ScanStatus[], DbError>;
+  activeSince: (accountId: string, nowMs: number) => Effect.Effect<ScanStatus[], DbError>;
+  activeCounts: (nowMs: number) => Effect.Effect<ActiveCounts, DbError>;
   file: (accountId: string, scanId: string, name: string) => Effect.Effect<ScanFileRef | null, DbError>;
 };

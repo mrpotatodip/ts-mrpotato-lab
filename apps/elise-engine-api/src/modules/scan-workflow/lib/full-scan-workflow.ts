@@ -1,4 +1,5 @@
 import { sandboxesOf } from "#/lib/scan-path";
+import { SCAN_WORKFLOW_FULL_MAX_POLLS } from "#/modules/scan-workflow/constants";
 import type { Bindings } from "#/types/variables";
 import { ScanWorkflow } from "./scan-workflow";
 
@@ -10,5 +11,9 @@ import { ScanWorkflow } from "./scan-workflow";
 export class FullScanWorkflow extends ScanWorkflow {
   protected override get sandboxes(): Bindings["SANDBOX"] {
     return sandboxesOf(this.env, "full");
+  }
+
+  protected override get maxPolls(): number {
+    return SCAN_WORKFLOW_FULL_MAX_POLLS;
   }
 }

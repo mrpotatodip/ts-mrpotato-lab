@@ -1,18 +1,21 @@
 import { Effect } from "effect";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { eq } from "drizzle-orm";
-import { scanFindings, tenantCreditLedger } from "@repo/db-elise/schema";
+import { scanFindings, scanRunnerJobs, tenantCreditLedger, tenantRunners } from "@repo/db-elise/schema";
 import { openTestDb, seedTenant, type TestDb } from "#/__tests__/test-db";
 import type { ScanParams } from "#/schemas";
 import { neonScanRepo } from "#/modules/scan-ledger";
 
 let test: TestDb;
 let acme: string;
+let acmePartyId: string;
 let other: string;
 
 beforeAll(async () => {
   test = await openTestDb();
-  acme = (await seedTenant(test, "acme")).tenantId;
+  const seeded = await seedTenant(test, "acme");
+  acme = seeded.tenantId;
+  acmePartyId = seeded.partyId;
   other = (await seedTenant(test, "other")).tenantId;
 });
 
@@ -28,7 +31,7 @@ const paramsFor = (accountId: string, scanId: string): ScanParams => ({
   createdAt: new Date().toISOString(),
 });
 
-const STALE_AFTER = () => Date.now() - 90 * 60 * 1000;
+const PAST_ANY_WINDOW = () => Date.now() + 200 * 60 * 1000;
 
 // -----
 // Queues a scan on its own repo, so a test is not stopped
@@ -36,7 +39,7 @@ const STALE_AFTER = () => Date.now() - 90 * 60 * 1000;
 // -----
 const queue = async (repo: ReturnType<typeof neonScanRepo>, params: ScanParams, ref?: string) => {
   const record = await Effect.runPromise(repo.ensureRepo(params.accountId, params.repo));
-  await Effect.runPromise(repo.create({ ...params, ref }, record.id, STALE_AFTER()));
+  await Effect.runPromise(repo.create({ ...params, ref }, record.id, Date.now()));
   return record;
 };
 
@@ -141,11 +144,48 @@ describe("neonScanRepo", () => {
     const repo = neonScanRepo(test.http);
     await queue(repo, paramsFor(acme, "act-1"));
     await Effect.runPromise(repo.mark(acme, "act-1", { status: "running" }));
-    const active = (await Effect.runPromise(repo.activeSince(acme, Date.now() - 60_000))).map((scan) => scan.scanId);
+    const active = (await Effect.runPromise(repo.activeSince(acme, Date.now()))).map((scan) => scan.scanId);
 
     expect(active).toContain("act-1");
     expect(active).not.toContain("a-flow");
-    expect(await Effect.runPromise(repo.activeSince(acme, Date.now() + 60_000))).toEqual([]);
+    expect(await Effect.runPromise(repo.activeSince(acme, PAST_ANY_WINDOW()))).toEqual([]);
+  });
+
+  // -----
+  // A full Scan may run 90 minutes with no status change, so a lite
+  // window of 90 minutes would call a live one stalled. At 120 minutes
+  // a lite Scan is stalled and a full Scan is still live.
+  // -----
+  it("judges each skill by its own window, for the account's list and for a newer request", async () => {
+    const repo = neonScanRepo(test.http);
+    await queue(repo, { ...paramsFor(acme, "win-lite"), repo: "https://github.com/octocat/win-lite" });
+    const fullRecord = await queue(repo, { ...paramsFor(acme, "win-full"), repo: "https://github.com/octocat/win-full", options: { ...paramsFor(acme, "x").options, skill: "full" } });
+    const at120Minutes = Date.now() + 120 * 60 * 1000;
+
+    const live = (await Effect.runPromise(repo.activeSince(acme, at120Minutes))).map((scan) => scan.scanId);
+    expect(live).toContain("win-full");
+    expect(live).not.toContain("win-lite");
+
+    const refused = await Effect.runPromise(Effect.flip(repo.create(paramsFor(acme, "win-full-2"), fullRecord.id, at120Minutes)));
+    expect(refused).toMatchObject({ _tag: "Conflict", message: "This repo already has an active scan: win-full" });
+  });
+
+  it("counts the live scans of every account on each path, and leaves out a scan that is on a Runner", async () => {
+    const repo = neonScanRepo(test.http);
+    const before = await Effect.runPromise(repo.activeCounts(Date.now()));
+    await queue(repo, paramsFor(acme, "cnt-lite"));
+    await queue(repo, paramsFor(other, "cnt-lite-other"));
+    await queue(repo, { ...paramsFor(other, "cnt-full"), options: { ...paramsFor(acme, "x").options, skill: "full" } });
+    await queue(repo, paramsFor(acme, "cnt-runner"));
+    const [runner] = await test.raw.insert(tenantRunners).values({ tenantId: acme, name: "laptop", createdBy: acmePartyId }).returning();
+    await test.raw
+      .insert(scanRunnerJobs)
+      .values({ tenantId: acme, scanId: "cnt-runner", runnerId: runner.id, state: "claimed", repoUrl: "https://github.com/octocat/cnt-runner", prompt: "p", optionsJson: "{}", priorsJson: "[]" });
+
+    const after = await Effect.runPromise(repo.activeCounts(Date.now()));
+
+    expect({ lite: after.lite - before.lite, full: after.full - before.full }).toEqual({ lite: 2, full: 1 });
+    expect(await Effect.runPromise(repo.activeCounts(PAST_ANY_WINDOW()))).toEqual({ lite: 0, full: 0 });
   });
 
   it("keeps one record for a repo however its URL is spelled, per account", async () => {
@@ -163,12 +203,12 @@ describe("neonScanRepo", () => {
     const repo = neonScanRepo(test.http);
     const record = await queue(repo, { ...paramsFor(acme, "dup-1"), repo: "https://github.com/octocat/dup" });
 
-    const error = await Effect.runPromise(Effect.flip(repo.create(paramsFor(acme, "dup-2"), record.id, STALE_AFTER())));
+    const error = await Effect.runPromise(Effect.flip(repo.create(paramsFor(acme, "dup-2"), record.id, Date.now())));
     expect(error).toMatchObject({ _tag: "Conflict", message: "This repo already has an active scan: dup-1" });
     expect(await Effect.runPromise(repo.get(acme, "dup-2"))).toBeNull();
 
     await Effect.runPromise(repo.mark(acme, "dup-1", { status: "succeeded", error: null }));
-    await Effect.runPromise(repo.create(paramsFor(acme, "dup-3"), record.id, STALE_AFTER()));
+    await Effect.runPromise(repo.create(paramsFor(acme, "dup-3"), record.id, Date.now()));
     expect(await Effect.runPromise(repo.get(acme, "dup-3"))).toMatchObject({ status: "queued", repoId: record.id });
   });
 
@@ -176,7 +216,7 @@ describe("neonScanRepo", () => {
     const repo = neonScanRepo(test.http);
     const record = await queue(repo, { ...paramsFor(acme, "stall-1"), repo: "https://github.com/octocat/stall" });
 
-    await Effect.runPromise(repo.create(paramsFor(acme, "stall-2"), record.id, Date.now() + 60_000));
+    await Effect.runPromise(repo.create(paramsFor(acme, "stall-2"), record.id, PAST_ANY_WINDOW()));
 
     expect(await Effect.runPromise(repo.get(acme, "stall-1"))).toMatchObject({ status: "failed", step: null });
     expect(await Effect.runPromise(repo.get(acme, "stall-2"))).toMatchObject({ status: "queued" });
@@ -187,7 +227,7 @@ describe("neonScanRepo", () => {
     const record = await queue(repo, { ...paramsFor(acme, "stall-hold-1"), repo: "https://github.com/octocat/stall-hold" });
     await test.raw.insert(tenantCreditLedger).values({ tenantId: acme, kind: "scan_hold", amountUsd: "-3.0000", scanId: "stall-hold-1" });
 
-    await Effect.runPromise(repo.create(paramsFor(acme, "stall-hold-2"), record.id, Date.now() + 60_000));
+    await Effect.runPromise(repo.create(paramsFor(acme, "stall-hold-2"), record.id, PAST_ANY_WINDOW()));
     const entries = await test.raw.select({ kind: tenantCreditLedger.kind, amountUsd: tenantCreditLedger.amountUsd }).from(tenantCreditLedger).where(eq(tenantCreditLedger.scanId, "stall-hold-1"));
 
     expect(entries.map((entry) => `${entry.kind} ${Number(entry.amountUsd)}`).toSorted()).toEqual(["scan_hold -3", "scan_settle 3"]);
@@ -205,7 +245,7 @@ describe("neonScanRepo", () => {
     const repo = neonScanRepo(test.http);
     const record = await queue(repo, { ...paramsFor(acme, "hist-1"), repo: "https://github.com/octocat/hist" });
     await Effect.runPromise(repo.mark(acme, "hist-1", { status: "succeeded", error: null }));
-    await Effect.runPromise(repo.create(paramsFor(acme, "hist-2"), record.id, STALE_AFTER()));
+    await Effect.runPromise(repo.create(paramsFor(acme, "hist-2"), record.id, Date.now()));
 
     const ofRepo = await Effect.runPromise(repo.list(acme, 50, undefined, { repoId: record.id }));
     const done = await Effect.runPromise(repo.list(acme, 50, undefined, { repoId: record.id, status: "succeeded" }));
@@ -241,7 +281,7 @@ describe("neonScanRepo", () => {
   it("keeps a scan that was closed as failed from being brought back by a slow workflow", async () => {
     const repo = neonScanRepo(test.http);
     const record = await queue(repo, { ...paramsFor(acme, "late-1"), repo: "https://github.com/octocat/late" });
-    await Effect.runPromise(repo.create(paramsFor(acme, "late-2"), record.id, Date.now() + 60_000));
+    await Effect.runPromise(repo.create(paramsFor(acme, "late-2"), record.id, PAST_ANY_WINDOW()));
 
     await Effect.runPromise(repo.mark(acme, "late-1", { status: "succeeded", error: null, usage }));
     await Effect.runPromise(repo.mark(acme, "late-1", { step: "saving" }));

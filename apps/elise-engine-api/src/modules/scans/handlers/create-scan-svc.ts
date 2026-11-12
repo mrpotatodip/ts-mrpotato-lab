@@ -7,9 +7,9 @@ import { RUNNER_JOB_NOT_CONNECTED, RUNNER_JOB_PRIVATE, RUNNER_MAX_BUDGET_USD } f
 import type { GithubAccess } from "#/modules/github-installs";
 import { newScanId } from "#/modules/scan-store";
 import type { ScanRepo } from "#/modules/scan-ledger";
-import { SCANS_ACTIVE_WINDOW_MS } from "#/modules/scans/constants";
 import type { CreateScanBody, ScanQueued } from "#/modules/scans/schemas";
 import type { CreateScanEnv } from "#/modules/scans/types";
+import { scanRefusalOf } from "#/modules/scans/utils";
 import { scanBlockOf } from "#/modules/billing";
 import { holdOf, type HoldCredit, type ReleaseCredit } from "#/modules/credit";
 import { budgetUsdOf, reservedUsdOf, type MonthSpend } from "#/modules/usage";
@@ -56,15 +56,17 @@ export const createScanSvc = (
     const block = scanBlockOf(spend.plan, env.BILLING_ENFORCED === "true", new Date());
     if (block) return yield* new RateLimited(block);
 
-    const limit = Number(env.MAX_ACTIVE_SCANS);
-    const activeScans = yield* repo.activeSince(accountId, Date.now() - SCANS_ACTIVE_WINDOW_MS);
-    const active = activeScans.length;
-    if (active >= limit) {
-      return yield* new RateLimited({
-        code: "TOO_MANY_ACTIVE_SCANS",
-        message: `This account already has ${active} active scans (limit ${limit})`,
-      });
-    }
+    // -----
+    // Each path counts on its own, for the Account and over all Accounts.
+    // A Scan on a Runner holds no Sandbox of ours, so the global caps
+    // do not count it and do not refuse it.
+    // -----
+    const path = scanPathOf(options.skill);
+    const nowMs = Date.now();
+    const activeScans = yield* repo.activeSince(accountId, nowMs);
+    const globalActive = input.runner_id === undefined ? yield* repo.activeCounts(nowMs) : null;
+    const refusal = scanRefusalOf(env, path, activeScans.filter((scan) => scanPathOf(scan.skill) === path).length, globalActive);
+    if (refusal) return yield* new RateLimited(refusal);
 
     // -----
     // A Scan on a Runner runs on the person's own Claude, so it takes
@@ -143,7 +145,7 @@ export const createScanSvc = (
       runnerId,
       createdAt: new Date().toISOString(),
     };
-    yield* repo.create(params, record.id, Date.now() - SCANS_ACTIVE_WINDOW_MS);
+    yield* repo.create(params, record.id, Date.now());
     // -----
     // The check above read the balance; this takes it, under a lock.
     // A scan that lost the race to another is failed, not started.
@@ -167,7 +169,7 @@ export const createScanSvc = (
     // The Skill picks the path: a full Scan starts on the full Workflow,
     // a lite Scan on the original one.
     // -----
-    const workflow = workflowOf(env, scanPathOf(options.skill));
+    const workflow = workflowOf(env, path);
     yield* Effect.tryPromise({ try: () => workflow.create({ id: params.scanId, params }), catch: toExternalError }).pipe(
       Effect.tapError((error) =>
         Effect.all(

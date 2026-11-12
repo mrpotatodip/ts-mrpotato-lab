@@ -1,11 +1,11 @@
-import { and, eq, gte, inArray, sql } from "drizzle-orm";
+import { and, eq, gte, sql } from "drizzle-orm";
 import { Effect } from "effect";
 import { scanRunnerJobs, scans, tenantAnthropicKeys, tenants } from "@repo/db-elise/schema";
 import type { DbConnectType, PoolDbType } from "#/lib/db-connection";
 import { toDbError, type DbError } from "#/lib/effect-query";
 import { actorPartyOf, insertAuditEntry } from "#/modules/audit-trail";
 import { planOfEffect } from "#/modules/billing";
-import { SCANS_ACTIVE_WINDOW_MS } from "#/modules/scans/constants";
+import { liveScansSql } from "#/modules/scan-ledger";
 import type { MonthSpend } from "#/modules/usage/types";
 
 // -----
@@ -57,8 +57,7 @@ export const monthSpendEffect = (db: DbConnectType, tenantId: string, monthStart
                 and(
                   eq(scans.tenantId, tenantId),
                   eq(scans.keySource, "platform"),
-                  inArray(scans.status, ["queued", "running"]),
-                  gte(scans.updatedAt, new Date(Date.now() - SCANS_ACTIVE_WINDOW_MS)),
+                  liveScansSql(Date.now()),
                 ),
               ),
           catch: toDbError,

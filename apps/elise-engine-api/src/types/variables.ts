@@ -17,6 +17,9 @@ export type Bindings = {
   MAX_BUDGET_USD: string;
   MAX_BUDGET_OWN_KEY_USD: string;
   MAX_ACTIVE_SCANS: string;
+  MAX_ACTIVE_FULL_SCANS: string;
+  MAX_GLOBAL_LITE_SCANS: string;
+  MAX_GLOBAL_FULL_SCANS: string;
   MONTHLY_BUDGET_USD: string;
   BUDGET_ALLOWANCE_USD: string;
   BILLING_ENFORCED: string;

@@ -51,12 +51,14 @@
     "producers": [{ "binding": "INVITE_EMAIL_QUEUE", "queue": "elise-invite-emails" }],
     "consumers": [{ "queue": "elise-invite-emails", "max_batch_size": 10, "max_batch_timeout": 5, "max_retries": 4, "dead_letter_queue": "elise-invite-emails-dlq" }]
   },
-  "vars": { "ENVIRONMENT": "production", "MODEL": "claude-sonnet-5-5", "EFFORT": "high", "MAX_BUDGET_USD": "2", "MAX_BUDGET_OWN_KEY_USD": "10", "MAX_ACTIVE_SCANS": "3", "MONTHLY_BUDGET_USD": "20", "BUDGET_ALLOWANCE_USD": "1000", "BILLING_ENFORCED": "false", "DASHBOARD_URL": "https://app.eliselab.com", "INVITE_FROM": "no-reply@hello.eliselab.com", "AUTH_BASE_URL": "https://api.eliselab.com", "AUTH_TRUSTED_ORIGINS": "https://api.eliselab.com,https://app.eliselab.com,http://localhost:3000" }
+  "vars": { "ENVIRONMENT": "production", "MODEL": "claude-sonnet-5-5", "EFFORT": "high", "MAX_BUDGET_USD": "2", "MAX_BUDGET_OWN_KEY_USD": "10", "MAX_ACTIVE_SCANS": "3", "MAX_ACTIVE_FULL_SCANS": "1", "MAX_GLOBAL_LITE_SCANS": "30", "MAX_GLOBAL_FULL_SCANS": "3", "MONTHLY_BUDGET_USD": "20", "BUDGET_ALLOWANCE_USD": "1000", "BILLING_ENFORCED": "false", "DASHBOARD_URL": "https://app.eliselab.com", "INVITE_FROM": "no-reply@hello.eliselab.com", "AUTH_BASE_URL": "https://api.eliselab.com", "AUTH_TRUSTED_ORIGINS": "https://api.eliselab.com,https://app.eliselab.com,http://localhost:3000" }
   // MONTHLY_BUDGET_USD is the default monthly spend per account with no plan (a plan's included credit is the default instead; tenants.monthly_scan_budget_usd overrides both).
   // BUDGET_ALLOWANCE_USD is the most an admin may set as the monthly budget (tenants.monthly_scan_budget_allowance_usd overrides it for one account).
   // BILLING_ENFORCED: "true" refuses new scans from an account with no plan row; "false" lets such accounts run as before. Accounts that have a plan row follow it either way.
   // MAX_BUDGET_USD is the per-scan spend ceiling for scans on the platform's key: requests may lower it, never raise it.
   // MAX_BUDGET_OWN_KEY_USD is the same ceiling for scans on an account's own Anthropic key, which pays for them itself. A scan on a Runner has a fixed safety cap in code (RUNNER_MAX_BUDGET_USD).
+  // MAX_ACTIVE_SCANS and MAX_ACTIVE_FULL_SCANS are how many lite and how many full scans one account may have live at once; each path counts on its own.
+  // MAX_GLOBAL_LITE_SCANS and MAX_GLOBAL_FULL_SCANS are the same counts over all accounts (scans on a Runner are not counted). A new scan over a global cap is refused with SCAN_WORKER_BUSY, not queued. The full values are low on purpose until full scans are measured.
   // Secrets (wrangler secret put / --secrets-file): ANTHROPIC_API_KEY, SCAN_API_TOKEN, DATABASE_URL, AUTH_SECRET
   // Optional, for accounts that bring their own Anthropic key: KEY_ENCRYPTION_SECRET (any long random string; changing it makes every saved key unreadable, and those accounts' scans stop until they save the key again)
   // Optional, for private repos: GITHUB_APP_ID, GITHUB_APP_PRIVATE_KEY (PKCS#8 PEM)

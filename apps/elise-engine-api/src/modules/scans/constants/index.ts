@@ -15,3 +15,10 @@ export const SCANS_SCAN_ID_PATTERN = /^[\w-]{1,100}$/;
 // -----
 export const SCANS_PAGE_SIZE = 50;
 export const SCANS_ACTIVE_WINDOW_MS = 90 * 60 * 1000;
+// -----
+// How long a full Scan may go without a status change and still count
+// as running: its 90 minutes of audit (SCAN_WORKFLOW_FULL_MAX_POLLS)
+// plus the clone, the launch and the save around it. A shorter window
+// would count a live full Scan as stalled and let a newer request close it.
+// -----
+export const SCANS_ACTIVE_FULL_WINDOW_MS = 130 * 60 * 1000;

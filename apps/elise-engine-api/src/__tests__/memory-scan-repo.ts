@@ -1,10 +1,17 @@
 import { Effect } from "effect";
 import { Conflict, DbError } from "#/lib/effect-query";
-import { canonicalRepo, displayRepoUrl } from "#/modules/scan-ledger/utils";
+import { activeWindowMsOf, canonicalRepo, displayRepoUrl } from "#/modules/scan-ledger/utils";
 import type { ScanStatus } from "#/schemas";
 import type { NewScanFile, RepoRecord, ScanRepo } from "#/modules/scan-ledger";
 
 type StoredFile = NewScanFile & { accountId: string; scanId: string };
+
+// -----
+// Queued or running and not stalled, each Skill by its own
+// window, as the Neon repo judges it.
+// -----
+const isLive = (row: ScanStatus, nowMs: number) =>
+  (row.status === "queued" || row.status === "running") && Date.parse(row.updatedAt) >= nowMs - activeWindowMsOf(row.skill);
 
 // -----
 // A faithful in-memory ScanRepo: same rules as the Neon
@@ -15,6 +22,7 @@ export function memoryScanRepo() {
   const rows = new Map<string, ScanStatus>();
   const files = new Map<string, StoredFile>();
   const repos = new Map<string, RepoRecord>();
+  const onRunner = new Set<string>();
 
   const artifactsOf = (scanId: string) =>
     [...files.values()]
@@ -36,12 +44,11 @@ export function memoryScanRepo() {
         repos.set(key, found);
         return found;
       }),
-    create: (params, repoId, staleBeforeMs) =>
+    create: (params, repoId, nowMs) =>
       Effect.suspend(() => {
-        const live = [...rows.values()].find(
-          (row) => row.repoId === repoId && (row.status === "queued" || row.status === "running") && Date.parse(row.updatedAt) >= staleBeforeMs,
-        );
+        const live = [...rows.values()].find((row) => row.repoId === repoId && isLive(row, nowMs));
         if (live) return Effect.fail(new Conflict({ message: `This repo already has an active scan: ${live.scanId}` }));
+        if (params.runnerId !== undefined) onRunner.add(params.scanId);
         const now = new Date().toISOString();
         rows.set(params.scanId, {
           scanId: params.scanId,
@@ -107,12 +114,12 @@ export function memoryScanRepo() {
         const row = rows.get(scanId);
         return row && row.accountId === accountId ? withFiles(row) : null;
       }),
-    activeSince: (accountId, sinceMs) =>
-      Effect.sync(() =>
-        [...rows.values()]
-          .filter((row) => row.accountId === accountId && (row.status === "queued" || row.status === "running") && Date.parse(row.updatedAt) >= sinceMs)
-          .map(withFiles),
-      ),
+    activeSince: (accountId, nowMs) => Effect.sync(() => [...rows.values()].filter((row) => row.accountId === accountId && isLive(row, nowMs)).map(withFiles)),
+    activeCounts: (nowMs) =>
+      Effect.sync(() => {
+        const ours = [...rows.values()].filter((row) => isLive(row, nowMs) && !onRunner.has(row.scanId));
+        return { lite: ours.filter((row) => row.skill !== "full").length, full: ours.filter((row) => row.skill === "full").length };
+      }),
     file: (accountId, scanId, name) =>
       Effect.sync(() => {
         const file = files.get(`${scanId}/${name}`);
@@ -134,5 +141,6 @@ export const brokenScanRepo: ScanRepo = {
   list: () => Effect.fail(new DbError({ cause: new Error("db down") })),
   get: () => Effect.fail(new DbError({ cause: new Error("db down") })),
   activeSince: () => Effect.fail(new DbError({ cause: new Error("db down") })),
+  activeCounts: () => Effect.fail(new DbError({ cause: new Error("db down") })),
   file: () => Effect.fail(new DbError({ cause: new Error("db down") })),
 };

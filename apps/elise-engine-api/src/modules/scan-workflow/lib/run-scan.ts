@@ -6,7 +6,6 @@ import type { ScanPatch } from "#/modules/scan-ledger";
 import { saveScanFilesEffect } from "#/modules/scan-store";
 import {
   SCAN_WORKFLOW_LAUNCH_TIMEOUT,
-  SCAN_WORKFLOW_MAX_POLLS,
   SCAN_WORKFLOW_POLL_SECONDS,
   SCAN_WORKFLOW_PREPARE_TIMEOUT,
   SCAN_WORKFLOW_RECORD_RETRY,
@@ -105,7 +104,7 @@ export const runScan = async (deps: ScanRunDeps, params: ScanParams, step: Workf
     });
 
     let outcome: PollResult = { state: "running" };
-    for (let i = 0; i < SCAN_WORKFLOW_MAX_POLLS && outcome.state === "running"; i++) {
+    for (let i = 0; i < deps.maxPolls && outcome.state === "running"; i++) {
       await step.sleep(`wait-${i}`, `${SCAN_WORKFLOW_POLL_SECONDS} seconds`);
       outcome = await step.do(`poll-${i}`, async () => {
         const polled = await sandbox.pollAgent();
@@ -115,7 +114,7 @@ export const runScan = async (deps: ScanRunDeps, params: ScanParams, step: Workf
     await readUsage();
     if (outcome.state === "running") {
       const tail = await step.do("log-tail", () => sandbox.agentLogTail());
-      throw new Error(`the agent timed out after ${(SCAN_WORKFLOW_MAX_POLLS * SCAN_WORKFLOW_POLL_SECONDS) / 60} minutes: ${tail}`);
+      throw new Error(`the agent timed out after ${(deps.maxPolls * SCAN_WORKFLOW_POLL_SECONDS) / 60} minutes: ${tail}`);
     }
     if (outcome.state === "failed") throw new Error(outcome.error ?? "the agent failed");
 
