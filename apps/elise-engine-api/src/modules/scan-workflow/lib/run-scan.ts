@@ -4,7 +4,9 @@ import { runEffect } from "#/lib/effect-query";
 import type { ScanParams, ScanState } from "#/schemas";
 import type { ScanPatch } from "#/modules/scan-ledger";
 import { saveScanFilesEffect } from "#/modules/scan-store";
+import type { FullPhase } from "#/modules/scan-sandbox";
 import {
+  SCAN_WORKFLOW_FULL_PHASE_MINUTES,
   SCAN_WORKFLOW_LAUNCH_TIMEOUT,
   SCAN_WORKFLOW_POLL_SECONDS,
   SCAN_WORKFLOW_PREPARE_TIMEOUT,
@@ -57,6 +59,36 @@ export const runScan = async (deps: ScanRunDeps, params: ScanParams, step: Workf
     }
   };
 
+  // -----
+  // One Phase of a full Scan: start it, wait for it within its own time
+  // slot, and close it. A Phase that ended with an error after the meter
+  // turned a call away ran out of its slice: it did not fail, so the Scan
+  // goes on and the next Phase starts with its own money. Any other
+  // failure, and a Phase that outruns its time slot, fails the Scan.
+  // -----
+  const runPhase = async (phase: FullPhase) => {
+    await step.do(`launch-${phase}`, { retries: SCAN_WORKFLOW_RETRY_ONCE, timeout: SCAN_WORKFLOW_LAUNCH_TIMEOUT }, async () => {
+      await runEffect(ledger.mark(params.accountId, params.scanId, { step: "auditing" }));
+      await sandbox.launchPhase(params.options, phase);
+      return true;
+    });
+    const minutes = SCAN_WORKFLOW_FULL_PHASE_MINUTES[phase];
+    let outcome: PollResult = { state: "running" };
+    for (let i = 0; i < (minutes * 60) / SCAN_WORKFLOW_POLL_SECONDS && outcome.state === "running"; i++) {
+      await step.sleep(`wait-${phase}-${i}`, `${SCAN_WORKFLOW_POLL_SECONDS} seconds`);
+      outcome = await step.do(`poll-${phase}-${i}`, async () => {
+        const polled = await sandbox.pollAgent();
+        return polled.state === "failed" ? { state: "failed" as const, error: polled.error } : { state: polled.state };
+      });
+    }
+    const ended = await step.do(`end-${phase}`, () => sandbox.endPhase(phase));
+    if (outcome.state === "running") {
+      const tail = await step.do(`log-tail-${phase}`, () => sandbox.agentLogTail());
+      throw new Error(`the ${phase} phase timed out after ${minutes} minutes: ${tail}`);
+    }
+    if (outcome.state === "failed" && !ended.exhausted) throw new Error(outcome.error ?? `the ${phase} phase failed`);
+  };
+
   let usage: ScanUsage | null = null;
   const readUsage = async () => {
     try {
@@ -97,26 +129,31 @@ export const runScan = async (deps: ScanRunDeps, params: ScanParams, step: Workf
       await runEffect(ledger.addFiles(params.accountId, params.scanId, saved));
       return found;
     });
-    await step.do("launch-agent", { retries: SCAN_WORKFLOW_RETRY_ONCE, timeout: SCAN_WORKFLOW_LAUNCH_TIMEOUT }, async () => {
-      await runEffect(ledger.mark(params.accountId, params.scanId, { step: "auditing" }));
-      await sandbox.launchAgent(params.options, priors);
-      return true;
-    });
-
-    let outcome: PollResult = { state: "running" };
-    for (let i = 0; i < deps.maxPolls && outcome.state === "running"; i++) {
-      await step.sleep(`wait-${i}`, `${SCAN_WORKFLOW_POLL_SECONDS} seconds`);
-      outcome = await step.do(`poll-${i}`, async () => {
-        const polled = await sandbox.pollAgent();
-        return polled.state === "failed" ? { state: "failed" as const, error: polled.error } : { state: polled.state };
+    if (deps.phases === undefined) {
+      await step.do("launch-agent", { retries: SCAN_WORKFLOW_RETRY_ONCE, timeout: SCAN_WORKFLOW_LAUNCH_TIMEOUT }, async () => {
+        await runEffect(ledger.mark(params.accountId, params.scanId, { step: "auditing" }));
+        await sandbox.launchAgent(params.options, priors);
+        return true;
       });
+
+      let outcome: PollResult = { state: "running" };
+      for (let i = 0; i < deps.maxPolls && outcome.state === "running"; i++) {
+        await step.sleep(`wait-${i}`, `${SCAN_WORKFLOW_POLL_SECONDS} seconds`);
+        outcome = await step.do(`poll-${i}`, async () => {
+          const polled = await sandbox.pollAgent();
+          return polled.state === "failed" ? { state: "failed" as const, error: polled.error } : { state: polled.state };
+        });
+      }
+      await readUsage();
+      if (outcome.state === "running") {
+        const tail = await step.do("log-tail", () => sandbox.agentLogTail());
+        throw new Error(`the agent timed out after ${(deps.maxPolls * SCAN_WORKFLOW_POLL_SECONDS) / 60} minutes: ${tail}`);
+      }
+      if (outcome.state === "failed") throw new Error(outcome.error ?? "the agent failed");
+    } else {
+      for (const phase of deps.phases) await runPhase(phase);
+      await readUsage();
     }
-    await readUsage();
-    if (outcome.state === "running") {
-      const tail = await step.do("log-tail", () => sandbox.agentLogTail());
-      throw new Error(`the agent timed out after ${(deps.maxPolls * SCAN_WORKFLOW_POLL_SECONDS) / 60} minutes: ${tail}`);
-    }
-    if (outcome.state === "failed") throw new Error(outcome.error ?? "the agent failed");
 
     await step.do("save-files", async () => {
       await runEffect(ledger.mark(params.accountId, params.scanId, { step: "saving" }));

@@ -3,7 +3,7 @@ import type { ScanFiles } from "#/lib/scan-file-types";
 import type { ScanOptions, ScanParams, ScanState } from "#/schemas";
 import type { ScanRepo } from "#/modules/scan-ledger";
 import type { PriorFinding } from "#/modules/scan-records";
-import type { AgentState, OutboundAnthropicKey, OutboundGithub, ScanCheckout } from "#/modules/scan-sandbox";
+import type { AgentState, FullPhase, OutboundAnthropicKey, OutboundGithub, PhaseEnd, ScanCheckout } from "#/modules/scan-sandbox";
 
 // -----
 // The sandbox as the Workflow uses it. Its Durable Object
@@ -12,6 +12,13 @@ import type { AgentState, OutboundAnthropicKey, OutboundGithub, ScanCheckout } f
 export type SandboxPort = {
   prepare: (repoUrl: string, ref?: string, github?: OutboundGithub, anthropicKey?: OutboundAnthropicKey) => Promise<ScanCheckout>;
   launchAgent: (options: ScanOptions, priors: PriorFinding[]) => Promise<void>;
+  // -----
+  // The two calls of a full Scan's Phases. A Phase is one run of the agent
+  // with its own slice of the cap; pollAgent then answers for the run that
+  // is going. Neither is optional, for the reason given at readCheckout.
+  // -----
+  launchPhase: (options: ScanOptions, phase: FullPhase) => Promise<void>;
+  endPhase: (phase: FullPhase) => Promise<PhaseEnd>;
   pollAgent: () => Promise<AgentState>;
   agentLogTail: () => Promise<string>;
   readUsage: () => Promise<ScanUsage | null>;
@@ -35,6 +42,7 @@ export type SandboxPort = {
 export type ScanRunDeps = {
   sandbox: SandboxPort;
   maxPolls: number;
+  phases?: readonly FullPhase[];
   ledger: ScanRepo;
   reports: R2Bucket;
   readPriors: (params: ScanParams) => Promise<PriorFinding[]>;

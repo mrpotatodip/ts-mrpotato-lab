@@ -46,6 +46,18 @@ export const runnerSandbox = (db: DbConnectType, params: ScanParams, runnerId: s
       );
     },
 
+    // -----
+    // A Runner has no Outbound handler to meter a Phase, so it runs one
+    // agent as before. Phases on a Runner are a later ticket.
+    // -----
+    launchPhase: async () => {
+      throw new Error("a Runner does not run a full scan in phases yet");
+    },
+
+    endPhase: async () => {
+      throw new Error("a Runner does not run a full scan in phases yet");
+    },
+
     pollAgent: async () => {
       const job = await read();
       if (job === null) return { state: "failed", error: "the runner job is missing" };
