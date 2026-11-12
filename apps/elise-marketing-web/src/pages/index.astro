@@ -4,16 +4,17 @@ import { EXAMPLE_FINDING, FEATURES, SITE, STEPS } from "../constants/site";
 ---
 
 <Base>
+  <a class="skip-link" href="#main">Skip to content</a>
   <div class="wrap">
     <header class="nav">
       <a class="brand" href="/">
-        <img src="/logomark.png" alt="" width="28" height="28" />
+        <img src="/logomark.png" alt="" width="67" height="28" />
         {SITE.name}
       </a>
       <a class="button quiet" href={SITE.appUrl}>Sign in</a>
     </header>
 
-    <main>
+    <main id="main">
       <div class="hero">
         <h1>Find the security flaws in your code before you ship it.</h1>
         <p class="lede">{SITE.description}</p>
@@ -21,6 +22,7 @@ import { EXAMPLE_FINDING, FEATURES, SITE, STEPS } from "../constants/site";
           <a class="button" href={SITE.appUrl}>Audit a repository</a>
           <a class="button quiet" href="#how-it-works">How it works</a>
         </div>
+        <p class="hint">"Audit a repository" opens the Elise app, where you sign in first.</p>
       </div>
 
       <section id="how-it-works" aria-labelledby="how-heading">
@@ -56,15 +58,18 @@ import { EXAMPLE_FINDING, FEATURES, SITE, STEPS } from "../constants/site";
         <div class="example">
           <div>
             <h2 id="example-heading">A finding, in plain words</h2>
-            <p>Every finding names the file, says what the flaw lets an attacker do, and says what to change. This one is an example, not from a real scan.</p>
+            <p>Here is what one finding looks like. This one is made up to show the format. It is not from a real scan.</p>
           </div>
           <article class="card finding">
             <div class="finding-head">
+              <span class="pill tag">{EXAMPLE_FINDING.label}</span>
               <span class="pill">{EXAMPLE_FINDING.severity}</span>
               <strong>{EXAMPLE_FINDING.title}</strong>
             </div>
             <span class="mono">{EXAMPLE_FINDING.file}</span>
             <dl>
+              <dt>How serious</dt>
+              <dd>{EXAMPLE_FINDING.seriousness}</dd>
               <dt>What it means</dt>
               <dd>{EXAMPLE_FINDING.meaning}</dd>
               <dt>The fix</dt>
@@ -77,13 +82,16 @@ import { EXAMPLE_FINDING, FEATURES, SITE, STEPS } from "../constants/site";
       <section class="closing" aria-labelledby="cta-heading">
         <h2 id="cta-heading">Audit your first repository</h2>
         <div class="actions">
-          <a class="button" href={SITE.appUrl}>Get started</a>
+          <a class="button" href={SITE.appUrl}>Audit a repository</a>
         </div>
       </section>
     </main>
   </div>
 
   <footer>
-    <div class="wrap">© {new Date().getFullYear()} {SITE.name}</div>
+    <div class="wrap footer-row">
+      <span>© {new Date().getFullYear()} {SITE.name}</span>
+      <a href={SITE.appUrl}>Sign in to Elise</a>
+    </div>
   </footer>
 </Base>

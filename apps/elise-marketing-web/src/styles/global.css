@@ -1,10 +1,13 @@
 :root {
-  --background: oklch(0.958 0.004 258);
-  --card: oklch(0.99 0.002 258);
-  --foreground: oklch(0.22 0.01 258);
-  --muted-foreground: oklch(0.36 0.01 258);
-  --border: rgb(0 0 0 / 9%);
-  --primary: oklch(0.27 0.01 258);
+  /* The dashboard's Daylight theme: a white page with a painted sky at the top
+     and glass cards. Base.astro sets --sky to a random one of the three. */
+  --sky: url("/theme-bgs/bg-daylight-1.jpeg");
+  --bg-color: oklch(1 0 0);
+  --card: oklch(1 0 0 / 0.74);
+  --foreground: oklch(0.15 0.012 258);
+  --muted-foreground: oklch(0.34 0.012 258);
+  --border: oklch(0 0 0 / 0.14);
+  --primary: oklch(0.22 0.012 258);
   --primary-foreground: oklch(0.98 0.002 258);
   --severity-high: oklch(0.42 0.14 50);
   --severity-high-soft: oklch(0.7 0.16 50 / 13%);
@@ -18,12 +21,38 @@
   box-sizing: border-box;
 }
 
+html {
+  background-color: var(--bg-color);
+}
+
 body {
   margin: 0;
   font-family: var(--font-sans);
   line-height: 1.6;
   color: var(--foreground);
-  background: radial-gradient(60rem 28rem at 85% -8rem, rgb(255 255 255 / 90%), transparent), var(--background);
+}
+
+/* The sky is a 1778 by 592 banner, centred at the top, with its sides and
+   bottom faded into the page: the same layer and mask as the dashboard. */
+html::before {
+  content: "";
+  position: fixed;
+  z-index: -1;
+  top: 0;
+  left: 50%;
+  width: min(150%, 2250px);
+  aspect-ratio: 3 / 1;
+  transform: translateX(-50%);
+  pointer-events: none;
+  background: var(--sky) center / 100% 100% no-repeat;
+  -webkit-mask-image:
+    linear-gradient(to right, transparent, rgb(0 0 0 / 0.08) 6%, rgb(0 0 0 / 0.3) 13%, rgb(0 0 0 / 0.65) 22%, #000 34%, #000 66%, rgb(0 0 0 / 0.65) 78%, rgb(0 0 0 / 0.3) 87%, rgb(0 0 0 / 0.08) 94%, transparent),
+    linear-gradient(to bottom, #000 10%, rgb(0 0 0 / 0.85) 25%, rgb(0 0 0 / 0.55) 45%, rgb(0 0 0 / 0.25) 65%, rgb(0 0 0 / 0.07) 82%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(to right, transparent, rgb(0 0 0 / 0.08) 6%, rgb(0 0 0 / 0.3) 13%, rgb(0 0 0 / 0.65) 22%, #000 34%, #000 66%, rgb(0 0 0 / 0.65) 78%, rgb(0 0 0 / 0.3) 87%, rgb(0 0 0 / 0.08) 94%, transparent),
+    linear-gradient(to bottom, #000 10%, rgb(0 0 0 / 0.85) 25%, rgb(0 0 0 / 0.55) 45%, rgb(0 0 0 / 0.25) 65%, rgb(0 0 0 / 0.07) 82%, transparent);
+  mask-composite: intersect;
 }
 
 a {
@@ -51,8 +80,11 @@ a {
 }
 
 .brand img {
-  width: 1.75rem;
   height: 1.75rem;
+  width: auto;
+  /* The file has an opaque white background: round it into a tile. */
+  border-radius: 0.375rem;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 12%);
 }
 
 .button {
@@ -62,6 +94,7 @@ a {
   border-radius: 0.5rem;
   font-weight: 600;
   text-decoration: none;
+  text-shadow: none;
   color: var(--primary-foreground);
   background: var(--primary);
   box-shadow: 0 1px 0 rgb(255 255 255 / 12%) inset, 0 1px 2px rgb(0 0 0 / 25%);
@@ -71,15 +104,42 @@ a {
   background: oklch(0.33 0.01 258);
 }
 
+.button:active {
+  transform: translateY(1px);
+  background: oklch(0.18 0.012 258);
+}
+
 .button.quiet {
   color: var(--foreground);
   background: var(--card);
   box-shadow: 0 1px 2px rgb(0 0 0 / 8%);
   border: 1px solid var(--border);
+  -webkit-backdrop-filter: blur(10px) saturate(1.4);
+  backdrop-filter: blur(10px) saturate(1.4);
 }
 
 .button.quiet:hover {
   background: oklch(0.96 0.002 258);
+}
+
+.button.quiet:active {
+  background: oklch(0.93 0.004 258);
+}
+
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -4rem;
+  z-index: 10;
+  padding: 0.6rem 1.1rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  color: var(--primary-foreground);
+  background: var(--primary);
+}
+
+.skip-link:focus {
+  top: 1rem;
 }
 
 :focus-visible {
@@ -90,6 +150,8 @@ a {
 .hero {
   padding-block: clamp(3rem, 9vw, 7rem) clamp(2.5rem, 6vw, 5rem);
   max-width: 46rem;
+  /* Text sits straight on the sky: a soft white halo keeps it readable. */
+  text-shadow: 0 0 14px oklch(1 0 0 / 0.9), 0 0 3px oklch(1 0 0 / 0.7);
 }
 
 h1 {
@@ -102,8 +164,10 @@ h1 {
 
 .lede {
   margin: 1.25rem 0 2rem;
+  max-width: 52ch;
   font-size: 1.15rem;
-  color: var(--muted-foreground);
+  /* Darker than the muted ink: this line sits on the painted sky. */
+  color: oklch(0.26 0.012 258);
   text-wrap: pretty;
 }
 
@@ -114,7 +178,14 @@ h1 {
 }
 
 section {
-  padding-block: clamp(2.5rem, 6vw, 4.5rem);
+  padding-block: clamp(2rem, 5vw, 3.5rem);
+}
+
+.hint {
+  margin: 0.75rem 0 0;
+  max-width: 52ch;
+  font-size: 0.9rem;
+  color: oklch(0.26 0.012 258);
 }
 
 h2 {
@@ -125,7 +196,7 @@ h2 {
 
 .grid {
   display: grid;
-  gap: 1rem;
+  gap: 2rem;
   grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
 }
 
@@ -135,11 +206,13 @@ h2 {
   border-radius: calc(var(--radius) + 0.25rem);
   background: var(--card);
   box-shadow: var(--shadow-card);
+  -webkit-backdrop-filter: blur(10px) saturate(1.4);
+  backdrop-filter: blur(10px) saturate(1.4);
 }
 
 .card h3 {
-  margin: 0 0 0.4rem;
-  font-size: 1.05rem;
+  margin: 0 0 0.375rem;
+  font-size: 0.9375rem;
 }
 
 .card p {
@@ -169,6 +242,7 @@ h2 {
 }
 
 .example p {
+  max-width: 52ch;
   color: var(--muted-foreground);
 }
 
@@ -188,6 +262,25 @@ h2 {
   font-weight: 650;
   color: var(--severity-high);
   background: var(--severity-high-soft);
+}
+
+.pill.tag {
+  border-color: var(--border);
+  color: var(--muted-foreground);
+  background: transparent;
+}
+
+.footer-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.footer-row a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.5rem;
 }
 
 .mono {

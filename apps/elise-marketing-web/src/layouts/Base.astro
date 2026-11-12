@@ -27,6 +27,9 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
     <meta name="twitter:card" content="summary" />
+    <script is:inline>
+      document.documentElement.style.setProperty("--sky", `url("/theme-bgs/bg-daylight-${1 + Math.floor(Math.random() * 3)}.jpeg")`);
+    </script>
   </head>
   <body>
     <slot />
