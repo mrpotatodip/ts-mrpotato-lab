@@ -16,7 +16,7 @@ export const getVerdictDoc = describeRoute({
       "A verdict for one commit of a repo: `pass`, `fail` or `cannot_tell`. A `pass` means the scans of this commit found nothing over the limit. It does not mean the commit is safe: the findings come from an AI agent that reads the repo, and text planted in the repo can steer it to leave a problem out, so no check here proves the list is complete. The response says so in `basis: \"ai_audit\"`. Treat a verdict as advice next to your own review and deterministic checks. Only `pass` ships.",
     steps: [
       "The Worker reads the succeeded lite scans of the commit (a scan of a branch counts too) and merges their findings: a problem any scan found is open.",
-      "`cannot_tell` when the commit has fewer than 2 scans, or one of the 2 newest did not check every problem the History had open, or the History had 50 or more open problems.",
+      "`cannot_tell` when the commit has no scan, or the newest did not check every problem the History had open, or the History had 50 or more open problems.",
       "Otherwise `fail` when more than 0 critical, 0 high or 3 medium problems are open, or when any open problem is not yet validated. Low and informational problems never block.",
       "A problem a person marked a false positive is listed under `dismissed`. An accepted risk is listed under `accepted` until its end date, and blocks again after it.",
       "Nothing is stored: every call computes the answer again.",

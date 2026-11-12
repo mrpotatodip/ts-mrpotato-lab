@@ -55,7 +55,7 @@ export const TEAM_INVITE_GROUP_LIMIT = 20;
 // a pass needs this many succeeded lite scans of the commit
 // -----
 export const ACCEPTED_RISK_MAX_DAYS = 90;
-export const VERDICT_MIN_SCANS = 2;
+export const VERDICT_MIN_SCANS = 1;
 
 // -----
 // Repos and branches: caps per Account and per Repo
