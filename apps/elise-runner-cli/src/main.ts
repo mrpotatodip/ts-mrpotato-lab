@@ -1,8 +1,8 @@
 import "./style.css";
-import { runnerStatus, type RunnerStatus } from "./api";
+import { runnerStatus, type PairingOffer, type RunnerStatus } from "./api";
 import { COPY } from "./copy";
 import { h } from "./dom";
-import { connectedView, offlineView, pairView, stopActivity, topbar, type Tone } from "./views";
+import { acceptView, connectedView, offlineView, pairView, stopActivity, topbar, type Tone } from "./views";
 
 const root = document.getElementById("app");
 if (!root) throw new Error("#app is missing from index.html");
@@ -30,9 +30,9 @@ const viewOf = (status: RunnerStatus | null): HTMLElement[] => {
     case "offline":
       return offlineView(refresh);
     case "revoked":
-      return pairView(show, COPY.revoked);
+      return pairView(showOffer, COPY.revoked);
     case "unpaired":
-      return pairView(show);
+      return pairView(showOffer);
   }
 };
 
@@ -48,6 +48,18 @@ function show(status: RunnerStatus | null): void {
   document.getElementById("code")?.focus();
 }
 
+// -----
+// A code worked: the window asks whether to join that account. The token is held by Rust and
+// nothing is saved until the person accepts, so this window is not redrawn by `recheck`.
+// -----
+const OFFER_KEY = "offer";
+
+function showOffer(offer: PairingOffer): void {
+  stopActivity();
+  shownKey = OFFER_KEY;
+  root?.replaceChildren(topbar(COPY.pill.confirming, "warning"), h("main", { id: "main" }, ...acceptView(offer, show)));
+}
+
 async function refresh(): Promise<void> {
   show(null);
   show(await runnerStatus());
@@ -60,7 +72,9 @@ async function refresh(): Promise<void> {
 // A form being typed in is left alone.
 // -----
 async function recheck(): Promise<void> {
+  if (shownKey === OFFER_KEY) return;
   const next = await runnerStatus();
+  if (shownKey === OFFER_KEY) return;
   if (JSON.stringify(next) !== shownKey) show(next);
 }
 

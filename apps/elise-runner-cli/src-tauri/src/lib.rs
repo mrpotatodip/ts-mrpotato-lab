@@ -2,7 +2,7 @@ mod jobs;
 mod runner;
 
 use jobs::Activity;
-use runner::{RunnerError, RunnerStatus};
+use runner::{PairingOffer, RunnerError, RunnerStatus};
 use tauri::{
     menu::{Menu, MenuItem},
     tray::TrayIconBuilder,
@@ -16,8 +16,18 @@ async fn runner_status() -> RunnerStatus {
 }
 
 #[tauri::command]
-async fn pair_runner(code: String) -> Result<RunnerStatus, RunnerError> {
+async fn pair_runner(code: String) -> Result<PairingOffer, RunnerError> {
     runner::pair(&code).await
+}
+
+#[tauri::command]
+async fn accept_pairing() -> Result<RunnerStatus, RunnerError> {
+    runner::accept_pairing().await
+}
+
+#[tauri::command]
+async fn decline_pairing() -> Result<RunnerStatus, RunnerError> {
+    runner::decline_pairing().await
 }
 
 #[tauri::command]
@@ -39,7 +49,7 @@ fn show_main_window(app: &tauri::AppHandle) {
 
 pub fn run() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![runner_status, pair_runner, unpair_runner, runner_activity])
+        .invoke_handler(tauri::generate_handler![runner_status, pair_runner, accept_pairing, decline_pairing, unpair_runner, runner_activity])
         .setup(|app| {
             // The work loop asks EliseLAB for scans for as long as the app runs.
             tauri::async_runtime::spawn(jobs::work_loop(app.handle().clone()));
