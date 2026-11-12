@@ -83,11 +83,11 @@ Before execution, the parent opens and retains trusted, non-inheritable director
 
 For a reproduced check, record the command, exact test input, sandbox limits, and only the allowlisted environment variable names plus safe non-secret values needed to reproduce it. Never capture or copy the ambient environment, inherited variables, credential values, authentication state, or unrelated host paths. Launch from an empty environment rather than trying to redact one after execution.
 
-Before delegation, the parent writes `run-metadata.json` with at least `run_id`, `repo`, `target`, `source_ref`, `profile`, `scope_paths`, `budget` (null if unset), `execution_policy: "sandboxed-source-and-local-only"`, selected companion files, prior-run paths, shared-file owners, and `run_status: "in_progress"`. Update metadata only when those facts change; candidate state belongs in the coverage ledger and `findings.json`.
+Before delegation, the parent writes `run-metadata.json` with at least `run_id`, `repo`, `target`, `source_ref`, `profile`, `scope_paths`, `execution_policy: "sandboxed-source-and-local-only"`, selected companion files, prior-run paths, shared-file owners, and `run_status: "in_progress"`. Update metadata only when those facts change; candidate state belongs in the coverage ledger and `findings.json`.
 
 ## Full audit planning
 
-The coverage, prior-run, profile, and budget requirements in this section apply only in full audit mode.
+The coverage, prior-run, and profile requirements in this section apply only in full audit mode.
 
 ### Coverage and prior runs
 
@@ -116,22 +116,17 @@ A **scoped run** audits a subset: named paths, one subsystem, one companion doma
 
 Profiles change breadth and redundancy, never the evidence bar. Do not scale away the candidate gate, the source/local execution boundary, `needs_validation` discipline, schema validation, or independent verification of `confirmed` records.
 
-#### Cost budget
+#### Agents at once, and running out of money
 
-The ledger makes spend countable: one unit is roughly one hunter assignment, and one surviving candidate is one or two verifier assignments depending on profile. When the user sets a budget — or the parent proposes one for a large target — record `budget` in `run-metadata.json` as a maximum number of agent invocations across all phases.
+Run at most 3 hunters or verifiers at the same time. Reconnaissance and the report use one agent and no sub-agents.
 
-Apply the strict budget gate before launching any reconnaissance agent. Reserve the four baseline reconnaissance calls, one final post-wave critic for `quick` or one post-wave plus one distinct final-clean critic for `standard`/`deep`, and at least one verifier call. Add focused reconnaissance only after repeating this gate for each extra call. If the requested budget cannot fund that minimum, launch no agent: ask for a larger budget, narrower scope, or different profile. If the request remains unchanged, set `run_status: "incomplete"` with `incomplete_reason: "budget_cannot_fund_reconnaissance_and_reserves"` and report that no audit pass ran.
+The run's limit is money, not a count of agents. A model call refused with a budget message, or a note that your money is limited, means the run can stop at any point. Do not retry a refused call or start new work. Finish the files instead:
 
-Spend it in this order:
-
-1. Count reconnaissance, every post-wave critic, and the separate final-clean critic as agent invocations.
-2. **Reserve critics and validation before hunting.** For `quick`, reserve its one post-wave final critic. Before every `standard` or `deep` hunter wave, reserve one immediate post-wave critic plus one distinct final-clean critic. Also reserve verifier cost from the profile (about 1 or 2 agents per expected candidate; when in doubt reserve 30% of the balance after critic reservation). Never assign hunters into either reserve.
-3. Assign hunters to units in priority order until the hunting allowance is spent. Spend the reserved post-wave critic immediately after that wave; keep the final-clean and validation reserves intact.
-4. Before a later wave, reserve its new post-wave critic again. If the remaining budget cannot cover the required critic calls and validation reserve, launch no hunters from that wave, mark its planned units `deferred` with reason `budget_cannot_reserve_critics_and_validation`, and use the retained final-clean critic to record the resulting gap.
-
-Before wave 1, update the pre-recon estimate with seeded units, implied hunter count, mandatory critic calls, validation reserve, and whether the remaining budget covers the plan. If it clearly cannot, say so and propose either a tighter scope or a coarser profile instead of silently thinning evidence. If later facts consume the required final-critic reserve, launch no hunters, mark all planned work deferred, set the run incomplete with reason `critic_budget_exhausted`, and make no complete-coverage claim.
-
-A strict total-agent budget can still be exceeded by an unexpectedly large candidate set or by a material Phase 5 replacement that needs another independent verifier. If the remaining budget cannot validate every candidate, stop hunting, validate candidates in fingerprint order while the budget permits, and set `run_status: "incomplete"` plus `incomplete_reason: "validation_budget_exhausted"`. Keep each unvalidated fingerprint linked to a `candidate` ledger unit with that unresolved reason. Do not put an unvalidated candidate in `findings.json`, relabel it `needs_validation`, or report the run as complete. Phase 6 may produce a partial report only if its first section states that candidate validation is incomplete and lists the affected fingerprints and units. Never exceed a user-set strict budget silently.
+1. Mark every unit not finished (`planned`, `in_progress`, or not reached) `deferred` with `unresolved: ["money_exhausted"]`. Keep a unit that has finished evidence as it is.
+2. Keep each candidate that was not validated as a `candidate` ledger unit with `unresolved: ["money_exhausted"]`. Do not put it in `findings.json` under any verdict.
+3. Set `run_status: "incomplete"` and `incomplete_reason: "money_exhausted"` in `run-metadata.json`.
+4. Write `findings.json` (validated records only) and `coverage-ledger.json`, and make both validators pass. A partial ledger is valid when every unit is in a final state.
+5. Write `REPORT.md` with this first line: `PARTIAL: money ran out; N units were not covered.` Directly after it, list every deferred unit by `coverage_id` and every unvalidated candidate fingerprint. Never claim full coverage.
 
 ## Core principles
 

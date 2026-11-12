@@ -132,7 +132,6 @@ export const neonScanRepo = (db: DbConnectType): ScanRepo => ({
           model: params.options.model,
           effort: params.options.effort,
           profile: params.options.profile,
-          budget: params.options.budget ?? null,
           maxBudgetUsd: params.options.maxBudgetUsd.toFixed(2),
           keySource: params.keySource ?? "platform",
           installationId: params.github?.installationRowId ?? null,

@@ -80,12 +80,12 @@ describe("buildAgentPrompt", () => {
     expect(buildAgentPrompt(options)).toContain("security-audit-lite");
   });
 
-  it("names the full skill, the profile and the agent budget for the full option", () => {
-    const prompt = buildAgentPrompt({ ...options, skill: "full", profile: "deep", budget: 12 });
+  it("names the full skill and the profile for the full option, and sets no count of agents", () => {
+    const prompt = buildAgentPrompt({ ...options, skill: "full", profile: "deep" });
 
     expect(prompt).toContain("security-audit skill in FULL AUDIT mode");
     expect(prompt).toContain("Profile: deep");
-    expect(prompt).toContain("at most 12 agent invocations");
+    expect(prompt).not.toContain("agent invocations");
   });
 
   it.each([

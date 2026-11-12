@@ -113,7 +113,6 @@ export const buildScanRecordSvc = (
         model: params.options.model,
         effort: params.options.effort,
         profile: params.options.profile,
-        budget: params.options.budget ?? null,
         maxBudgetUsd: params.options.maxBudgetUsd.toFixed(2),
         error,
         inputTokens: usage?.inputTokens ?? null,

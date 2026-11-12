@@ -2,7 +2,6 @@
 // Scan options
 // -----
 export { SCAN_EFFORTS, SCAN_MODELS, SCAN_PROFILES, SCAN_SKILLS } from "@repo/contracts/elise";
-export const SCAN_AGENT_BUDGET_MAX = 200;
 
 // -----
 // Saved files

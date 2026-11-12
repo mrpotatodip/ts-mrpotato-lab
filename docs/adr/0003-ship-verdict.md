@@ -15,6 +15,7 @@ How `GET /repos/:repoId/verdict?commit=<sha>` decides in `apps/elise-engine-api`
 - **Findings are merged, never averaged.** A problem that any Scan of the commit found is open, at the worst severity any Scan gave it. A second Scan can only make the Verdict stricter. A single `not_found` in the History does not cancel a Finding that another Scan of the same commit saw.
 - **Every Prior finding was checked.** In the newest Scan, `priors_unchecked` is 0 and `priors_given` is below 50. At 50 the agent was asked about only the worst 50, so the Verdict cannot tell. Older Scans are not asked: a Scan that ran out of budget must not block a commit that a good Scan has since cleared.
 - **Within the limit.** 0 critical, 0 high, at most 3 medium. A problem still `needs_validation` blocks until a person decides it. Low and informational never block. One fixed default for every account; per-account limits wait until someone needs them.
+- **Full Scans do not count (checked 2026-11-13).** The Verdict reads only `lite` Scans (`eq(scans.skill, "lite")` in `verdict-queries.ts`), so a full Scan never enters it, complete or partial, and a Partial Scan can never make a commit `pass`. If full Scans are ever counted, a Partial Scan (one whose ledger has a `deferred` unit with `money_exhausted`, or whose Report starts with `PARTIAL:`) must make the Verdict `cannot_tell`, because it did not cover the whole code.
 
 `cannot_tell` wins over `fail`: the over-limit reason is still listed, but the Scans are not trusted yet.
 

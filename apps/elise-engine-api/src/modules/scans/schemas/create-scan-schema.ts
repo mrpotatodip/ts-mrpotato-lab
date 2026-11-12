@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { SCAN_AGENT_BUDGET_MAX, SCAN_EFFORTS, SCAN_MODELS, SCAN_PROFILES, SCAN_SKILLS } from "#/constants";
+import { SCAN_EFFORTS, SCAN_MODELS, SCAN_PROFILES, SCAN_SKILLS } from "#/constants";
 import { ScanOptionsSchema } from "#/schemas";
 import { SCANS_GIT_REF, SCANS_GITHUB_REPO } from "#/modules/scans/constants";
 
@@ -9,7 +9,6 @@ export const CreateScanBodySchema = z.object({
   model: z.enum(SCAN_MODELS).optional(),
   effort: z.enum(SCAN_EFFORTS).optional(),
   profile: z.enum(SCAN_PROFILES).optional(),
-  budget: z.number().int().min(1).max(SCAN_AGENT_BUDGET_MAX).optional(),
   max_budget_usd: z.number().positive().optional(),
   runner_id: z.uuid().optional().meta({ description: "Run the scan on this Runner of the account instead of in EliseLAB's cloud. The Runner must be connected, and the repository public." }),
   ref: z

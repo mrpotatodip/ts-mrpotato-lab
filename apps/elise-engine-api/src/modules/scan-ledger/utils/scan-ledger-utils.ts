@@ -25,7 +25,6 @@ export const scanRowToStatus = (row: ScanRow, artifacts: ScanArtifact[], summary
   model: row.model,
   effort: row.effort,
   profile: row.profile,
-  budget: row.budget ?? undefined,
   maxBudgetUsd: Number(row.maxBudgetUsd),
   status: row.status,
   step: row.step,
