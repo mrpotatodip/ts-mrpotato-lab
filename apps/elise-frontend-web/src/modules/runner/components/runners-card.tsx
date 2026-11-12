@@ -73,9 +73,9 @@ export function RunnersCard() {
   return (
     <Card>
       <CardHeader className="flex-row items-center justify-between">
-        <div className="grid gap-1">
+        <div className="grid gap-1.5">
           <CardTitle>Runners</CardTitle>
-          <p className="text-sm leading-relaxed text-muted-foreground">Computers you control that can run this account&apos;s scans, in place of EliseLAB&apos;s cloud container.</p>
+          <p className="max-w-copy text-sm leading-relaxed text-muted-foreground">Computers you control that can run this account&apos;s scans, in place of EliseLAB&apos;s cloud container.</p>
         </div>
         <Suspense fallback={<Skeleton className="h-8 w-32" />}>
           <RunnerAddDialog />

@@ -40,7 +40,7 @@ export function AnthropicKeyCard() {
     <Card>
       <CardHeader>
         <CardTitle>Anthropic API key</CardTitle>
-        <p className="text-sm leading-relaxed text-muted-foreground">
+        <p className="max-w-copy text-sm leading-relaxed text-muted-foreground">
           Scans run on EliseLAB&apos;s key by default. Bring your own and new scans run on it, billed to your Anthropic organization. A scan already running keeps the key it started with. The monthly budget still applies.
         </p>
       </CardHeader>
