@@ -1,4 +1,4 @@
-import { pairRunner, runnerActivity, unpairRunner, type RunnerStatus } from "./api";
+import { acceptPairing, declinePairing, pairRunner, runnerActivity, unpairRunner, type PairingOffer, type RunnerStatus } from "./api";
 import { COPY } from "./copy";
 import { h, logo } from "./dom";
 
@@ -38,11 +38,14 @@ const alert = (tone: Tone, message: string): HTMLElement => h("p", { class: `ale
 const button = (label: string, variant: "primary" | "outline" | "destructive", type: "button" | "submit" = "button"): HTMLButtonElement =>
   h("button", { class: `btn btn-${variant}`, type }, label);
 
+type OnOffer = (offer: PairingOffer) => void;
+
 // -----
 // Not paired: one question, one helper line, one error under the field.
-// A code that works moves the app to the connected view.
+// A code that works moves the app to the account check, not to the connected view: the
+// computer joins the account only when the person accepts it there.
 // -----
-export const pairView = (onStatus: OnStatus, notice?: string): HTMLElement[] => {
+export const pairView = (onOffer: OnOffer, notice?: string): HTMLElement[] => {
   const input = h("input", {
     id: "code",
     class: "input",
@@ -87,7 +90,7 @@ export const pairView = (onStatus: OnStatus, notice?: string): HTMLElement[] => 
     if (!code) return showError(COPY.errors.empty);
     setBusy(true);
     const result = await pairRunner(code);
-    if (result.ok) return onStatus(result.status);
+    if (result.ok) return onOffer(result.offer);
     setBusy(false);
     showError(COPY.errors[result.code]);
     if (result.code === "invalid_code") input.select();
@@ -97,6 +100,46 @@ export const pairView = (onStatus: OnStatus, notice?: string): HTMLElement[] => 
     pageHeader(COPY.pair.title, COPY.pair.description),
     ...(notice ? [alert("warning", notice)] : []),
     h("section", { class: "card" }, cardHeader(COPY.pair.cardTitle, COPY.pair.cardHint), form),
+  ];
+};
+
+// -----
+// The code worked and EliseLAB named the account. Nothing is saved yet: "Connect" keeps the
+// token, "Cancel" tells EliseLAB to drop it. Cancel is the focused button, so Enter does not
+// connect a computer by habit.
+// -----
+export const acceptView = (offer: PairingOffer, onStatus: OnStatus): HTMLElement[] => {
+  const copy = COPY.accept;
+  const error = h("p", { class: "error", role: "alert" });
+  const connectLabel = copy.connect(offer.accountName);
+  const connect = button(connectLabel, "primary");
+  const cancel = button(copy.cancel, "outline");
+
+  const answer = async (pressed: HTMLButtonElement, busy: string, call: typeof acceptPairing) => {
+    connect.disabled = true;
+    cancel.disabled = true;
+    pressed.textContent = busy;
+    const result = await call();
+    if (result.ok) return onStatus(result.status);
+    connect.disabled = false;
+    cancel.disabled = false;
+    connect.textContent = connectLabel;
+    cancel.textContent = copy.cancel;
+    error.textContent = COPY.errors[result.code];
+  };
+  connect.addEventListener("click", () => void answer(connect, copy.busy, acceptPairing));
+  cancel.addEventListener("click", () => void answer(cancel, copy.canceling, declinePairing));
+
+  const facts = h(
+    "dl",
+    { class: "facts" },
+    h("div", { class: "fact" }, h("dt", {}, copy.account), h("dd", {}, offer.accountName)),
+    h("div", { class: "fact" }, h("dt", {}, copy.runner), h("dd", {}, offer.name)),
+  );
+  queueMicrotask(() => cancel.focus());
+  return [
+    pageHeader(copy.title(offer.accountName), copy.description),
+    h("section", { class: "card" }, cardHeader(copy.cardTitle, copy.cardHint), h("div", { class: "card-content" }, facts, alert("warning", copy.warning(offer.accountName)), error, h("div", { class: "actions" }, connect, cancel))),
   ];
 };
 

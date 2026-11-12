@@ -1,6 +1,6 @@
 import type { Context } from "hono";
 import { createAuth } from "#/lib/auth";
-import { dbConnect, poolConnect } from "#/lib/db-connection";
+import { dbConnect, poolConnect, withTenant } from "#/lib/db-connection";
 import { runEffect } from "#/lib/effect-query";
 import { holdCreditEffect, settleCreditEffect } from "#/modules/credit";
 import { githubAccessFor, neonInstallationRepo } from "#/modules/github-installs";
@@ -47,4 +47,5 @@ export const realAppDeps: AppDeps = {
   enqueueInviteEmail: async (env, mail) => {
     await env.INVITE_EMAIL_QUEUE.send(mail, { contentType: "json" });
   },
+  withTenant: (c, accountId, run) => withTenant(c.env.HYPERDRIVE_TENANT.connectionString, (promise) => c.executionCtx.waitUntil(promise), accountId, run),
 };

@@ -28,6 +28,8 @@
     { "name": "RUNNER_ENROLL_LIMITER", "namespace_id": "1004", "simple": { "limit": 5, "period": 60 } }
   ],
   "r2_buckets": [{ "binding": "REPORTS", "bucket_name": "repo-scan-reports" }],
+  // Tenant-scoped routes connect as the elise_app role (no BYPASSRLS) and set app.tenant_id per transaction. Caching must stay off on this config: Hyperdrive caches SELECT results by query text, so a cached answer would cross accounts.
+  "hyperdrive": [{ "binding": "HYPERDRIVE_TENANT", "id": "c40dce1918af46b2bdf7be08609ba654" }],
   // Invite emails: the Worker queues one per invite, the consumer below sends it. The queues must exist before a deploy (wrangler queues create).
   "send_email": [{ "name": "EMAIL" }],
   "queues": {
