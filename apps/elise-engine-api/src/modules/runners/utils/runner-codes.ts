@@ -1,18 +1,17 @@
 import { sha256Hex } from "@repo/db-elise";
 import { RUNNER_TOKEN_BYTES } from "@repo/contracts/elise";
-import { RUNNER_PAIRING_ALPHABET, RUNNER_PAIRING_CODE_LENGTH, RUNNER_TOKEN_PREFIX } from "#/modules/runners/constants";
-
-const GROUP = RUNNER_PAIRING_CODE_LENGTH / 2;
+import { RUNNER_PAIRING_ALPHABET, RUNNER_PAIRING_CODE_LENGTH, RUNNER_PAIRING_GROUP_LENGTH, RUNNER_TOKEN_PREFIX } from "#/modules/runners/constants";
 
 // -----
 // The alphabet has 32 characters, so a random byte
-// modulo 32 is unbiased. The code reads as two groups
-// of four: XXXX-XXXX.
+// modulo 32 is unbiased. The code reads as groups of
+// four: XXXX-XXXX-XXXX.
 // -----
 export const generatePairingCode = (): string => {
   const bytes = crypto.getRandomValues(new Uint8Array(RUNNER_PAIRING_CODE_LENGTH));
   const chars = Array.from(bytes, (byte) => RUNNER_PAIRING_ALPHABET.charAt(byte % RUNNER_PAIRING_ALPHABET.length)).join("");
-  return `${chars.slice(0, GROUP)}-${chars.slice(GROUP)}`;
+  const groups = Array.from({ length: RUNNER_PAIRING_CODE_LENGTH / RUNNER_PAIRING_GROUP_LENGTH }, (_, i) => chars.slice(i * RUNNER_PAIRING_GROUP_LENGTH, (i + 1) * RUNNER_PAIRING_GROUP_LENGTH));
+  return groups.join("-");
 };
 
 // -----
