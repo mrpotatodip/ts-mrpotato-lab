@@ -1,1 +1,1 @@
-export { ScanWorkflow } from "./lib";
+export { FullScanWorkflow, ScanWorkflow } from "./lib";

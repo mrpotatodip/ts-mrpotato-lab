@@ -1,3 +1,5 @@
+import type { ScanPath } from "#/lib/scan-path";
+
 // -----
 // Agent
 // -----
@@ -36,5 +38,7 @@ export type OutboundAnthropicKey = { accountId: string; sealed: string };
 // -----
 // repo is the one repo this scan reads, as owner/name in lowercase.
 // Outbound passes git requests for no other repo, public or not.
+// path is the Sandbox namespace the sandboxId belongs to; a Scan
+// that started before there were two has none and is lite.
 // -----
-export type OutboundProps = { sandboxId: string; repo: string; github?: OutboundGithub; anthropicKey?: OutboundAnthropicKey };
+export type OutboundProps = { sandboxId: string; repo: string; path?: ScanPath; github?: OutboundGithub; anthropicKey?: OutboundAnthropicKey };

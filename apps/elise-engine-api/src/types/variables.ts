@@ -44,7 +44,9 @@ export type Bindings = {
   INVITE_EMAIL_QUEUE: Queue<QueuedEmail>;
   REPORTS: R2Bucket;
   SANDBOX: DurableObjectNamespace<ScanSandbox>;
+  SANDBOX_FULL: DurableObjectNamespace<ScanSandbox>;
   SCAN_WORKFLOW: Workflow<ScanParams>;
+  SCAN_WORKFLOW_FULL: Workflow<ScanParams>;
 };
 
 // -----

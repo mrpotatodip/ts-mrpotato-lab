@@ -3,6 +3,7 @@ import { DurableObject } from "cloudflare:workers";
 import type { ScanUsage } from "@repo/contracts/elise";
 import { SCAN_REPORT_FILES } from "#/constants";
 import type { ScanFiles } from "#/lib/scan-file-types";
+import type { ScanPath } from "#/lib/scan-path";
 import type { ScanOptions } from "#/schemas";
 import type { PriorFinding } from "#/modules/scan-records";
 import type { Bindings } from "#/types/variables";
@@ -45,6 +46,14 @@ export class ScanSandbox extends DurableObject<Bindings> {
     this.#container = ctx.container;
     this.#files = new Files(ctx.container);
     this.#context = ctx;
+  }
+
+  // -----
+  // Which Sandbox namespace this class is bound to, told to Outbound
+  // so a model call finds this Sandbox's meter. FullScanSandbox says full.
+  // -----
+  protected get path(): ScanPath {
+    return "lite";
   }
 
   // -----
@@ -190,7 +199,7 @@ export class ScanSandbox extends DurableObject<Bindings> {
 
   async #start(repo: string, github?: OutboundGithub, anthropicKey?: OutboundAnthropicKey): Promise<void> {
     if (this.#container.running) return;
-    const outbound = this.#context.exports.Outbound({ props: { sandboxId: this.#context.id.toString(), repo, github, anthropicKey } });
+    const outbound = this.#context.exports.Outbound({ props: { sandboxId: this.#context.id.toString(), repo, path: this.path, github, anthropicKey } });
     this.#container.start({
       image: this.#container.images.sandbox,
       instance: SCAN_SANDBOX_INSTANCE_TYPE,

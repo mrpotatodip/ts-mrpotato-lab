@@ -6,7 +6,6 @@ RUN apt-get update \
   && rm -rf /var/lib/apt/lists/*
 RUN npm install --global @anthropic-ai/claude-code@2.1.312
 COPY --from=sandbox-tools /usr/local/bin/sandbox-shim /usr/local/bin/sandbox-shim
-COPY skills/security-audit /root/.claude/skills/security-audit
 COPY skills/security-audit-lite /root/.claude/skills/security-audit-lite
 WORKDIR /workspace
 CMD ["sleep", "infinity"]

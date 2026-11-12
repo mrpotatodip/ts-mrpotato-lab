@@ -14,6 +14,7 @@ type WorkflowStatus = { status: string; error?: { name: string; message: string 
 export function fakeBindings(overrides: Partial<Bindings> = {}, workflowStatus: WorkflowStatus = { status: "running" }) {
   const store = new Map<string, string>();
   const created: Created[] = [];
+  const createdFull: Created[] = [];
 
   const reports = {
     put: async (key: string, value: string) => {
@@ -40,12 +41,14 @@ export function fakeBindings(overrides: Partial<Bindings> = {}, workflowStatus: 
     },
   };
 
-  const workflow = {
+  const workflowInto = (into: Created[]) => ({
     create: async (options: Created) => {
-      created.push(options);
+      into.push(options);
     },
     get: async () => ({ status: async () => workflowStatus }),
-  };
+  });
+  const workflow = workflowInto(created);
+  const workflowFull = workflowInto(createdFull);
 
   // SAFETY: the routes under test read only the bindings listed here.
   const env: Bindings = {
@@ -66,8 +69,9 @@ export function fakeBindings(overrides: Partial<Bindings> = {}, workflowStatus: 
     AUTH_TRUSTED_ORIGINS: "http://localhost",
     REPORTS: reports,
     SCAN_WORKFLOW: workflow,
+    SCAN_WORKFLOW_FULL: workflowFull,
     ...overrides,
   } as never;
 
-  return { env, store, created };
+  return { env, store, created, createdFull };
 }

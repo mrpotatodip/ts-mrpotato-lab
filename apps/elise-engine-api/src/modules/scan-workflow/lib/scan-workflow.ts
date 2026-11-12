@@ -1,6 +1,7 @@
 import { WorkflowEntrypoint, type WorkflowEvent, type WorkflowStep } from "cloudflare:workers";
 import { runEffect } from "#/lib/effect-query";
 import { dbConnect, type DbConnectType } from "#/lib/db-connection";
+import { sandboxesOf } from "#/lib/scan-path";
 import type { ScanParams } from "#/schemas";
 import { findSealedKeyEffect } from "#/modules/anthropic-key";
 import { findBranchEffect, findBranchesAtTipEffect, isCommitId } from "#/modules/branches";
@@ -38,10 +39,18 @@ const priorsOf = async (env: Bindings, params: ScanParams): Promise<PriorFinding
 };
 
 export class ScanWorkflow extends WorkflowEntrypoint<Bindings, ScanParams> {
+  // -----
+  // The Sandbox namespace this Workflow starts its Scans in.
+  // FullScanWorkflow overrides it.
+  // -----
+  protected get sandboxes(): Bindings["SANDBOX"] {
+    return sandboxesOf(this.env, "lite");
+  }
+
   async run(event: WorkflowEvent<ScanParams>, step: WorkflowStep) {
     return runScan(
       {
-        sandbox: event.payload.runnerId ? runnerSandbox(dbConnect(this.env.DATABASE_URL), event.payload, event.payload.runnerId) : this.env.SANDBOX.getByName(event.payload.scanId),
+        sandbox: event.payload.runnerId ? runnerSandbox(dbConnect(this.env.DATABASE_URL), event.payload, event.payload.runnerId) : this.sandboxes.getByName(event.payload.scanId),
         ledger: neonScanRepo(dbConnect(this.env.DATABASE_URL)),
         reports: this.env.REPORTS,
         readPriors: (params) => priorsOf(this.env, params),
