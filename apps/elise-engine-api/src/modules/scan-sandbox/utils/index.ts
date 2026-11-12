@@ -5,5 +5,6 @@ export * from "./is-allowed-outbound";
 export * from "./parse-agent-usage";
 export * from "./create-usage-scanner";
 export * from "./price-usage";
+export * from "./reserve-usd";
 export * from "./git-auth";
 export * from "./guard-messages";
