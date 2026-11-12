@@ -1,4 +1,4 @@
-// Pairing with EliseLAB. The web page never talks to the API and never sees the token:
+// Pairing with Elise. The web page never talks to the API and never sees the token:
 // it asks these functions, which call the API from Rust and keep the token in the
 // computer's keychain (macOS Keychain, Windows Credential Manager, Linux Secret Service).
 
@@ -28,9 +28,9 @@ pub(crate) fn engine_url() -> String {
 pub enum RunnerStatus {
     // No token on this computer.
     Unpaired,
-    // EliseLAB no longer knows the token: the runner was removed.
+    // Elise no longer knows the token: the runner was removed.
     Revoked,
-    // A token is saved, but EliseLAB could not be reached.
+    // A token is saved, but Elise could not be reached.
     Offline,
     Connected { name: String, account_name: String },
 }
@@ -104,7 +104,7 @@ pub(crate) fn forget_token() {
     }
 }
 
-// Asks EliseLAB who this runner is. Also the proof that the pairing still works.
+// Asks Elise who this runner is. Also the proof that the pairing still works.
 pub async fn status() -> RunnerStatus {
     let Some(token) = token() else {
         return RunnerStatus::Unpaired;
@@ -162,7 +162,7 @@ pub async fn pair(code: &str) -> Result<RunnerStatus, RunnerError> {
     })
 }
 
-// Tells EliseLAB to stop trusting this runner, then forgets the token. If EliseLAB cannot
+// Tells Elise to stop trusting this runner, then forgets the token. If Elise cannot
 // be reached the token is kept, so a copy of it is never left alive without a way to retry.
 pub async fn unpair() -> Result<RunnerStatus, RunnerError> {
     let Some(token) = token() else {
@@ -174,7 +174,7 @@ pub async fn unpair() -> Result<RunnerStatus, RunnerError> {
         .send()
         .await
         .map_err(|_| RunnerError::Unreachable)?;
-    // 401 means EliseLAB already dropped it, which is what we wanted.
+    // 401 means Elise already dropped it, which is what we wanted.
     match response.status() {
         StatusCode::OK | StatusCode::UNAUTHORIZED => {
             forget_token();

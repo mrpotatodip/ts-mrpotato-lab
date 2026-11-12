@@ -41,15 +41,15 @@ pub fn run() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![runner_status, pair_runner, unpair_runner, runner_activity])
         .setup(|app| {
-            // The work loop asks EliseLAB for scans for as long as the app runs.
+            // The work loop asks Elise for scans for as long as the app runs.
             tauri::async_runtime::spawn(jobs::work_loop(app.handle().clone()));
-            let open =MenuItem::with_id(app, "open", "Open EliseLAB Runner", true, None::<&str>)?;
+            let open =MenuItem::with_id(app, "open", "Open Elise Runner", true, None::<&str>)?;
             let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&open, &quit])?;
 
             let mut tray = TrayIconBuilder::new()
                 .menu(&menu)
-                .tooltip("EliseLAB Runner")
+                .tooltip("Elise Runner")
                 .on_menu_event(|app, event| match event.id.as_ref() {
                     "open" => show_main_window(app),
                     "quit" => app.exit(0),
@@ -69,5 +69,5 @@ pub fn run() {
             }
         })
         .run(tauri::generate_context!())
-        .expect("failed to run the EliseLAB Runner");
+        .expect("failed to run the Elise Runner");
 }

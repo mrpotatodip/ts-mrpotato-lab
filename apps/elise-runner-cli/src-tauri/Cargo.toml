@@ -1,7 +1,7 @@
 [package]
 name = "elise-runner"
 version = "0.1.0"
-description = "EliseLAB Runner: runs Scans on this computer"
+description = "Elise Runner: runs Scans on this computer"
 edition = "2021"
 
 [lib]

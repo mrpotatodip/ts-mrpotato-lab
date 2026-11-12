@@ -1,7 +1,7 @@
 type Child = Node | string;
 
 // Builds an element. A string child becomes a text node, never HTML, so a name that came
-// from EliseLAB cannot inject markup into the window.
+// from Elise cannot inject markup into the window.
 export const h = <K extends keyof HTMLElementTagNameMap>(tag: K, attributes: Record<string, string> = {}, ...children: Child[]): HTMLElementTagNameMap[K] => {
   const element = document.createElement(tag);
   for (const [name, value] of Object.entries(attributes)) element.setAttribute(name, value);
@@ -9,7 +9,7 @@ export const h = <K extends keyof HTMLElementTagNameMap>(tag: K, attributes: Rec
   return element;
 };
 
-// The EliseLAB mark (the same as the dashboard's ShellLogo). The markup is fixed text with
+// The Elise mark (the same as the dashboard's ShellLogo). The markup is fixed text with
 // no data in it, so it is safe to set as HTML.
 export const logo = (): HTMLElement => {
   const mark = h("span", { class: "brand-mark", "aria-hidden": "true" });

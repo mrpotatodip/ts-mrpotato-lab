@@ -1,4 +1,4 @@
-// Running a scan on this computer. A loop asks EliseLAB for work every few seconds. When a
+// Running a scan on this computer. A loop asks Elise for work every few seconds. When a
 // scan was started on this runner, it clones the repository, runs `claude` with the
 // person's own login (their Claude subscription), and sends back what the agent wrote.
 
@@ -195,8 +195,8 @@ async fn handle(app: &AppHandle, token: &str, job: Job) {
         ok: ok && sent,
         repo: label,
         message: match (ok, sent) {
-            (_, false) => "The result could not be sent to EliseLAB.".to_string(),
-            (true, true) => "The report was sent to EliseLAB.".to_string(),
+            (_, false) => "The result could not be sent to Elise.".to_string(),
+            (true, true) => "The report was sent to Elise.".to_string(),
             (false, true) => message,
         },
     });

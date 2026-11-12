@@ -54,7 +54,7 @@ async function refresh(): Promise<void> {
 }
 
 // -----
-// Coming back to the window asks EliseLAB again, so a runner that was removed meanwhile
+// Coming back to the window asks Elise again, so a runner that was removed meanwhile
 // shows as removed, and a lost connection shows as back. The window is drawn again only when
 // the answer changed, so it does not flash and an open "Disconnect" question stays open.
 // A form being typed in is left alone.

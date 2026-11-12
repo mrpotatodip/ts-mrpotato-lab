@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "EliseLAB Runner",
+  "productName": "Elise Runner",
   "version": "0.1.0",
   "identifier": "com.eliselab.runner",
   "build": {
@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "EliseLAB Runner",
+        "title": "Elise Runner",
         "width": 460,
         "height": 740,
         "resizable": false
