@@ -8,9 +8,13 @@ Run from the main checkout, never from inside the worktree. The PR is the one fo
 
 ## 1. Merge
 
-`gh pr checks <n> --watch`, then `gh pr merge <n> --squash --delete-branch`. This repo allows squash merges only and has auto-merge off, so the skill waits for the required check itself. `--delete-branch` removes the remote branch after the merge, and its failure to delete the local branch is expected while the worktree holds it.
+A PR already `MERGED` skips to step 2: `gh pr view <n> --json state -q .state`.
 
-Done when `gh pr view <n> --json state -q .state` prints `MERGED`. If a check fails, or the PR is still `OPEN` after the watch, report which check and stop: steps 2 to 4 wait for the merge.
+Queue the merge: `gh pr merge <n> --squash --delete-branch --auto`. GitHub then merges when the required check passes, even if this session ends. This repo allows squash merges only. When the repo has auto-merge off, the command prints `Auto merge is not allowed for this repository`; the skill then runs `gh pr checks <n> --watch`, followed by `gh pr merge <n> --squash --delete-branch`, and waits for the check itself. `--delete-branch` removes the remote branch after the merge, and its failure to delete the local branch is expected while the worktree holds it.
+
+With auto-merge queued, `gh pr checks <n> --watch` waits for the check, then poll `gh pr view <n> --json state -q .state` until it prints `MERGED`.
+
+Done when it prints `MERGED`. If a check fails, or the PR is still `OPEN` after the watch, report which check and stop: steps 2 to 4 wait for the merge, and a later `/pr-clean` run resumes here.
 
 ## 2. Remove the worktree
 
