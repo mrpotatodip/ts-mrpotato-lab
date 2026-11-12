@@ -2,7 +2,7 @@ import { and, asc, desc, eq, inArray, isNull, or, sql, type SQL } from "drizzle-
 import { Effect } from "effect";
 import type { Finding, FindingsQuery, FindingTriage, FindingTriageBody } from "@repo/contracts/elise";
 import { partyPersons, scanFindings, scanFindingTriage, scanRepos, scans, type TFindingTriage } from "@repo/db-elise/schema";
-import type { DbConnectType, PoolDbType, TenantDbType } from "#/lib/db-connection";
+import type { AppDbType, DbConnectType, PoolDbType } from "#/lib/db-connection";
 import { Forbidden, Invalid, toDbError, type DbError } from "#/lib/effect-query";
 import { actorPartyOf, insertAuditEntry } from "#/modules/audit-trail";
 import { canonicalRepo } from "#/modules/scan-ledger";
@@ -40,7 +40,7 @@ const triageFilter = (triage: FindingsQuery["triage"]): SQL | undefined => {
   return eq(scanFindingTriage.status, triage);
 };
 
-export const listFindingsEffect = (db: DbConnectType | TenantDbType, tenantId: string, query: FindingsQuery): Effect.Effect<Finding[], DbError> =>
+export const listFindingsEffect = (db: AppDbType, tenantId: string, query: FindingsQuery): Effect.Effect<Finding[], DbError> =>
   Effect.tryPromise({
     try: async () => {
       const rows = await db

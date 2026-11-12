@@ -1,5 +1,7 @@
 import { createDb, createPoolDb, createTenantDb } from "@repo/db-elise/client";
+import type * as schema from "@repo/db-elise/schema";
 import { sql } from "drizzle-orm";
+import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
 
 export type DbConnectType = ReturnType<typeof createDb>;
 export type PoolDbType = ReturnType<typeof createPoolDb>["db"];
@@ -18,6 +20,13 @@ export const poolConnect = (url: string) => createPoolDb(url);
 // account's rows.
 // -----
 export type TenantDbType = Parameters<Parameters<ReturnType<typeof createTenantDb>["db"]["transaction"]>[0]>[0];
+
+// -----
+// What a service needs of a database: queries, no transaction.
+// The HTTP client and a withTenant transaction both satisfy it,
+// so a service takes this one type and a route can pass either.
+// -----
+export type AppDbType = Pick<PgDatabase<PgQueryResultHKT, typeof schema>, "select" | "insert" | "update" | "delete">;
 
 // -----
 // Runs a job as one account on the elise_app role over

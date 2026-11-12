@@ -1,40 +1,19 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { scanFindings, scans } from "@repo/db-elise/schema";
-import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { buildApp } from "#/index";
-import { fakeBindings, TEST_TOKEN, testExecutionContext } from "#/__tests__/fake-bindings";
-import { memoryScanRepo } from "#/__tests__/memory-scan-repo";
-import { noGithubAccess } from "#/__tests__/no-github-access";
 import { OWNER_CONNECTION_USES } from "#/__tests__/owner-connection-uses";
 import { openTestDb, scanValues, seedRepo, seedTenant, type TestDb } from "#/__tests__/test-db";
 import { CROSS_ACCOUNT_CASES, NOT_TENANT_ROUTES, type CrossAccountCase } from "#/__tests__/tenant-route-cases";
+import { callAs, tenantRouteApp } from "#/__tests__/tenant-route-harness";
 
 const EnvelopeSchema = z.object({ data: z.record(z.string(), z.unknown()).nullable() });
 
 let test: TestDb;
 let tenantId: string;
 
-const app = buildApp({
-  scanRepo: () => memoryScanRepo().repo,
-  githubAccess: noGithubAccess,
-  monthSpend: async () => ({ spentUsd: 0, scans: 0, tokens: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }, budgetOverrideUsd: null, budgetAllowanceUsd: null, platformSpentUsd: 0, platformReservedUsd: 0, ownKey: false, plan: null }),
-  holdCredit: async () => ({ held: true, balanceUsd: 0 }),
-  releaseCredit: async () => ({ settled: true, chargeUsd: 0 }),
-  sessionUserId: async () => undefined,
-  userHasAccount: async () => true,
-  userHasPower: async () => true,
-  enqueueInviteEmail: async () => undefined,
-  withTenant: (_c, accountId, run) =>
-    test.raw.transaction(async (tx) => {
-      await tx.execute(sql`set local role elise_app`);
-      await tx.execute(sql`select set_config('app.tenant_id', ${accountId}, true)`);
-      // SAFETY: the pglite transaction answers the same calls as the pg transaction the route's real wrapper passes.
-      return run(tx as never);
-    }),
-}).app;
+const app = tenantRouteApp(() => test);
 
 const mountedRoutes = [...new Set(app.routes.filter((route) => route.method !== "ALL").map((route) => `${route.method} ${route.path}`))];
 const tenantRoutes = mountedRoutes.filter((route) => !NOT_TENANT_ROUTES.includes(route));
@@ -79,8 +58,7 @@ describe("every tenant route has a cross-account case", () => {
   });
 
   it.each(runCases)("$route answers one Account with nothing of another's", async ({ path, expect: outcome }) => {
-    const { env } = fakeBindings();
-    const res = await app.fetch(new Request(`http://localhost${path}`, { headers: { authorization: `Bearer ${TEST_TOKEN}`, "x-account-id": tenantId } }), env, testExecutionContext);
+    const res = await callAs(app, tenantId, path);
     const { data } = EnvelopeSchema.parse(await res.json());
     const lists = Object.values(data ?? {}).filter(Array.isArray);
     expect(outcome === "not-found" ? [res.status, 0] : [res.status, lists.flat().length]).toEqual(outcome === "not-found" ? [404, 0] : [200, 0]);
