@@ -4,6 +4,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { bearer } from "better-auth/plugins";
 import { authAccount, authSession, authUser, authVerification } from "@repo/db-elise/schema";
 import { poolConnect, type PoolDbType } from "#/lib/db-connection";
+import type { PasswordResetEmail } from "#/modules/auth/types";
 import type { AppEnv } from "#/types/variables";
 
 // -----
@@ -23,8 +24,6 @@ export const AUTH_DISABLED_PATHS = [
   "/refresh-token",
   "/send-verification-email",
   "/verify-email",
-  "/request-password-reset",
-  "/reset-password",
   "/change-email",
   "/update-user",
   "/delete-user",
@@ -36,8 +35,12 @@ export type AuthConfig = {
   secret: string;
   baseUrl: string;
   trustedOrigins: string[];
+  dashboardUrl: string;
+  sendPasswordReset: (mail: PasswordResetEmail) => Promise<void>;
   waitUntil?: (promise: Promise<unknown>) => void;
 };
+
+const RESET_TOKEN_SECONDS = 3600;
 
 // -----
 // Takes plain values, not a Context, so a test
@@ -50,7 +53,25 @@ export const buildAuth = (config: AuthConfig) =>
       usePlural: false,
       schema: { user: authUser, session: authSession, account: authAccount, verification: authVerification },
     }),
-    emailAndPassword: { enabled: true, disableSignUp: true, requireEmailVerification: false },
+    // -----
+    // The reset link opens the dashboard's page, which
+    // posts the token back to /auth/reset-password. A
+    // reset signs the account out everywhere.
+    // -----
+    emailAndPassword: {
+      enabled: true,
+      disableSignUp: true,
+      requireEmailVerification: false,
+      resetPasswordTokenExpiresIn: RESET_TOKEN_SECONDS,
+      revokeSessionsOnPasswordReset: true,
+      sendResetPassword: ({ user, token }) =>
+        config.sendPasswordReset({
+          kind: "password-reset",
+          to: user.email,
+          link: `${config.dashboardUrl}/reset-password?token=${encodeURIComponent(token)}`,
+          expiresAt: new Date(Date.now() + RESET_TOKEN_SECONDS * 1000).toISOString(),
+        }),
+    },
     disabledPaths: AUTH_DISABLED_PATHS,
     secret: config.secret,
     // -----
@@ -80,6 +101,8 @@ export const createAuth = (c: Context<AppEnv>) => {
     secret: c.env.AUTH_SECRET,
     baseUrl: c.env.AUTH_BASE_URL,
     trustedOrigins: c.env.AUTH_TRUSTED_ORIGINS.split(","),
+    dashboardUrl: c.env.DASHBOARD_URL,
+    sendPasswordReset: (mail) => c.get("deps").enqueuePasswordResetEmail(c.env, mail),
     waitUntil: (promise) => c.executionCtx.waitUntil(promise),
   });
   return { auth, close: () => c.executionCtx.waitUntil(close()) };

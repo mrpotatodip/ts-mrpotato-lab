@@ -24,6 +24,7 @@ const app = buildApp({
   userHasAccount: async () => userHoldsRole,
   userHasPower: async (_c, _userId, _accountId, power) => userHoldsRole && (!userIsWatcher || power === "company:summary:read"),
   enqueueInviteEmail: async () => undefined,
+  enqueuePasswordResetEmail: async () => undefined,
   withTenant: noTenantDb,
 }).app;
 

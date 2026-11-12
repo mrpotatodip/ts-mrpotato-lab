@@ -13,6 +13,8 @@ import { fieldAria, fieldMessage, focusFirstInvalidField } from "#/lib/form-fiel
 import { signIn, signUp } from "../api";
 import { AUTH_COPY } from "../constants";
 import { AuthBrandPanel } from "./auth-brand-panel";
+import { ForgotPasswordFields } from "./forgot-password-fields";
+import { ResetPasswordFields } from "./reset-password-fields";
 import { authKeys } from "../hooks";
 import { SignInSchema, SignUpInputSchema } from "../schemas";
 
@@ -75,7 +77,9 @@ function SignInFields() {
       <Button type="submit" size="lg" className="mt-1 w-full" disabled={signInMutation.isPending}>
         {signInMutation.isPending ? "Please wait…" : AUTH_COPY.signin.submit}
       </Button>
-      <p className="text-sm leading-relaxed text-muted-foreground">{AUTH_COPY.signin.forgot}</p>
+      <Link to={AUTH_COPY.signin.forgotTo} className="justify-self-start rounded-sm text-sm text-muted-foreground underline underline-offset-4 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+        {AUTH_COPY.signin.forgot}
+      </Link>
     </form>
   );
 }
@@ -175,7 +179,19 @@ function SignUpFields() {
   );
 }
 
-export function AuthForm({ mode }: { mode: "signin" | "signup" }) {
+type AuthMode = "signin" | "signup" | "forgot" | "reset";
+
+function AuthFields({ mode, token }: { mode: AuthMode; token: string | undefined }) {
+  if (mode === "signup") return <SignUpFields />;
+  if (mode === "forgot") return <ForgotPasswordFields />;
+  if (mode === "reset") return <ResetPasswordFields token={token} />;
+  return <SignInFields />;
+}
+
+// -----
+// `token` is only read by the reset page: the one from the emailed link.
+// -----
+export function AuthForm({ mode, token }: { mode: AuthMode; token?: string }) {
   const copy = AUTH_COPY[mode];
 
   return (
@@ -191,7 +207,9 @@ export function AuthForm({ mode }: { mode: "signin" | "signup" }) {
             <h1 className="text-xl font-semibold leading-none tracking-tight">{copy.title}</h1>
             <p className="text-sm text-muted-foreground">{copy.hint}</p>
           </CardHeader>
-          <CardContent className="p-8">{mode === "signup" ? <SignUpFields /> : <SignInFields />}</CardContent>
+          <CardContent className="p-8">
+            <AuthFields mode={mode} token={token} />
+          </CardContent>
         </Card>
         <Link to={copy.to} className="inline-flex min-h-6 items-center justify-self-center rounded-sm text-sm text-muted-foreground underline underline-offset-4 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
           {copy.swap}
