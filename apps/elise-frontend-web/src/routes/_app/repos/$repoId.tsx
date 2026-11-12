@@ -25,7 +25,7 @@ export const Route = createFileRoute("/_app/repos/$repoId")({
     if (target) throw redirect({ to: "/repos/$repoId/branches/$branchId", params: { repoId: params.repoId, branchId: target.id }, replace: true });
     return { name: repoName(repo.url) };
   },
-  head: ({ loaderData }) => ({ meta: [{ title: `${loaderData?.name ?? "Repository"} · EliseLAB` }] }),
+  head: ({ loaderData }) => ({ meta: [{ title: `${loaderData?.name ?? "Repository"} · Elise` }] }),
   component: RepoPage,
 });
 

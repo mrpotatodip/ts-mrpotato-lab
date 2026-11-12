@@ -4,7 +4,7 @@ import { ShellPageHeader } from "#/modules/shell";
 import { ScanList, ScanListSkeleton, scansQuery } from "#/modules/scan";
 
 export const Route = createFileRoute("/_app/scans/")({
-  head: () => ({ meta: [{ title: "Scans · EliseLAB" }] }),
+  head: () => ({ meta: [{ title: "Scans · Elise" }] }),
   loader: ({ context }) => context.queryClient.query({ ...scansQuery(), staleTime: "static" }),
   component: ScansPage,
 });

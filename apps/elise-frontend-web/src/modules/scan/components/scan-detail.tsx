@@ -149,7 +149,7 @@ export function ScanDetail({ scanId, Decision }: ScanDetailProps) {
               <CardHeader className="gap-1.5">
                 <CardTitle>No history to compare with</CardTitle>
                 <p className="max-w-copy text-sm leading-relaxed text-muted-foreground">
-                  {scan.untrackedReason ? `This scan has no History: ${scan.untrackedReason}` : scan.ref ? `EliseLAB does not track ${scan.ref}, so this scan has no earlier scans to compare with.` : "This scan has no earlier scans to compare with."}
+                  {scan.untrackedReason ? `This scan has no History: ${scan.untrackedReason}` : scan.ref ? `Elise does not track ${scan.ref}, so this scan has no earlier scans to compare with.` : "This scan has no earlier scans to compare with."}
                 </p>
               </CardHeader>
             </Card>

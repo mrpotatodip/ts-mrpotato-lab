@@ -42,6 +42,31 @@ pub enum RunnerError {
     InvalidCode,
     Unreachable,
     KeychainFailed,
+    // Accepting a pairing that is not waiting: the app was restarted, or it was answered twice.
+    PairingLost,
+}
+
+// What the page is asked to confirm: the account that made the code and the name it gave this
+// runner. The token stays in Rust.
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PairingOffer {
+    pub name: String,
+    pub account_name: String,
+}
+
+// A token Elise has issued that the person has not accepted yet. It lives in memory only:
+// it is not in the keychain, so the work loop cannot use it, and quitting the app loses it.
+struct Pending {
+    token: String,
+    name: String,
+    account_name: String,
+}
+
+static PENDING: Mutex<Option<Pending>> = Mutex::new(None);
+
+fn take_pending() -> Option<Pending> {
+    PENDING.lock().expect("the pending pairing is not poisoned").take()
 }
 
 // The API wraps every answer as { data, error }.
@@ -133,8 +158,10 @@ pub async fn status() -> RunnerStatus {
     }
 }
 
-// Trades a pairing code for a token and keeps the token in the keychain.
-pub async fn pair(code: &str) -> Result<RunnerStatus, RunnerError> {
+// Trades a pairing code for a token and holds it until the person accepts the account it
+// belongs to (`accept_pairing`). A code can be handed to someone by a stranger, so the token is
+// not kept, and no scan can run, before the person has seen whose account this computer joins.
+pub async fn pair(code: &str) -> Result<PairingOffer, RunnerError> {
     let response = client()
         .post(format!("{}/runners/enroll", engine_url()))
         .json(&EnrollBody { code })
@@ -152,14 +179,53 @@ pub async fn pair(code: &str) -> Result<RunnerStatus, RunnerError> {
         .await
         .map_err(|_| RunnerError::Unreachable)?
         .data;
-    keychain_entry()
-        .and_then(|entry| entry.set_password(&enrolled.token))
-        .map_err(|_| RunnerError::KeychainFailed)?;
-    remember_token(&enrolled.token);
-    Ok(RunnerStatus::Connected {
+    let offer = PairingOffer {
+        name: enrolled.name.clone(),
+        account_name: enrolled.account_name.clone(),
+    };
+    // A second code entered before the first was answered replaces it; the first is revoked.
+    let earlier = PENDING.lock().expect("the pending pairing is not poisoned").replace(Pending {
+        token: enrolled.token,
         name: enrolled.name,
         account_name: enrolled.account_name,
+    });
+    if let Some(earlier) = earlier {
+        revoke(&earlier.token).await;
+    }
+    Ok(offer)
+}
+
+// Tells Elise to stop trusting a token. True when it did, or already had.
+async fn revoke(token: &str) -> bool {
+    match client().delete(format!("{}/runners/me", engine_url())).bearer_auth(token).send().await {
+        Ok(response) => response.status().is_success() || response.status() == StatusCode::UNAUTHORIZED,
+        Err(_) => false,
+    }
+}
+
+// The person accepted the account: the token goes to the keychain and the work loop may use it.
+pub async fn accept_pairing() -> Result<RunnerStatus, RunnerError> {
+    let pending = take_pending().ok_or(RunnerError::PairingLost)?;
+    let saved = keychain_entry().and_then(|entry| entry.set_password(&pending.token));
+    if saved.is_err() {
+        revoke(&pending.token).await;
+        return Err(RunnerError::KeychainFailed);
+    }
+    remember_token(&pending.token);
+    Ok(RunnerStatus::Connected {
+        name: pending.name,
+        account_name: pending.account_name,
     })
+}
+
+// The person refused. Elise is told to drop the token; if it cannot be reached the token
+// is dropped here anyway, and a token nobody holds works for nobody. The runner then shows in
+// the account's list until an admin removes it.
+pub async fn decline_pairing() -> Result<RunnerStatus, RunnerError> {
+    if let Some(pending) = take_pending() {
+        revoke(&pending.token).await;
+    }
+    Ok(RunnerStatus::Unpaired)
 }
 
 // Tells Elise to stop trusting this runner, then forgets the token. If Elise cannot

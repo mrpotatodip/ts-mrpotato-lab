@@ -8,11 +8,16 @@ export type RunnerStatus =
   | { state: "offline" }
   | { state: "connected"; name: string; accountName: string };
 
-export type RunnerErrorCode = "invalid_code" | "unreachable" | "keychain_failed";
+export type RunnerErrorCode = "invalid_code" | "unreachable" | "keychain_failed" | "pairing_lost";
 
 export type RunnerResult = { ok: true; status: RunnerStatus } | { ok: false; code: RunnerErrorCode };
 
-const ERROR_CODES: readonly RunnerErrorCode[] = ["invalid_code", "unreachable", "keychain_failed"];
+// A code that worked, before the person has accepted the account it belongs to.
+export type PairingOffer = { name: string; accountName: string };
+
+export type OfferResult = { ok: true; offer: PairingOffer } | { ok: false; code: RunnerErrorCode };
+
+const ERROR_CODES: readonly RunnerErrorCode[] = ["invalid_code", "unreachable", "keychain_failed", "pairing_lost"];
 
 const codeOf = (error: unknown): RunnerErrorCode => {
   const code = typeof error === "object" && error !== null && "code" in error ? error.code : undefined;
@@ -32,6 +37,14 @@ export const runnerActivity = (): Promise<RunnerActivity> => invoke<RunnerActivi
 
 export const runnerStatus = (): Promise<RunnerStatus> => invoke<RunnerStatus>("runner_status");
 
-export const pairRunner = (code: string): Promise<RunnerResult> => settle(invoke<RunnerStatus>("pair_runner", { code }));
+export const pairRunner = (code: string): Promise<OfferResult> =>
+  invoke<PairingOffer>("pair_runner", { code }).then(
+    (offer): OfferResult => ({ ok: true, offer }),
+    (error: unknown): OfferResult => ({ ok: false, code: codeOf(error) }),
+  );
+
+export const acceptPairing = (): Promise<RunnerResult> => settle(invoke<RunnerStatus>("accept_pairing"));
+
+export const declinePairing = (): Promise<RunnerResult> => settle(invoke<RunnerStatus>("decline_pairing"));
 
 export const unpairRunner = (): Promise<RunnerResult> => settle(invoke<RunnerStatus>("unpair_runner"));

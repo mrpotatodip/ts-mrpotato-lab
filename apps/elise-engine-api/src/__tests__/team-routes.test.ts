@@ -4,6 +4,7 @@ import type { Bindings } from "#/types/variables";
 import { fakeBindings, TEST_TOKEN, testExecutionContext } from "./fake-bindings";
 import { memoryScanRepo } from "./memory-scan-repo";
 import { noGithubAccess } from "./no-github-access";
+import { noTenantDb } from "./no-tenant-db";
 
 let signedInUser: string | undefined;
 let managesAccount = false;
@@ -18,6 +19,7 @@ const app = buildApp({
   userHasAccount: async () => true,
   userHasPower: async () => managesAccount,
   enqueueInviteEmail: async () => undefined,
+  withTenant: noTenantDb,
 }).app;
 
 const ACCOUNT = "0b8c1d2e-3f4a-4b5c-8d6e-7f8091a2b3c4";

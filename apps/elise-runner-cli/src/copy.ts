@@ -9,6 +9,21 @@ export const COPY = {
     unpaired: "Not paired",
     connected: "Connected",
     offline: "Can't reach Elise",
+    confirming: "Waiting for you",
+  },
+  accept: {
+    title: (accountName: string) => `Connect this computer to ${accountName}?`,
+    description: "The code worked. Nothing is connected until you say so.",
+    cardTitle: "Check the account",
+    cardHint: "Only connect if you, or someone you trust at this account, made the code.",
+    account: "Account",
+    runner: "Runner name",
+    warning: (accountName: string) =>
+      `Once connected, people in ${accountName} can start scans that run on this computer. A scan uses your Claude sign-in and reads the repository it was started for. If you were sent this code by someone you don't know, cancel.`,
+    connect: (accountName: string) => `Connect to ${accountName}`,
+    cancel: "Cancel",
+    busy: "Connecting…",
+    canceling: "Canceling…",
   },
   pair: {
     title: "Connect this computer",
@@ -53,6 +68,7 @@ export const COPY = {
     invalid_code: "That code didn't work. Check it, or make a new one in Elise: a code works once and expires after 10 minutes.",
     unreachable: "Couldn't reach Elise. Check your internet connection and try again.",
     keychain_failed: "The code worked, but this computer would not save the connection. Make a new code in Elise and try again.",
+    pairing_lost: "That pairing is no longer waiting. Make a new code in Elise and try again.",
   } satisfies Record<RunnerErrorCode | "empty", string>,
   disconnectErrors: {
     unreachable: "Couldn't reach Elise to disconnect. Check your internet connection and try again.",

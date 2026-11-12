@@ -4,7 +4,7 @@ import { creditEntriesQuery, planQuery } from "#/modules/plan";
 import { SettingsPlanPage } from "#/modules/settings";
 
 export const Route = createFileRoute("/_app/settings/plan")({
-  head: () => ({ meta: [{ title: "Plan · Settings · EliseLAB" }] }),
+  head: () => ({ meta: [{ title: "Plan · Settings · Elise" }] }),
   beforeLoad: ({ context }) => {
     if (!hasAccessPower(context.user?.powers ?? [], "company:plan:read")) throw redirect({ to: "/settings/budget" });
   },

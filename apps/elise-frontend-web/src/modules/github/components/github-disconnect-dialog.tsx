@@ -7,7 +7,7 @@ import type { GithubInstallation } from "../schemas";
 type GithubDisconnectDialogProps = { install: GithubInstallation };
 
 // -----
-// EliseLAB stops using the install, and past scans and reports stay. It
+// Elise stops using the install, and past scans and reports stay. It
 // cannot take access away on GitHub, so the dialog says where that is
 // done. Connecting the same install again undoes this.
 // -----
@@ -22,7 +22,7 @@ export function GithubDisconnectDialog({ install }: GithubDisconnectDialogProps)
         <DialogHeader>
           <DialogTitle>Disconnect {install.accountLogin}?</DialogTitle>
           <DialogDescription>
-            EliseLAB stops reading repositories through this connection, and no new scan uses it. Past scans and reports stay. This does not remove EliseLAB from GitHub: remove it in your GitHub settings too.
+            Elise stops reading repositories through this connection, and no new scan uses it. Past scans and reports stay. This does not remove Elise from GitHub: remove it in your GitHub settings too.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
