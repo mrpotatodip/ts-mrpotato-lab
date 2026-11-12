@@ -1,5 +1,6 @@
 import { Effect } from "effect";
 import { Invalid, RateLimited, toExternalError, type Conflict, type DbError, type ExternalError } from "#/lib/effect-query";
+import { scanPathOf, workflowOf } from "#/lib/scan-path";
 import { ScanOptionsSchema, type ScanParams } from "#/schemas";
 import { normalizeBranchName } from "#/modules/branches";
 import { RUNNER_JOB_NOT_CONNECTED, RUNNER_JOB_PRIVATE, RUNNER_MAX_BUDGET_USD } from "#/modules/runners/constants";
@@ -162,7 +163,12 @@ export const createScanSvc = (
     // A scan whose workflow never starts is never settled by one, so
     // its hold is given back here.
     // -----
-    yield* Effect.tryPromise({ try: () => env.SCAN_WORKFLOW.create({ id: params.scanId, params }), catch: toExternalError }).pipe(
+    // -----
+    // The Skill picks the path: a full Scan starts on the full Workflow,
+    // a lite Scan on the original one.
+    // -----
+    const workflow = workflowOf(env, scanPathOf(options.skill));
+    yield* Effect.tryPromise({ try: () => workflow.create({ id: params.scanId, params }), catch: toExternalError }).pipe(
       Effect.tapError((error) =>
         Effect.all(
           [

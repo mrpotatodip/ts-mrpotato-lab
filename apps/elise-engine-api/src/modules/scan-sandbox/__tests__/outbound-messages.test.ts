@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import type { ScanPath } from "#/lib/scan-path";
 import { Outbound } from "#/modules/scan-sandbox";
 import type { Meter, MeteredTokens } from "#/modules/scan-sandbox/types";
 import { messagesBlockedReason, priceUsage, safeBetaHeader, withReserve, withoutReserve, type MessagesBody } from "#/modules/scan-sandbox/utils";
@@ -75,11 +76,15 @@ const meterSandbox = (budgetUsd: number) => {
   };
 };
 
-const messages = (payload: MessagesBody, beta?: string, sandbox: FakeSandbox = openSandbox, pending: Promise<unknown>[] = []) => {
-  const env = { ANTHROPIC_API_KEY: "platform-key", SANDBOX: { idFromString: () => "id", get: () => sandbox } };
+const messages = (payload: MessagesBody, beta?: string, sandbox: FakeSandbox = openSandbox, pending: Promise<unknown>[] = [], path?: ScanPath) => {
+  const env = {
+    ANTHROPIC_API_KEY: "platform-key",
+    SANDBOX: { idFromString: () => "id", get: () => sandbox },
+    SANDBOX_FULL: { idFromString: () => "full-id", get: () => openSandbox },
+  };
   // SAFETY: the test stub of WorkerEntrypoint takes no arguments; env and ctx are set by hand.
   const instance = Reflect.construct(Outbound, []) as Outbound;
-  Object.assign(instance, { env, ctx: { props: { sandboxId: "box", repo: "octo/hello" }, waitUntil: (work: Promise<unknown>) => pending.push(work) } });
+  Object.assign(instance, { env, ctx: { props: { sandboxId: "box", repo: "octo/hello", path }, waitUntil: (work: Promise<unknown>) => pending.push(work) } });
   const headers = new Headers({ "content-type": "application/json", "x-api-key": "placeholder" });
   if (beta !== undefined) headers.set("anthropic-beta", beta);
   return instance.fetch(new Request("https://api.anthropic.com/v1/messages", { method: "POST", headers, body: JSON.stringify(payload) }));
@@ -101,6 +106,22 @@ describe("Outbound, a model call", () => {
     expect(response.status).toBe(200);
     expect(sent[0]?.headers.get("x-api-key")).toBe("platform-key");
     expect(sent[0]?.headers.get("anthropic-beta")).toBe("claude-code-20250219");
+  });
+
+  // -----
+  // The meter lives in the Sandbox of the path the Scan runs on. The lite
+  // namespace here refuses every call and the full one allows it, so a 200
+  // shows which namespace Outbound asked. A Scan with no path is lite.
+  // -----
+  it.each([
+    ["a full Scan", "full" as const, 200],
+    ["a lite Scan", "lite" as const, 403],
+    ["a Scan that started before there were two paths", undefined, 403],
+  ])("asks the Sandbox namespace of its path: %s", async (_label, path, status) => {
+    stubAnthropic();
+    const refusing: FakeSandbox = { ...openSandbox, meterReserve: async () => false };
+    const response = await messages({ model: "claude-haiku-5-5", messages: [] }, undefined, refusing, [], path);
+    expect(response.status).toBe(status);
   });
 });
 

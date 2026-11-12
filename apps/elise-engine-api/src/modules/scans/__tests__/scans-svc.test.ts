@@ -34,6 +34,16 @@ describe("createScanSvc", () => {
     expect(created).toHaveLength(1);
   });
 
+  it.each([
+    ["lite", { lite: 1, full: 0 }],
+    ["full", { lite: 0, full: 1 }],
+  ] as const)("starts a %s scan on the workflow of its path and no other", async (skill, expected) => {
+    const { env, created, createdFull } = fakeBindings();
+    await Effect.runPromise(createScanSvc(env, repo, "acme", { ...input, skill }, NO_SPEND));
+
+    expect({ lite: created.length, full: createdFull.length }).toEqual(expected);
+  });
+
   it("records the scan in the ledger before the workflow starts", async () => {
     const { env } = fakeBindings();
     const queued = await Effect.runPromise(createScanSvc(env, repo, "acme", input, NO_SPEND));
@@ -409,6 +419,23 @@ describe("detailScanSvc", () => {
     const status = await Effect.runPromise(detailScanSvc(env, repo, "acme", queued.scanId));
 
     expect(status.status).toBe("queued");
+  });
+
+  // -----
+  // A full scan that started before the two paths existed is on the
+  // original workflow. The full one does not know it, so asking there
+  // fails and the original is asked next.
+  // -----
+  it("finds a full scan that started on the original workflow", async () => {
+    // SAFETY: the service calls only create and get on the workflow.
+    const { env } = fakeBindings({
+      SCAN_WORKFLOW: { create: async () => undefined, get: async () => ({ status: async () => ({ status: "errored", error: { name: "Error", message: "boom" } }) }) } as never,
+      SCAN_WORKFLOW_FULL: { create: async () => undefined, get: down } as never,
+    });
+    const queued = await Effect.runPromise(createScanSvc(env, repo, "acme", { ...input, skill: "full" }, NO_SPEND));
+    const status = await Effect.runPromise(detailScanSvc(env, repo, "acme", queued.scanId));
+
+    expect(status).toMatchObject({ status: "failed", error: "boom" });
   });
 
   it("lists the files a scan saved, with their sizes", async () => {
