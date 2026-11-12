@@ -34,6 +34,50 @@ const FILE_MAX: u64 = 1_900_000;
 // mode below, only inside the work folder. Edit this line to change what a scan may do.
 const ALLOWED_TOOLS: &str = "Bash(cd:*) Bash(pwd:*) Bash(mkdir:*) Bash(ls:*) Bash(git ls-files:*)";
 
+// The only settings the agent reads. The person's own Claude Code settings would add their allow
+// rules to the list above (a `curl` they allow for daily work would let a repository's README
+// send a file out), so a scan loads the project source only: the file this app writes into the
+// work folder, with the audit skill beside it. The person's login is not a setting and stays.
+// Their user, local and plugin settings and `~/.claude/skills` are not loaded.
+// This file grants nothing; it only denies: programs that start others or use the network, git
+// commands that reach a remote, web fetches, the places credentials live, and edits to itself.
+const AGENT_DENY_RULES: [&str; 33] = [
+    "Bash(curl:*)",
+    "Bash(wget:*)",
+    "Bash(nc:*)",
+    "Bash(ncat:*)",
+    "Bash(ssh:*)",
+    "Bash(scp:*)",
+    "Bash(sftp:*)",
+    "Bash(ftp:*)",
+    "Bash(telnet:*)",
+    "Bash(sh:*)",
+    "Bash(bash:*)",
+    "Bash(zsh:*)",
+    "Bash(env:*)",
+    "Bash(xargs:*)",
+    "Bash(python:*)",
+    "Bash(python3:*)",
+    "Bash(node:*)",
+    "Bash(npm:*)",
+    "Bash(npx:*)",
+    "Bash(pnpm:*)",
+    "Bash(git push:*)",
+    "Bash(git fetch:*)",
+    "Bash(git pull:*)",
+    "Bash(git remote:*)",
+    "WebFetch",
+    "WebSearch",
+    "Read(~/.ssh/**)",
+    "Read(~/.aws/**)",
+    "Read(~/.config/**)",
+    "Read(~/.claude/**)",
+    "Read(//etc/**)",
+    "Edit(.claude/**)",
+    "Write(.claude/**)",
+];
+const AGENT_SETTINGS_FILE: &str = ".claude/settings.json";
+
 // Ceiling on what one scan may spend, whatever the server asks for. It is the same safety net
 // the server sets for a Runner scan (RUNNER_MAX_BUDGET_USD in the engine).
 const BUDGET_CAP_USD: f64 = 50.0;
@@ -253,7 +297,8 @@ async fn execute(app: &AppHandle, job: &Job, work: &Path) -> Result<Report, Stri
     clone_repo(work, &job.repo, &git_ref).await?;
     strip_untrusted(&work.join("repo")).map_err(|e| format!("Could not clean the cloned repository: {e}"))?;
 
-    install_skill(app, skill_dir)?;
+    install_skill(app, skill_dir, work)?;
+    write_agent_settings(work)?;
     run_agent(work, job).await?;
     let report = collect(work)?;
     if job.skill == "full" {
@@ -312,20 +357,51 @@ async fn clone_repo(work: &Path, repo: &str, git_ref: &str) -> Result<(), String
 }
 
 // -----
-// The skill's own instructions run its validator at ~/.claude/skills/<name>, so the bundled
-// copy goes there, as in the container. A copy that is already there is replaced.
+// The bundled skill goes into the work folder's `.claude/skills`, where the project settings
+// source finds it by name. It is not copied into the person's `~/.claude/skills`: that folder is
+// theirs, and a scan does not load it. The skill's own `node ~/.claude/skills/...` validator
+// step has no copy to run here, and `node` is not allowed to the agent anyway; the app runs the
+// full audit's validators itself (`validate_full`). A copy that is already there is replaced.
 // -----
-fn install_skill(app: &AppHandle, skill_dir: &str) -> Result<(), String> {
+fn install_skill(app: &AppHandle, skill_dir: &str, work: &Path) -> Result<(), String> {
     let source = app
         .path()
         .resource_dir()
         .map_err(|e| format!("Could not find the audit skill inside the app: {e}"))?
         .join("skills")
         .join(skill_dir);
-    let home = std::env::var("HOME").map_err(|_| "Could not find your home folder.".to_string())?;
-    let target = PathBuf::from(home).join(".claude").join("skills").join(skill_dir);
+    let target = work.join(".claude").join("skills").join(skill_dir);
     let _ = fs::remove_dir_all(&target);
     copy_dir(&source, &target).map_err(|e| format!("Could not install the audit skill from {}: {e}", source.display()))
+}
+
+// -----
+// The settings file the agent loads in place of the person's own: deny rules only (see
+// AGENT_DENY_RULES). The rules hold no quote or backslash, so they are joined without escaping.
+// -----
+fn agent_settings_json() -> String {
+    let rules: Vec<String> = AGENT_DENY_RULES.iter().map(|rule| format!("\"{rule}\"")).collect();
+    format!("{{\"permissions\":{{\"deny\":[{}]}}}}\n", rules.join(","))
+}
+
+fn write_agent_settings(work: &Path) -> Result<(), String> {
+    let path = work.join(AGENT_SETTINGS_FILE);
+    fs::create_dir_all(path.parent().unwrap_or(work)).map_err(|e| format!("Could not make the agent's settings folder: {e}"))?;
+    fs::write(&path, agent_settings_json()).map_err(|e| format!("Could not write the agent's settings: {e}"))
+}
+
+// -----
+// Everything the agent is started with, apart from the prompt's place and the environment.
+// `--setting-sources project` reads only the work folder's `.claude`. Never `user` or `local`
+// (the person's rules), never `--bare` (it also drops the person's login).
+// -----
+fn agent_args(job: &Job) -> Vec<String> {
+    let mut args: Vec<String> = ["--print", "--output-format", "json", "--no-session-persistence", "--setting-sources", "project"].map(String::from).to_vec();
+    args.extend(["--model".to_string(), job.model.clone(), "--effort".to_string(), job.effort.clone()]);
+    args.extend(["--max-budget-usd".to_string(), budget_of(job.max_budget_usd).to_string()]);
+    args.extend(["--permission-mode", "acceptEdits", "--allowedTools", ALLOWED_TOOLS, "--"].map(String::from));
+    args.push(job.prompt.clone());
+    args
 }
 
 fn copy_dir(from: &Path, to: &Path) -> std::io::Result<()> {
@@ -445,12 +521,7 @@ async fn run_agent(work: &Path, job: &Job) -> Result<(), String> {
     let err = fs::File::create(work.join("agent.err")).map_err(|e| format!("Could not open the agent log: {e}"))?;
     let mut command = Command::new(&claude);
     command
-        .args(["--print", "--output-format", "json", "--no-session-persistence", "--setting-sources", "user"])
-        .args(["--model", &job.model, "--effort", &job.effort, "--max-budget-usd", &budget_of(job.max_budget_usd).to_string()])
-        .args(["--permission-mode", "acceptEdits"])
-        .args(["--allowedTools", ALLOWED_TOOLS])
-        .arg("--")
-        .arg(&job.prompt)
+        .args(agent_args(job))
         .current_dir(work)
         .env("PATH", path)
         // The person's own login does the work. A key in the environment would be used instead.
@@ -589,6 +660,75 @@ mod tests {
         for bare in ["Read ", "Glob ", "Grep "] {
             assert!(!format!("{ALLOWED_TOOLS} ").contains(bare), "{bare}must not be a bare rule");
         }
+    }
+
+    fn test_job() -> Job {
+        Job {
+            scan_id: "s1".into(),
+            repo: "https://github.com/octocat/Hello-World".into(),
+            git_ref: None,
+            skill: "lite".into(),
+            model: "claude-haiku-5-5".into(),
+            effort: "low".into(),
+            max_budget_usd: 1.0,
+            prompt: "Use the security-audit-lite skill".into(),
+            priors_json: String::new(),
+        }
+    }
+
+    // The person's own settings would add their allow rules to ALLOWED_TOOLS. What the agent is
+    // started with must load the project source only: never `user` or `local`, no `--settings`
+    // file of theirs, and not `--bare`, which would also drop their login.
+    #[test]
+    fn agent_loads_only_the_project_settings_source() {
+        let args = agent_args(&test_job());
+        let at = args.iter().position(|a| a == "--setting-sources").expect("--setting-sources must be passed");
+        assert_eq!(args[at + 1], "project");
+        assert_eq!(args.iter().filter(|a| *a == "--setting-sources").count(), 1);
+        for banned in ["--bare", "--settings", "--add-dir", "--plugin-dir", "--mcp-config", "--dangerously-skip-permissions"] {
+            assert!(!args.iter().any(|a| a == banned), "{banned} must not be passed");
+        }
+    }
+
+    #[test]
+    fn agent_grant_is_the_allowed_tools_list_and_nothing_else() {
+        let args = agent_args(&test_job());
+        let at = args.iter().position(|a| a == "--allowedTools").expect("--allowedTools must be passed");
+        assert_eq!(args[at + 1], ALLOWED_TOOLS);
+        assert_eq!(args.iter().filter(|a| *a == "--allowedTools" || *a == "--allowed-tools").count(), 1);
+        let mode = args.iter().position(|a| a == "--permission-mode").expect("--permission-mode must be passed");
+        assert_eq!(args[mode + 1], "acceptEdits");
+        // The prompt comes last, after `--`, so a prompt that starts with a dash is not a flag.
+        assert_eq!(&args[args.len() - 2..], ["--".to_string(), test_job().prompt]);
+    }
+
+    // The settings file only denies. A grant in it would be a second list to keep in step with
+    // ALLOWED_TOOLS, and it must stop a rule the person has on `curl` from mattering.
+    #[test]
+    fn agent_settings_deny_the_network_and_grant_nothing() {
+        let json = agent_settings_json();
+        assert!(!json.contains("\"allow\""), "the settings file must not grant anything");
+        assert!(!json.contains("\"ask\""));
+        for rule in ["Bash(curl:*)", "Bash(wget:*)", "Bash(ssh:*)", "Bash(git push:*)", "WebFetch", "WebSearch", "Edit(.claude/**)", "Write(.claude/**)"] {
+            assert!(json.contains(&format!("\"{rule}\"")), "{rule} must be denied");
+        }
+        for rule in AGENT_DENY_RULES {
+            assert!(!rule.contains('"') && !rule.contains('\\'), "{rule} would break the JSON");
+        }
+        // Nothing the agent is allowed may also be denied: a deny wins and the scan would fail.
+        for allowed in ALLOWED_TOOLS.split(' ') {
+            assert!(!AGENT_DENY_RULES.contains(&allowed), "{allowed} is both allowed and denied");
+        }
+    }
+
+    #[test]
+    fn agent_settings_are_written_into_the_work_folder() {
+        let root = std::env::temp_dir().join(format!("eliselab-settings-test-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&root);
+        fs::create_dir_all(&root).unwrap();
+        write_agent_settings(&root).unwrap();
+        assert_eq!(fs::read_to_string(root.join(".claude/settings.json")).unwrap(), agent_settings_json());
+        let _ = fs::remove_dir_all(&root);
     }
 
     #[test]

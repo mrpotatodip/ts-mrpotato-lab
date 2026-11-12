@@ -18,6 +18,8 @@ The page never holds the API token. Rust keeps it in the system keychain and mak
 | `src-tauri/src/runner.rs` | Pairing, unpairing and the keychain. |
 | `src-tauri/src/jobs.rs` | The work loop: clone, run `claude` with a fixed tool allowlist, validate the output, upload. |
 
+A scan uses your Claude login but not your Claude Code settings. The app writes its own settings file and the audit skill into the scan's work folder and tells `claude` to load only that (`--setting-sources project`), so an allow rule you keep for daily work, such as `curl`, cannot widen what the agent may do. Your `~/.claude` folder is neither read nor changed.
+
 The runner status is one of `unpaired`, `revoked`, `offline` or `connected`. The activity is `idle`, `running` or `finished`.
 
 ## Run it
