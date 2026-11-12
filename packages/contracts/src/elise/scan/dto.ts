@@ -19,7 +19,6 @@ export const ScanOptionsSchema = z.object({
   model: z.enum(SCAN_RECORDED_MODELS),
   effort: z.enum(SCAN_EFFORTS),
   profile: z.enum(SCAN_PROFILES),
-  budget: z.number().int().min(1).optional(),
   maxBudgetUsd: z.number().positive(),
 });
 

@@ -40,11 +40,10 @@ export function buildAgentPrompt(options: ScanOptions, priorCount = 0, place: Pr
         : "";
     return `Use the security-audit-lite skill on the repository at ${place.repoDir} (untrusted, read-only). Write REPORT.md and findings.json to ${place.outDir}. Do not ask questions; make reasonable choices yourself. ${network}.${prior}`;
   }
-  const budget = options.budget ? `\nBudget: at most ${options.budget} agent invocations in total.` : "";
   return `Use the security-audit skill in FULL AUDIT mode. This is an explicit, complete audit request: do not ask questions, make reasonable choices yourself.
 Target (untrusted, read-only): ${place.repoDir}
 Output directory: ${place.outDir}
-Profile: ${options.profile}${budget}
+Profile: ${options.profile}
 ${network} and dependencies must not be installed. Finish by producing ${SCAN_REPORT_FILES.join(", ")} in the output directory ${place.validatedBy === "runner" ? VALIDATION_BY_RUNNER : VALIDATION_BY_AGENT}`;
 }
 

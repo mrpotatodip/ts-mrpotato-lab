@@ -48,7 +48,6 @@ export const createScanSvc = (
         model: input.model ?? env.MODEL,
         effort: input.effort ?? env.EFFORT,
         profile: input.profile ?? "quick",
-        budget: input.budget,
         maxBudgetUsd,
       }),
     ).pipe(Effect.orDie);

@@ -424,6 +424,46 @@ test("archives prior evidence when a critic assigns a fresh owner", () => {
   assert.deepEqual(errorsFor([finalClosure]), []);
 });
 
+// -----
+// The result of a run whose money ran out (SKILL.md, "Agents at once, and
+// running out of money"): a finished unit, a unit that was never reached and
+// is deferred, and a candidate that was not validated and stays a candidate.
+// -----
+test("accepts a partial result whose unreached units are deferred with money_exhausted", () => {
+  const refs = (name) => ({
+    surface: `src/${name}.ts#GET /${name}`,
+    boundary: `src/${name}.ts#guard`,
+    subsystem: "packages/api",
+    attack_class: "ATTACK-CLASSES.md#Access control",
+  });
+  const covered = unit({
+    canonical_refs: refs("a"),
+    surface: "Route a",
+    boundary: "Guard a",
+    status: "covered",
+    agent_id: "hunter-1",
+    reviewed_paths: ["src/a.ts"],
+    local_checks: [sourceCheck("hunter-1", { reviewed_paths: ["src/a.ts"] })],
+  });
+  const deferred = unit({ canonical_refs: refs("b"), surface: "Route b", boundary: "Guard b", status: "deferred", unresolved: ["money_exhausted"] });
+  const unvalidated = unit({
+    canonical_refs: refs("c"),
+    surface: "Route c",
+    boundary: "Guard c",
+    status: "candidate",
+    agent_id: "hunter-2",
+    reviewed_paths: ["src/c.ts"],
+    local_checks: [sourceCheck("hunter-2", { reviewed_paths: ["src/c.ts"] })],
+    result_fingerprints: ["src-c-missing-owner-check"],
+    unresolved: ["money_exhausted"],
+  });
+  const partial = [covered, deferred, unvalidated];
+
+  assert.deepEqual(errorsFor(partial), []);
+  const result = runCli(JSON.stringify(partial));
+  assert.equal(result.status, 0, cliOutput(result));
+});
+
 test("preserves candidate provenance when reassignment must be deferred", () => {
   const candidateAttempt = archivedAttempt({
     status: "candidate",
