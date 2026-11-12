@@ -1,4 +1,5 @@
-import { createDb, createPoolDb } from "@repo/db-elise/client";
+import { createDb, createPoolDb, createTenantDb } from "@repo/db-elise/client";
+import { sql } from "drizzle-orm";
 
 export type DbConnectType = ReturnType<typeof createDb>;
 export type PoolDbType = ReturnType<typeof createPoolDb>["db"];
@@ -10,6 +11,37 @@ export const dbConnect = (url: string): DbConnectType => createDb(url);
 // better-auth. Call close() when the request ends.
 // -----
 export const poolConnect = (url: string) => createPoolDb(url);
+
+// -----
+// One transaction of the elise_app role, with app.tenant_id
+// set. A query that forgets its tenant filter sees only this
+// account's rows.
+// -----
+export type TenantDbType = Parameters<Parameters<ReturnType<typeof createTenantDb>["db"]["transaction"]>[0]>[0];
+
+// -----
+// Runs a job as one account on the elise_app role over
+// Hyperdrive. set_config(..., true) lasts for this transaction
+// only, so a pooled connection never carries it to the next
+// request. Caching must be off on the Hyperdrive config.
+// -----
+export const withTenant = async <T>(
+  connectionString: string,
+  waitUntil: (promise: Promise<unknown>) => void,
+  accountId: string,
+  run: (db: TenantDbType) => Promise<T>,
+): Promise<T> => {
+  const { db, connect, close } = createTenantDb(connectionString);
+  try {
+    await connect();
+    return await db.transaction(async (tx) => {
+      await tx.execute(sql`select set_config('app.tenant_id', ${accountId}, true)`);
+      return run(tx);
+    });
+  } finally {
+    waitUntil(close());
+  }
+};
 
 // -----
 // Runs a job on a pooled connection and closes the

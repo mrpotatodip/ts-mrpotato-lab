@@ -7,6 +7,7 @@ import type { Bindings } from "#/types/variables";
 import { fakeBindings, TEST_TOKEN, testExecutionContext } from "./fake-bindings";
 import { memoryScanRepo } from "./memory-scan-repo";
 import { noGithubAccess } from "./no-github-access";
+import { noTenantDb } from "./no-tenant-db";
 
 let ledger = memoryScanRepo();
 let signedInUser: string | undefined;
@@ -23,6 +24,7 @@ const app = buildApp({
   userHasAccount: async () => userHoldsRole,
   userHasPower: async (_c, _userId, _accountId, power) => userHoldsRole && (!userIsWatcher || power === "company:summary:read"),
   enqueueInviteEmail: async () => undefined,
+  withTenant: noTenantDb,
 }).app;
 
 beforeEach(() => {

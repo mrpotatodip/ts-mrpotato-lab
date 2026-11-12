@@ -1,5 +1,6 @@
 import type { Context } from "hono";
 import type { AccessPower } from "@repo/contracts/elise";
+import type { TenantDbType } from "#/lib/db-connection";
 import type { HoldResult, SettleResult } from "#/modules/credit";
 import type { GithubAccess } from "#/modules/github-installs";
 import type { ScanRepo } from "#/modules/scan-ledger";
@@ -22,6 +23,7 @@ export type Bindings = {
   KEY_ENCRYPTION_SECRET?: string;
   SCAN_API_TOKEN: string;
   DATABASE_URL: string;
+  HYPERDRIVE_TENANT: Hyperdrive;
   AUTH_SECRET: string;
   GITHUB_APP_ID?: string;
   GITHUB_APP_PRIVATE_KEY?: string;
@@ -56,6 +58,7 @@ export type AppDeps = {
   userHasAccount: (c: Context<AppEnv>, userId: string, accountId: string) => Promise<boolean>;
   userHasPower: (c: Context<AppEnv>, userId: string, accountId: string, power: AccessPower) => Promise<boolean>;
   enqueueInviteEmail: (env: Bindings, mail: InviteEmail) => Promise<void>;
+  withTenant: <T>(c: Context<AppEnv>, accountId: string, run: (db: TenantDbType) => Promise<T>) => Promise<T>;
 };
 
 export type Variables = { userId?: string; deps: AppDeps };
