@@ -51,7 +51,20 @@ A folder of written instructions the agent follows. We have `lite` and `full`.
 _Avoid_: Prompt, plugin
 
 **Step**:
-Where a running Scan is: `cloning`, `auditing` or `saving`. It is null when the Scan has not started or has ended.
+Where a running Scan is: `cloning`, `auditing` or `saving`. It is null when the Scan has not started or has ended. A full Scan is in the `auditing` Step through all four of its Phases: a Phase is a part of the audit, never a Step.
+_Avoid_: Phase (a Phase is one of recon, hunt, check or report)
+
+**Phase**:
+One of the four Detached runs of a full Scan, in order: `recon`, `hunt`, `check` and `report`. Each has its own slice of the Budget cap, its own meter in the Outbound handler and its own time limit. Only a full Scan has Phases; a lite Scan is one run. ADR 0006 holds the rules.
+_Avoid_: Step (that is cloning, auditing or saving), stage
+
+**Partial Scan**:
+A full Scan that ran out of money in `hunt` or `check` and still ended with a Report and a findings file that say it is partial and name the units it did not cover. It is charged only what was metered. It is not a failed Scan.
+_Avoid_: Incomplete, failed Scan
+
+**Full worker**:
+The path a Scan takes when it uses the `full` Skill: its own Workflow, its own Sandbox class and its own Image, inside the same Worker as the lite path. It has limits of its own, so a long full Scan never blocks a lite Scan. ADR 0006 holds the decisions.
+_Avoid_: Full server, second Worker (it is one Worker with two paths)
 
 **Usage**:
 What a Scan spent: tokens, a cost estimate, turns and duration. The Agent reports it when it ends; a Scan that fails after the Agent started keeps it.
@@ -130,19 +143,19 @@ The most dollars the agent may spend in one scan (`--max-budget-usd`). The ceili
 _Avoid_: Limit, quota
 
 **Monthly budget**:
-The dollars an Account may spend on scans, on either key, in a UTC calendar month: `tenants.monthly_scan_budget_usd`, or the Plan's Included credit when unset, or `MONTHLY_BUDGET_USD` when the Account has no Plan. An admin with the Power `company:usage:budget:update` sets it. A new scan is refused when spent plus the cap of running scans plus its own cap would pass it.
+An optional guard on the dollars an Account may spend on scans in a UTC calendar month: `tenants.monthly_scan_budget_usd`, or `MONTHLY_BUDGET_USD` when the Account has no Plan and no own key. On a Plan it applies only once an admin with the Power `company:usage:budget:update` sets it, and it counts in credit dollars (cost times the Plan's markup). A new scan is refused with `MONTHLY_BUDGET_EXCEEDED` when spent plus the cap of running scans plus its own cap would pass it.
 _Avoid_: Quota
 
 **Budget allowance**:
-The most an admin may set as the Monthly budget: `tenants.monthly_scan_budget_allowance_usd`, or `BUDGET_ALLOWANCE_USD` (a sanity maximum) when unset. Only the operator changes it. It does not decide what the platform's key may spend: the Included credit does.
+The most an admin may set as the Monthly budget: `tenants.monthly_scan_budget_allowance_usd`, or `BUDGET_ALLOWANCE_USD` (a sanity maximum) when unset. Only the operator changes it. It does not decide what the platform's key may spend: the credit balance does.
 _Avoid_: Ceiling (that is the Budget cap's `MAX_BUDGET_USD`), limit
 
 **Plan**:
-What an Account pays for: Solo or Team, a row of `platform_master_plans` with a monthly price, an Included credit and a member cap. An Account's Plan is its `tenant_subscriptions` row; no row means no Plan. A `grant` row is a Plan the operator gave, never charged. This is the subscription, not the Instance type.
+What an Account pays for: Pro (`pro`, $49 a month, $49 of Included credit) or Bring your own key (`byok`, $19 a month, no credit, 300 Scans a month), a row of `platform_master_plans` with a monthly price, an Included credit, a credit markup (1.5), a carry cap, a Key source and a member cap (5). The Plan decides the key: Pro always uses the platform's key and takes credit, Bring your own key needs the Account's own key and takes none. An Account's Plan is its `tenant_subscriptions` row; no row means no Plan. A `grant` row is a Plan the operator gave, never charged. Solo and Team are disabled rows kept because subscriptions still point to them. This is the subscription, not the Instance type.
 _Avoid_: Tier, subscription (for the Plan itself)
 
 **Included credit**:
-The most dollars the platform's Anthropic key may spend for an Account in a UTC calendar month, set by its Plan. Scans on the Account's own key do not use it. A new scan on the platform's key is refused with `PLATFORM_CREDIT_EXCEEDED` when the month's platform spend plus the cap of running platform scans plus its own cap would pass it.
+The dollars a paid period of a Plan adds to the Account's credit balance (`tenant_credit_ledger`, one signed sum of grants, top-ups, holds and charges). A balance may not be pushed past the Plan's carry cap ($100 on Pro) by a grant. A new scan on the platform's key holds its Budget cap times the markup and is refused with `INSUFFICIENT_CREDIT` when the balance is lower; when it ends it is charged its metered cost times the markup. Scans on the Account's own key take no credit.
 _Avoid_: Allowance, quota
 
 **Key source**:
