@@ -30,7 +30,7 @@ export function UsageBudgetCard() {
     <Card>
       <CardHeader>
         <CardTitle>Monthly budget</CardTitle>
-        <p className="text-sm leading-relaxed text-muted-foreground">
+        <p className="max-w-copy text-sm leading-relaxed text-muted-foreground">
           The most this account spends on scans in {usageMonthLabel(data.month)}. New scans are refused once spent money plus what running scans may still spend would pass it.
         </p>
       </CardHeader>

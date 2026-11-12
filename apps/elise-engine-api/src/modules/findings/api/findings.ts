@@ -13,7 +13,8 @@ const app = new Hono<AppEnv>();
 
 app.get("/", listFindingsDoc, zValidator("header", AccountHeaderSchema), zValidator("query", FindingsQuerySchema), async (c) => {
   const { "x-account-id": accountId } = c.req.valid("header");
-  const data = await runEffect(listFindingsSvc(dbConnect(c.env.DATABASE_URL), accountId, c.req.valid("query")));
+  const query = c.req.valid("query");
+  const data = await c.get("deps").withTenant(c, accountId, (db) => runEffect(listFindingsSvc(db, accountId, query)));
   return c.json({ data, error: null });
 });
 

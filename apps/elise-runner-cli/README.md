@@ -6,7 +6,7 @@ EliseLAB Runner is a small desktop app (Tauri 2, Rust and TypeScript) that runs 
 
 - Claude Code installed and signed in on the computer. The app looks for `claude` in the usual places, then asks a login shell.
 - The app kept open while a scan runs.
-- A pairing code. Add a runner in EliseLAB to get one. A code works once and expires after 10 minutes.
+- A pairing code. Add a runner in EliseLAB to get one. A code works once and expires after 10 minutes. After a code works, the app names the account and waits: nothing is saved, and no scan can run, until you press Connect.
 
 ## How it is built
 

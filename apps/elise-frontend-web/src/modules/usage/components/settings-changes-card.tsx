@@ -1,5 +1,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { History } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "#/components/ui/empty";
 import { settingsChangesQuery } from "../hooks";
 import type { SettingsChange } from "../schemas";
 import { usageBudgetLabel, usageChangedAt } from "../utils";
@@ -31,11 +33,19 @@ export function SettingsChangesCard() {
     <Card>
       <CardHeader>
         <CardTitle>Recent changes</CardTitle>
-        <p className="text-sm leading-relaxed text-muted-foreground">Who changed the monthly budget or the Anthropic key, and when. The last 20 are shown.</p>
+        <p className="max-w-copy text-sm leading-relaxed text-muted-foreground">Who changed the monthly budget or the Anthropic key, and when. The last 20 are shown.</p>
       </CardHeader>
       <CardContent>
         {data.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No changes yet. The budget is the default and scans use the Elise key.</p>
+          <Empty>
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <History aria-hidden="true" />
+              </EmptyMedia>
+              <EmptyTitle>No changes yet</EmptyTitle>
+              <EmptyDescription>The budget is the default and scans use the Elise key. A change to either shows up here.</EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         ) : (
           <ul className="grid gap-3 text-sm">
             {data.map((change) => (
