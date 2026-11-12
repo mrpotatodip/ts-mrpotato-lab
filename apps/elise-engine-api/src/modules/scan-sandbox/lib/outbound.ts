@@ -1,15 +1,20 @@
 import { WorkerEntrypoint } from "cloudflare:workers";
-import { z } from "zod";
 import type { Bindings } from "#/types/variables";
 import { ANTHROPIC_KEY_UNREADABLE, openKey } from "#/modules/anthropic-key";
 import { mintRepoToken } from "#/modules/github-app";
 import { SCAN_SANDBOX_MAX_OUTPUT_TOKENS } from "#/modules/scan-sandbox/constants";
 import type { OutboundProps } from "#/modules/scan-sandbox/types";
-import { allowedOutboundTarget, createUsageScanner, gitBasicAuth, repoOfGitPath } from "#/modules/scan-sandbox/utils";
+import {
+  allowedOutboundTarget,
+  createUsageScanner,
+  gitBasicAuth,
+  MessagesBodySchema,
+  messagesBlockedReason,
+  repoOfGitPath,
+  safeBetaHeader,
+} from "#/modules/scan-sandbox/utils";
 
 const blocked = (reason: string) => new Response(`Blocked: ${reason}`, { status: 403 });
-
-const MessagesBodySchema = z.looseObject({ model: z.string(), max_tokens: z.number().optional() });
 
 const parseMessagesBody = (text: string) => {
   try {
@@ -47,12 +52,15 @@ export class Outbound extends WorkerEntrypoint<Bindings, OutboundProps> {
   }
 
   // -----
-  // The key is added here, outside the container, and only for the repo
-  // this scan was set up for. Any other repo goes through unsigned.
+  // Git may read the one repo this scan was set up for, and no
+  // other: a request for another repo is a way to send data out in
+  // which repos are asked for. The key is added here, outside the
+  // container, and only for a private scan's repo.
   // -----
   async #github(request: Request, url: URL): Promise<Response> {
-    const github = this.ctx.props.github;
-    if (github === undefined || repoOfGitPath(url.pathname) !== github.repo) return fetch(request);
+    const { github, repo } = this.ctx.props;
+    if (repoOfGitPath(url.pathname) !== repo) return blocked(`${request.method} ${url.hostname}${url.pathname} is not this scan's repo`);
+    if (github === undefined) return fetch(request);
     const { GITHUB_APP_ID: appId, GITHUB_APP_PRIVATE_KEY: privateKey } = this.env;
     if (appId === undefined || privateKey === undefined) return blocked("the GitHub App is not set up");
     try {
@@ -71,6 +79,11 @@ export class Outbound extends WorkerEntrypoint<Bindings, OutboundProps> {
     if (!(await sandbox.meterAllows())) return blocked("the scan's budget is spent");
     const body = parseMessagesBody(await request.text());
     if (body === null) return blocked("the request is not a messages call");
+    const refused = messagesBlockedReason(body);
+    if (refused !== null) return blocked(refused);
+    const beta = safeBetaHeader(headers.get("anthropic-beta"));
+    if (beta === null) headers.delete("anthropic-beta");
+    else headers.set("anthropic-beta", beta);
     const maxTokens = Math.min(body.max_tokens ?? SCAN_SANDBOX_MAX_OUTPUT_TOKENS, SCAN_SANDBOX_MAX_OUTPUT_TOKENS);
     headers.delete("content-length");
     const upstream = await fetch(
