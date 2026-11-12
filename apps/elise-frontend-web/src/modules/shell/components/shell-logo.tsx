@@ -1,10 +1,10 @@
 // -----
-// The EliseLAB mark: an "E" of three equal bars, like lines of a report, with
+// The Elise mark: an "E" of three equal bars, like lines of a report, with
 // square corners. It sits in a diamond (a
 // square turned 45 degrees) and is turned 45 degrees the other way, so its bars
 // point up and to the right. It is drawn with the theme's own action
 // colours, so it is dark on a light page and light on a dark one, and needs no
-// second file per theme. It is decorative: the word "EliseLAB" always sits next
+// second file per theme. It is decorative: the word "Elise" always sits next
 // to it.
 // -----
 export function ShellLogo({ className }: { className?: string }) {

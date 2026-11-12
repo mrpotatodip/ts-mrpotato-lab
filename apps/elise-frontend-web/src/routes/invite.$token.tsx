@@ -14,7 +14,7 @@ const FailureStatusSchema = z.object({ status: z.number() });
 const UNUSABLE_INVITE_STATUSES = new Set([400, 403, 404, 410]);
 
 export const Route = createFileRoute("/invite/$token")({
-  head: () => ({ meta: [{ title: "Join · EliseLAB" }] }),
+  head: () => ({ meta: [{ title: "Join · Elise" }] }),
   loader: async ({ context, params }) => {
     try {
       return await context.queryClient.query({ ...inviteQuery(params.token), staleTime: "static" });

@@ -3,7 +3,7 @@ import { hasAccessPower } from "@repo/contracts/elise";
 import { groupsQuery, teamQuery, teamRolesQuery, TeamPage } from "#/modules/team";
 
 export const Route = createFileRoute("/_app/team")({
-  head: () => ({ meta: [{ title: "Team · EliseLAB" }] }),
+  head: () => ({ meta: [{ title: "Team · Elise" }] }),
   beforeLoad: ({ context }) => {
     if (!hasAccessPower(context.user?.powers ?? [], "company:team:members:read")) throw redirect({ to: "/overview" });
   },

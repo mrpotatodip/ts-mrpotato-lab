@@ -75,7 +75,7 @@ export function RunnersCard() {
       <CardHeader className="flex-row items-center justify-between">
         <div className="grid gap-1.5">
           <CardTitle>Runners</CardTitle>
-          <p className="max-w-copy text-sm leading-relaxed text-muted-foreground">Computers you control that can run this account&apos;s scans, in place of EliseLAB&apos;s cloud container.</p>
+          <p className="max-w-copy text-sm leading-relaxed text-muted-foreground">Computers you control that can run this account&apos;s scans, in place of Elise&apos;s cloud container.</p>
         </div>
         <Suspense fallback={<Skeleton className="h-8 w-32" />}>
           <RunnerAddDialog />
@@ -89,7 +89,7 @@ export function RunnersCard() {
                 <Laptop aria-hidden="true" />
               </EmptyMedia>
               <EmptyTitle>No runners yet</EmptyTitle>
-              <EmptyDescription>Add a computer to get a pairing code, then type the code into the EliseLAB Runner app on it.</EmptyDescription>
+              <EmptyDescription>Add a computer to get a pairing code, then type the code into the Elise Runner app on it.</EmptyDescription>
             </EmptyHeader>
           </Empty>
         ) : (

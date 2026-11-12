@@ -16,7 +16,7 @@ export const Route = createFileRoute("/_app/repos/$repoId_/branches/$branchId")(
       .toSorted((a, b) => Number(b.isDefault) - Number(a.isDefault) || (b.latestScanAt ?? "").localeCompare(a.latestScanAt ?? ""));
     return { name: repoName(repo.url), branch: branch.name, repoId: params.repoId, branchId: branch.id, branches };
   },
-  head: ({ loaderData }) => ({ meta: [{ title: `${loaderData ? `${loaderData.name} · ${loaderData.branch}` : "Branch"} · EliseLAB` }] }),
+  head: ({ loaderData }) => ({ meta: [{ title: `${loaderData ? `${loaderData.name} · ${loaderData.branch}` : "Branch"} · Elise` }] }),
   component: BranchPage,
 });
 

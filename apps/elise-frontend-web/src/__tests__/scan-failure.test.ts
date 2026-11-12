@@ -12,8 +12,8 @@ const TIMEOUT = "command exited 124: Cloning into '/workspace/repo'...";
 
 describe("scanFailure", () => {
   it.each([
-    ["a repository that is missing or private", NOT_FOUND, "EliseLAB could not read this repository."],
-    ["a clone git would prompt for a login on", NO_USERNAME, "EliseLAB could not read this repository."],
+    ["a repository that is missing or private", NOT_FOUND, "Elise could not read this repository."],
+    ["a clone git would prompt for a login on", NO_USERNAME, "Elise could not read this repository."],
     ["a branch, tag or commit that does not exist", NO_REF, "That branch, tag or commit was not found in the repository."],
     ["a clone the timeout killed", TIMEOUT, "Cloning the repository took too long and was stopped."],
     ["an agent that ran out of memory", "claude exited 1: RangeError: Out of memory", "The agent ran out of memory while it read the repository."],

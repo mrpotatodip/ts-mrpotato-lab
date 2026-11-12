@@ -54,13 +54,13 @@ export function RunnerAddDialog() {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add a runner</DialogTitle>
-          <DialogDescription>A runner is a computer that runs scans for this account. We make a code that you type into the EliseLAB Runner app on that computer.</DialogDescription>
+          <DialogDescription>A runner is a computer that runs scans for this account. We make a code that you type into the Elise Runner app on that computer.</DialogDescription>
         </DialogHeader>
         {created ? (
           <>
             <DialogBody className="grid gap-3">
               <p className="text-sm">
-                Open the EliseLAB Runner app on <span className="font-medium">{created.name}</span> and type this code. It works once and expires at {runnerWhen(created.expiresAt)}.
+                Open the Elise Runner app on <span className="font-medium">{created.name}</span> and type this code. It works once and expires at {runnerWhen(created.expiresAt)}.
               </p>
               <Label htmlFor="runner-code">Pairing code</Label>
               <Input id="runner-code" readOnly value={created.pairingCode} onFocus={(event) => event.target.select()} className="h-12 text-center font-mono text-2xl tracking-widest" />

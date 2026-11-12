@@ -43,7 +43,7 @@ export function SettingsChangesCard() {
                 <History aria-hidden="true" />
               </EmptyMedia>
               <EmptyTitle>No changes yet</EmptyTitle>
-              <EmptyDescription>The budget is the default and scans use the EliseLAB key. A change to either shows up here.</EmptyDescription>
+              <EmptyDescription>The budget is the default and scans use the Elise key. A change to either shows up here.</EmptyDescription>
             </EmptyHeader>
           </Empty>
         ) : (
