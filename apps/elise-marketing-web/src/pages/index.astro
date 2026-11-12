@@ -1,0 +1,89 @@
+---
+import Base from "../layouts/Base.astro";
+import { EXAMPLE_FINDING, FEATURES, SITE, STEPS } from "../constants/site";
+---
+
+<Base>
+  <div class="wrap">
+    <header class="nav">
+      <a class="brand" href="/">
+        <img src="/logomark.png" alt="" width="28" height="28" />
+        {SITE.name}
+      </a>
+      <a class="button quiet" href={SITE.appUrl}>Sign in</a>
+    </header>
+
+    <main>
+      <div class="hero">
+        <h1>Find the security flaws in your code before you ship it.</h1>
+        <p class="lede">{SITE.description}</p>
+        <div class="actions">
+          <a class="button" href={SITE.appUrl}>Audit a repository</a>
+          <a class="button quiet" href="#how-it-works">How it works</a>
+        </div>
+      </div>
+
+      <section id="how-it-works" aria-labelledby="how-heading">
+        <h2 id="how-heading">How it works</h2>
+        <ol class="grid" style="list-style: none; margin: 0; padding: 0">
+          {
+            STEPS.map((step, index) => (
+              <li class="card">
+                <div class="step-number">{index + 1}</div>
+                <h3>{step.title}</h3>
+                <p>{step.text}</p>
+              </li>
+            ))
+          }
+        </ol>
+      </section>
+
+      <section aria-labelledby="features-heading">
+        <h2 id="features-heading">What you get</h2>
+        <div class="grid">
+          {
+            FEATURES.map((feature) => (
+              <div class="card">
+                <h3>{feature.title}</h3>
+                <p>{feature.text}</p>
+              </div>
+            ))
+          }
+        </div>
+      </section>
+
+      <section aria-labelledby="example-heading">
+        <div class="example">
+          <div>
+            <h2 id="example-heading">A finding, in plain words</h2>
+            <p>Every finding names the file, says what the flaw lets an attacker do, and says what to change. This one is an example, not from a real scan.</p>
+          </div>
+          <article class="card finding">
+            <div class="finding-head">
+              <span class="pill">{EXAMPLE_FINDING.severity}</span>
+              <strong>{EXAMPLE_FINDING.title}</strong>
+            </div>
+            <span class="mono">{EXAMPLE_FINDING.file}</span>
+            <dl>
+              <dt>What it means</dt>
+              <dd>{EXAMPLE_FINDING.meaning}</dd>
+              <dt>The fix</dt>
+              <dd>{EXAMPLE_FINDING.fix}</dd>
+            </dl>
+          </article>
+        </div>
+      </section>
+
+      <section class="closing" aria-labelledby="cta-heading">
+        <h2 id="cta-heading">Audit your first repository</h2>
+        <div class="actions">
+          <a class="button" href={SITE.appUrl}>Get started</a>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <footer>
+    <div class="wrap">© {new Date().getFullYear()} {SITE.name}</div>
+  </footer>
+</Base>

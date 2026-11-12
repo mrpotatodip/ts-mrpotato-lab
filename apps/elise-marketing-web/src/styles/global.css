@@ -1,0 +1,231 @@
+:root {
+  --background: oklch(0.958 0.004 258);
+  --card: oklch(0.99 0.002 258);
+  --foreground: oklch(0.22 0.01 258);
+  --muted-foreground: oklch(0.36 0.01 258);
+  --border: rgb(0 0 0 / 9%);
+  --primary: oklch(0.27 0.01 258);
+  --primary-foreground: oklch(0.98 0.002 258);
+  --severity-high: oklch(0.42 0.14 50);
+  --severity-high-soft: oklch(0.7 0.16 50 / 13%);
+  --radius: 0.75rem;
+  --shadow-card: 0 1px 0 rgb(255 255 255 / 80%) inset, 0 1px 2px rgb(0 0 0 / 6%), 0 8px 24px rgb(0 0 0 / 5%);
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  color: var(--foreground);
+  background: radial-gradient(60rem 28rem at 85% -8rem, rgb(255 255 255 / 90%), transparent), var(--background);
+}
+
+a {
+  color: inherit;
+}
+
+.wrap {
+  width: min(70rem, 100% - 2rem);
+  margin-inline: auto;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-block: 1.25rem;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.brand img {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.6rem 1.1rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--primary-foreground);
+  background: var(--primary);
+  box-shadow: 0 1px 0 rgb(255 255 255 / 12%) inset, 0 1px 2px rgb(0 0 0 / 25%);
+}
+
+.button:hover {
+  background: oklch(0.33 0.01 258);
+}
+
+.button.quiet {
+  color: var(--foreground);
+  background: var(--card);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 8%);
+  border: 1px solid var(--border);
+}
+
+.button.quiet:hover {
+  background: oklch(0.96 0.002 258);
+}
+
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+}
+
+.hero {
+  padding-block: clamp(3rem, 9vw, 7rem) clamp(2.5rem, 6vw, 5rem);
+  max-width: 46rem;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(2.2rem, 5.5vw, 3.75rem);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.lede {
+  margin: 1.25rem 0 2rem;
+  font-size: 1.15rem;
+  color: var(--muted-foreground);
+  text-wrap: pretty;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+section {
+  padding-block: clamp(2.5rem, 6vw, 4.5rem);
+}
+
+h2 {
+  margin: 0 0 1.5rem;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  letter-spacing: -0.02em;
+}
+
+.grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+}
+
+.card {
+  padding: 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 0.25rem);
+  background: var(--card);
+  box-shadow: var(--shadow-card);
+}
+
+.card h3 {
+  margin: 0 0 0.4rem;
+  font-size: 1.05rem;
+}
+
+.card p {
+  margin: 0;
+  color: var(--muted-foreground);
+}
+
+.step-number {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  margin-bottom: 0.9rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  color: var(--primary-foreground);
+  background: var(--primary);
+}
+
+.example {
+  display: grid;
+  gap: 2rem;
+  align-items: center;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+}
+
+.example p {
+  color: var(--muted-foreground);
+}
+
+.finding-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.75rem;
+}
+
+.pill {
+  padding: 0.1rem 0.6rem;
+  border: 1px solid color-mix(in oklch, var(--severity-high) 25%, transparent);
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 650;
+  color: var(--severity-high);
+  background: var(--severity-high-soft);
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--muted-foreground);
+}
+
+.finding dt {
+  margin-top: 0.9rem;
+  font-size: 0.75rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.finding dd {
+  margin: 0.15rem 0 0;
+}
+
+.closing {
+  text-align: center;
+}
+
+.closing .actions {
+  justify-content: center;
+}
+
+footer {
+  padding-block: 2rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.9rem;
+  color: var(--muted-foreground);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .button {
+    transition: background-color 150ms ease-out;
+  }
+}
