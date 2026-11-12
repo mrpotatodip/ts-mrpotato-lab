@@ -547,6 +547,20 @@
       "when": 1794422113023,
       "tag": "0077_plan_read_power",
       "breakpoints": true
+    },
+    {
+      "idx": 78,
+      "version": "7",
+      "when": 1794442694587,
+      "tag": "0078_app_role",
+      "breakpoints": true
+    },
+    {
+      "idx": 79,
+      "version": "7",
+      "when": 1794442701111,
+      "tag": "0079_tenant_rls_findings",
+      "breakpoints": true
     }
   ]
 }
