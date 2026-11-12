@@ -1,0 +1,23 @@
+{
+  "name": "elise-marketing-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev --port 3200",
+    "build": "astro build",
+    "preview": "astro preview --port 3200",
+    "lint": "oxlint src",
+    "deploy": "node ../../scripts/deploy-guard.mjs apps/elise-marketing-web && astro build && wrangler deploy",
+    "check": "astro check && oxlint src"
+  },
+  "dependencies": {
+    "astro": "^7.4.11"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.12",
+    "oxlint": "1.79.0",
+    "typescript": "^6.0.2",
+    "wrangler": "^4.114.0"
+  }
+}

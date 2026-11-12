@@ -6,6 +6,7 @@ EliseLAB: a pnpm workspace. A Worker clones a public GitHub repo into a Cloudfla
 
 - `apps/elise-engine-api` — the Worker (Hono, Effect, better-auth). Its `CLAUDE.md` loads when you work there
 - `apps/elise-frontend-web` — the dashboard (TanStack Start, port 3100). Its `CLAUDE.md` loads when you work there
+- `apps/elise-marketing-web` — the public marketing site (Astro, static, port 3200). Its `CLAUDE.md` loads when you work there
 - `packages/db-elise` — Drizzle schema, Neon client, migrations. Rules: `packages/db-elise/README.md`
 - `packages/contracts` — Zod schemas shared by API and frontend (`@repo/contracts/elise`)
 - `packages/chat-bot*` — chat-bot runtime, API, React UI and durable stream. Kept on purpose: `docs/adr/0001-keep-chat-bot-packages.md`
@@ -14,7 +15,7 @@ EliseLAB: a pnpm workspace. A Worker clones a public GitHub repo into a Cloudfla
 
 ```bash
 pnpm check:apps                              # tsc, oxlint and vitest for every project: one line on success, the tail of each failure; the pre-commit hook runs the changed ones
-pnpm dev                                     # engine (8787) and dashboard (3100) together; first run: copy `.dev.vars.example` to `.dev.vars` in both apps (engine `DATABASE_URL`: `packages/db-elise/.env`). Up when `curl -s -o /dev/null -w "%{http_code}" localhost:8787/me` prints 401
+pnpm dev                                     # engine (8787), dashboard (3100) and marketing site (3200) together; first run: copy `.dev.vars.example` to `.dev.vars` in both apps (engine `DATABASE_URL`: `packages/db-elise/.env`). Up when `curl -s -o /dev/null -w "%{http_code}" localhost:8787/me` prints 401
 pnpm --filter elise-engine-api dev:log       # wrangler dev, output teed to apps/elise-engine-api/.dev.log (the dashboard has the same `dev:log`)
 pnpm dev:stop                                # free ports 8787 and 3100 from stale servers
 node scripts/check-changed.mjs               # the pre-commit check: only the projects with staged changes (`check:apps` runs all nine)
