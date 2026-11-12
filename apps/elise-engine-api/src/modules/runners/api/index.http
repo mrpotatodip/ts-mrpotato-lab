@@ -15,7 +15,7 @@ Content-Type: application/json
 POST {{baseUrl}}/runners/enroll
 Content-Type: application/json
 
-{ "code": "K7QM-4TXD" }
+{ "code": "K7QM-4TXD-9WPA" }
 
 ###
 
