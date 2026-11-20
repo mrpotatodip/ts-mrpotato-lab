@@ -57,7 +57,7 @@ const PHASE_HANDOFF = {
 } satisfies Record<FullPhase, string>;
 
 const VERIFY_CANDIDATES =
-  "Verify each candidate with a separate sub-agent, not with yourself. Record its ID as the `agent_id` of the check in the ledger. If you cannot start a sub-agent, set `run_status` to `incomplete` and `incomplete_reason` to `verification_unavailable`.";
+  "Verify each candidate with a separate sub-agent, not with yourself. Record its ID as the `agent_id` of the check in the ledger. If you cannot start a sub-agent, set `run_status` to `incomplete` and `incomplete_reason` to `verification_unavailable`. If the hunt left no candidates there is nothing to verify and no verifier is needed: that is a finished run, not `verification_unavailable`.";
 
 const SUBAGENT_ASK = {
   quick: { recon: "", hunt: "", check: VERIFY_CANDIDATES, report: "" },
@@ -93,7 +93,7 @@ const handoffOf = (phase: FullPhase, profile: ScanOptions["profile"]) =>
 const OUT_OF_MONEY = "The money for this run is limited. If it runs out, stop at a safe point: write down what you did, and record every unit you did not reach as deferred in the coverage ledger.";
 
 const PHASE_VALIDATION_BY_RUNNER =
-  "When findings.json and coverage-ledger.json are final, stop: the app that started you runs the skill's validators on them after this run ends.";
+  "When findings.json and coverage-ledger.json are final, stop: the app that started you runs the skill's validators on them after this run ends. If a validator is refused to you, that is expected here: it is not a reason to set `run_status` to `incomplete`.";
 
 export function buildPhasePrompt(options: ScanOptions, phase: FullPhase, place: PromptPlace = CONTAINER_PLACE): string {
   const network = capitalized(place.networkRule);

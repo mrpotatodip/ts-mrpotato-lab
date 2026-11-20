@@ -9,7 +9,7 @@ const options: ScanOptions = { skill: "full", model: "claude-haiku-5-5", effort:
 
 const CRITIC_SENTENCE = "After the last hunter wave, run the critic pass with a separate sub-agent. Record it in `critic_passes` in run-metadata.json.";
 const VERIFIER_SENTENCE =
-  "Verify each candidate with a separate sub-agent, not with yourself. Record its ID as the `agent_id` of the check in the ledger. If you cannot start a sub-agent, set `run_status` to `incomplete` and `incomplete_reason` to `verification_unavailable`.";
+  "Verify each candidate with a separate sub-agent, not with yourself. Record its ID as the `agent_id` of the check in the ledger. If you cannot start a sub-agent, set `run_status` to `incomplete` and `incomplete_reason` to `verification_unavailable`. If the hunt left no candidates there is nothing to verify and no verifier is needed: that is a finished run, not `verification_unavailable`.";
 const DEEP_CRITIC_SENTENCE =
   "After each hunter wave, run the critic pass with a separate sub-agent. Record each in `critic_passes` in run-metadata.json. If a critic pass accepts something, hunt another wave. Stop when a critic pass accepts nothing.";
 const DEEP_FINAL_SENTENCE =
@@ -152,6 +152,14 @@ describe("buildAgentPrompt", () => {
     expect(buildPhasePrompt(full, "check")).toContain("run the skill's validators");
     expect(buildPhasePrompt(full, "check")).toContain("Do not write the report files in this run");
     expect(buildPhasePrompt(full, "report")).toContain("Finish by producing REPORT.md");
+  });
+
+  it("tells a Runner's check run that a refused validator is expected and that no candidates need no verifier", () => {
+    const full: ScanOptions = { ...options, skill: "full" };
+    const check = buildPhasePrompt(full, "check", RUNNER_PLACE);
+
+    expect(check).toContain("If a validator is refused to you, that is expected here");
+    expect(check).toContain("nothing to verify and no verifier is needed");
   });
 
   it("tells every run but the report to write down what it did not reach when its money runs out", () => {
