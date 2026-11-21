@@ -64,13 +64,14 @@ type FindingCount = { status: FindingStatusValue; severity: FindingSeverityValue
 // Counts only for a succeeded scan whose findings are
 // recorded: a lite scan, or a full scan whose partial column
 // is set (every full scan recorded from the profile era on).
-// For any other the findings table is empty because nothing
+// A running scan counts the live rows it holds so far. For any
+// other the findings table is empty because nothing
 // was read, not because nothing was found. A clean scan has
 // all zeros.
 // -----
 export const summaryOf = (row: ScanRow, counts: FindingCount[]): ScanSummary | null => {
   const recorded = row.skill === "lite" || (row.skill === "full" && row.partial !== null);
-  if (row.status !== "succeeded" || !recorded) return null;
+  if (row.status !== "running" && (row.status !== "succeeded" || !recorded)) return null;
   const recheck =
     row.priorsGiven === null
       ? null

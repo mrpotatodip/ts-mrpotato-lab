@@ -51,11 +51,12 @@ export const overviewQuery = () =>
     refetchInterval: POLL_MS * 6,
   });
 
-export const scanFindingsQuery = (scanId: string) =>
+export const scanFindingsQuery = (scanId: string, live = false) =>
   queryOptions({
     queryKey: scanKeys.findings(scanId),
     queryFn: () => fetchScanFindings({ data: { scanId } }),
     staleTime: Infinity,
+    refetchInterval: live ? POLL_MS : false,
   });
 
 export const scanDiffQuery = (scanId: string) =>

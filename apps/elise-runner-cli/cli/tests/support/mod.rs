@@ -24,6 +24,9 @@ struct State {
     archive_downloads: Vec<String>,
     results: Vec<(String, String)>,
     remove_after_result: bool,
+    findings: Vec<(String, String)>,
+    findings_answer: Option<u16>,
+    findings_before_result: Vec<usize>,
     cancelled: BTreeSet<String>,
     job_checks: Vec<String>,
     job_checks_fail: Option<u16>,
@@ -111,6 +114,19 @@ impl Engine {
 
     pub fn archive_downloads(&self) -> Vec<String> {
         self.state.lock().unwrap().archive_downloads.clone()
+    }
+
+    pub fn finding_batches(&self) -> Vec<Vec<serde_json::Value>> {
+        let state = self.state.lock().unwrap();
+        state.findings.iter().map(|(_, body)| batch_of(body)).collect()
+    }
+
+    pub fn batches_before_results(&self) -> Vec<usize> {
+        self.state.lock().unwrap().findings_before_result.clone()
+    }
+
+    pub fn answer_findings_with(&self, status: u16) {
+        self.state.lock().unwrap().findings_answer = Some(status);
     }
 
     pub fn results(&self) -> Vec<(String, serde_json::Value)> {
@@ -321,6 +337,11 @@ fn archive_of(request: &Request, state: &mut State) -> Option<Vec<u8>> {
     state.archives.get(&scan_id).cloned()
 }
 
+fn batch_of(body: &str) -> Vec<serde_json::Value> {
+    let body: serde_json::Value = serde_json::from_str(body).expect("a batch is JSON");
+    body["findings"].as_array().expect("a batch holds findings").clone()
+}
+
 pub const ARCHIVE_REMOVED: &str = "The zip this Scan reads was removed before the Runner could download it, so the Scan did not run.";
 
 const REJECTED: (u16, &str) = (401, r#"{"data":null,"error":{"code":"unauthorized"}}"#);
@@ -399,8 +420,17 @@ fn answer(request: &Request, state: &mut State) -> (u16, String) {
             Some(job) => (200, format!(r#"{{"data":{job},"error":null}}"#)),
             None => (200, r#"{"data":null,"error":null}"#.to_string()),
         },
+        ("POST", path) if live && path.starts_with("/runners/jobs/") && path.ends_with("/findings") => {
+            let scan_id = path.trim_start_matches("/runners/jobs/").trim_end_matches("/findings").to_string();
+            state.findings.push((scan_id, request.body.clone()));
+            match state.findings_answer {
+                Some(status @ (0 | 400..=599)) => (status, r#"{"data":null,"error":{"code":"conflict"}}"#.to_string()),
+                _ => (200, format!(r#"{{"data":{{"accepted":{},"dropped":0}},"error":null}}"#, batch_of(&request.body).len())),
+            }
+        }
         ("POST", path) if live && path.starts_with("/runners/jobs/") && path.ends_with("/result") => {
             let scan_id = path.trim_start_matches("/runners/jobs/").trim_end_matches("/result").to_string();
+            state.findings_before_result.push(state.findings.len());
             state.results.push((scan_id, request.body.clone()));
             if state.remove_after_result {
                 state.live.clear();
@@ -740,6 +770,16 @@ esac
 case "$prompt" in
   *phase=check*) echo '{"findings":[]}' > out/findings.json; echo '{"units":[]}' > out/coverage-ledger.json ;;
   *phase=report*) echo '# Report' > out/REPORT.md ;;
+esac
+case "$prompt" in
+  *phase=check*live=spread*)
+    echo '{"verdict":"confirmed","fingerprint":"fp-1"}' >> out/live-findings.jsonl
+    echo 'not json' >> out/live-findings.jsonl
+    echo '{"verdict":"rejected","fingerprint":"fp-no"}' >> out/live-findings.jsonl
+    echo '{"verdict":"needs_validation","fingerprint":"fp-2"}' >> out/live-findings.jsonl
+    sleep 3
+    echo '{"verdict":"confirmed","fingerprint":"fp-3"}' >> out/live-findings.jsonl ;;
+  *phase=check*live=late*) echo '{"verdict":"confirmed","fingerprint":"fp-late"}' >> out/live-findings.jsonl ;;
 esac
 cost=$(printf '%s' "$prompt" | sed -n 's/.*cost=\([0-9.]*\).*/\1/p')
 printf '{"type":"result","subtype":"success","is_error":false,"total_cost_usd":%s,"num_turns":1,"duration_ms":10,"usage":{}}\n' "${cost:-0}"

@@ -76,6 +76,7 @@ describe("GET /openapi.json", () => {
       "POST /runners",
       "POST /runners/claim",
       "POST /runners/enroll",
+      "POST /runners/jobs/{scanId}/findings",
       "POST /runners/jobs/{scanId}/result",
       "POST /runners/jobs/{scanId}/trace",
       "POST /runners/login/approve",
@@ -103,7 +104,7 @@ describe("GET /openapi.json", () => {
     for (const { route, operation } of operations(spec)) {
       expect({ route, summary: Boolean(operation.summary) }).toEqual({ route, summary: true });
       expect({ route, description: operation.description?.includes("**Context.**") }).toEqual({ route, description: true });
-      const tag = ["groups", "team", "repos", "scans", "files", "findings", "usage", "runners", "me", "sign-up", "stripe"].find((name) => route.includes(`/${name}`));
+      const tag = ["groups", "team", "repos", "scans", "files", "runners", "findings", "usage", "me", "sign-up", "stripe"].find((name) => route.includes(`/${name}`));
       expect({ route, tags: operation.tags }).toEqual({ route, tags: [tag] });
       const security = tag === "sign-up" || PUBLIC_ROUTES.has(route) ? undefined : [{ bearerAuth: [] }];
       expect({ route, security: operation.security }).toEqual({ route, security });

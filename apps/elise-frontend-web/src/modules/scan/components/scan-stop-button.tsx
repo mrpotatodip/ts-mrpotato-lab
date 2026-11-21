@@ -33,8 +33,8 @@ export function ScanStopButton({ scanId, onRunner, size = "sm", className }: { s
           <DialogTitle>Stop this scan?</DialogTitle>
           <DialogDescription>
             {onRunner
-              ? "The scan ends at once. No report and no findings are kept. A Runner built before this change keeps running until it finishes, and its result is dropped."
-              : "The scan ends at once and its sandbox is destroyed. No report and no findings are kept. The cost so far is still charged."}
+              ? "The scan ends at once. No report and no findings are kept. Findings found so far are dropped. A Runner built before this change keeps running until it finishes, and its result is dropped."
+              : "The scan ends at once and its sandbox is destroyed. No report and no findings are kept. Findings found so far are dropped. The cost so far is still charged."}
           </DialogDescription>
         </DialogHeader>
         {stop.isError && <p role="alert" className="text-sm text-status-danger">{stop.error.message}</p>}

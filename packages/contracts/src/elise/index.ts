@@ -21,4 +21,5 @@ export * from "./gitlab";
 export * from "./gitlab-sh";
 export * from "./runner";
 export * from "./trace";
+export * from "./live-finding";
 export * from "./upload";

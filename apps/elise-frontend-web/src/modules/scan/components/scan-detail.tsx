@@ -160,7 +160,22 @@ export function ScanDetail({ scanId }: { scanId: string }) {
 
       <ScanStatusNotice scan={scan} />
 
-      {isScanActive(scan.status) && <ScanTrace scan={scan} />}
+      {isScanActive(scan.status) && (
+        <>
+          <Card>
+            <CardHeader className="gap-1.5">
+              <CardTitle>Findings so far</CardTitle>
+              <p className="max-w-copy text-sm leading-relaxed text-muted-foreground">Found so far, still being checked. They can change before the Report.</p>
+            </CardHeader>
+            <CardContent className="overflow-hidden p-0">
+              <Suspense fallback={<ScanFindingsTableSkeleton />}>
+                <ScanFindingsTable scanId={scanId} repoId={scan.repoId} repoLabel={owner ? `${owner}/${name}` : name} commit={scan.commitSha ?? undefined} live />
+              </Suspense>
+            </CardContent>
+          </Card>
+          <ScanTrace scan={scan} />
+        </>
+      )}
 
       {succeeded && (
         <>

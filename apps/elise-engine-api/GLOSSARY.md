@@ -157,8 +157,12 @@ A Finding that a signed-in `tenant_admin` or `workspace_admin` chose to ship wit
 _Avoid_: Waiver, exception
 
 **Finding**:
-One security problem in `findings.json`, with a status of `confirmed` or `needs_validation`.
+One security problem a Scan's verifier decided, with a status of `confirmed` or `needs_validation`.
 _Avoid_: Bug, issue, vulnerability (until a person checks it)
+
+**Live finding**:
+A Finding of a running Scan, shown before the Scan ends. The Scan's final Findings replace it when the Scan succeeds, and it is dropped when the Scan is stopped or fails. No one can make a decision or write a Comment on it.
+_Avoid_: Candidate, draft finding, preliminary finding
 
 **decision**:
 A triage change to a Finding: its status (`open`, `fixed`, `false_positive` or `accepted_risk`) and its note (`scan_finding_triage`). It is not the Finding's own `confirmed` or `needs_validation` state, which the Scan wrote.

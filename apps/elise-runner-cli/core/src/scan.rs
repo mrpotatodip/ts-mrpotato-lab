@@ -5,6 +5,7 @@
 use crate::engine::{client, engine_url, Envelope};
 use crate::git_access;
 use crate::git_token;
+use crate::live;
 use crate::providers::{clone_address, label_of, read_archive, Settings, JOB_SOURCES};
 use crate::store::{TokenStore, TOKEN_VARIABLE};
 use crate::trace;
@@ -38,6 +39,7 @@ const REPORT_TRIES: u32 = 3;
 const ERROR_MAX: usize = 3800;
 const LOG_MAX: usize = 190_000;
 const FILE_MAX: u64 = 1_900_000;
+const LIVE_FINDINGS_FILE: &str = "live-findings.jsonl";
 
 // What the agent may do. The repository is untrusted, so this is the cloud's "no code
 // execution" rule as an allowlist. Bare `Read`, `Glob` and `Grep` are left out on purpose: a
@@ -356,7 +358,8 @@ pub async fn run_job(
     let on_event = |event: Event| on_scan_event(&scan_id, event);
     let on_event: OnEvent<'_> = &on_event;
     let sink = trace::TraceSink::new(token, &job.scan_id);
-    trace::scope(sink, run_traced_job(token, job, tools, settings, on_event, stop)).await
+    let live = live::LiveSink::new(token, &job.scan_id);
+    trace::scope(sink, live::scope(live, run_traced_job(token, job, tools, settings, on_event, stop))).await
 }
 
 async fn run_traced_job(token: &str, job: Job, tools: FindTools<'_>, settings: &Settings, on_event: OnEvent<'_>, stop: &Stop) -> JobEnd {
@@ -1069,12 +1072,16 @@ async fn run_agent(
     let mut child = command.spawn().map_err(|e| format!("Could not start Claude Code: {e}"))?;
 
     let following = trace::follow(&work.join(&log_name), phase);
+    let pushing = live::follow(&work.join("out").join(LIVE_FINDINGS_FILE));
     let waited = tokio::select! {
         waited = timeout(limit, child.wait()) => waited.map_err(|_| named(&format!("ran longer than {} minutes, so this runner stopped it.", limit.as_secs() / 60))),
         _ = stop.stopped() => Err(STOPPED.to_string()),
     };
     if let Some(following) = following {
         following.finish().await;
+    }
+    if let Some(pushing) = pushing {
+        pushing.finish().await;
     }
     let status = match waited {
         Ok(status) => status.map_err(|e| format!("Claude Code stopped unexpectedly: {e}"))?,
@@ -1188,7 +1195,10 @@ fn collect(work: &Path) -> Result<Report, String> {
     let mut files = BTreeMap::new();
     for entry in fs::read_dir(work.join("out")).map_err(|e| format!("Could not read the audit's output: {e}"))?.flatten() {
         let name = entry.file_name().to_string_lossy().to_string();
-        let ok_name = !name.is_empty() && name.len() <= 80 && name.chars().all(|c| c.is_ascii_alphanumeric() || "._-".contains(c));
+        let ok_name = name != LIVE_FINDINGS_FILE
+            && !name.is_empty()
+            && name.len() <= 80
+            && name.chars().all(|c| c.is_ascii_alphanumeric() || "._-".contains(c));
         let small = entry.metadata().map(|m| m.is_file() && m.len() <= FILE_MAX).unwrap_or(false);
         if ok_name && small {
             if let Ok(text) = fs::read_to_string(entry.path()) {

@@ -1,6 +1,6 @@
 import { and, desc, eq, exists, gt, inArray, isNull } from "drizzle-orm";
 import { Effect } from "effect";
-import { partyPersons, scanRunnerJobs, scans, tenantRunners, tenants } from "@repo/db-elise";
+import { partyPersons, scanFindings, scanRunnerJobs, scans, tenantRunners, tenants } from "@repo/db-elise";
 import type { Runner, RunnerIdentity } from "@repo/contracts/elise";
 import type { AppDbType, DbConnectType } from "#/lib/db-connection";
 import { Forbidden, toDbError, type DbError } from "#/lib/effect-query";
@@ -120,7 +120,13 @@ export const removeRunnerEffect = (db: AppDbType, tenantId: string, runnerId: st
           .where(and(eq(scans.tenantId, tenantId), inArray(scans.status, ["queued", "running"]), inArray(scans.id, db.select({ scanId: cancelled.scanId }).from(cancelled))))
           .returning({ id: scans.id }),
       );
-      const rows = await db.with(revoked, cancelled, stopped).select({ id: revoked.id }).from(revoked);
+      const cleared = db.$with("cleared").as(
+        db
+          .delete(scanFindings)
+          .where(inArray(scanFindings.scanId, db.select({ id: stopped.id }).from(stopped)))
+          .returning({ id: scanFindings.id }),
+      );
+      const rows = await db.with(revoked, cancelled, stopped, cleared).select({ id: revoked.id }).from(revoked);
       return rows.length > 0;
     },
     catch: toDbError,

@@ -88,14 +88,28 @@ function ScanFindingDecisionLink({ repoId }: { repoId: string | undefined }) {
   );
 }
 
-type ScanFindingsTableProps = { scanId: string; repoId?: string; repoLabel?: string; commit?: string };
+type ScanFindingsTableProps = { scanId: string; repoId?: string; repoLabel?: string; commit?: string; live?: boolean };
 
-export function ScanFindingsTable({ scanId, repoId, repoLabel, commit }: ScanFindingsTableProps) {
-  const { data } = useSuspenseQuery(scanFindingsQuery(scanId));
+export function ScanFindingsTable({ scanId, repoId, repoLabel, commit, live = false }: ScanFindingsTableProps) {
+  const { data } = useSuspenseQuery(scanFindingsQuery(scanId, live));
   const [selected, setSelected] = useState<number | undefined>();
   const sorted = data.toSorted((a, b) => (RANK.get(a.severity) ?? 0) - (RANK.get(b.severity) ?? 0));
   const rows = sorted.map((finding, index) => ({ finding, selected: index === selected, open: () => setSelected(index) }));
   const table = useTable({ features: dataTableFeatures, columns, data: rows, getRowId: (_, index) => String(index) });
+
+  if (data.length === 0 && live) {
+    return (
+      <Empty className="py-12">
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <ShieldCheck />
+          </EmptyMedia>
+          <EmptyTitle>Nothing verified yet</EmptyTitle>
+          <EmptyDescription>A finding shows here as soon as it is checked. This page updates by itself.</EmptyDescription>
+        </EmptyHeader>
+      </Empty>
+    );
+  }
 
   if (data.length === 0) {
     return (
@@ -115,7 +129,7 @@ export function ScanFindingsTable({ scanId, repoId, repoLabel, commit }: ScanFin
 
   return (
     <>
-      {actionable.length > 0 && (
+      {actionable.length > 0 && !live && (
         <div className="flex justify-end border-b px-5 py-3">
           <ScanFindingCopy text={scanFindingsPrompt(sorted, { repo: repoLabel, commit })} label={`Copy ${actionable.length === 1 ? "finding" : `all ${actionable.length} findings`} for coding agent`} />
         </div>
@@ -125,7 +139,7 @@ export function ScanFindingsTable({ scanId, repoId, repoLabel, commit }: ScanFin
         findings={sorted}
         selected={selected}
         onSelect={setSelected}
-        decision={<ScanFindingDecisionLink repoId={repoId} />}
+        decision={live ? undefined : <ScanFindingDecisionLink repoId={repoId} />}
       />
     </>
   );

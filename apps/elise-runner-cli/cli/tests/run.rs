@@ -658,3 +658,67 @@ fn without_a_git_token_the_clone_gets_no_helper() {
     assert_eq!(output.code, 0, "{}{}", output.stdout, output.stderr);
     assert_eq!((stubs.git_config(), stubs.git_calls().is_empty()), (String::new(), false));
 }
+
+fn fingerprints(batches: &[Vec<serde_json::Value>]) -> Vec<String> {
+    batches.iter().flatten().map(|finding| finding["fingerprint"].as_str().unwrap().to_string()).collect()
+}
+
+#[test]
+fn live_findings_are_sent_in_batches_while_the_agent_runs_and_a_line_that_is_not_a_finding_is_skipped() {
+    let engine = Engine::start();
+    let mut runner = paired(&engine);
+    runner.stub_tools(&["claude", "node"]);
+    engine.queue_job(job("scan_19", ["phase=recon", "phase=hunt", "phase=check live=spread", "phase=report"]));
+
+    let output = runner.run(&["run", "--once"], "");
+
+    assert_eq!(output.code, 0, "{}{}", output.stdout, output.stderr);
+    let batches = engine.finding_batches();
+    assert_eq!(batches.len(), 2, "{batches:?}");
+    assert_eq!(fingerprints(&batches), ["fp-1", "fp-2", "fp-3"]);
+    assert_eq!(engine.batches_before_results(), [2]);
+}
+
+#[test]
+fn the_last_live_findings_are_sent_before_the_result() {
+    let engine = Engine::start();
+    let mut runner = paired(&engine);
+    runner.stub_tools(&["claude", "node"]);
+    engine.queue_job(job("scan_20", ["phase=recon", "phase=hunt", "phase=check live=late", "phase=report"]));
+
+    let output = runner.run(&["run", "--once"], "");
+
+    assert_eq!(output.code, 0, "{}{}", output.stdout, output.stderr);
+    assert_eq!(fingerprints(&engine.finding_batches()), ["fp-late"]);
+    assert_eq!(engine.batches_before_results(), [1]);
+    assert!(!engine.results()[0].1["files"].as_object().unwrap().contains_key("live-findings.jsonl"));
+}
+
+#[test]
+fn a_route_that_never_answers_does_not_fail_the_scan() {
+    let engine = Engine::start();
+    let mut runner = paired(&engine);
+    runner.stub_tools(&["claude", "node"]);
+    engine.answer_findings_with(0);
+    engine.queue_job(job("scan_21", ["phase=recon", "phase=hunt", "phase=check live=late", "phase=report"]));
+
+    let output = runner.run(&["run", "--once"], "");
+
+    assert_eq!(output.code, 0, "{}{}", output.stdout, output.stderr);
+    assert_eq!(engine.results()[0].1["state"], "succeeded");
+}
+
+#[test]
+fn an_engine_that_answers_conflict_ends_the_push_and_fails_nothing() {
+    let engine = Engine::start();
+    let mut runner = paired(&engine);
+    runner.stub_tools(&["claude", "node"]);
+    engine.answer_findings_with(409);
+    engine.queue_job(job("scan_22", ["phase=recon", "phase=hunt", "phase=check live=spread", "phase=report"]));
+
+    let output = runner.run(&["run", "--once"], "");
+
+    assert_eq!(output.code, 0, "{}{}", output.stdout, output.stderr);
+    assert_eq!(fingerprints(&engine.finding_batches()), ["fp-1", "fp-2"]);
+    assert_eq!(engine.results()[0].1["state"], "succeeded");
+}

@@ -63,6 +63,7 @@ export const NOT_TENANT_ROUTES: readonly string[] = [
   "GET /runners/jobs/:scanId",
   "GET /runners/jobs/:scanId/archive",
   "POST /runners/jobs/:scanId/trace",
+  "POST /runners/jobs/:scanId/findings",
   "GET /runners/me",
   "DELETE /runners/me",
   "GET /openapi.json",

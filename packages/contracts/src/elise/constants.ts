@@ -70,6 +70,13 @@ export const TRACE_ENTRIES_PER_SCAN_MAX = 5000;
 export const TRACE_BATCH_MAX = 500;
 
 // -----
+// A running Scan's live Findings: the most records one Scan keeps
+// before its result (a sanity cap) and the most one batch may carry.
+// -----
+export const LIVE_FINDINGS_PER_SCAN_MAX = 1000;
+export const LIVE_FINDINGS_BATCH_MAX = 200;
+
+// -----
 // Groups and team invites: caps the form and the
 // server share, so one Tenant cannot grow without
 // bound
