@@ -32,4 +32,4 @@ export const setAnthropicKeySvc = (
     return yield* tenant((db) => saveAnthropicKeyEffect(db, accountId, userId, sealed, apiKey.slice(-4)));
   });
 
-export const removeAnthropicKeySvc = (db: AppDbType, accountId: string, userId: string): Effect.Effect<AnthropicKey, DbError> => removeAnthropicKeyEffect(db, accountId, userId);
+export const removeAnthropicKeySvc = (db: AppDbType, accountId: string, userId: string): Effect.Effect<{ key: AnthropicKey; removed: boolean }, DbError> => removeAnthropicKeyEffect(db, accountId, userId);

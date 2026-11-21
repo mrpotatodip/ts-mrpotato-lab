@@ -694,6 +694,13 @@
       "when": 1795256253055,
       "tag": "0098_starter_plan_row",
       "breakpoints": true
+    },
+    {
+      "idx": 99,
+      "version": "7",
+      "when": 1795282227133,
+      "tag": "0099_team_invite_email_status",
+      "breakpoints": true
     }
   ]
 }

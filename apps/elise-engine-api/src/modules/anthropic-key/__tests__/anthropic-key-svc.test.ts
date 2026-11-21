@@ -117,15 +117,16 @@ describe("removeAnthropicKeySvc", () => {
 
     const removed = await Effect.runPromise(remove());
 
-    expect(removed).toEqual({ source: "platform", lastFour: null, updatedAt: null });
+    expect(removed).toEqual({ key: { source: "platform", lastFour: null, updatedAt: null }, removed: true });
     expect(await test.raw.select().from(tenantAnthropicKeys)).toHaveLength(0);
     expect((await auditOf(acme.tenantId)).map((entry) => entry.action)).toEqual(["anthropic.key.set", "anthropic.key.removed"]);
     expect((await auditOf(acme.tenantId))[1]).toMatchObject({ before: { lastFour: "w3Zq" } });
   });
 
   it("changes nothing and records nothing when there is no key", async () => {
-    await Effect.runPromise(remove());
+    const removed = await Effect.runPromise(remove());
 
+    expect(removed.removed).toBe(false);
     expect(await auditOf(acme.tenantId)).toHaveLength(0);
   });
 });

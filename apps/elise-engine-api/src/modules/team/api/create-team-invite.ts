@@ -19,7 +19,7 @@ app.post("/invites", createTeamInviteDoc, requirePower("company:team:invites:cre
   const data = await runEffect(
     createInviteSvc(tenantEffectOf(c, accountId), accountId, userId, body, {
       dashboardUrl: c.env.DASHBOARD_URL,
-      enqueue: (mail) => deps.enqueueInviteEmail(c.env, mail),
+      enqueue: (mail) => deps.enqueueEmail(c.env, mail),
     }),
   );
   return c.json({ data, error: null }, 201);

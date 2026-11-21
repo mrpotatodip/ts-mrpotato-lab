@@ -80,6 +80,7 @@ export function fakeBindings(overrides: Partial<Bindings> = {}, workflowStatus: 
     DATABASE_URL: "postgresql://user:pass@127.0.0.1:1/none",
     AUTH_SECRET: "test-auth-secret-test-auth-secret",
     AUTH_BASE_URL: "http://localhost",
+    DASHBOARD_URL: "https://app.example.com",
     AUTH_TRUSTED_ORIGINS: "http://localhost",
     REPORTS: reports,
     SCAN_WORKFLOW_FULL: workflowFull,

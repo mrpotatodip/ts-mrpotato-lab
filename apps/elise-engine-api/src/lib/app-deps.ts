@@ -5,6 +5,7 @@ import { dbConnect, withPool, withTenant } from "#/lib/db-connection";
 import { runEffect } from "#/lib/effect-query";
 import { linkScanArchiveEffect } from "#/modules/archives/queries";
 import { holdCreditEffect, settleCreditEffect } from "#/modules/credit";
+import { enqueueEmail } from "#/modules/email";
 import { runnerIdentitySvc } from "#/modules/runners/handlers";
 import { findConnectedRunnerEffect } from "#/modules/runners/queries";
 import { userHasAccountEffect, userHasPowerEffect } from "#/modules/me";
@@ -44,12 +45,7 @@ export const realAppDeps: AppDeps = {
   runnerIdentity: (c, token) => runEffect(runnerIdentitySvc(dbConnect(c.env.DATABASE_URL), token)),
   userHasAccount: (c, userId, accountId) => runEffect(userHasAccountEffect(dbConnect(c.env.DATABASE_URL), userId, accountId)),
   userHasPower: (c, userId, accountId, power) => runEffect(userHasPowerEffect(dbConnect(c.env.DATABASE_URL), userId, accountId, power)),
-  enqueueInviteEmail: async (env, mail) => {
-    await env.INVITE_EMAIL_QUEUE.send(mail, { contentType: "json" });
-  },
-  enqueuePasswordResetEmail: async (env, mail) => {
-    await env.INVITE_EMAIL_QUEUE.send(mail, { contentType: "json" });
-  },
+  enqueueEmail,
   withTenant: (c, accountId, run) => withTenant(c.env.HYPERDRIVE_TENANT.connectionString, (promise) => c.executionCtx.waitUntil(promise), accountId, run),
   withOwner: (c, run) => withPool(c.env.DATABASE_URL, (promise) => c.executionCtx.waitUntil(promise), run),
   stripe: (env) => {

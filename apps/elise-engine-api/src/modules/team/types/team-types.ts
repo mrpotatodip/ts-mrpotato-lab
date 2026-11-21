@@ -1,4 +1,5 @@
 import type { Conflict, DbError, Forbidden, Invalid, NotFound } from "#/lib/effect-query";
+import type { TeamInviteEmail } from "#/modules/email";
 
 // -----
 // Failures a team service can end with.
@@ -19,22 +20,9 @@ export type NewInvite = {
   expiresAt: Date;
 };
 
-// -----
-// One invite email, as it waits in the queue.
-// The link holds the one-time token.
-// -----
-export type InviteEmail = {
-  to: string;
-  accountName: string;
-  inviterName: string;
-  roleLabel: string;
-  link: string;
-  expiresAt: string;
-};
-
 export type InviteMailer = {
   dashboardUrl: string;
-  enqueue: (mail: InviteEmail) => Promise<void>;
+  enqueue: (mail: TeamInviteEmail) => Promise<void>;
 };
 
 export type AcceptInvite = {

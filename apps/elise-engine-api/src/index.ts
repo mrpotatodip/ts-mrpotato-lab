@@ -23,8 +23,7 @@ import scanTraceRoutes from "#/modules/scan-trace";
 import signUpRoutes from "#/modules/sign-up";
 import stripeRoutes from "#/modules/stripe";
 import teamRoutes from "#/modules/team";
-import type { QueuedEmail } from "#/modules/auth/types";
-import { consumeQueuedEmails } from "#/modules/team/lib";
+import { handleEmailQueue, recordInviteStatusOf, type QueueBody } from "#/modules/email";
 import anthropicKeyRoutes from "#/modules/anthropic-key";
 import creditRoutes from "#/modules/credit/api";
 import planRoutes from "#/modules/plan/api";
@@ -117,7 +116,7 @@ export const buildApp = (deps: AppDeps = realAppDeps) => {
 
 export default {
   fetch: buildApp().app.fetch,
-  queue: (batch: MessageBatch<QueuedEmail>, env: Bindings) => consumeQueuedEmails(batch, env),
+  queue: (batch: MessageBatch<QueueBody>, env: Bindings, ctx: ExecutionContext) => handleEmailQueue(batch, env, recordInviteStatusOf(env, (promise) => ctx.waitUntil(promise))),
   // -----
   // The daily cron (wrangler.jsonc "triggers"): deletes the zips
   // no Scan has read 30 days after upload, and stored objects

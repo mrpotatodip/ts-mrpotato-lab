@@ -68,15 +68,15 @@ export const saveAnthropicKeyEffect = (db: AppDbType, tenantId: string, userId: 
 // Go back to the platform key. Removing a key that is not there
 // changes nothing and writes no audit row.
 // -----
-export const removeAnthropicKeyEffect = (db: AppDbType, tenantId: string, userId: string): Effect.Effect<AnthropicKey, DbError> =>
+export const removeAnthropicKeyEffect = (db: AppDbType, tenantId: string, userId: string): Effect.Effect<{ key: AnthropicKey; removed: boolean }, DbError> =>
   Effect.tryPromise({
     try: async () => {
       const [removed] = await db.delete(tenantAnthropicKeys).where(eq(tenantAnthropicKeys.tenantId, tenantId)).returning({ lastFour: tenantAnthropicKeys.lastFour });
       if (removed) {
         const actorPartyId = await actorPartyOf(db, userId);
-        await insertAuditEntry(db,{ actorPartyId, action: "anthropic.key.removed", subjectId: tenantId, tenantId, before: { lastFour: removed.lastFour } });
+        await insertAuditEntry(db, { actorPartyId, action: "anthropic.key.removed", subjectId: tenantId, tenantId, before: { lastFour: removed.lastFour } });
       }
-      return PLATFORM_KEY;
+      return { key: PLATFORM_KEY, removed: removed !== undefined };
     },
     catch: toDbError,
   });

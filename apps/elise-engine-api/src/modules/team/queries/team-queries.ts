@@ -18,6 +18,7 @@ import {
   TEAM_PENDING_INVITE_LIMIT,
   TENANT_ADMIN_ROLE_KEY,
   type AcceptedTeamInvite,
+  type InviteEmailStatusValue,
   type TeamInvite,
   type TeamInvitePreview,
   type TeamList,
@@ -122,6 +123,8 @@ export const listTeamEffect = (db: AppDbType, tenantId: string, now: Date): Effe
             roleLabel: accessMasterRoles.label,
             expiresAt: tenantTeamInvites.expiresAt,
             createdAt: tenantTeamInvites.createdAt,
+            emailStatus: tenantTeamInvites.emailStatus,
+            emailStatusAt: tenantTeamInvites.emailStatusAt,
           })
           .from(tenantTeamInvites)
           .innerJoin(partyMasterRoles, eq(partyMasterRoles.id, tenantTeamInvites.roleId))
@@ -148,6 +151,7 @@ export const listTeamEffect = (db: AppDbType, tenantId: string, now: Date): Effe
         groupIds: groupsOfInvite.get(invite.id) ?? [],
         expiresAt: invite.expiresAt.toISOString(),
         createdAt: invite.createdAt.toISOString(),
+        emailStatusAt: invite.emailStatusAt?.toISOString() ?? null,
       })),
     };
   });
@@ -277,6 +281,8 @@ export const createInviteEffect = (db: AppTxDbType, invite: NewInvite): Effect.E
           groupIds,
           expiresAt: row.expiresAt.toISOString(),
           createdAt: row.createdAt.toISOString(),
+          emailStatus: row.emailStatus,
+          emailStatusAt: null,
         };
       }),
     catch: classify,
@@ -301,6 +307,17 @@ export const inviteEmailContextEffect = (
       catch: toDbError,
     });
     return { accountName: tenant?.name ?? "your team", inviterName: actor?.name ?? "A teammate" };
+  });
+
+export const markInviteEmailStatusEffect = (db: AppDbType, inviteId: string, status: Exclude<InviteEmailStatusValue, "not_sent">, now: Date): Effect.Effect<void, DbError> =>
+  Effect.tryPromise({
+    try: () =>
+      db
+        .update(tenantTeamInvites)
+        .set({ emailStatus: status, emailStatusAt: now })
+        .where(and(eq(tenantTeamInvites.id, inviteId), isNull(tenantTeamInvites.revokedAt), isNull(tenantTeamInvites.acceptedAt)))
+        .then(() => undefined),
+    catch: toDbError,
   });
 
 // -----

@@ -32,20 +32,24 @@
     { "name": "RUNNER_ENROLL_TOTAL_LIMITER", "namespace_id": "1005", "simple": { "limit": 30, "period": 60 } },
     { "name": "PASSWORD_RESET_LIMITER", "namespace_id": "1006", "simple": { "limit": 5, "period": 60 } },
     { "name": "RUNNER_LOGIN_START_LIMITER", "namespace_id": "1007", "simple": { "limit": 5, "period": 60 } },
-    { "name": "RUNNER_LOGIN_START_TOTAL_LIMITER", "namespace_id": "1008", "simple": { "limit": 30, "period": 60 } }
+    { "name": "RUNNER_LOGIN_START_TOTAL_LIMITER", "namespace_id": "1008", "simple": { "limit": 30, "period": 60 } },
+    { "name": "PASSWORD_RESET_ADDRESS_LIMITER", "namespace_id": "1009", "simple": { "limit": 3, "period": 60 } }
   ],
   "r2_buckets": [{ "binding": "REPORTS", "bucket_name": "repo-scan-reports" }],
   // Upload retention (docs/adr/0008-git-providers.md): once a day the scheduled handler deletes zips no Scan has read 30 days after upload, and upload objects with no row.
   "triggers": { "crons": ["17 3 * * *"] },
   // Tenant-scoped routes connect as the elise_app role (no BYPASSRLS) and set app.tenant_id per transaction. Caching must stay off on this config: Hyperdrive caches SELECT results by query text, so a cached answer would cross accounts.
   "hyperdrive": [{ "binding": "HYPERDRIVE_TENANT", "id": "c40dce1918af46b2bdf7be08609ba654" }],
-  // Invite emails: the Worker queues one per invite, the consumer below sends it. The queues must exist before a deploy (wrangler queues create).
-  "send_email": [{ "name": "EMAIL" }],
+  // Emails: the Worker queues one message per email (src/modules/email), the consumer below sends it, and the dead-letter consumer logs what ran out of retries. The queues must exist before a deploy (wrangler queues create). The code calls the binding EMAIL_QUEUE, but the Cloudflare queues keep their first names (elise-invite-emails, elise-invite-emails-dlq): a queue cannot be renamed, only replaced by a second queue with a drain window, for a name only the operator sees. The binding may send only from the one sender address.
+  "send_email": [{ "name": "EMAIL", "allowed_sender_addresses": ["no-reply@hello.eliselab.com"] }],
   "queues": {
-    "producers": [{ "binding": "INVITE_EMAIL_QUEUE", "queue": "elise-invite-emails" }],
-    "consumers": [{ "queue": "elise-invite-emails", "max_batch_size": 10, "max_batch_timeout": 5, "max_retries": 4, "dead_letter_queue": "elise-invite-emails-dlq" }]
+    "producers": [{ "binding": "EMAIL_QUEUE", "queue": "elise-invite-emails" }],
+    "consumers": [
+      { "queue": "elise-invite-emails", "max_batch_size": 10, "max_batch_timeout": 5, "max_retries": 4, "dead_letter_queue": "elise-invite-emails-dlq" },
+      { "queue": "elise-invite-emails-dlq", "max_batch_size": 10, "max_batch_timeout": 5 }
+    ]
   },
-  "vars": { "ENVIRONMENT": "production", "MODEL": "claude-sonnet-5-5", "EFFORT": "high", "MAX_BUDGET_FULL_USD": "18", "MAX_ACTIVE_SCANS": "3", "MAX_ACTIVE_FULL_SCANS": "1", "MONTHLY_BUDGET_USD": "20", "BUDGET_ALLOWANCE_USD": "1000", "BILLING_ENFORCED": "false", "DASHBOARD_URL": "https://app.eliselab.com", "INVITE_FROM": "no-reply@hello.eliselab.com", "AUTH_BASE_URL": "https://api.eliselab.com", "AUTH_TRUSTED_ORIGINS": "https://api.eliselab.com,https://app.eliselab.com,http://localhost:3000" }
+  "vars": { "ENVIRONMENT": "production", "MODEL": "claude-sonnet-5-5", "EFFORT": "high", "MAX_BUDGET_FULL_USD": "18", "MAX_ACTIVE_SCANS": "3", "MAX_ACTIVE_FULL_SCANS": "1", "MONTHLY_BUDGET_USD": "20", "BUDGET_ALLOWANCE_USD": "1000", "BILLING_ENFORCED": "false", "DASHBOARD_URL": "https://app.eliselab.com", "EMAIL_FROM": "no-reply@hello.eliselab.com", "AUTH_BASE_URL": "https://api.eliselab.com", "AUTH_TRUSTED_ORIGINS": "https://api.eliselab.com,https://app.eliselab.com,http://localhost:3000" }
   // MONTHLY_BUDGET_USD is the default monthly spend per account with no plan (a plan's included credit is the default instead; tenants.monthly_scan_budget_usd overrides both).
   // BUDGET_ALLOWANCE_USD is the most an admin may set as the monthly budget (tenants.monthly_scan_budget_allowance_usd overrides it for one account).
   // BILLING_ENFORCED: "true" refuses new scans from an account with no plan row; "false" does not refuse an own-key or Runner scan for it. A scan on the platform's key needs a plan whatever this says (NO_ACTIVE_PLAN, #135); an account with its own key and no plan runs on its key. Accounts that have a plan row follow it either way.

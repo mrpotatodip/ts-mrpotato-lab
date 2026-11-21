@@ -13,7 +13,7 @@ import {
   tenants,
 } from "@repo/db-elise";
 import type { AccessPower, Me, MeAccount } from "@repo/contracts/elise";
-import type { DbConnectType } from "#/lib/db-connection";
+import type { AppDbType, DbConnectType } from "#/lib/db-connection";
 import { NotFound, toDbError, type DbError } from "#/lib/effect-query";
 
 // -----
@@ -112,6 +112,26 @@ export const userHasAccountEffect = (db: DbConnectType, userId: string, accountI
         .limit(1),
     catch: toDbError,
   }).pipe(Effect.map((rows) => rows.length > 0));
+
+export const listLoginsWithPowerEffect = (
+  db: AppDbType,
+  accountId: string,
+  power: AccessPower,
+): Effect.Effect<{ email: string; name: string; partyId: string }[], DbError> =>
+  Effect.tryPromise({
+    try: () =>
+      db
+        .select({ email: authUser.email, name: authUser.name, partyId: authUser.partyId })
+        .from(partyRoles)
+        .innerJoin(authUser, eq(authUser.partyId, partyRoles.partyId))
+        .innerJoin(partyMasterRoles, eq(partyMasterRoles.id, partyRoles.roleId))
+        .innerJoin(accessRolePowers, eq(accessRolePowers.masterRoleId, partyMasterRoles.masterRoleId))
+        .innerJoin(accessMasterPowers, eq(accessMasterPowers.id, accessRolePowers.masterPowerId))
+        .where(and(eq(partyRoles.tenantId, accountId), eq(accessMasterPowers.power, power)))
+        .groupBy(authUser.email, authUser.name, authUser.partyId)
+        .orderBy(asc(authUser.email)),
+    catch: toDbError,
+  });
 
 // -----
 // Does this login hold this Power in this Account? A Role holds

@@ -12,4 +12,5 @@ app.route("/", getSettingsChangesAPI);
 export default app;
 export * from "./utils";
 export * from "./types";
-export { monthSpendEffect } from "./queries";
+export { monthSpendEffect, noticeAudienceEffect } from "./queries";
+export type { NoticeAudience } from "./queries";

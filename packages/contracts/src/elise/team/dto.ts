@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { INVITE_EMAIL_STATUS_VALUES } from "../enums";
 import {
   SIGN_UP_EMAIL_MAX,
   SIGN_UP_PASSWORD_MAX,
@@ -66,6 +67,8 @@ export const TeamInviteSchema = z.object({
   groupIds: z.array(z.uuid()),
   expiresAt: z.iso.datetime(),
   createdAt: z.iso.datetime(),
+  emailStatus: z.enum(INVITE_EMAIL_STATUS_VALUES).optional(),
+  emailStatusAt: z.iso.datetime().nullable().optional(),
 });
 
 export const TeamListSchema = z.object({

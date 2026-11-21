@@ -35,6 +35,14 @@ export const INVITE_CODE_STATUS_VALUES = ["active", "used_up", "expired", "revok
 export type InviteCodeStatusValue = (typeof INVITE_CODE_STATUS_VALUES)[number];
 
 // -----
+// Whether a Team invite's email went out. Twin of the CHECK
+// constraint on tenant_team_invites in db-elise.
+// -----
+export const INVITE_EMAIL_STATUS_VALUES = ["not_sent", "sent", "failed"] as const;
+
+export type InviteEmailStatusValue = (typeof INVITE_EMAIL_STATUS_VALUES)[number];
+
+// -----
 // Scans. Twins of the CHECK constraints on
 // scans, scan_findings and scan_finding_triage in db-elise;
 // change both together.

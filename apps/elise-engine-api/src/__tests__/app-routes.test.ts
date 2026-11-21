@@ -291,6 +291,13 @@ describe("rate limits", () => {
     expect(await res.json()).toMatchObject({ error: { code: "SIGN_IN_RATE_LIMITED" } });
   });
 
+  it("answers 404 to change-password, so a password changes only through reset", async () => {
+    const { env } = fakeBindings();
+    const res = await call(env, "/auth/change-password", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" });
+
+    expect(res.status).toBe(404);
+  });
+
   it("lets a request through while the limit holds", async () => {
     const { env } = fakeBindings({ SIGN_UP_LIMITER: limiter(true) });
     const res = await call(env, "/sign-up", { method: "POST", headers: { "content-type": "application/json" }, body: signUpBody });

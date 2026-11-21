@@ -1,7 +1,10 @@
 import { sql } from "drizzle-orm";
-import { foreignKey, index, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { check, foreignKey, index, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { INVITE_EMAIL_STATUS_VALUES, type InviteEmailStatusValue } from "@repo/contracts/elise";
 import { partyPersons } from "./party";
 import { partyMasterRoles, tenants } from "./tenant";
+
+const inList = (values: readonly string[]) => sql.raw(values.map((value) => `'${value}'`).join(", "));
 
 export const tenantTeamInvites = pgTable(
   "tenant_team_invites",
@@ -19,6 +22,8 @@ export const tenantTeamInvites = pgTable(
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
     revokedAt: timestamp("revoked_at", { withTimezone: true }),
     acceptedAt: timestamp("accepted_at", { withTimezone: true }),
+    emailStatus: text("email_status").$type<InviteEmailStatusValue>().notNull().default("not_sent"),
+    emailStatusAt: timestamp("email_status_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .defaultNow()
@@ -35,6 +40,7 @@ export const tenantTeamInvites = pgTable(
       columns: [t.roleId, t.tenantId],
       foreignColumns: [partyMasterRoles.id, partyMasterRoles.tenantId],
     }).onDelete("restrict"),
+    chkEmailStatus: check("tenant_team_invites_email_status", sql`${t.emailStatus} in (${inList(INVITE_EMAIL_STATUS_VALUES)})`),
     uqIdTenant: uniqueIndex("uq_tenant_team_invites_id_tenant").on(t.id, t.tenantId),
     idxTenant: index("idx_tenant_team_invites_tenant_id").on(t.tenantId),
   }),

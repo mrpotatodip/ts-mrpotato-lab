@@ -26,7 +26,7 @@ export type TenantDbType = Parameters<Parameters<ReturnType<typeof createTenantD
 // The HTTP client and a withTenant transaction both satisfy it,
 // so a service takes this one type and a route can pass either.
 // -----
-export type AppDbType = Pick<PgDatabase<PgQueryResultHKT, typeof schema>, "select" | "selectDistinctOn" | "insert" | "update" | "delete" | "$with" | "with">;
+export type AppDbType = Pick<PgDatabase<PgQueryResultHKT, typeof schema>, "select" | "selectDistinct" | "selectDistinctOn" | "insert" | "update" | "delete" | "$with" | "with">;
 
 // -----
 // What a service needs to run its writes as one unit. The pool

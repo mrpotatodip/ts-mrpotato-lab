@@ -4,7 +4,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { authUser, ensureTenantRoles, findTenantRole, partyRoles, tenantGroupMembers, tenantGroups, tenantTeamInvites } from "@repo/db-elise";
 import { TENANT_ADMIN_ROLE_KEY } from "@repo/contracts/elise";
 import { openTestDb, seedTenant, type TestDb } from "#/__tests__/test-db";
-import { acceptInviteEffect, createInviteEffect, inviteEmailContextEffect, listTeamEffect, previewInviteEffect, revokeInviteEffect } from "#/modules/team/queries";
+import { acceptInviteEffect, createInviteEffect, inviteEmailContextEffect, listTeamEffect, markInviteEmailStatusEffect, previewInviteEffect, revokeInviteEffect } from "#/modules/team/queries";
 import type { NewInvite } from "#/modules/team/types";
 
 let test: TestDb;
@@ -98,6 +98,32 @@ describe("inviteEmailContextEffect", () => {
   it("gives the account name and the inviter's name, and falls back when either is missing", async () => {
     expect(await run(inviteEmailContextEffect(test.pool, tenantId, adminUserId))).toEqual({ accountName: "acme", inviterName: "Ada Rossi" });
     expect(await run(inviteEmailContextEffect(test.pool, crypto.randomUUID(), "nobody"))).toEqual({ accountName: "your team", inviterName: "A teammate" });
+  });
+});
+
+describe("markInviteEmailStatusEffect", () => {
+  const statusOf = async (email: string) => (await run(listTeamEffect(test.http, tenantId, NOW))).invites.find((row) => row.email === email);
+
+  it("starts as not sent, then records sent or failed with the time, and the list returns it", async () => {
+    const created = await run(createInviteEffect(test.pool, invite({ email: "status@example.com" })));
+    expect(await statusOf("status@example.com")).toMatchObject({ emailStatus: "not_sent", emailStatusAt: null });
+
+    await run(markInviteEmailStatusEffect(test.pool, created.id, "sent", NOW));
+    expect(await statusOf("status@example.com")).toMatchObject({ emailStatus: "sent", emailStatusAt: NOW.toISOString() });
+
+    await run(markInviteEmailStatusEffect(test.pool, created.id, "failed", LATER));
+    expect(await statusOf("status@example.com")).toMatchObject({ emailStatus: "failed", emailStatusAt: LATER.toISOString() });
+  });
+
+  it("leaves a revoked invite and an unknown one alone", async () => {
+    const created = await run(createInviteEffect(test.pool, invite({ email: "gone@example.com" })));
+    await run(revokeInviteEffect(test.pool, tenantId, created.id, adminUserId, NOW));
+
+    await run(markInviteEmailStatusEffect(test.pool, created.id, "sent", NOW));
+    await run(markInviteEmailStatusEffect(test.pool, crypto.randomUUID(), "sent", NOW));
+    const [row] = await test.raw.select({ status: tenantTeamInvites.emailStatus }).from(tenantTeamInvites).where(eq(tenantTeamInvites.id, created.id));
+
+    expect(row.status).toBe("not_sent");
   });
 });
 
